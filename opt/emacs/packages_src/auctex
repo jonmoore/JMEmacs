@@ -1,0 +1,3 @@
+./configure --prefix='c:/program files/gnu/emacs-23.3' --infodir='c:/program files/gnu/emacs-23.3/info' --with-texmf-dir='f:/texmf' --with-lispdir='c:/program files/gnu/emacs-23.3/site-lisp' --datarootdir='c:/program files/gnu/emacs-23.3/'
+#   --with-emacs=$(WEMACS) \
+

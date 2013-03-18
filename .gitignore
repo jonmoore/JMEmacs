@@ -1,13 +1,7 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
+# compiled emacs files and backups
+*.elc
+*~
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
+# Compressed files not ignored - we want to keep the packages
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+.DS_Store

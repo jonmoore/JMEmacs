@@ -1,0 +1,1052 @@
+;;; Use occur "^;;;" to list sections
+
+<<<<<<< HEAD
+;; a test
+
+=======
+>>>>>>> catchup
+;; In the real .emacs.el, just set emacs-root, and load this, e.g.
+;; (defvar emacs-root
+;;  (concat default-directory "opt/emacs")
+;;  "*The root of my personal emacs load-path.")
+;; (load "/Users/jon/src/git/JonsPortableEmacs/.emacs.el")
+<<<<<<< HEAD
+=======
+;;
+;; Local settings can be included in the real .emacs.el before or
+;; after this file is loaded
+>>>>>>> catchup
+
+;;; META
+(defmacro require-soft (feature &optional file)
+  "*Try to require FEATURE, but don't signal an error if `require' fails."
+  `(require ,feature ,file 'noerror)) 
+
+(defmacro when-available (func foo)
+  "*Do something if FUNCTION is available."
+  `(when (fboundp ,func) ,foo)) 
+
+;; no error on failure to load
+(when (load (expand-file-name "~/.emacs.d/elpa/package.el") t)
+  (package-initialize))
+
+;;; SYSTEM
+;; may need to add machine-specific stuff somewhere
+(defconst system-win32-p (eq system-type 'windows-nt)
+  "Are we running on a WinTel system?")
+(defconst system-linux-p (or (eq system-type 'gnu/linux) (eq system-type 'linux))
+  "Are we running on a GNU/Linux system?")
+(defconst system-osx-p (or (eq system-type 'darwin))
+  "Are we running on a Darwin (Mac OS X) system?")
+
+;;; 
+;;; ENVIRONMENT
+
+;; use setenv because some functions call getenv, not shell-file-name
+(require 'cl)
+(cond
+ (system-win32-p
+<<<<<<< HEAD
+  (setq cygwin-bin "C:\\apps\\cygwin\\bin"
+        default-system-shell (concat cygwin-bin "\\bash.exe"))
+  (require 'dos-w32)
+  (setq file-name-buffer-file-type-alist (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))))
+(setq shell-file-name (or (getenv "SHELL") ; on windows SHELL is set to cmdproxy even if not set at the system level
+=======
+  (setq cygwin-bin "C:\\apps\\cygwin\\bin" ;; should be site-specific
+        default-system-shell (concat cygwin-bin "\\bash.exe"))
+  (require 'dos-w32)
+  (setq file-name-buffer-file-type-alist (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
+  (setenv  "PATH" (concat cygwin-bin
+                          path-separator (getenv "PATH")))
+  (setq exec-path (append
+                   (list (replace-regexp-in-string  "\\\\"  "/" cygwin-bin))
+                   exec-path))))
+
+;; on windows SHELL is set to cmdproxy even if not set at the system level
+;; Not sure why we're doing this
+(setq shell-file-name (or (getenv "SHELL") 
+>>>>>>> catchup
+                          default-system-shell))
+(setenv "SHELL" shell-file-name)
+(setq inhibit-default-init t)           ; don't load default.el
+
+;;; PATHS
+;; or use Info-default-directory-list
+(setenv "INFOPATH" (concat (concat emacs-root "/packages/org/doc")
+                           path-separator (concat emacs-root "/packages/pde/doc")
+                           path-separator (concat emacs-root "/packages/w3/info")
+                           path-separator (concat emacs-root "/info/auctex")
+                           path-separator (expand-file-name (concat exec-directory "../info")) 
+                           path-separator (getenv "INFOPATH")))
+
+(defun my-woman-mode-hook ()
+  (require 'woman)
+  (when system-win32-p
+    (if (getenv "MANPATH")
+        (setq woman-manpath
+              (woman-parse-colon-path (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
+(add-hook 'woman-mode-hook 'my-woman-mode-hook)
+
+(labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
+  (add-path "/site-lisp")
+  (add-path "/site-lisp/templates")
+  (add-path "/packages")
+  (add-path "/packages/Emacs-PDE-0.2.16/lisp")
+  (add-path "/packages/cdlatex")
+  (add-path "/packages/color-theme-6.6.0")
+  (add-path "/packages/doxymacs-1.8.0")
+  (add-path "/packages/org/contrib/lisp")
+  (add-path "/packages/org/contrib/babel/lisp")
+  (add-path "/packages/org/lisp")
+  (add-path "/packages/perlnow")
+  (add-path "/packages/template/lisp")
+  (add-path "/packages/tempo")
+  (add-path "/packages/w3/share/emacs/site-lisp")
+<<<<<<< HEAD
+  (add-path "/packages/auctex")
+  (add-path "/packages/gabrielelanaro-emacs-for-python-08012bc")
+)
+=======
+  (add-path "/packages/ess-12.04-2/lisp")
+  (add-path "/packages/auctex"))
+>>>>>>> catchup
+
+(setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
+                                                   (system-osx-p   "~/backup")))))
+
+(eval-after-load 'highlight-sexps
+  (quote (progn
+           (require 'hexrgb)
+           (setq hl-sexp-background-colors
+                 (let* ((hsv-back (hexrgb-hex-to-hsv
+                                   (hexrgb-color-name-to-hex "blue4")))
+                        (h-back (nth 0 hsv-back))
+                        (s-back (nth 1 hsv-back))
+                        (v-back (nth 2 hsv-back))
+                        (val-cur (lambda (init target  step)
+                                   (+ init (*  (- target init) step)))))
+                   (progn
+                     (mapcar 
+                      (lambda (step)
+                        (hexrgb-hsv-to-hex 
+                         (funcall val-cur (+ .15 h-back)  h-back step)
+                         (funcall val-cur s-back         s-back step)
+                         (funcall val-cur v-back         v-back step)))
+                      (list 0 0.2 0.4 0.55 0.7 1.0))))))))
+
+(setq user-full-name "Jonathan Moore")
+
+;;;
+;;;; MY FUNCTIONS
+;;;==============
+
+(or (load "snippets" t t)
+    (message "Could not load snippets.el"))
+(load "jnm-loaddefs")
+
+;;; COLORS AND APPEARANCE
+                                        ; see also color-theme
+(tool-bar-mode -1)
+(setq 
+ frame-title-format
+ '(:eval (buffer-file-names-in-selected-frame)))
+(setq query-replace-highlight t) 
+(setq search-highlight t) 
+
+<<<<<<< HEAD
+(set-face-attribute 'default  nil
+                    :foreground "cadetblue1" :background "blue4")
+(when system-osx-p
+  (set-face-attribute 'default  nil :family "Inconsolata" :height 180))
+
+=======
+>>>>>>> catchup
+;;; GLOBAL EDITING SETTINGS
+(autoload 'scroll-up-in-place   "scroll-in-place" "scroll-up-in-place"   t)
+(autoload 'scroll-down-in-place "scroll-in-place" "scroll-down-in-place" t)
+
+;; (require 'undo-tree "undo-tree-0.3.1")
+;; (global-undo-tree-mode)
+
+;; (require-soft 'table)
+(put 'upcase-region   'disabled nil)
+(put 'downcase-region 'disabled nil)
+(put 'narrow-to-page  'disabled nil)
+(when (require-soft 'browse-kill-ring)
+  (browse-kill-ring-default-keybindings))
+(fset 'yes-or-no-p 'y-or-n-p)
+(setq require-final-newline t)
+(require-soft 'uniquify)
+(setq uniquify-buffer-name-style 'post-forward-angle-brackets
+      uniquify-min-dir-content 0)
+
+;;; GLOBAL KEY SETTINGS
+(when system-osx-p
+  (setq mac-command-modifier 'meta
+        mac-option-modifier   nil
+        mac-emulate-three-button-mouse t
+        ns-pop-up-frames nil
+        ))
+
+;;; control key sequences
+(global-set-key [?\C-.]             'goto-line)
+(global-set-key [?\C-c ?b]          'browse-url-at-point)
+(global-set-key [?\C-c ?a]          'org-agenda)
+(global-set-key [?\C-c ?r]          'rename-file-and-buffer)
+(global-set-key [?\C-c ?m]          'move-file-and-buffer)
+(global-set-key [?\C-c ?\C-o]       'search-buffers)
+(global-set-key [?\C-c ?\C-x ?\C-o] 'moccur)
+(global-set-key [?\C-x ?\C-b]       '(lambda () (interactive) (ibuffer nil "Ibuffer")))
+(global-set-key [?\C-x ?\C-j]       'dired-jump)
+(global-set-key [?\C-n]             '(lambda () (interactive) (scroll-up-in-place 1)))
+(global-set-key [?\C-p]             '(lambda () (interactive) (scroll-down-in-place 1)))
+(global-set-key [?\C-r]             'isearch-backward-regexp)
+(global-set-key [?\C-\M-r]          'isearch-backward)
+(global-set-key [?\C-s]             'isearch-forward-regexp)
+(global-set-key [?\C-\M-s]          'isearch-backward)
+(global-set-key [?\C-x ?\C-o]       'delete-blank-lines-around-point-or-in-region)
+(global-set-key [?\C-z]             'kill-buffer)
+
+;;; meta
+(global-set-key [?\M-.]             'find-function)
+(global-set-key [?\M-f]             'grep-buffers)
+;; use numeric codes 91 and 93 for [ and ] because embedding them with
+;; ?M-[ and ?M-] confuses forward-sexp, which is used by customization
+(global-set-key [(meta 91)]        'undo)
+(global-set-key [(meta 93)]        'repeat)
+
+;;; special keys
+(global-set-key [M-up]              'enlarge-window)
+(global-set-key [M-down]            'shrink-window)
+(global-set-key [C-S-left]          'select-last-buffer)
+(global-set-key [C-S-right]         'select-next-buffer)
+(global-set-key [home]              'beginning-of-buffer)
+(global-set-key [end]               'end-of-buffer)
+(require 'scroll-in-place)
+(global-set-key [prior]             '(lambda () (interactive) (scroll-down-in-place)))
+(global-set-key [next]              '(lambda () (interactive) (scroll-up-in-place)))
+
+;;; function keys
+(global-set-key [f4]                'shell-toggle)
+(global-set-key [f5]                'other-window)
+(global-set-key [S-f5]              'swap-buffers-previous-window-and-select)
+(global-set-key [f6]                'rotate-buffer-to-next-window)
+(global-set-key [M-f6]              'rotate-buffer-to-next-window-and-select)
+(global-set-key [f7]                'e-select-next-window)
+(autoload 'e-select-next-window "e-other-window" "e-other-window" t)
+
+;; TODO
+(when system-win32-p
+  (global-set-key [f8]                'w32-frame-cycle-size))
+(global-set-key [f11]               'org-clock-in-and-goto)
+(global-set-key [S-f11]             'org-clock-goto)
+<<<<<<< HEAD
+
+=======
+>>>>>>> catchup
+
+;;;
+;;;; APPLICATIONS
+;;;==============
+
+<<<<<<< HEAD
+=======
+(defun jnm-load-auctex ()
+  (interactive)
+  (load "auctex.el" nil t t)
+  (require 'tex-mik)
+  (setq TeX-auto-save t)
+  (setq TeX-parse-self t)
+  (setq-default TeX-master nil)
+  (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+  (add-hook 'LaTeX-mode-hook (lambda ()
+                               (push 
+                                '("Latexmk" 
+                                  "latexmk -pdflatex=\"f:/bin/pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
+                                  :help "Run Latexmk on file")
+                                TeX-command-list)))
+  (setq reftex-plug-into-AUCTeX t)
+  (setq TeX-PDF-mode t)
+  (setq 
+   TeX-source-correlate-method 'synctex
+   TeX-source-correlate-mode t
+   TeX-source-correlate-start-server t
+   TeX-view-program-list (quote (("Sumatra PDF" "f:/bin/SumatraPDF.exe -reuse-instance %o"))))
+  (require 'sumatra-forward)
+
+  (add-hook 'LaTeX-mode-hook
+            (lambda ()
+              (progn
+              (local-set-key [prior] '(lambda ()
+                                        (interactive)
+                                        (funcall (lookup-key (current-global-map) [prior]))
+                                        (sumatra-jump-to-line)))
+              (local-set-key [next] '(lambda ()
+                                        (interactive)
+                                        (funcall (lookup-key (current-global-map) [next]))
+                                        (sumatra-jump-to-line))))))
+  )
+
+>>>>>>> catchup
+;;; COMINT
+(add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
+
+;;; CYGWIN SHELL
+(setq process-coding-system-alist '(("bash" . undecided-unix)))
+
+;;; DIRED
+(require 'dired-x)
+;; Standard customization hooks
+(add-hook 'dired-mode-hook
+	  (function (lambda ()
+                      (require 'find-dired)
+                      (require-soft 'dired-column-widths)
+		      (setq dired-omit-mode t)
+		      (define-key dired-mode-map "j" 'dired-execute-file)
+		      (define-key dired-mode-map "P" 'dired-do-ps-print)
+		      (define-key dired-mode-map "O" 'dired-do-moccur)
+		      (define-key dired-mode-map [(control up)] 'dired-prev-subdir)
+		      (define-key dired-mode-map [(control down)] 'dired-next-subdir)
+                      (setq dired-omit-extensions (set-difference 
+                                                   dired-omit-extensions
+                                                   '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj" )
+                                                   :test 'string=))
+		      (setq dired-omit-mode t)
+                      (setq dired-dnd-protocol-alist nil)
+                      (setq find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))))))
+(defvar dired-ps-print-buffer-with-faces t
+  "*If non-nil, `dired-do-ps-print' will print fonts, colors, and underlines.")
+(setq dired-dnd-protocol-alist nil)
+(defadvice find-dired-sentinel		
+  (after column-widths-should-be-equalized)
+  "Column widths should be equalized in dired mode. This enforces that when we have run find-dired"
+  (progn 
+    (dired-column-widths-cleanup)))
+(ad-activate 'find-dired-sentinel)
+
+;;; EDIFF 
+(setq ediff-custom-diff-options "-c -w"
+      ediff-diff-options "-w")
+<<<<<<< HEAD
+(when system-win32-p (setq ediff-diff-program (concat cygwin-bin "diff")))
+=======
+>>>>>>> catchup
+
+;;; INFO
+(eval-after-load "info"
+  '(progn
+     (define-key Info-mode-map ";"           'Info-search-next)
+     (define-key Info-mode-map ":"           'Info-search-backward)
+     (define-key Info-mode-map [(shift tab)] 'Info-prev-reference)))
+
+;;; MAN
+;; Man-getpage-in-background
+(defadvice man (around ad-man-uses-bash-shell )
+  "Advises `man' to use bash as the shell."
+  (let ((shell-file-name "bash"))
+    ad-do-it))
+(ad-activate 'man)
+
+;;; OCCUR AND FRIENDS
+(load "ska-isearch-occur")
+(add-hook 'isearch-mode-hook 
+          '(lambda ()
+             (setq ska-isearch-window-configuration
+                   (list (current-window-configuration) (point-marker)))))
+(add-hook 'isearch-mode-end-hook 
+          '(lambda ()
+             (ska-isearch-maybe-remove-occur-buffer)
+             (setq ska-isearch-occur-opened nil)))
+(define-key isearch-mode-map (kbd "M-o") 'ska-isearch-occur)
+
+;; JOCCUR
+(autoload 'joccur "joccur" nil t)
+(define-key isearch-mode-map (kbd "C-o") 'isearch-joccur)
+
+;; MOCCUR
+(autoload 'dired-do-moccur "color-moccur" nil t)
+
+(require-soft 'moccur-edit)
+(setq *moccur-buffer-name-exclusion-list*
+      '(".+TAGS.+" "*Completions*" "*Messages*"
+	".+\.aps" ".+\.clw"
+	".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc"
+	"\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$"
+	"\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
+(setq dmoccur-exclusion-mask
+      '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$" "\\.deb$"
+	"\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$" "\\.mdb$" "\\.adp$"
+	"\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$" "\\.png$" "\\.pbm$"
+	"\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$"
+	"\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
+(setq moccur-split-word t)
+(setq dmoccur-use-list t
+      dmoccur-use-project t
+      dmoccur-list '(("dir" default-directory (".*") dir)))
+(define-key Buffer-menu-mode-map "O" 'Buffer-menu-moccur)
+
+;;; PRETTY COLUMN
+(autoload 'pretty-column "pretty-column" "Pretty column" t)
+(autoload 'pretty-rectangle "pretty-column" "Pretty rectangle" t)
+(setq pcol-str-separator " "
+      pcol-column-separator "[ \t]+")
+
+;;; PRINTING
+(setq  
+ ps-bottom-margin       36
+ ps-top-margin          36
+ ps-right-margin        36
+ ps-left-margin         36
+ ps-header-offset       36
+ ps-inter-column        18
+ ps-n-up-margin         18
+ ps-landscape-mode     nil
+ ps-line-number          t
+ ps-n-up-printing        1
+ ps-number-of-columns    1
+ ps-print-color-p      t)
+
+;;; SHELL-TOGGLE
+                                        ; shell-toggle tries to use term by default but this doesn't work on windows
+(when system-win32-p
+  (setq shell-toggle-launch-shell 'shell))
+
+;;; WOMAN
+(autoload 'woman           "woman" "Decode and browse a UN*X man page." t)
+(autoload 'woman-find-file "woman" "Find, decode and browse a specific UN*X man-page file." t)
+
+;;;
+;;;; MODES
+;;;=======
+
+;;; CC MODE
+(autoload 'doxymacs-mode      "doxymacs" "doxymacs mode" t)
+(autoload 'doxymacs-font-lock "doxymacs" "doxymacs font lock" t)
+
+;; offset customizations not in my-c-style
+(setq c-offsets-alist '((member-init-intro . ++)))
+
+;;; C++ MODE
+(add-to-list 'auto-mode-alist '("\\.c$" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.h$" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.cpp$" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.hpp$" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.cxx$" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.hxx$" . c++-mode))
+
+;; Customizations for all modes in CC Mode.
+(autoload 'ooh-maybe-insert-cpp-guard "once-only-header" nil t)
+(defconst visual-studio-c-style
+  '((c-tab-always-indent        . t)
+    (c-comment-only-line-offset . 0)
+    (c-hanging-braces-alist     . ((substatement-open after)
+				   (brace-list-open)))
+    (c-hanging-colons-alist     . ((member-init-intro before)
+				   (inher-intro)
+				   (case-label after)
+				   (label after)
+				   (access-label after)))
+    (c-cleanup-list             . (scope-operator
+				   empty-defun-braces
+				   defun-close-semi))
+    (c-offsets-alist            . ((arglist-close . c-lineup-arglist)
+				   (substatement-open . 0)
+				   (case-label        . 4)
+                                   (innamespace       . 4)
+				   (block-open        . 0)
+				   (knr-argdecl-intro . -)))
+    ) "Visual C++ Programming Style")
+
+(defun jnm-toggle-hideshow-all ()
+  "Toggle hideshow all."
+  (interactive)
+  (if (boundp 'jnm-hs-hide)
+      (setq jnm-hs-hide (not jnm-hs-hide))
+    (set (make-local-variable 'jnm-hs-hide) t))
+  (if jnm-hs-hide (hs-hide-all) (hs-show-all)))
+(defun jnm-customize-hide-show ()
+  (local-set-key (kbd "C-c l")       'hs-hide-level)
+  (local-set-key (kbd "C-c <right>") 'hs-show-block)
+  (local-set-key (kbd "C-c <left>")  'hs-hide-block)
+  )
+
+<<<<<<< HEAD
+(defun jm-qa-branch-root ()
+  "Root of the QA Branch for the current buffer's file."
+  (interactive)
+  (if (string-match ".*\.br/" (buffer-file-name))
+      (match-string 0 (buffer-file-name))))
+(defun jm-cc-search-directories ()
+  "Directories to search for matching files in."
+  (interactive)
+  (append 
+   (if (jm-qa-branch-root) (list (format "%sQALibrary/*" (jm-qa-branch-root))))
+   '("." "./*" "./*/*" ".." "../..")))
+=======
+
+>>>>>>> catchup
+
+(setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
+                            ("\\.h\\'"     (".cpp" ".c"))
+                            ("\\.hpp\\'"   (".cpp"))
+                            ("\\.c\\'"     (".h"))))
+
+(add-hook 'c-mode-common-hook
+	  (lambda ()
+	    (define-key c-mode-base-map   "\C-m"     'c-context-line-break)
+            ;; Load my templates for cc-mode
+            (when (require-soft 'tempo-c-cpp)
+              (my-tempo-c-cpp-bindings))
+	    (doxymacs-mode t)
+	    (setq
+             c-hungry-delete-key t
+             c-auto-newline 1
+             fill-column 90
+             indent-tabs-mode nil
+             tab-width 4
+             c-default-style '((java-mode . "java") 
+                               (other . "stroustrup"))
+             c-echo-syntactic-information-p nil
+             )
+            (set (make-local-variable 'dabbrev-case-fold-search) nil)
+
+	    (c-add-style "visual studio" visual-studio-c-style t)
+            (c-toggle-auto-newline -1)
+            (c-toggle-electric-state -1)
+            (local-set-key [(control tab)] 'tempo-forward-mark)
+            ;; include guards
+            (ooh-maybe-insert-cpp-guard)
+            ;; hide-show mode
+            (hs-minor-mode)
+            (jnm-customize-hide-show)
+            ;;
+            (local-set-key (kbd "M-o") 'ff-find-other-file)
+            ;; Enable auto-fill on for comments but not code
+            (auto-fill-mode 0)
+            (set (make-local-variable 'cc-search-directories)
+                 (jm-cc-search-directories))
+            (set (make-local-variable 'fill-nobreak-predicate)
+                 (lambda ()
+                   (not (eq (get-text-property (point) 'face)
+                            'font-lock-comment-face))))))
+(add-hook 'font-lock-mode-hook ;; Fontify doxygen keywords
+	  (function (lambda ()
+		      (if (or (eq major-mode 'c-mode)
+			      (eq major-mode 'c++-mode))
+			  (doxymacs-font-lock)))))
+
+;;; DOT MODE
+(add-to-list 'auto-mode-alist '("\\.dot\\'" . graphviz-dot-mode))
+(autoload 'graphviz-dot-mode "graphviz-dot-mode" "Mode for editing graphviz dot files." t)
+
+;;; DOXYMACS MODE
+(autoload 'doxymacs-mode "doxymacs")
+(setq doxymacs-doxygen-style "JavaDoc")
+
+;;; FONT LOCK MODE
+(global-font-lock-mode t)
+(setq font-lock-maximum-decoration t)
+(show-paren-mode)
+(setq jit-lock-context-time 5
+      jit-lock-chunk-size 32768
+      jit-lock-defer-time nil
+      jit-lock-stealth-nice nil
+      jit-lock-stealth-time 1)
+
+;;; GLOBAL AUTO REVERT MODE
+
+(defun buffer-file-name-looks-like-a-network-file (filename) 
+  (and filename
+       (string-match "^//" filename)))
+(add-hook 'find-file-hook 
+          (lambda ()
+            (when (buffer-file-name-looks-like-a-network-file buffer-file-name)
+              (message "Disabling global auto revert mode for %s" buffer-file-name)
+              (setq global-auto-revert-ignore-buffer t))))
+
+(global-auto-revert-mode t)
+
+;;; GLOBALFF
+(when system-win32-p
+  (setq file-cache-locate-command (concat cygwin-bin "\\locate")
+	locate-command (concat cygwin-bin "\\locate")))
+(setq locate-make-command-line 
+      (lambda (search-string) 
+	(list locate-command "-i" search-string)))
+
+;;; HTML MODE
+(autoload 'css-mode "css-mode")
+(add-to-list 'auto-mode-alist '("\\.css\\'" . css-mode))
+(add-hook 'html-mode-hook
+	  (function (lambda ()
+		      (longlines-mode nil))))
+
+;;; IBUFFER
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+               ("dired"   (mode . dired-mode))
+               ("C/C++"   (mode . c++-mode))
+               ("org"     (mode . org-mode))
+               ("script"  (mode . sh-mode))
+               ("pl"      (or (mode . perl-mode) (mode . cperl-mode)))
+               ("emacs"   (or
+                           (name . "^\\*"))))))
+      ;; ibuffer-expert t
+      ibuffer-never-show-predicates (list "\\*Completions\\*" "\\*vc\\*")
+      ibuffer-display-summary nil)
+(define-ibuffer-op ibuffer-do-ps-print ()
+  "Print marked buffers as with `ps-print-buffer-with-faces'."
+  (:opstring "printed"
+             :modifier-p nil)
+  (ps-print-buffer-with-faces))
+(defun my-ibuffer-hook ()
+  ;; add another sorting method for ibuffer (allow the grouping of
+  ;; filenames and dired buffers
+  (define-ibuffer-sorter filename-or-dired
+    "Sort the buffers by their pathname."
+    (:description "filenames plus dired")
+    (string-lessp 
+     (with-current-buffer (car a)
+       (or buffer-file-name
+           (if (eq major-mode 'dired-mode)
+               (expand-file-name dired-directory))
+           ;; so that all non pathnames are at the end
+           "~"))
+     (with-current-buffer (car b)
+       (or buffer-file-name
+           (if (eq major-mode 'dired-mode)
+               (expand-file-name dired-directory))
+           ;; so that all non pathnames are at the end
+           "~"))))
+  ;; add key binding
+  (define-key ibuffer-mode-map "P" 'ibuffer-do-ps-print)
+  (define-key ibuffer-mode-map (kbd "s p") 'ibuffer-do-sort-by-filename-or-dired))
+(add-hook 'ibuffer-mode-hook 'my-ibuffer-hook)
+(add-hook 'ibuffer-mode-hook (lambda ()
+                               (ibuffer-switch-to-saved-filter-groups
+                                "default")))
+
+;;; J MODE
+(autoload 'j-mode "j-mode.el"  "Major mode for J." t)
+(autoload 'j-shell "j-mode.el" "Run J from emacs." t)
+(setq auto-mode-alist
+      (cons '("\\.ij[rstp]" . j-mode) auto-mode-alist))
+(setq j-command "jconsole")
+(setq j-path "~/j/bin/")
+(add-hook 'j-mode-hook
+          (lambda ()
+            (which-func-mode 1)))
+
+(require 'cl)
+<<<<<<< HEAD
+(when (ignore-errors (require 'which-func))
+  (which-func-mode 1)) ; shows the current function in statusbar
+=======
+>>>>>>> catchup
+
+;;; LISP MODE
+                                        ; normally alt-tab, but windows masks this and we want to keep the normal behavior
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
+            (local-set-key [(control tab)] 'PC-lisp-complete-symbol)))
+
+;;; MATLAB MODE
+(add-to-list 'auto-mode-alist '("\\.m\\'" . matlab-mode))
+(autoload 'matlab-mode  "matlab" "Enter Matlab mode."       t)
+(autoload 'matlab-shell "matlab" "Interactive Matlab mode." t)
+(add-hook 'matlab-mode-hook
+	  (lambda ()
+	    (auto-fill-mode -1)
+	    (setq fill-column 76)
+	    (imenu-add-to-menubar "Find")
+	    (local-set-key [?\M-\;]    'comment-dwim)
+	    (local-set-key [(shift return)] 'matlab-comment-return)))
+(setq matlab-indent-function t
+      matlab-verify-on-save-flag nil)
+
+;;; MMIX MODE
+(autoload 'mmix-mode "mmix-mode" "Major mode for editing MMIX files" t)
+(setq auto-mode-alist (cons '("\\.mms" . mmix-mode)
+                            auto-mode-alist))
+
+;;; ORG MODE
+(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+(defun jm-org-get-priority-from-headline 
+  (headline)
+<<<<<<< HEAD
+  "Get the priority from an org headline using a tag format - _PRIORITY_A etc. Defaults to D"
+  (or (and (string-match "_PRIORITY_\\([ABC]\\)" headline) (match-string 1 headline))
+=======
+  "Get the priority from an org headline using a tag format - #A etc. Defaults to D.
+We do this so to provide inherited pseudo-priorities, allowing sorting by these (normal
+org priorities do not inherit."
+  (or (and (string-match "#\\([ABC]\\)" headline) (match-string 1 headline))
+>>>>>>> catchup
+      "D"))
+
+(defun jm-org-agenda-cmp-headline-priorities
+  (a b)
+  "Compare the priorities in two org headlines using `jm-org-get-priority-from-headline'"
+  (let* ((pa (jm-org-get-priority-from-headline  a))
+         (pb (jm-org-get-priority-from-headline  b)))
+    (cond
+     ((string> pa pb) 1)
+     ((string< pa pb) -1)
+     (t nil))))
+
+(when (require 'org-install)
+  (require 'org-clock)
+  (org-clock-persistence-insinuate)
+  (setq org-clock-persist t)
+  (setq org-clock-in-resume t)
+  (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities)
+  (add-hook 
+   'org-mode-hook
+   (function (lambda ()
+               (require 'org-toc)
+               (require 'org-wp-link)                          
+               (require 'ob-mscgen)
+               (when (and (require-soft 'texmathp)
+                          (require-soft 'cdlatex))
+                 (turn-on-org-cdlatex))
+               
+               (local-unset-key [C-tab])
+               (local-set-key [C-tab] (function (lambda () (interactive) (org-cycle t))))
+               (local-set-key [?\M-?] 'org-complete)
+               (local-unset-key [C-S-left]) ;; otherwise masks shifting buffers.  See org-disputed-keys?
+               (local-unset-key [C-S-right]) ;; otherwise masks shifting buffers
+               (local-set-key [(shift tab)] 'org-show-contents-or-move-to-previous-table-field)
+               (local-set-key [C-S-down]    'outline-next-visible-heading)
+               (local-set-key [C-S-up]      'outline-previous-visible-heading)
+               (local-set-key [?\C-c ?t]    'org-toc-show)
+
+               (local-set-key [?\C-c ? ]    'outline-mark-subtree)
+               (set-face-foreground 'org-hide (face-background 'default))
+               
+               (setq 
+                fill-column 90
+                org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
+                org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html" "todo.ps")))
+                org-agenda-exporter-settings '((ps-number-of-columns 2)
+                                               (ps-landscape-mode t)
+                                               (htmlize-output-type 'css)
+                                               (org-agenda-with-colors nil)
+                                               (org-agenda-remove-tags t))
+                org-agenda-files "~/.org_agenda_files"
+                org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down) 
+<<<<<<< HEAD
+                                                    (todo category-keep)
+                                                    (tags category-keep priority-down) 
+                                                    (search category-keep)))
+                org-agenda-start-with-clockreport-mode t
+=======
+                                                    (todo user-defined-up)
+                                                    (tags category-keep priority-down) 
+                                                    (search category-keep)))
+                org-agenda-start-with-clockreport-mode nil
+>>>>>>> catchup
+                org-agenda-todo-keyword-format "%-4s"
+                org-clock-history-length 10
+                org-clock-in-resume t
+                org-clock-persist t
+                org-disputed-keys (quote (([(control shift right)] . [(meta shift +)]) 
+                                          ([(control shift left)]  . [(meta shift -)])))
+                org-enforce-todo-checkbox-dependencies t
+                org-enforce-todo-dependencies t
+                org-export-mark-todo-in-toc t
+                org-export-with-priority t
+                org-export-with-LaTeX-fragments t
+                org-export-with-section-numbers nil
+                org-fast-tag-selection-single-key nil
+                org-hide-leading-stars t
+                org-log-done t
+                org-log-reschedule 'time
+                org-log-redeadline 'time
+                org-odd-levels-only t
+                org-publish-use-timestamps-flag t
+                org-replace-disputed-keys t
+                org-return-follows-link t
+                org-show-siblings (quote ((default . t) 
+                                          (isearch t)))
+<<<<<<< HEAD
+                org-tag-alist '(("Jaron" . ?j) ("Liang" . ?l) ("Richard" . ?r)
+                                ("_PRIORITY_A". ?a) ("_PRIORITY_B" . ?b) ("_PRIORITY_C" . ?c) ("PLATFORM_PROJECT" . ?p))
+=======
+                org-tag-alist '(("Petr"             . ?p)
+                                ("Ming"             . ?m)
+                                ("Richard"          . ?r)
+                                ("#A"               . ?a)
+                                ("#B"               . ?b)
+                                ("#C"               . ?c) 
+                                ("PLATFORM_PROJECT" . ?q))
+>>>>>>> catchup
+                
+               org-tags-column -80
+               org-toc-default-depth 3
+               org-toc-follow-mode t
+               org-toc-info-mode t
+               org-toc-show-subtree-mode t
+               org-use-speed-commands t
+               )
+               (setq org-export-html-style
+                   "<style type=\"text/css\">
+                                 html {
+                                       font-family: Arial;
+                                       font-size: 10pt;
+                                 }
+                                 .title         { text-align: center; }
+                                 .todo          { color: red; }
+                                 .done          { color: green; }
+                                 .timestamp     { color: grey }
+                                 .timestamp-kwd { color: CadetBlue }
+                                 .tag           { background-color:lightblue; 
+                                                  font-weight:normal }
+                                 .target        { background-color: lavender; }
+                                 pre            { border: 1pt solid #AEBDCC;
+                                                  background-color: #F3F5F7;
+                                                  padding: 5pt;
+                                                  font-family: 'Courier New';
+                                 }
+                                 table          { border-collapse: collapse; }
+                                 td, th         {
+                                                 vertical-align: top;
+                                                 <!--border: 1pt solid #ADB9CC;-->
+                                 }
+                               </style>")
+             (setq org-publish-project-alist
+                   '(("orgfiles"
+                      :base-directory "~/org/"
+                      :base-extension "org"
+                      :publishing-directory "~/org/"
+                      :publishing-function org-publish-org-to-html
+                      :headline-levels      3 ;; org-export-headline-levels
+                      :section-numbers      nil ;; org-export-with-section-numbers
+                      :table-of-contents    t ;; org-export-with-toc
+                      :archived-trees       headline ;; org-export-with-archived-trees
+                      :emphasize            t ;; org-export-with-emphasize
+                      :sub-superscript      t ;; org-export-with-sub-superscripts
+                      :special-strings      t ;; org-export-with-special-strings
+                      :TeX-macros           t ;; org-export-with-TeX-macros
+                      :LaTeX-fragments      t ;; org-export-with-LaTeX-fragments
+                      :fixed-width          t ;; org-export-with-fixed-width
+                      :timestamps           t ;; org-export-with-timestamps
+                      :tags                 not-in-toc ;; org-export-with-tags
+                      :tables               t ;; org-export-with-tables
+                      :table-auto-headline  t ;; org-export-highlight-first-table-line
+                      :convert-org-links    t ;; org-export-html-link-org-files-as-html
+                      :inline-images        maybe ;; org-export-html-inline-images
+                      :expand-quoted-html   t ;; org-export-html-expand
+                      :timestamp            t ;; org-export-html-with-timestamp
+                      :auto-preamble t ;; org-export-html-auto-preamble
+                      :auto-postamble t ;; org-export-html-auto-postamble
+                      )))))))
+(defadvice save-buffers-kill-emacs
+  (before org-check-running-clock activate)
+  "Check for a running clock before quitting."
+  (org-check-running-clock-any-buffer))
+
+;;; (C)PERL MODE
+(defalias 'perl-mode 'cperl-mode)
+(add-to-list 'auto-mode-alist '("\\.\\([pP][Llm]\\|al\\|t\\)\\'" . cperl-mode))
+(add-to-list 'interpreter-mode-alist '("perl" . cperl-mode))
+(add-to-list 'interpreter-mode-alist '("perl5" . cperl-mode))
+(add-to-list 'interpreter-mode-alist '("miniperl" . cperl-mode))
+
+(autoload 'template-initialize "template" "template" t)
+(defadvice require (before perlnow-requires-template activate) ; muppet
+  (if (eq 'perlnow (ad-get-arg 0))
+      (require 'template)))
+(autoload 'perlnow-script "perlnow" "perlnow" t)
+(autoload 'perlnow-module "perlnow" "perlnow" t)
+(autoload 'perlnow-run-check "perlnow" "perlnow" t)
+(autoload 'perlnow-run "perlnow" "perlnow" t)
+(autoload 'perlnow-perldb "perlnow" "perlnow" t)
+(autoload 'perlnow-perl-check "perlnow" "perlnow" t)
+(setq perlnow-script-location (substitute-in-file-name "$HOME/src/perl"))
+(setq perlnow-pm-location (substitute-in-file-name "$HOME/src/perl/lib"))
+
+(load "pde-loaddefs") ; autoloads
+(add-hook 'cperl-mode-hook
+          '(lambda ()
+             (setq pde-extra-setting nil) ;; restrain maniac
+             (pde-perl-mode-hook)
+             (abbrev-mode nil) ;; restrain maniac again
+             (setq cperl-indent-level 4)
+             (setq cperl-extra-newline-before-brace nil)
+             (template-initialize)
+             (require 'perlnow)
+             (require 'pde-vars)
+             (require 'template-simple)
+             (local-set-key [mouse-3] `imenu)
+             (hs-minor-mode)
+             (define-key cperl-mode-map [f1] 'perlnow-perl-check) ))
+
+;;; PYTHON MODE
+
+(defun epy-init ()
+  "Initialise python for emacs per from https://github.com/gabrielelanaro/emacs-for-python"
+  (interactive)
+  (require 'epy-init))
+
+;;; SCHEME MODE
+(defun comint-accumulate-and-indent (&optional prefix)
+  "Call comint-accumulate and indent-for-tab-command successively"
+  (interactive)
+  (comint-accumulate)
+  (indent-for-tab-command prefix))
+(add-hook 'scheme-mode-hook
+	  (lambda ()
+            ;; Tell emacs about the indentation of some not-so-well-known procedures.
+            (put 'with-error-handler           'scheme-indent-function 1)
+            (put 'with-exception-handler       'scheme-indent-function 1)     
+            (put 'with-exit-exception-handler  'scheme-indent-function 1)     
+            (put 'with-exit-exception-handler* 'scheme-indent-function 2)     
+            (put 'my-with-exception-handler    'scheme-indent-function 2)     
+            (put 'for-debug                    'scheme-indent-function 'defun)
+            (put 'test-expected                'scheme-indent-function 'defun)
+            (put 'call-with-input-string       'scheme-indent-function 1)     
+            (put 'with-port-locking            'scheme-indent-function 1)     
+            (setq scheme-program-name
+                  (and (getenv "PLTHOME")
+                       (file-directory-p (getenv "PLTHOME"))
+                       (expand-file-name "mzscheme.exe" (getenv "PLTHOME")))) 
+            (when (require-soft 'quack)
+              (setq quack-default-program scheme-program-name
+                    quack-fontify-style   'plt
+                    quack-global-menu-p   nil                
+                    quack-manuals (quote ((r5rs "R5RS" "http://www.schemers.org/Documents/Standards/R5RS/HTML/" nil) (plt-mzscheme "PLT MzScheme: Language Manual" plt t) (plt-mzlib "PLT MzLib: Libraries Manual" plt t) (plt-mred "PLT MrEd: Graphical Toolbox Manual" plt t) (plt-framework "PLT Framework: GUI Application Framework" plt t) (plt-drscheme "PLT DrScheme: Programming Environment Manual" plt nil) (plt-insidemz "PLT Inside PLT MzScheme" plt nil) (plt-tools "PLT Tools: DrScheme Extension Manual" plt nil) (plt-mzc "PLT mzc: MzScheme Compiler Manual" plt t) (plt-r5rs "PLT R5RS" plt t) (scsh "Scsh Reference Manual" "http://www.scsh.net/docu/html/man-Z-H-1.html" nil) (htdp "How to Design Programs" "http://www.htdp.org/" nil) (htus "How to Use Scheme" "http://www.htus.org/" nil) (t-y-scheme "Teach Yourself Scheme in Fixnum Days" "http://www.ccs.neu.edu/home/dorai/t-y-scheme/t-y-scheme.html" nil) (tspl "Scheme Programming Language (Dybvig)" "http://www.scheme.com/tspl/" nil) (sicp "Structure and Interpretation of Computer Programs" "http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-4.html" nil) (slib "SLIB" "http://swissnet.ai.mit.edu/~jaffer/SLIB.html" nil) (faq "Scheme Frequently Asked Questions" "http://www.schemers.org/Documents/FAQ/" nil)))
+                    quack-pltcollect-dirs (quote ("c:/Program Files/PLT" "c:/Program Files/PLT/collects"))
+                    quack-pretty-lambda-p nil
+                    quack-programs (quote ("c:\\Program Files\\Plt\\mred.exe -z" "bigloo" "c:/Program Files/PLT/mzscheme.exe" "c:\\Program Files\\Plt\\mred.exe" "c:\\Program Files\\Plt\\mred.exe -M errortrace -e \"(current-eventspace (make-eventspace))\" -e \"(print-structs true)\"" "c:\\Program Files\\Plt\\mred.exe /M errortrace /e \"(current-eventspace (make-eventspace))\" /e \"(print-structs true)\"" "c:\\Program Files\\Plt\\mzscheme.exe" "csi" "gosh" "gsi" "guile" "kawa" "mit-scheme" "mred -z" "mzscheme" "mzscheme -M errortrace" "rs" "scheme" "scheme48" "scsh" "sisc" "stklos" "sxi"))
+                    quack-remember-new-programs-p nil
+                    quack-tabs-are-evil-p t
+                    scheme-mit-dialect    nil                
+                    ))
+	    (define-key scheme-mode-map [f1]
+	      '(lambda ()
+		 "Lookup thing at point in info documentation for R5RS"
+		 (interactive)
+		 (ignore-errors
+		   (let ((symbol (thing-at-point 'symbol)))
+		     (info "(r5rs)")
+		     (Info-index symbol)))))))
+(add-hook 'inferior-scheme-mode-hook
+	  (function
+	   (lambda ()
+	     (turn-on-font-lock)
+	     (define-key inferior-scheme-mode-map
+	       [(shift return)] 'comint-accumulate-and-indent))))
+(autoload 'scheme-mode    "quack" "Major mode for Scheme."                           t)
+(autoload 'run-scheme     "quack"     "Switch to interactive Scheme buffer."             t)
+(autoload 'run-alt-scheme "cmuscheme" "Switch to interactive alternative Scheme buffer." t)
+(add-to-list 'interpreter-mode-alist '("scsh" . scheme-mode))
+
+;; Below we replace scheme-args-to-list so as not to destroy commands
+;; with spaces (...ram Files...).  This is crude - could check for
+;; file existence or a minus sign for options as we go along.
+(eval-after-load "cmuscheme" '(defun scheme-args-to-list (str) (list str)))
+
+;;; SERVER MINOR MODE
+
+(defun my-server-visit-hook ()
+  (local-set-key "\C-z" 'server-edit))
+(add-hook 'server-visit-hook 'my-server-visit-hook)
+
+;;; SHELL-MODE
+(add-hook 'shell-mode-hook
+	  '(lambda ()
+             (local-set-key [home]        ; move to beginning of line, after prompt  
+                            'comint-bol)
+	     (local-set-key [up]          ; cycle backward through command history
+                            '(lambda () (interactive)
+                               (if (comint-after-pmark-p)
+                                   (comint-previous-input 1)
+                                 (previous-line 1))))
+	     (local-set-key [down]        ; cycle forward through command history
+                            '(lambda () (interactive)
+                               (if (comint-after-pmark-p)
+                                   (comint-next-input 1)
+                                 (forward-line 1))))
+             ))
+
+(autoload 'shell-toggle "shell-toggle-patched" 
+  "Toggles between the *shell* buffer and whatever buffer you are editing." t) 
+(autoload 'shell-toggle-cd "shell-toggle-patched" 
+  "Pops up a shell-buffer and insert a \"cd \" command." t)
+
+;;; SPEEDBAR MODE
+(add-hook 'speedbar-mode-hook
+	  (lambda ()
+	    (speedbar-add-supported-extension ".org")
+	    (auto-raise-mode 1)))
+
+;;; TEXT MODE
+(add-hook 'text-mode-hook
+	  (function (lambda ()
+		      (local-set-key [(shift return)] 'newline-and-indent))))
+(autoload 'longlines-mode "longlines" "Minor mode for editing long lines." t)
+
+;;; WIKIPEDIA MODE
+(autoload 'wikipedia-mode "wikipedia-mode" "Major mode for editing documents in Wikipedia markup." t)
+(add-to-list 'auto-mode-alist '("\\.wiki$" . wikipedia-mode))
+
+
+;;;
+;;;; DESKTOP
+;;;=========
+
+(require 'desktop)
+<<<<<<< HEAD
+=======
+
+(let* ((computername (getenv "COMPUTERNAME"))
+       (local-desktop-dir (concat "~/.emacs.d/" computername )))
+  (if computername
+      (progn 
+	(if (not (file-exists-p local-desktop-dir))
+	    (mkdir local-desktop-dir))
+	(setq desktop-path (list local-desktop-dir)))))
+>>>>>>> catchup
+
+;;; SESSION SAVING
+(desktop-save-mode 1)
+(savehist-mode 1)
+
+;;; COLOR-THEME
+(require 'color-theme)
+(eval-after-load "color-theme"
+  '(progn
+     (color-theme-initialize)
+     (color-theme-word-perfect)))
+(setq inhibit-splash-screen t)
+<<<<<<< HEAD
+
+;;; CUSTOMIZATION
+(setq custom-file ;; set explicitly to avoid writing back to ~/.emacs.el
+      (expand-file-name ".emacs-custom.el" 
+                        (file-name-directory 
+                         (if load-in-progress 
+                             load-file-name 
+                           buffer-file-name))))
+(load custom-file)
+
+=======
+
+;;; CUSTOMIZATION
+(setq custom-file ;; set explicitly to avoid writing back to ~/.emacs.el
+      (expand-file-name ".emacs-custom.el" 
+                        (file-name-directory 
+                         (if load-in-progress 
+                             load-file-name 
+                           buffer-file-name))))
+(load custom-file)
+
+>>>>>>> catchup
+;;; STARTUP
+(server-start)
+(when system-win32-p
+  (w32-maximize-frame))

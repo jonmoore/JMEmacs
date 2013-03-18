@@ -1,0 +1,996 @@
+@article{citeulike:8208524,
+    abstract = {This paper describes four methods for estimating autocorrelation time and
+evaluates these methods with a test set of seven series. Fitting an
+autoregressive process appears to be the most accurate method of the four. An R
+package is provided for extending the comparison to more methods and test
+series.},
+    archivePrefix = {arXiv},
+    author = {Thompson, Madeleine B.},
+    citeulike-article-id = {8208524},
+    citeulike-linkout-0 = {http://arxiv.org/abs/1011.0175},
+    citeulike-linkout-1 = {http://arxiv.org/pdf/1011.0175},
+    day = {31},
+    eprint = {1011.0175},
+    keywords = {autocorrelation, review},
+    month = oct,
+    posted-at = {2012-06-19 19:45:43},
+    priority = {2},
+    title = {A Comparison of Methods for Computing Autocorrelation Time},
+    url = {http://arxiv.org/abs/1011.0175},
+    year = {2010}
+}
+
+@article{Brock,
+    author = {Brock, Guy and Pihur, Vasyl and Datta, Susmita and Datta, Somnath},
+    citeulike-article-id = {10191209},
+    citeulike-linkout-0 = {\&\#34;http://cran.r-project.org/web/packages/clValid/index.html},
+    journal = {J Statistical Software},
+    keywords = {cluster\_analysis},
+    pages = {1--22},
+    posted-at = {2012-06-18 21:57:34},
+    priority = {2},
+    title = {{clValid}: an R package for cluster validation},
+    url = {\&\#34;http://cran.r-project.org/web/packages/clValid/index.html},
+    volume = {25},
+    year = {2008}
+}
+
+@manual{R:cumSeg,
+    author = {Muggeo, Vito M. R.},
+    citeulike-article-id = {10801378},
+    citeulike-linkout-0 = {http://CRAN.R-project.org/package=cumSeg},
+    comment = {R package version 1.1},
+    keywords = {changepoint\_detection, rproject},
+    posted-at = {2012-06-18 20:57:27},
+    priority = {2},
+    title = {{cumSeg}: Change point detection in genomic sequences},
+    url = {http://CRAN.R-project.org/package=cumSeg},
+    year = {2011}
+}
+
+@article{citeulike:10801370,
+    author = {Scrucca, Luca},
+    citeulike-article-id = {10801370},
+    citeulike-linkout-0 = {http://cran.r-project.org/web/packages/qcc/qcc.pdf},
+    journal = {R News},
+    keywords = {changepoint\_detection},
+    pages = {11--17},
+    posted-at = {2012-06-18 20:47:11},
+    priority = {2},
+    title = {qcc: an R package for quality control charting and statistical process control},
+    url = {http://cran.r-project.org/web/packages/qcc/qcc.pdf},
+    volume = {4/1},
+    year = {2004}
+}
+
+@inproceedings{citeulike:10801174,
+    abstract = {We formulate and evaluate distribution-free statistical process control ({SPC}) charts for monitoring an autocorrelated process when a training data set is used to estimate the marginal mean and variance of the process as well as its variance parameter (i.e., the sum of covariances at all lags). We adapt variance-estimation techniques from the simulation literature for automated use in {DFTC}-{VE}, a distribution-free tabular {CUSUM} chart for rapidly detecting shifts in the mean of an autocorrelated process. Extensive experimentation shows that our variance-estimation techniques do not seriously degrade the performance of {DFTC}-{VE} compared with its performance using exact knowledge of the variance parameter; moreover, the performance of {DFTC}-{VE} compares favorably with that of other competing distribution-free {SPC} charts.},
+    author = {Lee, Joongsup J. and Alexopoulos, Christos and Goldsman, David and Kim, Seong H. and Tsui, Kwok L. and Wilson, James R.},
+    booktitle = {Proceedings of the 40th Conference on Winter Simulation},
+    citeulike-article-id = {10801174},
+    citeulike-linkout-0 = {http://www.informs-sim.org/wsc08papers/049.pdf},
+    citeulike-linkout-1 = {http://portal.acm.org/citation.cfm?id=1516827},
+    isbn = {978-1-4244-2708-6},
+    keywords = {changepoint\_detection, cusum},
+    location = {Miami, Florida},
+    pages = {417--425},
+    posted-at = {2012-06-18 18:20:44},
+    priority = {3},
+    publisher = {Winter Simulation Conference},
+    series = {WSC '08},
+    title = {A distribution-free tabular {CUSUM} chart for correlated data with automated variance estimation},
+    url = {http://www.informs-sim.org/wsc08papers/049.pdf},
+    year = {2008}
+}
+
+@article{citeulike:231102,
+    abstract = {The computational complexity of two classes of market mechanisms is compared. First the Walrasian interpretation in which prices are centrally computed by an auctioneer. Recent results on the computational complexity are reviewed. The non-polynomial complexity of these algorithms makes Walrasian general equilibrium an implausible conception. Second, a decentralised picture of market processes is described, involving concurrent exchange within transient coalitions of agents. These processes feature price dispersion, yield allocations that are not in the core, modify the distribution of wealth, are always stable, but path-dependent. Replacing the Walrasian framing of markets requires substantial revision of conventional wisdom concerning markets.},
+    author = {Axtell, Robert},
+    citeulike-article-id = {231102},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1111/j.1468-0297.2005.01001.x},
+    citeulike-linkout-1 = {http://www.ingentaconnect.com/content/bpl/ecoj/2005/00000115/00000504/art00002},
+    doi = {10.1111/j.1468-0297.2005.01001.x},
+    issn = {0013-0133},
+    journal = {The Economic Journal},
+    month = jun,
+    number = {504},
+    pages = {F193--F210},
+    posted-at = {2012-05-31 01:09:26},
+    priority = {5},
+    publisher = {Blackwell Publishing Ltd},
+    title = {The Complexity of Exchange*},
+    url = {http://dx.doi.org/10.1111/j.1468-0297.2005.01001.x},
+    volume = {115},
+    year = {2005}
+}
+
+@article{citeulike:10707589,
+    abstract = {Abrupt shifts in the level of a time series represent important information and should be preserved in statistical signal extraction. Various rules for detecting level shifts that are resistant to outliers and which work with only a short time delay are investigated. The properties of robustified versions of the t-test for two independent samples and its non-parametric alternatives are elaborated under different types of noise. Trimmed t-tests, median comparisons, robustified rank and {ANOVA} tests based on robust scale estimators are compared.},
+    author = {Fried, Roland},
+    citeulike-article-id = {10707589},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1016/j.csda.2007.06.011},
+    doi = {10.1016/j.csda.2007.06.011},
+    issn = {01679473},
+    journal = {Computational Statistics \& Data Analysis},
+    keywords = {changepoint\_detection},
+    month = oct,
+    number = {2},
+    pages = {1063--1074},
+    posted-at = {2012-05-27 18:36:30},
+    priority = {4},
+    title = {On the robust detection of edges in time series filtering},
+    url = {http://dx.doi.org/10.1016/j.csda.2007.06.011},
+    volume = {52},
+    year = {2007}
+}
+
+@inproceedings{rodionov2005brief,
+    author = {Rodionov, S. N.},
+    booktitle = {Large-scale disturbances (regime shifts) and recovery in aquatic ecosystems: challenges for management toward sustainability. UNESCO-ROSTE/BAS Workshop on Regime Shifts, Varna, Bulgaria},
+    citeulike-article-id = {10707587},
+    keywords = {changepoint\_detection, review},
+    pages = {17--24},
+    posted-at = {2012-05-27 18:34:38},
+    priority = {2},
+    title = {A brief overview of the regime shift detection methods},
+    year = {2005}
+}
+
+@article{fried2007rank,
+    abstract = {Robustified ranktests, applying a robust scale estimator, are investigated for reliable and fast shiftdetection in time series. The tests show good power for sufficiently large shifts, low false detection rates for Gaussian noise and high robustness against outliers. Wilcoxon scores in combination with a robust and efficient scale estimator achieve good performance in many situations.},
+    author = {Fried, R. and Gather, U.},
+    citeulike-article-id = {10707580},
+    journal = {Computational Statistics \& Data Analysis},
+    keywords = {changepoint\_detection, nonparametric},
+    number = {1},
+    pages = {221--233},
+    posted-at = {2012-05-27 18:31:41},
+    priority = {0},
+    publisher = {Elsevier},
+    title = {On rank tests for shift detection in time series},
+    volume = {52},
+    year = {2007}
+}
+
+@article{egloff2010high,
+    abstract = {We show how to implement highly efficient {GPU} solvers for one {dimensionalPDEs} based on finite difference schemes. The typical use case is to price a large number of similar or related derivatives in parallel. Application scenarios includemarket making, real time pricing, and risk management. The tridiagonal systems in the backward propagation of a finite difference scheme are solved with parallelcyclic reduction. This is a fine-grained parallel tridiagonal solver, which is well adapted to the hierarchical architecture of a modern {GPU}. We explain in detailthe calculation work flow and study the performance of the solver relative toa well optimized {CPU} implementation. Our timings demonstrate performance improvement factors 25 on a single {GPU} and 38 on two {GPUs}.},
+    author = {Egloff, D.},
+    citeulike-article-id = {10600684},
+    citeulike-linkout-0 = {http://download.quantalea.net/fdm\_gpu.pdf},
+    journal = {QuantAlea GmbH, Zurich, Switzerland2010},
+    keywords = {gpu, numerical, performance, pricing},
+    posted-at = {2012-04-23 02:01:07},
+    priority = {0},
+    title = {High performance finite difference {PDE} solvers on {GPUs}},
+    url = {http://download.quantalea.net/fdm\_gpu.pdf},
+    year = {2010}
+}
+
+@article{citeulike:8712333,
+    abstract = {Motivation: Knowing the exact locations of multiple change points in genomic sequences serves several biological needs, for instance when data represent {aCGH} profiles and it is of interest to identify possibly damaged genes involved in cancer and other diseases. Only a few of the currently available methods deal explicitly with estimation of the number and location of change points, and moreover these methods may be somewhat vulnerable to deviations of model assumptions usually {employed.Results}: We present a computationally efficient method to obtain estimates of the number and location of the change points. The method is based on a simple transformation of data and it provides results quite robust to model mis-specifications. The efficiency of the method guarantees moderate computational times regardless of the series length and the number of change {points.Availability}: The methods described in this paper are implemented in the new R package {cumSeg} available from the Comprehensive R Archive Network at {http://CRAN}.{R-project.org/package=cumSeg}.Contact: vito.muggeo@unipa.it},
+    author = {Muggeo, Vito M. R. and Adelfio, Giada},
+    citeulike-article-id = {8712333},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1093/bioinformatics/btq647},
+    citeulike-linkout-1 = {http://bioinformatics.oxfordjournals.org/content/27/2/161.abstract},
+    citeulike-linkout-2 = {http://bioinformatics.oxfordjournals.org/content/27/2/161.full.pdf},
+    citeulike-linkout-3 = {http://www.ingentaconnect.com/content/oup/cabios/2011/00000027/00000002/art00003},
+    citeulike-linkout-4 = {http://view.ncbi.nlm.nih.gov/pubmed/21088029},
+    citeulike-linkout-5 = {http://www.hubmed.org/display.cgi?uids=21088029},
+    day = {18},
+    doi = {10.1093/bioinformatics/btq647},
+    journal = {Bioinformatics},
+    keywords = {changepoint\_detection},
+    month = nov,
+    number = {2},
+    pages = {161--166},
+    pmid = {21088029},
+    posted-at = {2012-03-09 01:30:43},
+    priority = {0},
+    publisher = {Oxford University Press},
+    title = {Efficient change point detection for genomic sequences of continuous measurements},
+    url = {http://dx.doi.org/10.1093/bioinformatics/btq647},
+    volume = {27},
+    year = {2010}
+}
+
+@inproceedings{anderson2009lightweight,
+    abstract = {{SharC} is a recently developed system for checking data-sharing in multithreaded programs. Programmers specify sharing rules (read-only, protected by a lock, etc.) for individual objects, and the {SharC} compiler enforces these rules using static and dynamic checks. Violations of these rules indicate unintended data sharing, which is the underlying cause of harmful data-races. Additionally, {SharC} allows programmers to change the sharing rules for a specific object using a sharing cast, to capture the fact that sharing rules for an object often change during the object's lifetime. {SharC} was successfully applied to a number of multi-threaded C programs.
+
+However, many programs are not readily checkable using {SharC} because their sharing rules, and changes to sharing rules, effectively apply to whole data structures rather than to individual objects. We have developed a system called Shoal to address this shortcoming. In addition to the sharing rules and sharing cast of {SharC}, our system includes a new concept that we call groups. A group is a collection of objects all having the same sharing mode. Each group has a distinguished member called the group leader. When the sharing mode of the group leader changes by way of a sharing cast, the sharing mode of all members of the group also changes. This operation is made sound by maintaining the invariant that at the point of a sharing cast, the only external pointer into the group is the pointer to the group leader. The addition of groups allows checking safe concurrency at the level of data structures rather than at the level of individual objects.
+
+We demonstrate the necessity and practicality of groups by applying Shoal to a wide range of concurrent C programs (the largest approaching a million lines of code). In all benchmarks groups entail low annotation burden and no significant additional performance overhead.},
+    author = {Anderson, Z. R. and Gay, D. and Naik, M.},
+    booktitle = {ACM SIGPLAN Notices},
+    citeulike-article-id = {10337025},
+    number = {6},
+    organization = {ACM},
+    pages = {98--109},
+    posted-at = {2012-02-12 09:13:58},
+    priority = {4},
+    title = {Lightweight annotations for controlling sharing in concurrent data structures},
+    volume = {44},
+    year = {2009}
+}
+
+@inproceedings{latoza2006maintaining,
+    abstract = {To understand developers' typical tools, activities, and practices and their satisfaction with each, we conducted two surveys and eleven interviews. We found that many problems arose because developers were forced to invest great effort recovering implicit knowledge by exploring code and interrupting teammates and this knowledge was only saved in their memory. Contrary to expectations that email and {IM} prevent expensive task switches caused by face-to-face interruptions, we found that face-to-face communication enjoys many advantages. Contrary to expectations that documentation makes understanding design rationale easy, we found that current design documents are inadequate. Contrary to expectations that code duplication involves the copy and paste of code snippets, developers reported several types of duplication. We use data to characterize these and other problems and draw implications for the design of tools for their solution.},
+    author = {LaToza, T. D. and Venolia, G. and DeLine, R.},
+    booktitle = {Proceedings of the 28th international conference on Software engineering},
+    citeulike-article-id = {10258355},
+    keywords = {communication, observation\_studies, programming},
+    organization = {ACM},
+    pages = {492--501},
+    posted-at = {2012-01-24 00:52:19},
+    priority = {2},
+    title = {Maintaining mental models: a study of developer work habits},
+    year = {2006}
+}
+
+@article{citeulike:2919756,
+    abstract = {Abstract\&nbsp;\&nbsp; Research concerning project planning under uncertainty has primarily focused on the stochastic resource-constrained project scheduling problem (stochastic {RCPSP}), an extension of the basic {RCPSP}, in which the assumption of deterministic activity durations is dropped. In this paper, we introduce a\&nbsp;new variant of the {RCPSP}, for which the uncertainty is modeled by means of resource availabilities that are subject to unforeseen breakdowns. Our objective is to build a\&nbsp;robust schedule that meets the project deadline and minimizes the schedule instability cost, defined as the expected weighted sum of the absolute deviations between the planned and the actually realized activity starting times during project execution. We describe how stochastic resource breakdowns can be modeled, which reaction is recommended, when a\&nbsp;resource infeasibility occurs due to a\&nbsp;breakdown, and how one can protect the initial schedule from the adverse effects of potential breakdowns. An extensive computational experiment is used to show the relative performance of the proposed proactive and reactive strategies. It is shown that protection of the baseline schedule, coupled with intelligent schedule recovery, yields significant performance gains over the use of deterministic scheduling approaches in a\&nbsp;stochastic setting.},
+    author = {Lambrechts, Olivier and Demeulemeester, Erik and Herroelen, Willy},
+    citeulike-article-id = {2919756},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1007/s10951-007-0021-0},
+    day = {4},
+    doi = {10.1007/s10951-007-0021-0},
+    journal = {Journal of Scheduling},
+    keywords = {constrained, project, resource, scheduling, stochastic},
+    month = apr,
+    number = {2},
+    pages = {121--136},
+    posted-at = {2012-01-17 04:33:47},
+    priority = {2},
+    title = {Proactive and reactive strategies for resource-constrained project scheduling with uncertain resource availabilities},
+    url = {http://dx.doi.org/10.1007/s10951-007-0021-0},
+    volume = {11},
+    year = {2008}
+}
+
+@article{de1999multi,
+    abstract = {In this  paper  we tackle  the  challenging problem of  scheduling project  activities to minimize  
+the   project   duration,   in which the   activities  (a)  are  subject  to  generalized  precedence  relations  
+(minimal  and maximal  time  lags  between the  activity starting and completion times), (b) require  
+units  of  multiple  renewable ,  nonrenewable  and doubly- constrained resources  for which a  limited 
+availability is  imposed,  and (c)  can be performed in different  ways ,  reflected in multiple  activity 
+modes. These  multiple  modes  give rise  to several  kinds  of  trade-offs (time/resource, time / cost  and 
+resource l resource  trade-offs) which allow for  a more  efficient use  of  resources. We present  a  local 
+search-based  solution  methodology  which  is   able  to  handle   many  real-life  project   schedul ing 
+characteristics   such  as   time -varying  resource   requirements   and  availabilities ,   activity  ready 
+times,   due   dates   and  deadlines ,   several   types   of  permissible   and mandatory  activity  overlaps ,  
+activity starting time  constraints  and other  types  of  temporal  constraints .},
+    author = {De Reyck, B. and Herroelen, W.},
+    citeulike-article-id = {10233549},
+    journal = {European Journal of Operational Research},
+    keywords = {project, scheduling},
+    number = {2},
+    pages = {538--556},
+    posted-at = {2012-01-17 04:23:15},
+    priority = {3},
+    publisher = {Elsevier},
+    title = {The multi-mode resource-constrained project scheduling problem with generalized precedence relations},
+    volume = {119},
+    year = {1999}
+}
+
+@article{Herroelen05,
+    abstract = {The project scheduling problem involves the scheduling of project activities subject to precedence and/or resource constraints. Of obvious practical importance, it has been the subject of intensive research since the late fifties. A wide variety of commercialized project management software packages have been put to practical use. Despite all these efforts, numerous reports reveal that many projects escalate in time and budget and that many project scheduling procedures have not yet found their way to practical use. The objective of this paper is to confront project scheduling theory with project scheduling practice. We provide a generic hierarchical project planning and control framework that serves to position the various project planning procedures and discuss important research opportunities, the exploration of which may help to close the theory-practice gap.},
+    author = {Herroelen, Willy},
+    citeulike-article-id = {10193068},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1111/j.1937-5956.2005.tb00230.x},
+    doi = {10.1111/j.1937-5956.2005.tb00230.x},
+    journal = {Production and Operations Management},
+    keywords = {project, review, scheduling},
+    number = {4},
+    pages = {413--432},
+    posted-at = {2012-01-17 04:20:00},
+    priority = {3},
+    publisher = {Blackwell Publishing Ltd},
+    title = {Project {Scheduling—Theory} and Practice},
+    url = {http://dx.doi.org/10.1111/j.1937-5956.2005.tb00230.x},
+    volume = {14},
+    year = {2005}
+}
+
+@article{citeulike:6183133,
+    abstract = {The resource-constrained project scheduling problem ({RCPSP}) consists of activities that must be scheduled subject to precedence and resource constraints such that the makespan is minimized. It has become a well-known standard problem in the context of project scheduling which has attracted numerous researchers who developed both exact and heuristic scheduling procedures. However, it is a rather basic model with assumptions that are too restrictive for many practical applications. Consequently, various extensions of the basic {RCPSP} have been developed. This paper gives an overview over these extensions. The extensions are classified according to the structure of the {RCPSP}. We summarize generalizations of the activity concept, of the precedence relations and of the resource constraints. Alternative objectives and approaches for scheduling multiple projects are discussed as well. In addition to popular variants and extensions such as multiple modes, minimal and maximal time lags, and net present value-based objectives, the paper also provides a survey of many less known concepts.},
+    author = {Hartmann, S\"{o}nke and Briskorn, Dirk},
+    citeulike-article-id = {6183133},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1016/j.ejor.2009.11.005},
+    day = {11},
+    doi = {10.1016/j.ejor.2009.11.005},
+    issn = {03772217},
+    journal = {European Journal of Operational Research},
+    keywords = {constrained, project, resource, review, scheduling},
+    month = nov,
+    posted-at = {2012-01-17 04:14:30},
+    priority = {3},
+    title = {A Survey of Variants and Extensions of the {Resource-Constrained} Project Scheduling Problem},
+    url = {http://dx.doi.org/10.1016/j.ejor.2009.11.005},
+    year = {2009}
+}
+
+@article{gonçalves2008genetic,
+    abstract = {This paper presents a genetic algorithm for the resource constrained multi-project scheduling problem. The chromosome representation of the problem is based on random keys. The schedules are constructed using a heuristic that builds parameterized active schedules based on priorities, delay times, and release dates defined by the genetic algorithm. The approach is tested on a set of randomly generated problems. The computational results validate the effectiveness of the proposed algorithm.},
+    author = {Gon\c{c}alves, J. F. and Mendes, J. J. M. and Resende, M. G. C.},
+    citeulike-article-id = {10233406},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1016/j.ejor.2006.06.074},
+    doi = {10.1016/j.ejor.2006.06.074},
+    journal = {European Journal of Operational Research},
+    keywords = {allocation, management, portfolio, project, resource, scheduling},
+    number = {3},
+    pages = {1171--1190},
+    posted-at = {2012-01-17 03:25:30},
+    priority = {2},
+    publisher = {Elsevier},
+    title = {A genetic algorithm for the resource constrained multi-project scheduling problem},
+    url = {http://dx.doi.org/10.1016/j.ejor.2006.06.074},
+    volume = {189},
+    year = {2008}
+}
+
+@article{engwall2003resource,
+    abstract = {This paper explores the nature of organizational settings, where a large extent of the operations is organized as simultaneous or successive projects. Anchored in qualitative case studies, the paper analyzes why the resource allocation syndrome is the number one issue for multi-project management and discusses the underlying mechanisms behind this phenomenon.},
+    author = {Engwall, M. and Jerbrant, A.},
+    citeulike-article-id = {10231187},
+    citeulike-linkout-0 = {http://www.kth.se/polopoly\_fs/1.224333!/Menu/general/column-content/attachment/Article8-EngwallJerbrant.pdf},
+    journal = {International Journal of Project Management},
+    keywords = {management, portfolio, project},
+    number = {6},
+    pages = {403--409},
+    posted-at = {2012-01-16 19:45:20},
+    priority = {2},
+    publisher = {Elsevier},
+    title = {The resource allocation syndrome: the prime challenge of multi-project management?},
+    url = {http://www.kth.se/polopoly\_fs/1.224333!/Menu/general/column-content/attachment/Article8-EngwallJerbrant.pdf},
+    volume = {21},
+    year = {2003}
+}
+
+@techreport{NBERw11759,
+    abstract = {This paper takes a different tack in addressing one of the fundamental questions in economics: what are the factors that determine the distribution of jobs and wages? In Adam Smith's classic formulation, and in much of the subsequent literature, wage levels have been used to estimate the values of job characteristics ("compensating" or "equalizing" differentials). There are econometric problems with this approach, principally caused by unmeasured differences in talents and aptitudes that enable people of high ability to have jobs with both high wages and good working conditions, thus understating the value of working conditions. We bypass this difficulty by estimating the extent to which incomes and job characteristics influence direct measures of life satisfaction from three large and recent Canadian surveys. The well-being results show strikingly large values for non-financial job characteristics, especially workplace trust and other measures of the quality of workplace social capital. The compensating differentials estimated for the quality of workplace social capital are so large as to suggest that they do not reflect a full equilibrium. Thus the current situation probably reflects the existence of unrecognized opportunities for managers and employees to alter workplace environments, or for workers to change jobs, so as to increase both life satisfaction and workplace efficiency.},
+    author = {Helliwell, John F. and Huang, Haifang},
+    citeulike-article-id = {10228116},
+    citeulike-linkout-0 = {http://www.nber.org/papers/w11759},
+    institution = {National Bureau of Economic Research},
+    keywords = {management, wellbeing},
+    month = nov,
+    number = {11759},
+    posted-at = {2012-01-16 00:38:52},
+    priority = {2},
+    series = {Working Paper Series},
+    title = {How's the Job? {Well-Being} and Social Capital in the Workplace},
+    url = {http://www.nber.org/papers/w11759},
+    year = {2005}
+}
+
+@article{citeulike:10132702,
+    abstract = {A management model for explaining software errors is developed and estimated. The model is used to analyze two years of error log data at a commercial site. The focus is on identifying managerially controllable factors which affect software reliability. At the research site, application systems which (1) underwent frequent modification; (2) were maintained by programmers with low levels of application experience; (3) had high reliability requirements, and (4) had high levels of static complexity all showed particularly high error rates, other things being equal. It is suggested that that managers can make quantified judgements about the degree to which they wish to reduce error rates by implementing a number of procedures, including enforcing release control, assigning more experienced maintenance programmers, and establishing and enforcing complexity metric standards.},
+    address = {Hingham, MA, USA},
+    author = {Banker, Rajiv D. and Datar, Srikant M. and Kemerer, Chris F. and Zweig, Dani},
+    citeulike-article-id = {10132702},
+    citeulike-linkout-0 = {http://portal.acm.org/citation.cfm?id=595256.595315},
+    issn = {1385-951X},
+    journal = {Inf. Technol. and Management},
+    keywords = {bugs, evolution, maintenance},
+    month = jan,
+    pages = {25--41},
+    posted-at = {2011-12-16 02:18:30},
+    priority = {0},
+    publisher = {Kluwer Academic Publishers},
+    title = {Software Errors and Software Maintenance Management},
+    url = {http://portal.acm.org/citation.cfm?id=595256.595315},
+    volume = {3},
+    year = {2002}
+}
+
+@book{lientz80,
+    abstract = {ISBN:0201042053},
+    author = {Lientz, Bennet P. and Swanson, Burton E.},
+    citeulike-article-id = {606014},
+    citeulike-linkout-0 = {http://www.amazon.ca/exec/obidos/redirect?tag=citeulike09-20\&amp;path=ASIN/0201042053},
+    citeulike-linkout-1 = {http://www.amazon.de/exec/obidos/redirect?tag=citeulike01-21\&amp;path=ASIN/0201042053},
+    citeulike-linkout-2 = {http://www.amazon.fr/exec/obidos/redirect?tag=citeulike06-21\&amp;path=ASIN/0201042053},
+    citeulike-linkout-3 = {http://www.amazon.jp/exec/obidos/ASIN/0201042053},
+    citeulike-linkout-4 = {http://www.amazon.co.uk/exec/obidos/ASIN/0201042053/citeulike00-21},
+    citeulike-linkout-5 = {http://www.amazon.com/exec/obidos/redirect?tag=citeulike07-20\&path=ASIN/0201042053},
+    citeulike-linkout-6 = {http://www.worldcat.org/isbn/0201042053},
+    citeulike-linkout-7 = {http://books.google.com/books?vid=ISBN0201042053},
+    citeulike-linkout-8 = {http://www.amazon.com/gp/search?keywords=0201042053\&index=books\&linkCode=qs},
+    citeulike-linkout-9 = {http://www.librarything.com/isbn/0201042053},
+    howpublished = {Paperback},
+    isbn = {0201042053},
+    keywords = {maintenance, software},
+    pages = {1--160},
+    posted-at = {2011-12-16 02:12:25},
+    priority = {0},
+    publisher = {Addison-Wesley},
+    title = {Software Maintenance Management: A Study of the Maintenance of Computer Application Software in 487 Data Processing Organizations},
+    url = {http://www.amazon.com/exec/obidos/redirect?tag=citeulike07-20\&path=ASIN/0201042053},
+    year = {1980}
+}
+
+@inproceedings{bennett00,
+    abstract = {Software maintenance and evolution are characterised by
+their huge cost and slow speed of implementation. Yet they
+are inevitable activities – almost all software that is useful
+and successful stimulates user-generated requests for
+change and improvements. Our aim is to describe a
+landscape for research in software maintenance and
+evolution over the next ten years, in order to improve the
+speed and accuracy of change while reducing costs, by
+identifying key problems, promising solution strategies and
+topics of importance. The aims are met, by taking two
+approaches. Firstly current trends and practices are
+projected forward using a new model of software evolution
+called the staged model. Both strategic problems and
+research to solve particular tactical problems are described
+within this framework. Secondly, a longer term, and much
+more radical vision of software evolution is presented. Both
+general principles and specific research topics are provided,
+both within an overall strategy of engineering research and
+rationale.},
+    address = {New York, NY, USA},
+    author = {Bennett, Keith H. and Rajlich, Vaclav T.},
+    booktitle = {Conference on The Future of Software Engineering},
+    citeulike-article-id = {765101},
+    citeulike-linkout-0 = {http://portal.acm.org/citation.cfm?id=336512.336534},
+    citeulike-linkout-1 = {http://dx.doi.org/10.1145/336512.336534},
+    doi = {10.1145/336512.336534},
+    isbn = {1-58113-253-0},
+    keywords = {evolution, maintenance, software},
+    location = {Limerick, Ireland},
+    pages = {73--87},
+    posted-at = {2011-12-16 02:11:47},
+    priority = {0},
+    publisher = {ACM},
+    title = {Software maintenance and evolution: a roadmap},
+    url = {http://dx.doi.org/10.1145/336512.336534},
+    year = {2000}
+}
+
+@inproceedings{citeulike:9758078,
+    abstract = {Inspection is a highly effective but costly technique for quality control. Most companies do not have the resources to inspect all the code; thus accurate defect prediction can help focus available inspection resources. {BugCache} is a simple, elegant, award-winning prediction scheme that "caches" files that are likely to contain defects [12]. In this paper, we evaluate the utility of {BugCache} as a tool for focusing inspection, we examine the assumptions underlying {BugCache} with the aim of improving it, and finally we compare it with a simple, standard bug-prediction technique. We find that {BugCache} is, in fact, useful for focusing inspection effort; but surprisingly, we find that its performance, when used for inspections, is not much better than a naive prediction model -- viz., a model that orders files in the system by their count of closed bugs and chooses enough files to capture 20\% of the lines in the system.},
+    address = {New York, NY, USA},
+    author = {Rahman, Foyzur and Posnett, Daryl and Hindle, Abram and Barr, Earl and Devanbu, Premkumar},
+    booktitle = {Proceedings of the 19th ACM SIGSOFT symposium and the 13th European conference on Foundations of software engineering},
+    citeulike-article-id = {9758078},
+    citeulike-linkout-0 = {http://portal.acm.org/citation.cfm?id=2025157},
+    citeulike-linkout-1 = {http://dx.doi.org/10.1145/2025113.2025157},
+    doi = {10.1145/2025113.2025157},
+    isbn = {978-1-4503-0443-6},
+    keywords = {bug\_prediction, source\_analysis},
+    location = {Szeged, Hungary},
+    pages = {322--331},
+    posted-at = {2011-12-15 19:37:06},
+    priority = {0},
+    publisher = {ACM},
+    series = {SIGSOFT/FSE '11},
+    title = {{BugCache} for inspections: hit or miss?},
+    url = {http://dx.doi.org/10.1145/2025113.2025157},
+    year = {2011}
+}
+
+@inproceedings{citeulike:1732065,
+    abstract = {We analyze the version history of 7 software systems to predict the most fault prone entities and files. The basic assumption is that faults do not occur in isolation, but rather in bursts of several related faults. Therefore, we cache locations that are likely to have faults: starting from the location of a known (fixed) fault, we cache the location itself, any locations changed together with the fault, recently added locations, and recently changed locations. By consulting the cache at the moment a fault is fixed, a developer can detect likely fault-prone locations. This is useful for prioritizing verification and validation resources on the most fault prone files or entities. In our evaluation of seven open source projects with more than 200,000 revisions, the cache selects 10\% of the source code files; these files account for 73\%-95\% of faults-- a significant advance beyond the state of the art.},
+    address = {Washington, DC, USA},
+    author = {Kim, Sunghun and Zimmermann, Thomas and Whitehead, E. James and Zeller, Andreas},
+    booktitle = {Proceedings of the 29th international conference on Software Engineering},
+    citeulike-article-id = {1732065},
+    citeulike-linkout-0 = {http://portal.acm.org/citation.cfm?id=1248820.1248881},
+    citeulike-linkout-1 = {http://dx.doi.org/10.1109/ICSE.2007.66},
+    citeulike-linkout-2 = {http://ieeexplore.ieee.org/xpls/abs\_all.jsp?arnumber=4222610},
+    day = {26},
+    doi = {10.1109/ICSE.2007.66},
+    isbn = {0-7695-2828-7},
+    journal = {Software Engineering, 2007. ICSE 2007. 29th International Conference on},
+    keywords = {bug\_prediction, source\_analysis},
+    location = {Minneapolis, MN, USA},
+    month = may,
+    pages = {489--498},
+    posted-at = {2011-12-14 22:38:18},
+    priority = {2},
+    publisher = {IEEE Computer Society},
+    series = {ICSE '07},
+    title = {Predicting Faults from Cached History},
+    url = {http://dx.doi.org/10.1109/ICSE.2007.66},
+    year = {2007}
+}
+
+@article{citeulike:3371412,
+    abstract = {Developers of highly configurable performance-intensive software systems often use in-house performance-oriented "regression testing" to ensure that their modifications do not adversely affect their software's performance across its large configuration space. Unfortunately, time and resource constraints can limit in-house testing to a relatively small number of possible configurations, followed by unreliable extrapolation from these results to the entire configuration space. As a result, many performance bottlenecks escape detection until systems are fielded. In our earlier work, we improved the situation outlined above by developing an initial quality assurance process called "main effects screening". This process 1) executes formally designed experiments to identify an appropriate subset of configurations on which to base the performance-oriented regression testing, 2) executes benchmarks on this subset whenever the software changes, and 3) provides tool support for executing these actions on in-the-field and in-house computing resources. Our initial process had several limitations, however, since it was manually configured (which was tedious and error-prone) and relied on strong and untested assumptions for its accuracy (which made its use unacceptably risky in practice). This paper presents a new quality assurance process called "reliable effects screening" that provides three significant improvements to our earlier work. First, it allows developers to economically verify key assumptions during process execution. Second, it integrates several model-driven engineering tools to make process configuration and execution much easier and less error prone. Third, we evaluate this process via several feasibility studies of three large, widely used performance-intensive software frameworks. Our results indicate that reliable effects screening can detect performance degradation in large-scale systems more reliably and with significantly less resources than conventional t- echniques},
+    author = {Yilmaz, C. and Porter, A. and Krishna, A. S. and Memon, A. M. and Schmidt, D. C. and Gokhale, A. S. and Natarajan, B.},
+    booktitle = {Software Engineering, IEEE Transactions on},
+    citeulike-article-id = {3371412},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1109/TSE.2007.20},
+    citeulike-linkout-1 = {http://ieeexplore.ieee.org/xpls/abs\_all.jsp?arnumber=4052587},
+    doi = {10.1109/TSE.2007.20},
+    journal = {Software Engineering, IEEE Transactions on},
+    keywords = {changepoint\_detection, design\_of\_experiments, performance},
+    number = {2},
+    pages = {124--141},
+    posted-at = {2011-12-13 23:26:48},
+    priority = {2},
+    title = {Reliable Effects Screening: A Distributed Continuous Quality Assurance Process for Monitoring Performance Degradation in Evolving Software Systems},
+    url = {http://dx.doi.org/10.1109/TSE.2007.20},
+    volume = {33},
+    year = {2007}
+}
+
+@inproceedings{citeulike:10125822,
+    abstract = {Benchmarking as a method of assessing software performance is known to suffer from random fluctuations that distort the observed performance. In this paper, we focus on the fluctuations caused by compilation. We show that the design of a benchmarking experiment must reflect the existence of the fluctuations if the performance observed during the experiment is to be representative of reality. We present a new statistical model of a benchmark experiment that reflects the presence of the fluctuations in compilation, execution and measurement. The model describes the observed performance and makes it possible to calculate the optimum dimensions of the experiment that yield the best precision within a given amount of time. Using a variety of benchmarks, we evaluate the model within the context of regression benchmarking. We show that the model significantly decreases the number of erroneously detected performance changes in regression benchmarking. Key words: performance evaluation, benchmark precision, random effects, regression benchmarking.},
+    author = {Kalibera, Tomas and Tuma, Petr},
+    booktitle = {Formal Methods and Stochastic Models for Performance Evaluation},
+    citeulike-article-id = {10125822},
+    citeulike-linkout-0 = {http://nenya.ms.mff.cuni.cz/publications/KaliberaTuma-PreciseRegressionBenchmarking.pdf},
+    citeulike-linkout-1 = {http://citeseerx.ist.psu.edu/citeseerx/viewdoc/summary?doi=10.1.1.60.6025},
+    editor = {Horvath, Andras and Telek, Miklos},
+    keywords = {changepoint\_detection, performance},
+    month = jul,
+    number = {4054},
+    organization = {European Performance Enginering Workshop},
+    posted-at = {2011-12-13 23:17:41},
+    priority = {2},
+    publisher = {Springer},
+    series = {Lecture Notes in Computer Science},
+    title = {Precise Regression Benchmarking with Random Effects: Improving Mono Benchmark Results},
+    url = {http://nenya.ms.mff.cuni.cz/publications/KaliberaTuma-PreciseRegressionBenchmarking.pdf},
+    year = {2006}
+}
+
+@proceedings{KaliberaMascots05,
+    abstract = {Engineering a large software project involves tracking the impact of development and maintenance changes on the software performance. An approach for tracking the impact is regression benchmarking, which involves automated benchmarking and evaluation of performance at regular intervals. Regression benchmarking must tackle the nondeterminism inherent to contemporary computer systems and execution environments and the impact of the nondeterminism on the results. On the example of a fully automated regression benchmarking environment for the Mono opensource project, we show how the problems associated with nondeterminism can be tackled using statistical methods.},
+    author = {Kalibera, T. and Bulej, L. and Tuma, P.},
+    citeulike-article-id = {375399},
+    citeulike-linkout-0 = {http://ieeexplore.ieee.org/xpls/abs\_all.jsp?arnumber=1521132},
+    journal = {Modeling, Analysis, and Simulation of Computer and Telecommunication Systems, 2005. 13th IEEE International Symposium on},
+    keywords = {changepoint\_detection, performance},
+    pages = {183--190},
+    posted-at = {2011-12-13 23:04:34},
+    priority = {0},
+    title = {Automated Detection of Performance Regressions: The Mono Experience},
+    url = {http://ieeexplore.ieee.org/xpls/abs\_all.jsp?arnumber=1521132},
+    year = {2005}
+}
+
+@article{citeulike:523442,
+    abstract = {This paper provides a new Bayesian approach for models with multiple change points. The centerpiece of the approach is a formulation of the change-point model in terms of a latent discrete state variable that indicates the regime from which a particular observation has been drawn. This state variable is specified to evolve according to a discrete-time discrete-state Markov process with the transition probabilities constrained so that the state variable can either stay at the current value or jump to the next higher value. This parameterization exactly reproduces the change point model. The model is estimated by Markov chain Monte Carlo methods using an approach that is based on Chib (1996). This methodology is quite valuable since it allows for the fitting of more complex change point models than was possible before. Methods for the computation of Bayes factors are also developed. All the techniques are illustrated using simulated and real data sets.},
+    author = {Chib, Siddhartha},
+    citeulike-article-id = {523442},
+    citeulike-linkout-0 = {http://www.colorado.edu/ibs/crs/workshops/R\_for\_BayesianP10-24-2008\_Lu/bayes\_changepoint\_poisson\_2.pdf},
+    citeulike-linkout-1 = {http://dx.doi.org/10.1016/S0304-4076(97)00115-2},
+    citeulike-linkout-2 = {http://www.ingentaconnect.com/content/els/03044076/1998/00000086/00000002/art00115},
+    citeulike-linkout-3 = {http://www.sciencedirect.com/science/article/B6VC0-3VM1XM5-2/2/469ee3cba827365611dee3677f0babc6},
+    doi = {10.1016/S0304-4076(97)00115-2},
+    issn = {03044076},
+    journal = {Journal of Econometrics},
+    keywords = {changepoint\_detection},
+    month = oct,
+    number = {2},
+    pages = {221--241},
+    posted-at = {2011-12-12 20:59:45},
+    priority = {2},
+    title = {Estimation and comparison of multiple change-point models},
+    url = {http://www.colorado.edu/ibs/crs/workshops/R\_for\_BayesianP10-24-2008\_Lu/bayes\_changepoint\_poisson\_2.pdf},
+    volume = {86},
+    year = {1998}
+}
+
+@techreport{citeulike:10122645,
+    abstract = {We will consider the problem of estimating the number and the locations of change-points in a process that has been observed. A related problem of interest is the estimation of the distribution functions between change-points. First we will deal with the special case of a Gaussian process where only the mean of the process changes.  The binary segmentation procedure and a procedure using the Schwarz criterion have been proposed for this problem.  We will prove consistency results for these two procedures under weaker conditions on the number and location of the change-points. We will give an example where the binary segmentation procedure fails asymptotically while the other procedures are still consistent.  We will introduce the pseudo-sequential procedures for the general problem and give a prototype of the consistency statement and the method of proof for this class. These are sequential schemes for online detection of a change which have been adapted to our fixed sample problem. For the Gaussian case we will study a Bayesian method and a likelihood ratio method and will prove consistency theorems for both these types of procedures.  We will use Monte Carlo methods to compare the performance of these procedures in estimating the number of change-points, their locations and the mean function.  We will conclude from the Monte Carlo results and the consistency theorems that the pseudo-sequential procedures, properly modified to take care of shooting over the change-point, performs as well as the others. We will derive some tail-probability approximations for some of the statistics used to compute the critical levels required for the Monte Carlo study. Another problem we will consider is the exponential process with changes in the rate.  We will study the Bayesian method for this case and prove that it is consistent.},
+    author = {Venkatraman, Ennapadam S.},
+    citeulike-article-id = {10122645},
+    citeulike-linkout-0 = {http://statistics.stanford.edu/\~{}ckirby/techreports/NSA/SIE\%20NSA\%2024.pdf},
+    institution = {Department of Statistics, Stanford University},
+    keywords = {changepoint\_detection},
+    month = mar,
+    number = {24},
+    posted-at = {2011-12-12 20:58:26},
+    priority = {2},
+    title = {Consistency results in multiple change-point problems},
+    url = {http://statistics.stanford.edu/\~{}ckirby/techreports/NSA/SIE\%20NSA\%2024.pdf},
+    year = {1992}
+}
+
+@unpublished{citeulike:10122527,
+    abstract = {Change-point models have been widely applied for segmentation of spatial
+or time-series data. Some recent applications in genomics motivate multi-sequence change-point models for shared changes across multiple aligned sequences. These applications frequently involve data where the number of change-points can be
+large. In a previous paper (Biometrics, 2007, volume 63 pp. 22-32) we derived a
+Bayes Information Criterion ({BIC}) for determining the number of changes in the
+mean of a sequence of independent normal observations when the number of change-
+points m is assumed to remain bounded as the number of observations increases.
+Here we extend that result to the case where m can increase with the sample size
+and to simultaneous change-points in multiple sequences. Stochastic terms that
+enter into the new criteria involve integrals and maxima of two-sided random walks with negative drift. The new criteria are applied to the analysis of {DNA} copy
+number data.},
+    author = {Zhang, Nancy R. and Siegmund, David O.},
+    citeulike-article-id = {10122527},
+    citeulike-linkout-0 = {http://dx.doi.org/doi:10.5705/ss.2010.257},
+    doi = {doi:10.5705/ss.2010.257},
+    journal = {Statistica Sinica},
+    keywords = {changepoint\_detection},
+    posted-at = {2011-12-12 20:41:46},
+    priority = {2},
+    title = {Model Selection for High Dimensional, Multi-sequence Change-point Problems},
+    url = {http://dx.doi.org/doi:10.5705/ss.2010.257}
+}
+
+@article{citeulike:6981693,
+    abstract = {We propose an algorithm for simultaneously detecting and locating
+changepoints in a time series, and a framework for predicting the distribution
+of the next point in the series. The kernel of the algorithm is a system of
+equations that computes, for each index i, the probability that the last (most
+recent) change point occurred at i. We evaluate this algorithm by applying it
+to the change point detection problem and comparing it to the generalized
+likelihood ratio ({GLR}) algorithm. We find that our algorithm is as good as {GLR},
+or better, over a wide range of scenarios, and that the advantage increases as
+the signal-to-noise ratio decreases.},
+    archivePrefix = {arXiv},
+    author = {Downey, Allen B.},
+    citeulike-article-id = {6981693},
+    citeulike-linkout-0 = {http://arxiv.org/abs/0812.1237v1},
+    citeulike-linkout-1 = {http://arxiv.org/pdf/0812.1237v1},
+    day = {5},
+    eprint = {0812.1237v1},
+    keywords = {changepoint\_detection},
+    month = dec,
+    posted-at = {2011-12-12 20:25:26},
+    priority = {0},
+    title = {A novel changepoint detection algorithm},
+    url = {http://arxiv.org/abs/0812.1237v1},
+    year = {2008}
+}
+
+@article{citeulike:1804349,
+    abstract = {Changepoints are abrupt variations in the generative parameters of a data
+sequence. Online detection of changepoints is useful in modelling and
+prediction of time series in application areas such as finance, biometrics, and
+robotics. While frequentist methods have yielded online filtering and
+prediction techniques, most Bayesian papers have focused on the retrospective
+segmentation problem. Here we examine the case where the model parameters
+before and after the changepoint are independent and we derive an online
+algorithm for exact inference of the most recent changepoint. We compute the
+probability distribution of the length of the current ``run,'' or time since
+the last changepoint, using a simple message-passing algorithm. Our
+implementation is highly modular so that the algorithm may be applied to a
+variety of types of data. We illustrate this modularity by demonstrating the
+algorithm on three different real-world data sets.},
+    archivePrefix = {arXiv},
+    author = {Adams, Ryan P. and MacKay, David J. C.},
+    citeulike-article-id = {1804349},
+    citeulike-linkout-0 = {http://arxiv.org/abs/0710.3742},
+    citeulike-linkout-1 = {http://arxiv.org/pdf/0710.3742},
+    day = {19},
+    eprint = {0710.3742},
+    keywords = {changepoint\_detection},
+    month = oct,
+    posted-at = {2011-12-12 20:20:47},
+    priority = {0},
+    title = {Bayesian Online Changepoint Detection},
+    url = {http://arxiv.org/abs/0710.3742},
+    year = {2007}
+}
+
+@book{citeulike:10122153,
+    abstract = {This volume deals with nonparametric methods of change point (disorder) detection in random processes and fields. A systematic account is given of up-to-date developments in this rapidly evolving branch of statistics. It also provides a new approach to change point detection which is characterized by the reduction of change point problems to the more basic problem of mean value change points, and also the implementation of nonparametric statistics which require no a priori information concerning distributions. The book has seven chapters: Chapter 1 presents an account of preliminary considerations. Chapter 2 reviews the current state-of-the-art. Chapters 3 and 4 -- the major chapters of the book -- consider a posteriori change point problems and sequential change point detection problems, respectively. Chapter 5 discusses disorder detection of random fields, and Chapter 6 deals with applications in such diverse areas as geophysics, control systems and the analysis of historical texts. The volume concludes with a chapter devoted to new results, proofs and some technical details including an overview of a computer program package which has been developed for a posteriori change point detection. For researchers in the statistics and probability of random processes, this volume will also be of interest to specialists in control theory, engineering, systems analysis and cybernetics.},
+    author = {Brodsky, Boris E. and Darkhovsky, Boris S.},
+    citeulike-article-id = {10122153},
+    keywords = {changepoint\_detection},
+    posted-at = {2011-12-12 20:15:41},
+    priority = {2},
+    publisher = {Kluwer Academic Publishers},
+    title = {Nonparametric Methods in {Change-Point} Problems},
+    year = {1993}
+}
+
+@article{citeulike:7339065,
+    abstract = {We discuss the detection of local signals that occur at the same location in multiple one-dimensional noisy sequences, with particular attention to relatively weak signals that may occur in only a fraction of the sequences. We propose simple scan and segmentation algorithms based on the sum of the chi-squared statistics for each individual sample, which is equivalent to the generalized likelihood ratio for a model where the errors in each sample are independent. The simple geometry of the statistic allows us to derive accurate analytic approximations to the significance level of such scans. The formulation of the model is motivated by the biological problem of detecting recurrent {DNA} copy number variants in multiple samples. We show using replicates and parent-child comparisons that pooling data across samples results in more accurate detection of copy number variants. We also apply the multisample segmentation algorithm to the analysis of a cohort of tumour samples containing complex nested and overlapping copy number aberrations, for which our method gives a sparse and intuitive cross-sample summary.},
+    author = {Zhang, Nancy R. and Siegmund, David O. and Ji, Hanlee and Li, Jun Z.},
+    citeulike-article-id = {7339065},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1093/biomet/asq025},
+    citeulike-linkout-1 = {http://biomet.oxfordjournals.org/cgi/content/abstract/97/3/631},
+    day = {1},
+    doi = {10.1093/biomet/asq025},
+    journal = {Biometrika},
+    keywords = {changepoint\_detection},
+    month = sep,
+    number = {3},
+    pages = {631--645},
+    posted-at = {2011-12-12 19:57:35},
+    priority = {0},
+    title = {Detecting simultaneous changepoints in multiple sequences},
+    url = {http://dx.doi.org/10.1093/biomet/asq025},
+    volume = {97},
+    year = {2010}
+}
+
+@electronic{citeulike:7224996,
+    abstract = {Over the last twenty years, there has been a significant increase in the number of real problems concerned
+with questions such as
+
+
+ - fault detection and diagnosis (monitoring);
+
+ - condition-based maintenance of industrial processes;
+
+ - safety of complex systems (aircrafts, boats, rockets, nuclear power plants, chemical technological processes, etc.);
+
+ quality control;
+
+ - prediction of natural catastrophic events (earthquakes, tsunami, etc.);
+
+ - monitoring in biomedicine.
+
+These problems result from the increasing complexity of most
+technological processes, the availability of sophisticated sensors in
+both technological and natural worlds, and the existence of
+sophisticated information processing systems, which are widely
+used. Solutions to such problems are of crucial interest for safety,
+ecological, and economical reasons. And because of the availability of
+the above-mentioned information processing systems, complex monitoring
+algorithms can be considered and implemented.
+
+The common feature of the above problems is the fact that the problem
+of interest is the detection of one or several abrupt changes in some
+characteristic properties of the considered object. The key difficulty
+is to detect intrinsic changes that are not necessarily directly
+observed and that are measured together with other types of
+perturbations. For example, it is of interest to know how and when the
+modal characteristics of a vibrating structure change, whereas the
+available measurements (e.g., accelerometers) contain a mix of
+information related to both the changes in the structure and the
+perturbations due to the environment.
+
+Many monitoring problems can be stated as the problem of detecting a
+change in the parameters of a static or dynamic stochastic system. The
+main goal of this book is to describe a unified framework for the
+design and the performance analysis of the algorithms for solving
+these change detection problems. We call abrupt change any change in
+the parameters of the system that occurs either instantaneously or at
+least very fast with respect to the sampling period of the
+measurements. Abrupt changes by no means refer to changes with large
+magnitude; on the contrary, in most applications the main problem is
+to detect small changes. Moreover, in some applications, the early
+warning of small - and not necessarily fast - changes is of crucial
+interest in order to avoid the economic or even catastrophic
+consequences that can result from an accumulation of such small
+changes. For example, small faults arising in the sensors of a
+navigation system can result, through the underlying integration, in
+serious errors in the estimated position of the plane. Another example
+is the early warning of small deviations from the normal operating
+conditions of an industrial process. The early detection of slight
+changes in the state of the process allows to plan in a more adequate
+manner the periods during which the process should be inspected and
+possibly repaired, and thus to reduce the exploitation costs.
+
+Our intended readers include engineers and researchers in the following fields :
+
+ - signal processing and pattern recognition;
+
+ - automatic control and supervision;
+
+ - time series analysis;
+
+ - applied statistics;
+
+ - quality control;
+
+ - condition-based maintenance and monitoring of plants.
+
+We first introduce the reader to the basic ideas using a nonformal
+presentation in the simplest case. Then we have tried to include the
+key mathematical background necessary for the design and performance
+evaluation of change detection algorithms. This material is usually
+spread out in different types of books and journals.  The main goal of
+chapters 3 and 4 is to collect this information in a single
+place. These two chapters should be considered not as a small
+textbook, but rather as short notes that can be useful for reading the
+subsequent developments.
+
+At the end of each chapter, we have added a Notes and References
+section and a summary of the main results.},
+    author = {Basseville, Mich\`{e}le and Nikiforov, Igor V.},
+    citeulike-article-id = {7224996},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.22.6332},
+    keywords = {changepoint\_detection},
+    posted-at = {2011-12-12 16:10:50},
+    priority = {2},
+    title = {Detection of Abrupt Changes: Theory and Application},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.22.6332},
+    year = {1993}
+}
+
+@inproceedings{citeulike:8832809,
+    abstract = {This paper describesacollection of algorithms that we developed and implemented to facilitate the automatic recovery of the modular structure of a software system from its sourcecode.},
+    author = {Mancoridis, S. and Mitchell, B. S. and Rorres, C.},
+    booktitle = {In Proc. 6th Intl. Workshop on Program Comprehension},
+    citeulike-article-id = {8832809},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.14.3376},
+    keywords = {algorithm, automatic\_recovery, programanalysis, programming, reachability},
+    pages = {45--53},
+    posted-at = {2011-02-17 02:57:40},
+    priority = {2},
+    title = {Using Automatic Clustering to Produce {High-Level} System Organizations of Source Code},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.14.3376},
+    year = {1998}
+}
+
+@electronic{citeulike:7990348,
+    abstract = {Abstract. We present an in-depth study of various implementations of {DGEMM}, using both the recursive and iterative programming styles. Recursive algorithms for {DGEMM} are usually cache-oblivious and they automatically block {DGEMM}'s operands A, B, C for the memory hierarchy. Iterative algorithms for {DGEMM} explicitly block A, B, C for the L1 cache, higher caches and memory. Our study shows that recursive {DGEMM} implementations cannot achieve the high performance of blocked iterative algorithms. 1 A study of Recursive and Interative Algorithms for {DGEMM} The performance of {DGEMM} on modern computers is limited by the performance of the memory system in two ways. First, the latency of memory accesses can be many hundreds of cycles, so the processor may be stalled most of the time, waiting for reads to complete. Second, the bandwidth from memory is usually far less than the rate at which the processor can consume data. This contribution examines in depth these limitations for both recursive and iterative programming styles. We describe the results of a study of the performance of highly-optimized cache-oblivious and cache-conscious programs for {DGEMM} on four modern architectures:},
+    author = {Yotov, K. and Roeder, T. and Pingali, K. and Gunnels, J. and Gustavson, F.},
+    citeulike-article-id = {7990348},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.114.4596},
+    keywords = {algorithm, caching, optimal\_algorithms, performance},
+    posted-at = {2010-10-11 19:35:01},
+    priority = {2},
+    title = {Is Cache Oblivious {DGEMM} a Viable Alternative?},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.114.4596}
+}
+
+@electronic{citeulike:7947386,
+    abstract = {this paper was supported by the Special Research Program {SFB} F011 \&\#{034;AURORA}\&\#034; of the Austrian Science Fund {FWF}.   Contents 1 Introduction 3},
+    author = {Auer, Martin and Benedik, Ronald and Franchetti, Franz and Karner, Herbert and Krist\"{o}fel, Peter and Schachinger, Rupert and Slateff, Andreas and Ueberhuber, Christoph W.},
+    citeulike-article-id = {7947386},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9098},
+    keywords = {algorithm, fft, performance},
+    posted-at = {2010-10-04 20:39:31},
+    priority = {2},
+    title = {Performance Evaluation of {FFT} Routines - Machine Independent Serial Programs},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9098},
+    year = {1999}
+}
+
+@electronic{citeulike:7937766,
+    abstract = {We present a technique for analyzing the number of cache misses incurred by multithreaded cache oblivious algorithms on an idealized parallel machine in which each processor has a private cache. We specialize this technique to computations executed by the Cilk work-stealing scheduler on a machine with dag-consistent shared memory. We show that a multithreaded cache oblivious matrix multiplication incurs O(n 3 /  √ Z + (P n) 1/3 n 2) cache misses when executed by the Cilk scheduler on a machine with P processors, each with a cache of size Z, with high probability. This bound is tighter than previously published bounds. We also present a new multithreaded cache oblivious algorithm for {1D} stencil computations, which incurs O(n 2 /Z +n+ √ P n 3+ɛ) cache misses with high probability. 1},
+    citeulike-article-id = {7937766},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.108.7663},
+    keywords = {algorithm, caching},
+    posted-at = {2010-10-01 22:59:34},
+    priority = {2},
+    title = {Abstract The Cache Complexity of Multithreaded Cache Oblivious Algorithms},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.108.7663}
+}
+
+@inproceedings{citeulike:4165112,
+    abstract = {{FFTW} is an implementation of the discrete Fourier transform ({DFT}) that adapts to the hardware in order to maximize performance. This paper shows that such an approach can yield an implementation that is competitive with hand-optimized libraries, and describes the software structure that makes our current {FFTW3} version flexible and adaptive. We further discuss a new algorithm for real-data {DFTs} of prime size, a new way of implementing {DFTs} by means of machine-specific single-instruction, multiple-data ({SIMD}) instructions, and how a special-purpose compiler can derive optimized implementations of the discrete cosine and sine transforms automatically from a {DFT} algorithm. {Keywords—Adaptive} software, cosine transform, fast Fourier transform ({FFT}), Fourier transform, Hartley transform, {I/O} tensor.},
+    author = {Frigo, Matteo and Steven and Johnson, G.},
+    booktitle = {Proceedings of the IEEE},
+    citeulike-article-id = {4165112},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.136.7045},
+    keywords = {fftw, optimal\_algorithms, single\_instruction\_multiple\_data},
+    pages = {216--231},
+    posted-at = {2010-10-01 22:58:31},
+    priority = {2},
+    title = {The design and implementation of {FFTW3}},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.136.7045},
+    volume = {93},
+    year = {2005}
+}
+
+@proceedings{citeulike:3908629,
+    abstract = {This paper presents asymptotically optimal algorithms for rectangular matrix transpose, {FFT}, and sorting on computers with multiple levels of caching. Unlike previous optimal algorithms, these algorithms are cache oblivious: no variables dependent on hardware parameters, such as cache size and cache-line length, need to be tuned to achieve optimality. Nevertheless, these algorithms use an optimal amount of work and move data optimally among multiple levels of cache. For a cache with size Z and cache-line length L where {Z=\&Omega};(L<sup>2 </sup>) the number of cache misses for an m\&times;n matrix transpose is \&{Theta;(1+mn/L}). The number of cache misses for either an n-point {FFT} or the sorting of n numbers is \&{Theta;(1+(n/L})({1+log<sub>Z}</sub>n)). We also give an \&Theta;(mnp)-work algorithm to multiply an m\&times;n matrix by an n\&times;p matrix that incurs \&{Theta;(1+(mn+np+mp)/L}+{mnp/L}\&{radic;Z}) cache faults. We introduce an \&ldquo;ideal-cache\&rdquo; model to analyze our algorithms. We prove that an optimal cache-oblivious algorithm designed for two levels of memory is also optimal for multiple levels and that the assumption of optimal replacement in the ideal-cache model. Can be simulated efficiently by {LRU} replacement. We also provide preliminary empirical results on the effectiveness of cache-oblivious algorithms in practice},
+    author = {Frigo, M. and Leiserson, C. E. and Prokop, H. and Ramachandran, S.},
+    booktitle = {Foundations of Computer Science, 1999. 40th Annual Symposium on},
+    citeulike-article-id = {3908629},
+    citeulike-linkout-0 = {http://dx.doi.org/10.1109/SFFCS.1999.814600},
+    citeulike-linkout-1 = {http://ieeexplore.ieee.org/xpls/abs\_all.jsp?arnumber=814600},
+    doi = {10.1109/SFFCS.1999.814600},
+    journal = {Foundations of Computer Science, 1999. 40th Annual Symposium on},
+    keywords = {caching, optimal\_algorithms},
+    pages = {285--297},
+    posted-at = {2010-10-01 22:56:11},
+    priority = {2},
+    title = {Cache-oblivious algorithms},
+    url = {http://dx.doi.org/10.1109/SFFCS.1999.814600},
+    year = {1999}
+}
+
+@inproceedings{citeulike:7925108,
+    abstract = {A compiler-checked immutability guarantee provides useful documentation, facilitates reasoning, and enables optimizations. This paper presents Immutability Generic Java ({IGJ}), a novel language extension that expresses immutability without changing Java's syntax by building upon Java's generics and annotation mechanisms. In {IGJ}, each class has one additional type parameter that is Mutable, Immutable, or {ReadOnly}. {IGJ} guarantees both reference immutability (only mutable references can mutate an object) and object immutability (an immutable reference points to an immutable object). {IGJ} is the first proposal for enforcing object immutability within Java's syntax and type system, and its reference immutability is more expressive than previous work. {IGJ} also permits covariant changes of type parameters in a type-safe manner, e.g., a readonly list of integers is a subtype of a readonly list of numbers. {IGJ} extends Java's type system with a few simple rules. We formalize this type system and prove it sound. Our {IGJ} compiler works by typeerasure and generates byte-code that can be executed on any {JVM} without runtime penalty.},
+    author = {Zibin, Yoav and Potanin, Alex and Ali, Mahmood and Artzi, Shay and Ernst, Michael D.},
+    booktitle = {In ESEC/FSE},
+    citeulike-article-id = {7925108},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.143.5200},
+    keywords = {immutability, java, programanalysis},
+    pages = {75--84},
+    posted-at = {2010-09-29 18:33:15},
+    priority = {3},
+    title = {Object and reference immutability using Java generics},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.143.5200},
+    year = {2007}
+}
+
+@inproceedings{citeulike:7924837,
+    abstract = {This paper describes a type system that is capable of expressing and enforcing immutability constraints. The specific constraint expressed is that the abstract state of the object to which an immutable reference refers cannot be modified using that reference. The abstract state is (part of) the transitively reachable state: that is, the state of the object and all state reachable from it by following references. The type system permits explicitly excluding fields or objects from the abstract state of an object. For a statically type-safe language, the type system guarantees reference immutability. If the language is extended with immutability downcasts, then run-time checks enforce the reference immutability constraints.},
+    author = {Birka, Adrian and Ernst, Michael D.},
+    booktitle = {In OOPSLA},
+    citeulike-article-id = {7924837},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.10.7524},
+    keywords = {immutability, programanalysis, programming},
+    pages = {35--49},
+    posted-at = {2010-09-29 16:32:54},
+    priority = {2},
+    title = {A Practical Type System and Language for Reference Immutability},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.10.7524},
+    year = {2004}
+}
+
+@inproceedings{citeulike:7924804,
+    abstract = {This paper describes a programming language, Javari, that is capable of expressing and enforcing immutability constraints. The specific constraint expressed is that the abstract state of the object to which an immutable reference refers cannot be modified using that reference. The abstract state is (part of) the transitively reachable state: that is, the state of the object and all state reachable from it by following references.  The type system permits explicitly excluding fields from the abstract state of an object. For a statically type-safe language, the type system guarantees reference {immutability.The} type system is distinguishes the notions of assignability and mutability; integrates with Java's generic types and with multi-dimensional arrays; provides a mutability polymorphism approach to avoiding code duplication; and has type-safe support for reflection and serialization. This paper describes a core calculus including formal type rules for the {language.Additionally}, this paper describes a type inference algorithm that can be used convert existing Java programs to Javari. Experimental results from a prototype implementation of the algorithm are presented.},
+    author = {Ernst, D. and Tschantz, Matthew S.},
+    booktitle = {In OOPSLA},
+    citeulike-article-id = {7924804},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.70.5316},
+    keywords = {immutability, pointstoanalysis, programanalysis},
+    pages = {211--230},
+    posted-at = {2010-09-29 16:21:41},
+    priority = {3},
+    title = {Javari: Adding reference immutability to Java},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.70.5316},
+    year = {2005}
+}
+
+@inproceedings{citeulike:7924802,
+    abstract = {Abstract. We describe the design and implementation of an eﬃcient inclusion-based points-to analysis for strictly-typed object-oriented languages. Our implementation easily scales to millions of lines of Java code,
+and it supports language features such as inheritance, object ﬁelds, exceptional control ﬂow, type casting, dynamic dispatch, and reﬂection. Our algorithm is based on Heintz and Tardieu's Andersen-style pointsto analysis designed originally for C programs. We have improved the
+precision of their algorithm by tracking the ﬁelds of individual objects separately and by analyzing the local variables in a method in a ﬂowsensitive manner. Our algorithm represents the semantics of each procedure concisely using a sparse summary graph representation based on access paths; it iterates over this sparse representation until it reaches a ﬁxed point solution. By utilizing the access path and ﬁeld information present in the summary graphs, along with minimizing redundant
+operations and memory management overheads, we are able to quickly and eﬀectively analyze very large programs. Our experimental results demonstrate that this technique can be used to compute precise static call graphs for very large Java programs},
+    author = {Whaley, John and Lam, Monica S.},
+    booktitle = {IN PROC. STATIC ANALYSIS SYMP., VOLUME 2477 OF LNCS},
+    citeulike-article-id = {7924802},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.12.6091},
+    keywords = {pointstoanalysis, programanalysis},
+    pages = {180--195},
+    posted-at = {2010-09-29 16:20:40},
+    priority = {3},
+    title = {An Efficient {Inclusion-Based} Points-to Analysis for {Strictly-Typed} Languages},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.12.6091},
+    year = {2002}
+}
+
+@electronic{citeulike:7924798,
+    abstract = {The first interprocedural modification side-effects analysis ({MODC} ) for C that obtains better than worst-case precision on programs with general-purpose pointer usage is presented with empirical results. The analysis consists of an algorithm schema corresponding to a family of {MODC} algorithms with two independent phases: one for determining pointer-induced aliases and a subsequent one for propagating interprocedural side effects. These {MODC} algorithms are parameterized by the aliasing method used. The empirical results compare the performance of two dissimilar {MODC} algorithms: {MODC} ({FSAlias}) uses a flow-sensitive, calling-contextsensitive interprocedural alias analysis [{LR92}]; {MODC} ({FIAlias}) uses a flow-insensitive, callingcontext -insensitive alias analysis which is much faster, but less accurate [{ZRL96}]. These two algorithms were profiled on 45 programs ranging in size from 250 to 30,000 lines of C code, and the results demonstrate dramatically the possible cost-precision tradeo...},
+    author = {Landi, William A. and Ryder, Barbara G. and Stocks, Philip A. and Zhang, Sean and Altucher, Rita},
+    citeulike-article-id = {7924798},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.50.5053},
+    keywords = {immutability, pointstoanalysis, programanalysis},
+    posted-at = {2010-09-29 16:19:23},
+    priority = {2},
+    title = {A Schema for Interprocedural Modification {Side-Effect} Analysis With Pointer Aliasing},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.50.5053},
+    year = {1998}
+}
+
+@inproceedings{citeulike:7924748,
+    abstract = {A location is said to be  immutable  if its value and the values of selected locations reachable from it are guaranteed to remain unchanged during a specified time interval. We introduce a framework for  immutability specification , and discuss its application to  code optimization . Compared to a  final  declaration, an immutability assertion in our framework can express a richer set of immutability properties along three dimensions ---  lifetime ,  reachability  and  context .},
+    address = {New York, New York, USA},
+    author = {Pechtchanski, Igor and Sarkar, Vivek},
+    booktitle = {the 2002 joint ACM-ISCOPE conference},
+    citeulike-article-id = {7924748},
+    citeulike-linkout-0 = {http://portal.acm.org/citation.cfm?id=583810.583833},
+    citeulike-linkout-1 = {http://dx.doi.org/10.1145/583810.583833},
+    doi = {10.1145/583810.583833},
+    isbn = {1581135998},
+    keywords = {immutability, java, programanalysis, reachability},
+    location = {Seattle, Washington, USA},
+    pages = {202--211},
+    posted-at = {2010-09-29 16:17:13},
+    priority = {3},
+    publisher = {ACM Press},
+    title = {Immutability specification and its applications},
+    url = {http://dx.doi.org/10.1145/583810.583833},
+    year = {2002}
+}
+
+@electronic{citeulike:7924318,
+    abstract = {This survey examines research in the area of Pointer Analysis.  Three diverse methods for such analyses are covered - Pointer Anal- ysis based on a formal type system, an analysis based on {BDDs} and an approach using a variant of the {SSA} form, applied to the problem of detecting code vulnerabilities. This survey was done as part of the requirements for {CS203} - Programming Languages.},
+    author = {Raman, Vishwanath},
+    citeulike-article-id = {7924318},
+    citeulike-linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.60.538},
+    keywords = {pointstoanalysis, programanalysis, programming},
+    posted-at = {2010-09-29 14:56:50},
+    priority = {3},
+    title = {Pointer Analysis -- A Survey},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.60.538},
+    year = {2004}
+}
+
