@@ -1,7 +1,7 @@
 # compiled emacs files and backups
 *.elc
 *~
+\#*#
 
-# Compressed files not ignored - we want to keep the packages
-
+# For OS X
 .DS_Store
