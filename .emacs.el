@@ -632,6 +632,7 @@ org priorities do not inherit."
 
 (when (require 'org-install)
   (require 'org-clock)
+
   (org-clock-persistence-insinuate)
   (setq org-clock-persist t)
   (setq org-clock-in-resume t)
