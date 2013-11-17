@@ -2,6 +2,5 @@
 *.elc
 *~
 
-# Compressed files not ignored - we want to keep the packages
-
+# OS-generated files
 .DS_Store

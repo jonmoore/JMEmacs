@@ -35,7 +35,7 @@
   "Are we running on a WinTel system?")
 (defconst system-linux-p (or (eq system-type 'gnu/linux) (eq system-type 'linux))
   "Are we running on a GNU/Linux system?")
-(defconst system-osx-p (or (eq system-type 'darwin))
+(defconst system-osx-p (eq system-type 'darwin)
   "Are we running on a Darwin (Mac OS X) system?")
 
 ;;; 
@@ -65,7 +65,6 @@
 (setenv "INFOPATH" (concat (concat emacs-root "/packages/org/doc")
                            path-separator (concat emacs-root "/packages/pde/doc")
                            path-separator (concat emacs-root "/packages/w3/info")
-                           path-separator (concat emacs-root "/info/auctex")
                            path-separator (expand-file-name (concat exec-directory "../info")) 
                            path-separator (getenv "INFOPATH")))
 
@@ -91,9 +90,8 @@
   (add-path "/packages/perlnow")
   (add-path "/packages/template/lisp")
   (add-path "/packages/tempo")
-  (add-path "/packages/w3/share/emacs/site-lisp")
   (add-path "/packages/ess-12.04-2/lisp")
-  (add-path "/packages/auctex")
+  (add-path "/packages/auctex-11.87-e24.2-msw")
   (add-path "/packages/gabrielelanaro-emacs-for-python-08012bc")
 )
 
@@ -234,7 +232,7 @@
 
 (defun jnm-load-auctex ()
   (interactive)
-  (load "auctex.el" nil t t)
+  (load "site-lisp/site-start.d/auctex.el" nil t t)
   (require 'tex-mik)
   (setq TeX-auto-save t)
   (setq TeX-parse-self t)
@@ -243,32 +241,34 @@
   (add-hook 'LaTeX-mode-hook 'flyspell-mode)
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
   (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
-  (add-hook 'LaTeX-mode-hook (lambda ()
-                               (push 
-                                '("Latexmk" 
-                                  "latexmk -pdflatex=\"f:/bin/pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
-                                  :help "Run Latexmk on file")
-                                TeX-command-list)))
-  (setq reftex-plug-into-AUCTeX t)
-  (setq TeX-PDF-mode t)
-  (setq 
-   TeX-source-correlate-method 'synctex
-   TeX-source-correlate-mode t
-   TeX-source-correlate-start-server t
-   TeX-view-program-list (quote (("Sumatra PDF" "f:/bin/SumatraPDF.exe -reuse-instance %o"))))
-  (require 'sumatra-forward)
 
-  (add-hook 'LaTeX-mode-hook
-            (lambda ()
-              (progn
-              (local-set-key [prior] '(lambda ()
-                                        (interactive)
-                                        (funcall (lookup-key (current-global-map) [prior]))
-                                        (sumatra-jump-to-line)))
-              (local-set-key [next] '(lambda ()
-                                        (interactive)
-                                        (funcall (lookup-key (current-global-map) [next]))
-                                        (sumatra-jump-to-line))))))
+  (when system-win32-p                  ; Windows support for SumatraPDF
+    (add-hook 'LaTeX-mode-hook 
+              (lambda ()
+                (push 
+                 '("Latexmk" 
+                   "latexmk -pdflatex=\"f:/bin/pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
+                   :help "Run Latexmk on file")
+                 TeX-command-list)))
+    (setq reftex-plug-into-AUCTeX t)
+    (setq TeX-PDF-mode t)
+    (setq 
+     TeX-source-correlate-method 'synctex
+     TeX-source-correlate-mode t
+     TeX-source-correlate-start-server t
+     TeX-view-program-list (quote (("Sumatra PDF" "f:/bin/SumatraPDF.exe -reuse-instance %o"))))
+    (require 'sumatra-forward)
+    (add-hook 'LaTeX-mode-hook
+              (lambda ()
+                (progn
+                  (local-set-key [prior] '(lambda ()
+                                            (interactive)
+                                            (funcall (lookup-key (current-global-map) [prior]))
+                                            (sumatra-jump-to-line)))
+                  (local-set-key [next] '(lambda ()
+                                           (interactive)
+                                           (funcall (lookup-key (current-global-map) [next]))
+                                           (sumatra-jump-to-line)))))))
   )
 
 ;;; COMINT
