@@ -1,13 +1,20 @@
 ;;; Use occur "^;;;" to list sections
 
-;; In the real .emacs.el, just set emacs-root, and load this, e.g.
-;; (defvar emacs-root
-;;  (concat default-directory "opt/emacs")
-;;  "*The root of my personal emacs load-path.")
-;; (load "/Users/jon/src/git/JonsPortableEmacs/.emacs.el")
+;; In the real .emacs.el, just load this, e.g.
+;; (load "/Users/jon/src/git/JMEmacs/emacs.el")
 ;;
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
+
+(defvar emacs-root
+  nil
+  "*The root of my personal emacs load-path.")
+(setq emacs-root
+      (concat (file-name-directory (if load-in-progress 
+                                       load-file-name
+                                     buffer-file-name))
+              "opt/emacs"))
+(message "Running emacs.el with emacs-root %s" emacs-root)
 
 ;;; META
 (defmacro require-soft (feature &optional file)
@@ -134,8 +141,12 @@
 
 (set-face-attribute 'default  nil
                     :foreground "cadetblue1" :background "blue4")
+
+;; Inconsolata looks a bit like Consolas and needs to be installed.
+;; Otherwise you can end up with Times New Roman or something
 (when system-osx-p
   (set-face-attribute 'default  nil :family "Inconsolata" :height 180))
+
 ;;; GLOBAL EDITING SETTINGS
 (autoload 'scroll-up-in-place   "scroll-in-place" "scroll-up-in-place"   t)
 (autoload 'scroll-down-in-place "scroll-in-place" "scroll-down-in-place" t)
@@ -944,7 +955,7 @@ org priorities do not inherit."
 
 ;;; CUSTOMIZATION
 (setq custom-file ;; set explicitly to avoid writing back to ~/.emacs.el
-      (expand-file-name ".emacs-custom.el" 
+      (expand-file-name "emacs-custom.el" 
                         (file-name-directory 
                          (if load-in-progress 
                              load-file-name 
