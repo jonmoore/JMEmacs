@@ -6,20 +6,22 @@
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
 
-;; test2
+(defun expand-file-name-from-load-directory (filename)
+  "*Expand file name from the directory this file is in"
+  (let ((load-directory (if load-in-progress load-file-name
+                          buffer-file-name)))
+    (expand-file-name
+     filename
+     (file-name-directory load-directory))))
 
 (defvar emacs-root
   nil
   "*The root of my personal emacs load-path.")
 (setq emacs-root
-      (concat (file-name-directory (if load-in-progress 
-                                       load-file-name
-                                     buffer-file-name))
-              "opt/emacs"))
+      (expand-file-name-from-load-directory "opt/emacs"))
 (message "Running emacs.el with emacs-root %s" emacs-root)
 
 ;;; META
-
 (defmacro require-soft (feature &optional file)
   "*Try to require FEATURE, but don't signal an error if `require' fails."
   `(require ,feature ,file 'noerror)) 
@@ -33,7 +35,6 @@
   (package-initialize))
 
 ;;; SYSTEM
-;; may need to add machine-specific stuff somewhere
 (defconst system-win32-p (eq system-type 'windows-nt)
   "Are we running on a WinTel system?")
 (defconst system-linux-p (or (eq system-type 'gnu/linux) (eq system-type 'linux))
@@ -475,16 +476,14 @@
             (when (require-soft 'tempo-c-cpp)
               (my-tempo-c-cpp-bindings))
 	    (doxymacs-mode t)
-	    (setq
-             c-hungry-delete-key t
-             c-auto-newline 1
-             fill-column 90
-             indent-tabs-mode nil
-             tab-width 4
-             c-default-style '((java-mode . "java") 
-                               (other . "stroustrup"))
-             c-echo-syntactic-information-p nil
-             )
+	    (setq c-hungry-delete-key t
+                  c-auto-newline 1
+                  fill-column 90
+                  indent-tabs-mode nil
+                  tab-width 4
+                  c-default-style '((java-mode . "java") 
+                                    (other . "stroustrup"))
+                  c-echo-syntactic-information-p nil)
             (set (make-local-variable 'dabbrev-case-fold-search) nil)
 
 	    (c-add-style "visual studio" visual-studio-c-style t)
@@ -530,12 +529,12 @@
 
 ;;; GLOBAL AUTO REVERT MODE
 
-(defun buffer-file-name-looks-like-a-network-file (filename) 
+(defun looks-like-a-network-file (filename) 
   (and filename
        (string-match "^//" filename)))
 (add-hook 'find-file-hook 
           (lambda ()
-            (when (buffer-file-name-looks-like-a-network-file buffer-file-name)
+            (when (looks-like-a-network-file buffer-file-name)
               (message "Disabling global auto revert mode for %s" buffer-file-name)
               (setq global-auto-revert-ignore-buffer t))))
 
@@ -640,7 +639,7 @@
   (which-func-mode 1)) ; shows the current function in statusbar
 
 ;;; LISP MODE
-                                        ; normally alt-tab, but windows masks this and we want to keep the normal behavior
+;; normally alt-tab, but windows masks this and we want to keep the normal behavior
 (add-hook 'emacs-lisp-mode-hook
           (lambda ()
             (local-set-key [(control tab)] 'PC-lisp-complete-symbol)))
@@ -669,14 +668,15 @@
 (defun jm-org-get-priority-from-headline 
   (headline)
   "Get the priority from an org headline using a tag format - #A etc. Defaults to D.
-We do this so to provide inherited pseudo-priorities, allowing sorting by these (normal
-org priorities do not inherit."
+We do this so to provide inherited pseudo-priorities, allowing
+sorting by these (normal org priorities do not inherit)."
   (or (and (string-match "#\\([ABC]\\)" headline) (match-string 1 headline))
       "D"))
 
 (defun jm-org-agenda-cmp-headline-priorities
   (a b)
-  "Compare the priorities in two org headlines using `jm-org-get-priority-from-headline'"
+  "Compare the priorities in two org headlines using
+`jm-org-get-priority-from-headline'"
   (let* ((pa (jm-org-get-priority-from-headline  a))
          (pb (jm-org-get-priority-from-headline  b)))
     (cond
@@ -750,15 +750,17 @@ org priorities do not inherit."
                 org-log-reschedule 'time
                 org-log-redeadline 'time
                 ;; org-mode should really be smart enough to get this automatically
-                org-not-done-heading-regexp "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$" 
+                org-not-done-heading-regexp 
+                "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$" 
                 org-odd-levels-only t
                 org-publish-use-timestamps-flag t
                 org-replace-disputed-keys t
                 org-return-follows-link t
                 org-show-siblings (quote ((default . t) 
                                           (isearch t)))
-                org-tag-alist '(("Petr"             . ?p)
-                                ("Ming"             . ?m)
+                org-tag-alist '(("Ming"             . ?m)
+                                ("Petr"             . ?p)
+                                ("Qingning"         . ?q)
                                 ("Richard"          . ?r)
                                 ("#A"               . ?a)
                                 ("#B"               . ?b)
@@ -803,26 +805,26 @@ org priorities do not inherit."
                       :base-extension "org"
                       :publishing-directory "~/org/"
                       :publishing-function org-publish-org-to-html
-                      :headline-levels      3 ;; org-export-headline-levels
-                      :section-numbers      nil ;; org-export-with-section-numbers
-                      :table-of-contents    t ;; org-export-with-toc
-                      :archived-trees       headline ;; org-export-with-archived-trees
-                      :emphasize            t ;; org-export-with-emphasize
-                      :sub-superscript      t ;; org-export-with-sub-superscripts
-                      :special-strings      t ;; org-export-with-special-strings
-                      :TeX-macros           t ;; org-export-with-TeX-macros
-                      :LaTeX-fragments      t ;; org-export-with-LaTeX-fragments
-                      :fixed-width          t ;; org-export-with-fixed-width
-                      :timestamps           t ;; org-export-with-timestamps
-                      :tags                 not-in-toc ;; org-export-with-tags
-                      :tables               t ;; org-export-with-tables
-                      :table-auto-headline  t ;; org-export-highlight-first-table-line
-                      :convert-org-links    t ;; org-export-html-link-org-files-as-html
-                      :inline-images        maybe ;; org-export-html-inline-images
-                      :expand-quoted-html   t ;; org-export-html-expand
-                      :timestamp            t ;; org-export-html-with-timestamp
-                      :auto-preamble t ;; org-export-html-auto-preamble
-                      :auto-postamble t ;; org-export-html-auto-postamble
+                      :headline-levels      3
+                      :section-numbers      nil
+                      :table-of-contents    t
+                      :archived-trees       headline
+                      :emphasize            t
+                      :sub-superscript      t
+                      :special-strings      t
+                      :TeX-macros           t
+                      :LaTeX-fragments      t
+                      :fixed-width          t
+                      :timestamps           t
+                      :tags                 not-in-toc
+                      :tables               t
+                      :table-auto-headline  t
+                      :convert-org-links    t
+                      :inline-images        maybe
+                      :expand-quoted-html   t
+                      :timestamp            t
+                      :auto-preamble t
+                      :auto-postamble t
                       )))))))
 (defadvice save-buffers-kill-emacs
   (before org-check-running-clock activate)
@@ -833,8 +835,6 @@ org priorities do not inherit."
 (defalias 'perl-mode 'cperl-mode)
 (add-to-list 'auto-mode-alist '("\\.\\([pP][Llm]\\|al\\|t\\)\\'" . cperl-mode))
 (add-to-list 'interpreter-mode-alist '("perl" . cperl-mode))
-(add-to-list 'interpreter-mode-alist '("perl5" . cperl-mode))
-(add-to-list 'interpreter-mode-alist '("miniperl" . cperl-mode))
 
 (autoload 'template-initialize "template" "template" t)
 (defadvice require (before perlnow-requires-template activate) ; muppet
@@ -1017,7 +1017,6 @@ org priorities do not inherit."
 (autoload 'wikipedia-mode "wikipedia-mode" "Major mode for editing documents in Wikipedia markup." t)
 (add-to-list 'auto-mode-alist '("\\.wiki$" . wikipedia-mode))
 
-
 ;;;
 ;;;; DESKTOP
 ;;;=========
@@ -1049,11 +1048,7 @@ org priorities do not inherit."
 
 ;;; CUSTOMIZATION
 (setq custom-file ;; set explicitly to avoid writing back to ~/.emacs.el
-      (expand-file-name "emacs-custom.el" 
-                        (file-name-directory 
-                         (if load-in-progress 
-                             load-file-name 
-                           buffer-file-name))))
+      (expand-file-name-from-load-directory "emacs-custom.el"))
 (load custom-file)
 
 ;;; STARTUP
