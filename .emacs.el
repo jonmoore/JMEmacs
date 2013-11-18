@@ -10,6 +10,7 @@
 ;; after this file is loaded
 
 ;;; META
+
 (defmacro require-soft (feature &optional file)
   "*Try to require FEATURE, but don't signal an error if `require' fails."
   `(require ,feature ,file 'noerror)) 
@@ -44,9 +45,13 @@
   (setq file-name-buffer-file-type-alist (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
   (setenv "PATH" (concat cygwin-bin
                           path-separator (getenv "PATH")))
-  (setq exec-path (append
-                   (list (replace-regexp-in-string  "\\\\"  "/" cygwin-bin))
-                   exec-path))))
+
+  (mapcar 
+   (lambda (filepath)                   ;; preprend filepath to exec-path
+     (setq exec-path (append
+                      (list (replace-regexp-in-string  "\\\\"  "/" filepath))
+                      exec-path)))
+   (list cygwin-bin "c:/program files (x86)/SimonTatham/PuTTY"))))
 
 (setq shell-file-name (or (getenv "SHELL") 
                           default-system-shell))
@@ -70,6 +75,13 @@
               (woman-parse-colon-path (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
 (add-hook 'woman-mode-hook 'my-woman-mode-hook)
 
+(defconst epy-install-dir-rel
+  "/packages/epy/"
+  "Installation directory of emacs-for-python relative to emacs-root terminating with a slash")
+(defconst epy-install-dir
+  (concat emacs-root epy-install-dir-rel)
+  "Installation directory of emacs-for-python terminating with a slash")
+
 (labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
   (add-path "/site-lisp")
   (add-path "/site-lisp/templates")
@@ -87,8 +99,10 @@
   (add-path "/packages/w3/share/emacs/site-lisp")
   (add-path "/packages/ess-12.04-2/lisp")
   (add-path "/packages/auctex")
-  (add-path "/packages/gabrielelanaro-emacs-for-python-08012bc")
-)
+  (add-path epy-install-dir-rel)
+  (add-path (concat epy-install-dir-rel "extensions"))
+  (add-path (concat epy-install-dir-rel "extensions/auto-complete"))
+  )
 
 (setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
                                                    (system-osx-p   "~/backup")))))
@@ -119,8 +133,7 @@
 ;;;; MY FUNCTIONS
 ;;;==============
 
-(or (load "snippets" t t)
-    (message "Could not load snippets.el"))
+(load "snippets")
 (load "jnm-loaddefs")
 
 ;;; COLORS AND APPEARANCE
@@ -136,14 +149,11 @@
                     :foreground "cadetblue1" :background "blue4")
 (when system-osx-p
   (set-face-attribute 'default  nil :family "Inconsolata" :height 180))
+
 ;;; GLOBAL EDITING SETTINGS
 (autoload 'scroll-up-in-place   "scroll-in-place" "scroll-up-in-place"   t)
 (autoload 'scroll-down-in-place "scroll-in-place" "scroll-down-in-place" t)
 
-;; (require 'undo-tree "undo-tree-0.3.1")
-;; (global-undo-tree-mode)
-
-;; (require-soft 'table)
 (put 'upcase-region   'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'narrow-to-page  'disabled nil)
@@ -167,6 +177,7 @@
 (global-set-key [?\C-.]             'goto-line)
 (global-set-key [?\C-c ?b]          'browse-url-at-point)
 (global-set-key [?\C-c ?a]          'org-agenda)
+(global-set-key [?\C-c ?l]          'org-store-link)
 (global-set-key [?\C-c ?r]          'rename-file-and-buffer)
 (global-set-key [?\C-c ?m]          'move-file-and-buffer)
 (global-set-key [?\C-c ?\C-o]       'search-buffers)
@@ -184,7 +195,6 @@
 
 ;;; meta
 (global-set-key [?\M-.]             'find-function)
-(global-set-key [?\M-f]             'grep-buffers)
 ;; use numeric codes 91 and 93 for [ and ] because embedding them with
 ;; ?M-[ and ?M-] confuses forward-sexp, which is used by customization
 (global-set-key [(meta 91)]        'undo)
@@ -212,10 +222,13 @@
 
 ;; TODO
 (when system-win32-p
-  (global-set-key [f8]                'w32-frame-cycle-size))
+  (global-set-key [f8]              'w32-frame-cycle-size))
 (global-set-key [f11]               'org-clock-in-and-goto)
 (global-set-key [S-f11]             'org-clock-goto)
 
+(global-set-key [f12]               'qap-locate-p4-grep-and-moccur)
+(global-set-key [S-f12]             'qap-locate-windows-code-like-and-moccur )
+(global-set-key [C-f12]             'qap-locate-windows-code-contains-and-moccur )
 
 ;;;
 ;;;; APPLICATIONS
@@ -335,7 +348,6 @@
 ;; MOCCUR
 (autoload 'dired-do-moccur "color-moccur" nil t)
 
-(require-soft 'moccur-edit)
 (setq *moccur-buffer-name-exclusion-list*
       '(".+TAGS.+" "*Completions*" "*Messages*"
 	".+\.aps" ".+\.clw"
@@ -376,7 +388,7 @@
  ps-print-color-p      t)
 
 ;;; SHELL-TOGGLE
-                                        ; shell-toggle tries to use term by default but this doesn't work on windows
+;; shell-toggle tries to use term by default but this doesn't work on windows
 (when system-win32-p
   (setq shell-toggle-launch-shell 'shell))
 
@@ -517,6 +529,35 @@
 
 (global-auto-revert-mode t)
 
+;;; GUD MODE
+(eval-after-load 'gud
+  (quote (progn
+     (define-key gud-mode-map '[f5]   'gud-cont)
+     (define-key gud-mode-map '[S-f5] 'gud-break)
+     (define-key gud-mode-map '[f10]  'gud-next)
+     (define-key gud-mode-map '[f11]  'gud-step)
+
+     (defvar gud-overlay
+       (let* ((ov (make-overlay (point-min) (point-min))))
+         (overlay-put ov 'face 'secondary-selection)
+         ov)
+       "Overlay variable for GUD highlighting.")
+     
+     (defadvice gud-display-line (after my-gud-highlight act)
+       "Highlight current line up to first non-whitespace character."
+       (let ((bf (gud-find-file true-file)))
+         (with-current-buffer bf
+           (move-overlay 
+            gud-overlay 
+            (line-beginning-position) 
+            (save-excursion
+              (search-forward-regexp "\\S-" (line-end-position) t )
+              (match-beginning 0))
+            (current-buffer)))))
+     (defun gud-kill-buffer ()
+       (if (derived-mode-p 'gud-mode)
+           (delete-overlay gud-overlay)))
+     (add-hook 'kill-buffer-hook 'gud-kill-buffer))))
 
 ;;; HTML MODE
 (autoload 'css-mode "css-mode")
@@ -533,6 +574,7 @@
                ("org"     (mode . org-mode))
                ("script"  (mode . sh-mode))
                ("pl"      (or (mode . perl-mode) (mode . cperl-mode)))
+               ("py"      (or (mode . python-mode)))
                ("emacs"   (or
                            (name . "^\\*"))))))
       ;; ibuffer-expert t
@@ -640,8 +682,10 @@ org priorities do not inherit."
    'org-mode-hook
    (function (lambda ()
                (require 'org-toc)
+               (require 'org-id)
                (require 'org-wp-link)                          
                (require 'ob-mscgen)
+
                (when (and (require-soft 'texmathp)
                           (require-soft 'cdlatex))
                  (turn-on-org-cdlatex))
@@ -658,6 +702,7 @@ org priorities do not inherit."
 
                (local-set-key [?\C-c ? ]    'outline-mark-subtree)
                (set-face-foreground 'org-hide (face-background 'default))
+               (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t))) 
                
                (setq 
                 fill-column 90
@@ -680,9 +725,9 @@ org priorities do not inherit."
                 org-clock-persist t
                 org-disputed-keys (quote (([(control shift right)] . [(meta shift +)]) 
                                           ([(control shift left)]  . [(meta shift -)])))
-                org-enforce-todo-checkbox-dependencies t
                 org-enforce-todo-dependencies t
                 org-export-mark-todo-in-toc t
+                org-export-html-validation-link nil
                 org-export-with-priority t
                 org-export-with-LaTeX-fragments t
                 org-export-with-section-numbers nil
@@ -691,6 +736,8 @@ org priorities do not inherit."
                 org-log-done t
                 org-log-reschedule 'time
                 org-log-redeadline 'time
+                ;; org-mode should really be smart enough to get this automatically
+                org-not-done-heading-regexp "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$" 
                 org-odd-levels-only t
                 org-publish-use-timestamps-flag t
                 org-replace-disputed-keys t
@@ -780,11 +827,11 @@ org priorities do not inherit."
 (defadvice require (before perlnow-requires-template activate) ; muppet
   (if (eq 'perlnow (ad-get-arg 0))
       (require 'template)))
-(autoload 'perlnow-script "perlnow" "perlnow" t)
-(autoload 'perlnow-module "perlnow" "perlnow" t)
-(autoload 'perlnow-run-check "perlnow" "perlnow" t)
-(autoload 'perlnow-run "perlnow" "perlnow" t)
-(autoload 'perlnow-perldb "perlnow" "perlnow" t)
+(autoload 'perlnow-script     "perlnow" "perlnow" t)
+(autoload 'perlnow-module     "perlnow" "perlnow" t)
+(autoload 'perlnow-run-check  "perlnow" "perlnow" t)
+(autoload 'perlnow-run        "perlnow" "perlnow" t)
+(autoload 'perlnow-perldb     "perlnow" "perlnow" t)
 (autoload 'perlnow-perl-check "perlnow" "perlnow" t)
 (setq perlnow-script-location (substitute-in-file-name "$HOME/src/perl"))
 (setq perlnow-pm-location (substitute-in-file-name "$HOME/src/perl/lib"))
@@ -806,11 +853,55 @@ org priorities do not inherit."
              (define-key cperl-mode-map [f1] 'perlnow-perl-check) ))
 
 ;;; PYTHON MODE
+;; python should be in auto-mode-alist alredy
+(add-hook 'python-mode-hook
+          '(lambda () 
+             (modify-syntax-entry ?- "_" python-mode-syntax-table)
+             (require 'jpy-completion)
+             (require 'jpy-editing)
+             (define-key python-mode-map (kbd "M-<right>")
+               'balle-python-shift-right)
+             (define-key python-mode-map (kbd "M-<left>")
+               'balle-python-shift-left)))
 
-(defun epy-init ()
-  "Initialise python for emacs per from https://github.com/gabrielelanaro/emacs-for-python"
+(eval-after-load 'python
+  '(progn
+     (require 'jpy-python)
+     (require 'pymacs)
+     ;; note that the default ropemacs-global-prefix generates an
+     ;; error about being a non-prefix key so I customize this to nil
+     ;; to disable the keybindings
+     (pymacs-load "ropemacs" "rope-")))
+
+;; PDB command line
+(defun pdb-current-buffer ()
+  "Run python debugger on current buffer."
   (interactive)
-  (require 'epy-init))
+  (setq command (format "python -u -m pdb %s " (file-name-nondirectory buffer-file-name)))
+  (let ((command-with-args (read-string "Debug command: " command nil nil nil)))
+    (pdb command-with-args)))
+
+;; auto-complete
+(require 'auto-complete)
+(require 'auto-complete-config)
+(setq ac-dwim t)
+(ac-config-default)
+(define-key ac-complete-mode-map "\t" 'ac-expand)
+(define-key ac-complete-mode-map "\r" 'ac-complete)
+(define-key ac-complete-mode-map "\M-n" 'ac-next)
+(define-key ac-complete-mode-map "\M-p" 'ac-previous)
+
+;; virtualenv - why is this switching desktops?
+;; https://github.com/aculich/virtualenv.el
+;; http://matthewlmcclure.com/s/2012/06/05/emacs-tramp-python-virtualenv.html
+;; (autoload 'virtualenv-activate "virtualenv"
+;;   "Activate a Virtual Environment specified by PATH" t)
+;; (autoload 'virtualenv-workon "virtualenv"
+;;   "Activate a Virtual Environment present using virtualenvwrapper" t)
+;; (defun workon-postactivate (virtualenv)
+;;   (require 'virtualenv)
+;;   (virtualenv-activate virtualenv)
+;;   (desktop-change-dir virtualenv))
 
 ;;; SCHEME MODE
 (defun comint-accumulate-and-indent (&optional prefix)
@@ -871,10 +962,9 @@ org priorities do not inherit."
 (eval-after-load "cmuscheme" '(defun scheme-args-to-list (str) (list str)))
 
 ;;; SERVER MINOR MODE
-
-(defun my-server-visit-hook ()
-  (local-set-key "\C-z" 'server-edit))
-(add-hook 'server-visit-hook 'my-server-visit-hook)
+(add-hook 'server-visit-hook 
+          (lambda ()
+            (local-set-key "\C-z" 'server-edit)))
 
 ;;; SHELL-MODE
 (add-hook 'shell-mode-hook
@@ -935,10 +1025,13 @@ org priorities do not inherit."
 
 ;;; COLOR-THEME
 (require 'color-theme)
-(eval-after-load "color-theme"
-  '(progn
-     (color-theme-initialize)
-     (color-theme-word-perfect)))
+;; taken from color-theme-initialize, but avoiding loading .el files
+(let ((my-color-list-libraries
+       (directory-files (concat (file-name-directory (locate-library "color-theme")) "/themes") 
+                        t "^color-theme.*elc")))
+  (dolist (library my-color-list-libraries)
+    (load library)))
+(color-theme-word-perfect)
 (setq inhibit-splash-screen t)
 
 ;;; CUSTOMIZATION
