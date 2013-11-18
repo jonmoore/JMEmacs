@@ -6,7 +6,7 @@
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
 
-;; test 
+;; test2
 
 (defvar emacs-root
   nil
