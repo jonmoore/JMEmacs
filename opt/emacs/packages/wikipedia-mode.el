@@ -1312,7 +1312,8 @@ as does wikipedia-unfill-region."
 	  (outline-cycle)))
 
 
-(add-hook 'outline-minor-mode-hook  'wikipedia-outline-magic-keys)
+;; Restrain maniac
+;; (add-hook 'outline-minor-mode-hook  'wikipedia-outline-magic-keys)
 
 (defun wikipedia-outline-magic-keys ()
   (interactive)

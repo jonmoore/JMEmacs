@@ -4,6 +4,7 @@
 (defun recenter-top    () (interactive) (recenter 0))
 (defun recenter-bottom () (interactive) (recenter (quote -)))
 
+
 ;;; EDITING
 ;;;###autoload
 (defun insert-time ()   
@@ -77,7 +78,6 @@ If the mark is not set or inactive, act like `delete-blank-lines'."
 	  (if (string-match dir "\\(?:/\\|\\\\)$")
 	      (substring dir 0 -1) dir))
 	 (newname (concat dir "/" name)))
-
     (if (not filename)
 	(message "Buffer '%s' is not visiting a file!" name)
       (progn
@@ -299,6 +299,7 @@ If `dired-ps-print-buffer-with-faces' is non-nil, use
                                         ; This probably needs revisions as it was taken straight from 
                                         ; EmacsWiki
 
+
 (defun shell-in-default-directory ()
   "Run an inferior shell in the current directory.
   set name to that of this directory.
@@ -457,6 +458,7 @@ then update the mode line."
           (org-clock-sum-current-item (org-clock-get-sum-start)))
     (org-clock-update-mode-line)))
 
+
 ;;; MISC STUFF
 
 (defun assoc-regexp-exact  (key list-including-regexps)
@@ -497,8 +499,9 @@ The value is actually the first element of list whose car equals key."
 ;; post-processing/viewing with moccur
 
 ;;; MOCCUR 
-
+(require 'ibuffer)
 (require 'color-moccur)
+(require 'moccur-edit) ;; missing key - see color-mocur.el
 
 (defun moccur-wrap (textMatch func)
   (moccur-setup)
@@ -577,6 +580,8 @@ as a parameter.  Prints a list of matching paths to stdout."
       (concat qap-locate-windows-search-command " " arglist)))))
 
 (defun qap-locate-windows-code-like-and-moccur (textMatch)
+  "Does an moccur regexp search among files with names like the
+provided term according to Windows search"
   (interactive "sMoccur regexp:")
   (moccur-wrap
    textMatch
@@ -598,9 +603,6 @@ as a parameter.  Prints a list of matching paths to stdout."
        'qap-locate-term-code-search
        'qap-locate-term-contains)))))
 
-(global-set-key [S-f12]   'qap-locate-windows-code-like-and-moccur )
-(global-set-key [C-f12]   'qap-locate-windows-code-contains-and-moccur )
-
 ;;; P4 GREP 
 (defun qap-p4-client () "moorjona_w7")
 (defun qap-p4-root   () "c:/p4ws")
@@ -621,4 +623,54 @@ as a parameter.  Prints a list of matching paths to stdout."
    (lambda ()
      (qap-locate-p4 dir regex))))
 
-(global-set-key [f12] 'qap-locate-p4-grep-and-moccur)
+;; autoloads advice - http://stackoverflow.com/questions/4189159/emacs23-elisp-how-to-properly-autoload-this-library
+;; What you really want is to get the autoloads generated for you
+;; automatically, so that your .emacs file remains pristine. Most
+;; packages have the ;;;###autoload lines in them already, and if not,
+;; you can easily add them.
+
+;; To manage this, you can put all the packages in a directory, say
+;; ~/emacs/lisp, and in there have a file named update-auto-loads.el
+;; which contains:
+
+;; ;; put this path into the load-path automatically
+;; ;;;###autoload
+;; (progn
+;;   (setq load-path (cons (file-name-directory load-file-name) load-path)))
+
+;; ;;;###autoload
+;; (defun update-autoloads-in-package-area (&optional file)
+;;   "Update autoloads for files in the diretory containing this file."
+;;   (interactive)
+;;   (let ((base (file-truename
+;;        (file-name-directory
+;;         (symbol-file 'update-autoloads-in-package-area 'defun)))))
+;; (require 'autoload)         ;ironic, i know
+;; (let ((generated-autoload-file (concat base "loaddefs.el")))
+;;   (when (not (file-exists-p generated-autoload-file))
+;;     (with-current-buffer (find-file-noselect generated-autoload-file)
+;;       (insert ";;") ;; create the file with non-zero size to appease autoload
+;;       (save-buffer)))
+;;   (cd base)
+;;   (if file
+;;       (update-file-autoloads file)
+;;     (update-autoloads-from-directories base)))))
+
+;; ;;;###autoload
+;; (defun update-autoloads-for-file-in-package-area (file)
+;;   (interactive "f")
+;;   (update-autoloads-in-package-area file))
+
+;; If you add 'update-autoloads-in-package-area to your
+;; kill-emacs-hook, then the loaddefs.el will automatically be updated
+;; every time you exit Emacs.
+
+;; And, to tie it all together, add this to your .emacs:
+
+;; (load-file "~/emacs/lisp/loaddefs.el")
+
+;; Now, when you download a new package, just save it in the
+;; ~/emacs/lisp directory, update the loaddefs via M-x
+;; update-autoloads-in-package-area (or exit emacs), and it'll be
+;; available the next time you run Emacs. No more changes to your
+;; .emacs to load things.

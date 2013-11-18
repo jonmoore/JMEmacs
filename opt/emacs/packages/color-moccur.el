@@ -1,7 +1,7 @@
 ;;; color-moccur.el ---  multi-buffer occur (grep) mode
 ;; -*- Mode: Emacs-Lisp -*-
 
-;; $Id: color-moccur.el,v 2.71 2010-05-06 13:40:54 Akihisa Exp $
+;; $Id: color-moccur.el,v 2.73 2010-07-23 23:52:29 Akihisa Exp $
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -1191,10 +1191,10 @@ Optional argument LENGTH
              ((string-match "grep" str)
               (if (moccur-grep-xdoc2txt-p file)
                   (setq moccur-buffer-name (moccur-grep-binary-file-view file))
-                (if (find-buffer-visiting file)
+                (if (get-file-buffer file)
                     (setq moccur-buffer-name
                           (buffer-name
-                           (find-buffer-visiting file))))))
+                           (get-file-buffer file))))))
              (t
               (setq moccur-buffer-name buffer))))
         (setq start-pt (point-min))))
@@ -2295,8 +2295,8 @@ It serves as a menu to find any of the occurrences in this buffer.
                     (not (dmoccur-in-list-p file-name
                                             dmoccur-exclusion-mask)))))
               (progn
-                (if (find-buffer-visiting file-name)
-                    (setq buf-name (find-buffer-visiting file-name))
+                (if (get-file-buffer file-name)
+                    (setq buf-name (get-file-buffer file-name))
                   (setq buf-name (find-file-noselect file-name)))
                 (if (cdr file-name-history)
                     (setq file-name-history (cdr file-name-history)))
@@ -2641,40 +2641,6 @@ It serves as a menu to find any of the occurrences in this buffer.
       (dired-do-moccur-by-moccur regexp arg)
     (dired-do-moccur-by-mgrep regexp arg)))
 
-;;;; kill-buffer when moccur-quit
-(defadvice moccur-quit (before moccur-quit-kill-buffers activate)
-  (let ((buffers moccur-match-buffers)
-        (buff nil)
-        (mocc-window (selected-window))
-        (mocc-buffer (window-buffer (selected-window))))
-    (while moccur-xdoc2txt-buffers
-      (when (buffer-live-p
-             (get-buffer (car (car moccur-xdoc2txt-buffers))))
-        (kill-buffer (car (car moccur-xdoc2txt-buffers))))
-      (setq moccur-xdoc2txt-buffers (cdr moccur-xdoc2txt-buffers)))
-    (while buffers
-      (setq buff (car buffers))
-      (when (and (eq moccur-last-command 'dired-do-moccur)
-                 kill-buffer-after-dired-do-moccur
-                 (buffer-live-p buff)
-                 (buffer-name buff))
-        (select-window (next-window mocc-window))
-        (set-window-buffer (selected-window) buff)
-        (if (and (buffer-file-name buff)
-                 (buffer-modified-p buff)
-                 (y-or-n-p (concat "Buffer "
-                                   (buffer-name buff)
-                                   " modified. Save it? ")))
-            (save-buffer)
-          (set-buffer-modified-p nil)) ;; mark as not modified
-        (display-buffer mocc-buffer)
-        (select-window mocc-window)
-        (if (memq buff moccur-buffers-before-moccur)
-            (delq buff buffers)
-          (kill-buffer buff)))
-      (setq buffers (cdr buffers))))
-  nil)
-
 ;;;; Buffer-menu-moccur
 (defun Buffer-menu-moccur (regexp arg)
   (interactive (list (moccur-regexp-read-from-minibuf)
@@ -2752,14 +2718,15 @@ It serves as a menu to find any of the occurrences in this buffer.
     (define-key map "<" 'moccur-file-beginning-of-buffer)
     (define-key map ">" 'moccur-file-end-of-buffer)
 
-    (condition-case nil
-        (progn
-          (require 'moccur-edit)
-          (define-key map "r" 'moccur-edit-mode-in)
-          (define-key map "\C-x\C-q" 'moccur-edit-mode-in)
-          (define-key map "\C-c\C-i" 'moccur-edit-mode-in))
-      (error
-       nil))
+    ;; NOOO - Don't require something that requires you!!!
+    ;; (condition-case nil
+    ;;     (progn
+    ;;       (require 'moccur-edit)
+    ;;       (define-key map "r" 'moccur-edit-mode-in)
+    ;;       (define-key map "\C-x\C-q" 'moccur-edit-mode-in)
+    ;;       (define-key map "\C-c\C-i" 'moccur-edit-mode-in))
+    ;;   (error
+    ;;    nil))
     map))
 
 (if moccur-mode-map
@@ -3400,6 +3367,40 @@ It serves as a menu to find any of the occurrences in this buffer.
     (setq moccur-buffer-position nil))
 
   (moccur-remove-overlays-on-all-buffers))
+
+;;;; kill-buffer when moccur-quit
+(defadvice moccur-quit (before moccur-quit-kill-buffers activate)
+  (let ((buffers moccur-match-buffers)
+        (buff nil)
+        (mocc-window (selected-window))
+        (mocc-buffer (window-buffer (selected-window))))
+    (while moccur-xdoc2txt-buffers
+      (when (buffer-live-p
+             (get-buffer (car (car moccur-xdoc2txt-buffers))))
+        (kill-buffer (car (car moccur-xdoc2txt-buffers))))
+      (setq moccur-xdoc2txt-buffers (cdr moccur-xdoc2txt-buffers)))
+    (while buffers
+      (setq buff (car buffers))
+      (when (and (eq moccur-last-command 'dired-do-moccur)
+                 kill-buffer-after-dired-do-moccur
+                 (buffer-live-p buff)
+                 (buffer-name buff))
+        (select-window (next-window mocc-window))
+        (set-window-buffer (selected-window) buff)
+        (if (and (buffer-file-name buff)
+                 (buffer-modified-p buff)
+                 (y-or-n-p (concat "Buffer "
+                                   (buffer-name buff)
+                                   " modified. Save it? ")))
+            (save-buffer)
+          (set-buffer-modified-p nil)) ;; mark as not modified
+        (display-buffer mocc-buffer)
+        (select-window mocc-window)
+        (if (memq buff moccur-buffers-before-moccur)
+            (delq buff buffers)
+          (kill-buffer buff)))
+      (setq buffers (cdr buffers))))
+  nil)
 
 (defun moccur-toggle-view ()
   (interactive)
