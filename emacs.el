@@ -8,7 +8,7 @@
 
 (defvar emacs-root
   nil
-  "*The root of my personal emacs directories.")
+  "*The root of my personal emacs workspace.")
 (setq emacs-root
       (file-name-directory (if load-in-progress load-file-name
                              buffer-file-name)))
