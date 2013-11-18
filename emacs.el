@@ -6,6 +6,8 @@
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
 
+;; test 
+
 (defvar emacs-root
   nil
   "*The root of my personal emacs load-path.")
