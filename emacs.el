@@ -103,6 +103,7 @@
   (add-path "/packages/template/lisp")
   (add-path "/packages/tempo")
   (add-path "/packages/auctex-11.87-e24.2-msw")
+  (add-path "/packages/auctex-11.87-e24.2-msw/site-lisp/auctex")
   (add-path epy-install-dir-rel)
   (add-path (concat epy-install-dir-rel "extensions"))
   (add-path (concat epy-install-dir-rel "extensions/auto-complete"))
