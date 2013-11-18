@@ -6,19 +6,12 @@
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
 
-(defun expand-file-name-from-load-directory (filename)
-  "*Expand file name from the directory this file is in"
-  (let ((load-directory (if load-in-progress load-file-name
-                          buffer-file-name)))
-    (expand-file-name
-     filename
-     (file-name-directory load-directory))))
-
 (defvar emacs-root
   nil
-  "*The root of my personal emacs load-path.")
+  "*The root of my personal emacs directories.")
 (setq emacs-root
-      (expand-file-name-from-load-directory "opt/emacs"))
+      (file-name-directory (if load-in-progress load-file-name
+                             buffer-file-name)))
 (message "Running emacs.el with emacs-root %s" emacs-root)
 
 ;;; META
@@ -1048,7 +1041,7 @@ sorting by these (normal org priorities do not inherit)."
 
 ;;; CUSTOMIZATION
 (setq custom-file ;; set explicitly to avoid writing back to ~/.emacs.el
-      (expand-file-name-from-load-directory "emacs-custom.el"))
+      (expand-file-name "emacs-custom.el" emacs-root))
 (load custom-file)
 
 ;;; STARTUP
