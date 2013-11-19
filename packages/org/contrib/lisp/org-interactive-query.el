@@ -1,12 +1,12 @@
 ;;; org-interactive-query.el --- Interactive modification of agenda query
 ;;
-;; Copyright 2007-2011 Free Software Foundation, Inc.
+;; Copyright 2007-2013 Free Software Foundation, Inc.
 ;;
 ;; Author: Christopher League <league at contrapunctus dot net>
 ;; Version: 1.0
 ;; Keywords: org, wp
 ;;
-;; This file is not part of GNU Emacs. 
+;; This file is not part of GNU Emacs.
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -19,8 +19,7 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, write to the Free Software
-;; Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
@@ -31,7 +30,7 @@
 ;; /   add a keyword as a positive selection criterion
 ;; \   add a keyword as a newgative selection criterion
 ;; =   clear a keyword from the selection string
-;; ;   
+;; ;
 
 (require 'org)
 
@@ -39,7 +38,7 @@
 (org-defkey org-agenda-mode-map "/" 'org-agenda-query-and-cmd)
 (org-defkey org-agenda-mode-map ";" 'org-agenda-query-or-cmd)
 (org-defkey org-agenda-mode-map "\\" 'org-agenda-query-not-cmd)
- 
+
 ;;; Agenda interactive query manipulation
 
 (defcustom org-agenda-query-selection-single-key t
@@ -283,7 +282,7 @@ keyword string."
 (defun org-agenda-query-generic-cmd (op)
   "Activate query manipulation with OP as initial operator."
   (let ((q (org-agenda-query-selection org-agenda-query-string op
-                                       org-tag-alist 
+                                       org-tag-alist
                                        (org-agenda-query-global-todo-keys))))
     (when q
       (setq org-agenda-query-string q)

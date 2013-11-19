@@ -1,6 +1,6 @@
 ;;; org-habit.el --- The habit tracking code for Org-mode
 
-;; Copyright (C) 2009-2011 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2013 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw at gnu dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
@@ -67,15 +67,29 @@ relative to the current effective date."
   :group 'org-habit
   :type 'boolean)
 
+(defcustom org-habit-show-all-today nil
+  "If non-nil, will show the consistency graph of all habits on
+today's agenda, even if they are not scheduled."
+  :group 'org-habit
+  :type 'boolean)
+
 (defcustom org-habit-today-glyph ?!
   "Glyph character used to identify today."
   :group 'org-habit
+  :version "24.1"
   :type 'character)
 
 (defcustom org-habit-completed-glyph ?*
   "Glyph character used to show completed days on which a task was done."
   :group 'org-habit
+  :version "24.1"
   :type 'character)
+
+(defcustom org-habit-show-done-always-green nil
+  "Non-nil means DONE days will always be green in the consistency graph.
+It will be green even if it was done after the deadline."
+  :group 'org-habit
+  :type 'boolean)
 
 (defface org-habit-clear-face
   '((((background light)) (:background "#8270f9"))
@@ -264,8 +278,9 @@ Habits are assigned colors on the following basis:
       (if donep
 	  '(org-habit-ready-face . org-habit-ready-future-face)
 	'(org-habit-alert-face . org-habit-alert-future-face)))
-     (t
-      '(org-habit-overdue-face . org-habit-overdue-future-face)))))
+     ((and org-habit-show-done-always-green donep)
+      '(org-habit-ready-face . org-habit-ready-future-face))
+     (t '(org-habit-overdue-face . org-habit-overdue-future-face)))))
 
 (defun org-habit-build-graph (habit starting current ending)
   "Build a graph for the given HABIT, from STARTING to ENDING.
@@ -334,7 +349,14 @@ current time."
   (let ((inhibit-read-only t) l c
 	(buffer-invisibility-spec '(org-link))
 	(moment (time-subtract (current-time)
-			       (list 0 (* 3600 org-extend-today-until) 0))))
+			       (list 0 (* 3600 org-extend-today-until) 0)))
+	disabled-overlays)
+    ;; Disable filters; this helps with alignment if there are links.
+    (mapc (lambda (ol)
+	    (when (overlay-get ol 'invisible)
+	      (overlay-put ol 'invisible nil)
+	      (setq disabled-overlays (cons ol disabled-overlays))))
+	  (overlays-in (point-min) (point-max)))
     (save-excursion
       (goto-char (if line (point-at-bol) (point-min)))
       (while (not (eobp))
@@ -344,14 +366,15 @@ current time."
 	    (delete-char (min (+ 1 org-habit-preceding-days
 				 org-habit-following-days)
 			      (- (line-end-position) (point))))
-	    (insert (org-habit-build-graph
-		     habit
-		     (time-subtract moment
-				    (days-to-time org-habit-preceding-days))
-		     moment
-		     (time-add moment
-			       (days-to-time org-habit-following-days))))))
-	(forward-line)))))
+	    (insert-before-markers
+	     (org-habit-build-graph
+	      habit
+	      (time-subtract moment (days-to-time org-habit-preceding-days))
+	      moment
+	      (time-add moment (days-to-time org-habit-following-days))))))
+	(forward-line)))
+    (mapc (lambda (ol) (overlay-put ol 'invisible t))
+	  disabled-overlays)))
 
 (defun org-habit-toggle-habits ()
   "Toggle display of habits in an agenda buffer."

@@ -2,6 +2,22 @@
 ;;
 ;; Author: Jan Böker <jan dot boecker at jboecker dot de>
 
+;; This file is part of GNU Emacs.
+
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
 ;; This elisp code integrates Static MathJax into the
 ;; HTML export process of Org-mode.
 ;;
@@ -39,7 +55,7 @@
 ;; of your math, add the following line at the top of your Org file:
 ;; -*- coding: utf-8; -*-
 ;;
-;; License: GPL v2 or later
+;;; Code:
 
 (defcustom org-static-mathjax-app-ini-path
   (or (expand-file-name
@@ -86,7 +102,7 @@ org-static-mathjax-options:      The string given with #+STATICMATHJAX: in the f
 						 (set 'org-static-mathjax-mathjax-path
 							  (car (read-from-string
 									(substring mathjax-options (match-end 0))))))))
-			   (add-hook 'after-save-hook 
+			   (add-hook 'after-save-hook
 						 'org-static-mathjax-process
 						 nil t)))))
 
@@ -117,20 +133,20 @@ org-static-mathjax-options:      The string given with #+STATICMATHJAX: in the f
 			 (set symbol (eval (car (read-from-string
 									 (substring options (match-end 0))))))))
 	   '(embed-fonts output-file-name))
-	  
+
 	  ; debug
 	  (when org-static-mathjax-debug
 		(message "output file name, embed-fonts")
 		(print output-file-name)
 		(print embed-fonts))
-	  
+
 	  ; open (temporary) input file, copy contents there, replace MathJax path with local installation
 	  (with-temp-buffer
 		(insert html-code)
 		(goto-char 1)
 		(replace-regexp mathjax-oldpath mathjax-newpath)
 		(write-file input-file-name))
-	  
+
 	  ; prepare argument list for call-process
 	  (let ((call-process-args (list org-static-mathjax-xulrunner-path
 									 nil nil nil
@@ -146,10 +162,10 @@ org-static-mathjax-options:      The string given with #+STATICMATHJAX: in the f
 		(if (not embed-fonts)
 			(progn
 			  (add-to-list 'call-process-args "--final-mathjax-url" t)
-			  (add-to-list 'call-process-args 
+			  (add-to-list 'call-process-args
 						   (file-name-directory org-static-mathjax-mathjax-path)
 						   t)))
-		
+
 		; debug
 		(when org-static-mathjax-debug
 		  (print call-process-args))

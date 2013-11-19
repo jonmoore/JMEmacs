@@ -1,8 +1,8 @@
 ;;; org-expiry.el --- expiry mechanism for Org entries
 ;;
-;; Copyright 2007-2011 Free Software Foundation, Inc.
+;; Copyright 2007-2013 Free Software Foundation, Inc.
 ;;
-;; Author: bzg AT gnu DOT org
+;; Author: Bastien Guerry
 ;; Version: 0.2
 ;; Keywords: org expiry
 
@@ -19,13 +19,12 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, write to the Free Software
-;; Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
 ;; This gives you a chance to get rid of old entries in your Org files
-;; by expiring them.  
+;; by expiring them.
 ;;
 ;; By default, entries that have no EXPIRY property are considered to be
 ;; new (i.e. 0 day old) and only entries older than one year go to the
@@ -33,7 +32,7 @@
 ;; your tasks will be deleted with the default settings.
 ;;
 ;; When does an entry expires?
-;; 
+;;
 ;; Consider this entry:
 ;;
 ;; * Stop watching TV
@@ -41,8 +40,8 @@
 ;;   :CREATED:  <2008-01-07 lun 08:01>
 ;;   :EXPIRY:   <2008-01-09 08:01>
 ;;   :END:
-;; 
-;; This entry will expire on the 9th, january 2008. 
+;;
+;; This entry will expire on the 9th, january 2008.
 
 ;; * Stop watching TV
 ;;   :PROPERTIES:
@@ -56,19 +55,19 @@
 ;; What happen when an entry is expired?  Nothing until you explicitely
 ;; M-x org-expiry-process-entries When doing this, org-expiry will check
 ;; for expired entries and request permission to process them.
-;; 
+;;
 ;; Processing an expired entries means calling the function associated
 ;; with `org-expiry-handler-function'; the default is to add the tag
-;; :ARCHIVE:, but you can also add a EXPIRED keyword or even archive 
-;; the subtree.  
+;; :ARCHIVE:, but you can also add a EXPIRED keyword or even archive
+;; the subtree.
 ;;
 ;; Is this useful?  Well, when you're in a brainstorming session, it
 ;; might be useful to know about the creation date of an entry, and be
 ;; able to archive those entries that are more than xxx days/weeks old.
-;; 
+;;
 ;; When you're in such a session, you can insinuate org-expiry like
-;; this: M-x org-expiry-insinuate 
-;; 
+;; this: M-x org-expiry-insinuate
+;;
 ;; Then, each time you're pressing M-RET to insert an item, the CREATION
 ;; property will be automatically added.  Same when you're scheduling or
 ;; deadlining items.  You can deinsinuate: M-x org-expiry-deinsinuate
@@ -83,7 +82,7 @@
   :group 'org)
 
 (defcustom org-expiry-inactive-timestamps nil
-  "Insert inactive timestamps for the created and expired time properties"
+  "Insert inactive timestamps for created/expired properties."
   :type 'boolean
   :group 'org-expiry)
 
@@ -218,7 +217,7 @@ and restart `org-mode' if necessary."
 Return nil if the entry is not expired.  Otherwise return the
 amount of time between today and the expiry date.
 
-If there is no creation date, use `org-expiry-created-date'.  
+If there is no creation date, use `org-expiry-created-date'.
 If there is no expiry date, use `org-expiry-expiry-date'."
   (let* ((ex-prop org-expiry-expiry-property-name)
 	 (cr-prop org-expiry-created-property-name)
@@ -292,7 +291,7 @@ update the date."
 	 d-time d-hour timestr)
     (when (or (null d) arg)
       ;; update if no date or non-nil prefix argument
-      ;; FIXME Use `org-time-string-to-time' 
+      ;; FIXME Use `org-time-string-to-time'
       (setq d-time (if d (org-time-string-to-time d)
 		     (current-time)))
       (setq d-hour (format-time-string "%H:%M" d-time))
@@ -326,7 +325,7 @@ and insert today's date."
     ;; maybe transform to inactive timestamp
     (if org-expiry-inactive-timestamps
 	(setq timestr (concat "[" (substring timestr 1 -1) "]")))
-     
+
     (save-excursion
       (org-entry-put
        (point) org-expiry-expiry-property-name timestr))))
