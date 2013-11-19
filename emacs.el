@@ -767,7 +767,7 @@ sorting by these (normal org priorities do not inherit)."
                                     (lambda (path)
                                       (let ((saved-buffer (current-buffer)))
                                         (if (get-buffer "*Jira*")
-                                            (pop-to-buffer "*Jira" 'other-window)
+                                            (pop-to-buffer "*Jira*" 'other-window)
                                           (jira-mode))
                                         (jira-show-issue path)
                                         (pop-to-buffer saved-buffer))))
