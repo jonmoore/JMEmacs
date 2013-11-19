@@ -677,6 +677,8 @@ sorting by these (normal org priorities do not inherit)."
      ((string< pa pb) -1)
      (t nil))))
 
+
+
 (when (require 'org-install)
   (require 'org-clock)
 
@@ -689,6 +691,7 @@ sorting by these (normal org priorities do not inherit)."
    (function (lambda ()
                (require 'org-toc)
                (require 'org-id)
+               (require 'org-jira)
                (require 'org-wp-link)                          
                (require 'ob-mscgen)
 
@@ -760,6 +763,14 @@ sorting by these (normal org priorities do not inherit)."
                                 ("#C"               . ?c) 
                                 ("PLATFORM_PROJECT" . ?q))
                 
+                (org-add-link-type  "jira" 
+                                    (lambda (path)
+                                      (let ((saved-buffer (current-buffer)))
+                                        (if (get-buffer "*Jira*")
+                                            (pop-to-buffer "*Jira" 'other-window)
+                                          (jira-mode))
+                                        (jira-show-issue path)
+                                        (pop-to-buffer saved-buffer))))
                org-tags-column -80
                org-toc-default-depth 3
                org-toc-follow-mode t

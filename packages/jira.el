@@ -554,7 +554,6 @@
        (put-text-property 0 (length s) 'face 'jira-issue-info-face s)
        (insert s "\n\n"))
 
-     ;; ((("name" . "FMD") ("id" . "17112")))
      (let ((s "Component(s): "))
        (put-text-property 0 (length s) 'face 'jira-issue-info-header-face s)
        (insert s))
