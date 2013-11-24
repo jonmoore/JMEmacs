@@ -763,14 +763,6 @@ sorting by these (normal org priorities do not inherit)."
                                 ("#C"               . ?c) 
                                 ("PLATFORM_PROJECT" . ?q))
                 
-                (org-add-link-type  "jira" 
-                                    (lambda (path)
-                                      (let ((saved-buffer (current-buffer)))
-                                        (if (get-buffer "*Jira*")
-                                            (pop-to-buffer "*Jira*" 'other-window)
-                                          (jira-mode))
-                                        (jira-show-issue path)
-                                        (pop-to-buffer saved-buffer))))
                org-tags-column -80
                org-toc-default-depth 3
                org-toc-follow-mode t
@@ -778,6 +770,14 @@ sorting by these (normal org priorities do not inherit)."
                org-toc-show-subtree-mode t
                org-use-speed-commands t
                )
+               (org-add-link-type  "jira" 
+                                   (lambda (path)
+                                     (let ((saved-buffer (current-buffer)))
+                                       (if (get-buffer "*Jira*")
+                                           (pop-to-buffer "*Jira*" 'other-window)
+                                         (jira-mode))
+                                       (jira-show-issue path)
+                                       (pop-to-buffer saved-buffer))))
                (setq org-export-html-style
                    "<style type=\"text/css\">
                                  html {
