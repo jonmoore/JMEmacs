@@ -83,6 +83,9 @@
 (defconst epy-install-dir
   (concat emacs-root epy-install-dir-rel)
   "Installation directory of emacs-for-python terminating with a slash")
+(defconst python-ide-package
+  'elpy
+  "Python IDE package to use")
 
 (labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
   (add-path "/site-lisp")
@@ -100,10 +103,14 @@
   (add-path "/packages/tempo")
   (add-path "/packages/auctex-11.87-e24.2-msw")
   (add-path "/packages/auctex-11.87-e24.2-msw/site-lisp/auctex")
-  (add-path epy-install-dir-rel)
-  (add-path (concat epy-install-dir-rel "extensions"))
-  (add-path (concat epy-install-dir-rel "extensions/auto-complete"))
   )
+
+(if (eq python-ide-package 'epy)
+    (labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
+      (add-path epy-install-dir-rel)
+      (add-path (concat epy-install-dir-rel "extensions"))
+      (add-path (concat epy-install-dir-rel "extensions/auto-complete"))
+      ))
 
 (setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
                                                    (system-osx-p   "~/backup")))))
@@ -151,13 +158,15 @@
 (setq query-replace-highlight t) 
 (setq search-highlight t) 
 
-(set-face-attribute 'default  nil
-                    :foreground "cadetblue1" :background "blue4")
+(set-face-attribute 'default nil
+                    :background "blue4" 
+                    :foreground "white")
 
-;; Inconsolata looks a bit like Consolas and needs to be installed.
-;; Otherwise you can end up with Times New Roman or something
+(when system-win32-p
+  (set-face-attribute 'default  nil :family "Consolas"    :height 120))
+;; Inconsolata needs to be installed otherwise you can end up with Times New Roman
 (when system-osx-p
-  (set-face-attribute 'default  nil :family "Inconsolata" :height 180))
+  (set-face-attribute 'default  nil :family "Inconsolata" :height 200))
 
 ;;; GLOBAL EDITING SETTINGS
 (autoload 'scroll-up-in-place   "scroll-in-place" "scroll-up-in-place"   t)
@@ -876,51 +885,73 @@ sorting by these (normal org priorities do not inherit)."
 
 ;;; PYTHON MODE
 ;; python should be in auto-mode-alist alredy
-(add-hook 'python-mode-hook
-          '(lambda () 
-             (modify-syntax-entry ?- "_" python-mode-syntax-table)
-             (require 'jpy-completion)
-             (require 'jpy-editing)
-             (define-key python-mode-map (kbd "M-<right>")
-               'balle-python-shift-right)
-             (define-key python-mode-map (kbd "M-<left>")
-               'balle-python-shift-left)))
 
+(package-initialize)
+(cond 
+ ((eq python-ide-package 'epy)
+  (add-hook 'python-mode-hook
+                                           '(lambda () 
+                                              (modify-syntax-entry ?- "_" python-mode-syntax-table)
+                                              (require 'jpy-completion)
+                                              (require 'jpy-editing)
+                                              (define-key python-mode-map (kbd "M-<right>")
+                                                'balle-python-shift-right)
+                                              (define-key python-mode-map (kbd "M-<left>")
+                                                'balle-python-shift-left)))
+  
 ;; (eval-after-load 'python
 ;;   '(progn
 ;;      (require 'jpy-python)
 ;;      (require 'pymacs)
 ;;      (pymacs-load "ropemacs" "rope-")))
-
-;; PDB command line
-(defun pdb-current-buffer ()
+  
+  ;; PDB command line
+  (defun pdb-current-buffer ()
   "Run python debugger on current buffer."
   (interactive)
   (setq command (format "python -u -m pdb %s " (file-name-nondirectory buffer-file-name)))
   (let ((command-with-args (read-string "Debug command: " command nil nil nil)))
     (pdb command-with-args)))
 
-;; auto-complete
-(require 'auto-complete)
-(require 'auto-complete-config)
-(setq ac-dwim t)
-(ac-config-default)
-(define-key ac-complete-mode-map "\t" 'ac-expand)
-(define-key ac-complete-mode-map "\r" 'ac-complete)
-(define-key ac-complete-mode-map "\M-n" 'ac-next)
-(define-key ac-complete-mode-map "\M-p" 'ac-previous)
+  ;; auto-complete
+  (require 'auto-complete)
+  (require 'auto-complete-config)
+  (setq ac-dwim t)
+  (ac-config-default)
+  (define-key ac-complete-mode-map "\t" 'ac-expand)
+  (define-key ac-complete-mode-map "\r" 'ac-complete)
+  (define-key ac-complete-mode-map "\M-n" 'ac-next)
+  (define-key ac-complete-mode-map "\M-p" 'ac-previous)
 
-;; virtualenv - why is this switching desktops?
-;; https://github.com/aculich/virtualenv.el
-;; http://matthewlmcclure.com/s/2012/06/05/emacs-tramp-python-virtualenv.html
-;; (autoload 'virtualenv-activate "virtualenv"
-;;   "Activate a Virtual Environment specified by PATH" t)
-;; (autoload 'virtualenv-workon "virtualenv"
-;;   "Activate a Virtual Environment present using virtualenvwrapper" t)
-;; (defun workon-postactivate (virtualenv)
-;;   (require 'virtualenv)
-;;   (virtualenv-activate virtualenv)
-;;   (desktop-change-dir virtualenv))
+  ;; virtualenv - why is this switching desktops?
+  ;; https://github.com/aculich/virtualenv.el
+  ;; http://matthewlmcclure.com/s/2012/06/05/emacs-tramp-python-virtualenv.html
+  ;; (autoload 'virtualenv-activate "virtualenv"
+  ;;   "Activate a Virtual Environment specified by PATH" t)
+  ;; (autoload 'virtualenv-workon "virtualenv"
+  ;;   "Activate a Virtual Environment present using virtualenvwrapper" t)
+  ;; (defun workon-postactivate (virtualenv)
+  ;;   (require 'virtualenv)
+  ;;   (virtualenv-activate virtualenv)
+  ;;   (desktop-change-dir virtualenv))
+  )
+ ((eq python-ide-package 'elpy)
+  (elpy-enable)
+  (elpy-use-ipython)
+  (elpy-clean-modeline)))
+
+;; (setq
+;;  python-shell-interpreter "ipython"
+;;  python-shell-interpreter-args ""
+;;  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
+;;  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
+;;  python-shell-completion-setup-code
+;;    "from IPython.core.completerlib import module_completion"
+;;  python-shell-completion-module-string-code
+;;    "';'.join(module_completion('''%s'''))\n"
+;;  python-shell-completion-string-code
+;;    "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
+
 
 ;;; SCHEME MODE
 (defun comint-accumulate-and-indent (&optional prefix)

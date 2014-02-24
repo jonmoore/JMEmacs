@@ -91,7 +91,6 @@
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "blue4" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 120 :width normal :foundry "outline" :family "Consolas"))))
  '(font-lock-builtin-face ((((class color) (background light)) (:foreground "blue"))))
  '(font-lock-comment-face ((t (:foreground "sky blue"))))
  '(font-lock-constant-face ((((class color) (background light)) (:foreground "dark green"))))
@@ -102,5 +101,4 @@
  '(longlines-visible-face ((t (:foreground "red"))))
  '(p4-diff-del-face ((t (:foreground "DodgerBlue"))) t)
  '(p4-diff-head-face ((t (:background "black"))) t)
- '(p4-diff-ins-face ((t (:foreground "white"))) t)
- '(quack-threesemi-text-face ((((class color) (background light)) (:background "#c0ffff" :foreground "black" :weight bold)))))
+ '(p4-diff-ins-face ((t (:foreground "white"))) t))
