@@ -291,7 +291,9 @@ class LispUtils(ropemode.environment.Environment):
                    'after_save': 'after-save-hook',
                    'exit': 'kill-emacs-hook'}
         globals()[name] = callback
-        lisp.add_hook(lisp[mapping[hook]], lisp[_lisp_name(name)])
+#       JNM: try to add as buffer-local hook?  don't want global 
+#        lisp.add_hook(lisp[mapping[hook]], lisp[_lisp_name(name)])
+        lisp.add_hook(lisp[mapping[hook]], lisp[_lisp_name(name)], None, True)
 
     def project_opened(self):
         '''

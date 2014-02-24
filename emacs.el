@@ -43,18 +43,18 @@
 (cond
  (system-win32-p
   (require 'dos-w32)
-  (setq cygwin-bin "C:\\apps\\cygwin\\bin"
-        default-system-shell (concat cygwin-bin "\\bash.exe"))
   (setq file-name-buffer-file-type-alist (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
-  (setenv "PATH" (concat cygwin-bin
-                          path-separator (getenv "PATH")))
 
+  (setq default-system-shell (concat cygwin-bin "\\bash.exe"))
+  ;; (setenv "PATH" (concat 
+  ;;                 cygwin-bin
+  ;;                        path-separator (getenv "PATH")))
   (mapcar 
-   (lambda (filepath)                   ;; preprend filepath to exec-path
+   (lambda (filepath)                   ;; prepend filepath to exec-path
      (setq exec-path (append
                       (list (replace-regexp-in-string  "\\\\"  "/" filepath))
                       exec-path)))
-   (list cygwin-bin "c:/program files (x86)/SimonTatham/PuTTY"))))
+   local-exec-paths)))
 
 (setq shell-file-name (or (getenv "SHELL") 
                           default-system-shell))
@@ -134,6 +134,11 @@
 ;;;; MY FUNCTIONS
 ;;;==============
 
+
+(require 'ibuffer)
+(require 'color-moccur)
+(require 'moccur-edit)
+(load "moccur-wrappers")
 (load "snippets")
 (load "jnm-loaddefs")
 
@@ -230,7 +235,7 @@
 (global-set-key [f11]               'org-clock-in-and-goto)
 (global-set-key [S-f11]             'org-clock-goto)
 
-(global-set-key [f12]               'qap-locate-p4-grep-and-moccur)
+(global-set-key [f12]               'qap-moccur-p4-grep)
 (global-set-key [S-f12]             'qap-locate-windows-code-like-and-moccur )
 (global-set-key [C-f12]             'qap-locate-windows-code-contains-and-moccur )
 
@@ -881,14 +886,11 @@ sorting by these (normal org priorities do not inherit)."
              (define-key python-mode-map (kbd "M-<left>")
                'balle-python-shift-left)))
 
-(eval-after-load 'python
-  '(progn
-     (require 'jpy-python)
-     (require 'pymacs)
-     ;; note that the default ropemacs-global-prefix generates an
-     ;; error about being a non-prefix key so I customize this to nil
-     ;; to disable the keybindings
-     (pymacs-load "ropemacs" "rope-")))
+;; (eval-after-load 'python
+;;   '(progn
+;;      (require 'jpy-python)
+;;      (require 'pymacs)
+;;      (pymacs-load "ropemacs" "rope-")))
 
 ;; PDB command line
 (defun pdb-current-buffer ()

@@ -276,8 +276,6 @@ If `dired-ps-print-buffer-with-faces' is non-nil, use
             (if dired-ps-print-buffer-with-faces
                 (ps-print-buffer-with-faces)
               (ps-print-buffer)))
-          ;; ps-print.el somehow alters the current buffer
-          ;; (or buffer (kill-buffer (current-buffer)))
           (or buffer (kill-buffer (get-file-buffer (car files))))))
       (setq files (cdr files)))))
 
@@ -503,12 +501,6 @@ The value is actually the first element of list whose car equals key."
 (require 'color-moccur)
 (require 'moccur-edit) ;; missing key - see color-mocur.el
 
-(defun moccur-wrap (textMatch func)
-  (moccur-setup)
-  (setq moccur-last-command 'moccur-grep-find)
-  (moccur-search-files textMatch
-                       (funcall func)))
-
 ;; configuration
 (defgroup qap-locate nil
   "Personal locate commands")
@@ -544,14 +536,14 @@ as a parameter.  Prints a list of matching paths to stdout."
 (setplist
  'qap-locate-term-itemname-like  '(description 
                                   "Itemname matches string"
-                                  sql-where (lambda (liketerm) (interactive "sLike:")
+                                  sql-where (lambda (liketerm) (interactive "sName like (for Windows Search):")
                                               (format "System.ItemName LIKE '%%%s%%'" liketerm))
                                   sql-select ("System.ItemName")))
 
 (setplist
  'qap-locate-term-contains  '(description 
                              "Item contains string"
-                             sql-where (lambda (containsterm) (interactive "sContains:")
+                             sql-where (lambda (containsterm) (interactive "sContains (for Windows Search):")
                                          (format "contains('%s*')" containsterm))
                              sql-select ()))
 
@@ -593,6 +585,8 @@ provided term according to Windows search"
        'qap-locate-term-itemname-like)))))
 
 (defun qap-locate-windows-code-contains-and-moccur (textMatch)
+  "Does an moccur regexp search among files containign the
+provided term according to Windows search"
   (interactive "sMoccur regexp:")
   (moccur-wrap
    textMatch
@@ -602,26 +596,6 @@ provided term according to Windows search"
        'qap-locate-term-default-scope
        'qap-locate-term-code-search
        'qap-locate-term-contains)))))
-
-;;; P4 GREP 
-(defun qap-p4-client () "moorjona_w7")
-(defun qap-p4-root   () "c:/p4ws")
-  
-(defun qap-locate-p4 (dir regex)
-  (mapcar 
-   (lambda (s) 
-     (concat (qap-p4-root)
-             (replace-regexp-in-string "/\\(.*\\)#.*" "\\1" s)))
-   (split-string
-    (shell-command-to-string 
-     (format "p4  -c %s -d %s grep -s -l -e %s ..." (qap-p4-client) dir regex)))))
-
-(defun qap-locate-p4-grep-and-moccur (dir regex)
-  (interactive  "DDirectory: \nsRegexp: ")
-  (moccur-wrap
-   regex
-   (lambda ()
-     (qap-locate-p4 dir regex))))
 
 ;; autoloads advice - http://stackoverflow.com/questions/4189159/emacs23-elisp-how-to-properly-autoload-this-library
 ;; What you really want is to get the autoloads generated for you
