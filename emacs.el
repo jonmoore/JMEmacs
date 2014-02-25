@@ -23,10 +23,6 @@
   "*Do something if FUNCTION is available."
   `(when (fboundp ,func) ,foo)) 
 
-;; no error on failure to load
-(when (load (expand-file-name "~/.emacs.d/elpa/package.el") t)
-  (package-initialize))
-
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
   "Are we running on a WinTel system?")
@@ -45,21 +41,30 @@
   (require 'dos-w32)
   (setq file-name-buffer-file-type-alist (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
 
-  (setq default-system-shell (concat cygwin-bin "\\bash.exe"))
+  (when (boundp 'cygwin-bin)
+    (setq default-system-shell (concat cygwin-bin "\\bash.exe")))
   ;; (setenv "PATH" (concat 
   ;;                 cygwin-bin
   ;;                        path-separator (getenv "PATH")))
-  (mapcar 
-   (lambda (filepath)                   ;; prepend filepath to exec-path
-     (setq exec-path (append
-                      (list (replace-regexp-in-string  "\\\\"  "/" filepath))
+  (when (boundp 'local-exec-paths)
+    (mapcar 
+     (lambda (filepath)                   ;; prepend filepath to exec-path
+       (setq exec-path (append
+                        (list (replace-regexp-in-string  "\\\\"  "/" filepath))
                       exec-path)))
-   local-exec-paths)))
-
+     local-exec-paths))))
+ 
 (setq shell-file-name (or (getenv "SHELL") 
                           default-system-shell))
 (setenv "SHELL" shell-file-name)
 (setq inhibit-default-init t)           ; don't load default.el
+
+;;; ELPA Archives
+(require 'package)
+(setq package-archives
+      '(("gnu" . "http://elpa.gnu.org/packages/")
+        ("marmalade" . "http://marmalade-repo.org/packages/")))
+(package-initialize)
 
 ;;; PATHS
 ;; or use Info-default-directory-list
@@ -884,74 +889,42 @@ sorting by these (normal org priorities do not inherit)."
              (define-key cperl-mode-map [f1] 'perlnow-perl-check) ))
 
 ;;; PYTHON MODE
-;; python should be in auto-mode-alist alredy
 
 (package-initialize)
 (cond 
- ((eq python-ide-package 'epy)
-  (add-hook 'python-mode-hook
-                                           '(lambda () 
-                                              (modify-syntax-entry ?- "_" python-mode-syntax-table)
-                                              (require 'jpy-completion)
-                                              (require 'jpy-editing)
-                                              (define-key python-mode-map (kbd "M-<right>")
-                                                'balle-python-shift-right)
-                                              (define-key python-mode-map (kbd "M-<left>")
-                                                'balle-python-shift-left)))
-  
-;; (eval-after-load 'python
-;;   '(progn
-;;      (require 'jpy-python)
-;;      (require 'pymacs)
-;;      (pymacs-load "ropemacs" "rope-")))
-  
-  ;; PDB command line
-  (defun pdb-current-buffer ()
-  "Run python debugger on current buffer."
-  (interactive)
-  (setq command (format "python -u -m pdb %s " (file-name-nondirectory buffer-file-name)))
-  (let ((command-with-args (read-string "Debug command: " command nil nil nil)))
-    (pdb command-with-args)))
-
-  ;; auto-complete
-  (require 'auto-complete)
-  (require 'auto-complete-config)
-  (setq ac-dwim t)
-  (ac-config-default)
-  (define-key ac-complete-mode-map "\t" 'ac-expand)
-  (define-key ac-complete-mode-map "\r" 'ac-complete)
-  (define-key ac-complete-mode-map "\M-n" 'ac-next)
-  (define-key ac-complete-mode-map "\M-p" 'ac-previous)
-
-  ;; virtualenv - why is this switching desktops?
-  ;; https://github.com/aculich/virtualenv.el
-  ;; http://matthewlmcclure.com/s/2012/06/05/emacs-tramp-python-virtualenv.html
-  ;; (autoload 'virtualenv-activate "virtualenv"
-  ;;   "Activate a Virtual Environment specified by PATH" t)
-  ;; (autoload 'virtualenv-workon "virtualenv"
-  ;;   "Activate a Virtual Environment present using virtualenvwrapper" t)
-  ;; (defun workon-postactivate (virtualenv)
-  ;;   (require 'virtualenv)
-  ;;   (virtualenv-activate virtualenv)
-  ;;   (desktop-change-dir virtualenv))
-  )
- ((eq python-ide-package 'elpy)
-  (elpy-enable)
-  (elpy-use-ipython)
-  (elpy-clean-modeline)))
-
-;; (setq
-;;  python-shell-interpreter "ipython"
-;;  python-shell-interpreter-args ""
-;;  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
-;;  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
-;;  python-shell-completion-setup-code
-;;    "from IPython.core.completerlib import module_completion"
-;;  python-shell-completion-module-string-code
-;;    "';'.join(module_completion('''%s'''))\n"
-;;  python-shell-completion-string-code
-;;    "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
-
+ ((eq python-ide-package 'elpy) (eval-after-load 'python 
+				  '(progn 
+                                     (elpy-enable)
+                                     ;; (elpy-use-ipython) 
+                                     (elpy-clean-modeline))))
+ ((eq python-ide-package 'epy)  
+  (progn
+    (add-hook 'python-mode-hook
+              '(lambda () 
+                 (modify-syntax-entry ?- "_" python-mode-syntax-table)
+                 (require 'jpy-completion)
+                 (require 'jpy-editing)
+                 (define-key python-mode-map (kbd "M-<right>")
+                   'balle-python-shift-right)
+                 (define-key python-mode-map (kbd "M-<left>")
+                   'balle-python-shift-left)))
+    
+    (defun pdb-current-buffer ()
+      "Run python debugger on current buffer."
+      (interactive)
+      (setq command (format "python -u -m pdb %s " (file-name-nondirectory buffer-file-name)))
+      (let ((command-with-args (read-string "Debug command: " command nil nil nil)))
+        (pdb command-with-args)))
+    
+    ;; auto-complete
+    (require 'auto-complete)
+    (require 'auto-complete-config)
+    (setq ac-dwim t)
+    (ac-config-default)
+    (define-key ac-complete-mode-map "\t" 'ac-expand)
+    (define-key ac-complete-mode-map "\r" 'ac-complete)
+    (define-key ac-complete-mode-map "\M-n" 'ac-next)
+    (define-key ac-complete-mode-map "\M-p" 'ac-previous))))
 
 ;;; SCHEME MODE
 (defun comint-accumulate-and-indent (&optional prefix)

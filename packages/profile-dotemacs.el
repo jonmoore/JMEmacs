@@ -81,7 +81,7 @@
   "c:/git/JMEmacs/opt/emacs"
   "*The root of my personal emacs load-path.")
 
-(defvar profile-dotemacs-file "c:/git/JMEmacs/.emacs.el"
+(defvar profile-dotemacs-file "c:/git/JMEmacs/emacs.el"
   "File to be profiled.")
 
 (defvar profile-dotemacs-low-percentage 3
