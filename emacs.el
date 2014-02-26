@@ -62,9 +62,64 @@
 ;;; ELPA Archives
 (require 'package)
 (setq package-archives
-      '(("gnu" . "http://elpa.gnu.org/packages/")
+      '(("gnu"       . "http://elpa.gnu.org/packages/")
+        ("melpa"     . "http://melpa.milkbox.net/packages/")
+        ("org"       . "http://orgmode.org/elpa/")
         ("marmalade" . "http://marmalade-repo.org/packages/")))
+
 (package-initialize)
+
+(when (not package-archive-contents)
+  (package-refresh-contents))
+
+(setq jnm-packages
+      '(
+        auctex
+        auctex-latexmk
+        auto-complete
+        browse-kill-ring
+        cdlatex
+        color-theme
+        ein
+        elpy
+        ess
+        find-file-in-project
+        fuzzy
+        graphviz-dot-mode
+        hexrgb
+        highlight-indentation
+        idomenu
+        iedit
+        j-mode
+        jira
+        maxframe
+        nose
+        org
+        org-jira
+        popup
+        request
+        sumatra-forward
+        undo-tree
+        virtualenv
+        websocket
+        xml-rpc
+        ))
+
+(dolist (pkg jnm-packages)
+  (when (and (not (package-installed-p pkg))
+             (assoc pkg package-archive-contents))
+    (package-install pkg)))
+
+(defun package-list-unaccounted-packages ()
+  "Like `package-list-packages', but shows only the packages that
+  are installed and are not in `jnm-packages'.  Useful for
+  cleaning out unwanted packages."
+  (interactive)
+  (package-show-package-list
+   (remove-if-not (lambda (x) (and (not (memq x jnm-packages))
+                                   (not (package-built-in-p x))
+                                   (package-installed-p x)))
+                  (mapcar 'car package-archive-contents))))
 
 ;;; PATHS
 ;; or use Info-default-directory-list
@@ -82,40 +137,15 @@
               (woman-parse-colon-path (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
 (add-hook 'woman-mode-hook 'my-woman-mode-hook)
 
-(defconst epy-install-dir-rel
-  "/packages/epy/"
-  "Installation directory of emacs-for-python relative to emacs-root terminating with a slash")
-(defconst epy-install-dir
-  (concat emacs-root epy-install-dir-rel)
-  "Installation directory of emacs-for-python terminating with a slash")
-(defconst python-ide-package
-  'elpy
-  "Python IDE package to use")
-
-(labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
+(cl-labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
   (add-path "/site-lisp")
   (add-path "/site-lisp/templates")
   (add-path "/packages")
   (add-path "/packages/Emacs-PDE-0.2.16/lisp")
-  (add-path "/packages/cdlatex")
-  (add-path "/packages/color-theme-6.6.0")
   (add-path "/packages/doxymacs-1.8.0")
-  (add-path "/packages/org/contrib/lisp")
-  (add-path "/packages/org/contrib/babel/lisp")
-  (add-path "/packages/org/lisp")
   (add-path "/packages/perlnow")
   (add-path "/packages/template/lisp")
-  (add-path "/packages/tempo")
-  (add-path "/packages/auctex-11.87-e24.2-msw")
-  (add-path "/packages/auctex-11.87-e24.2-msw/site-lisp/auctex")
   )
-
-(if (eq python-ide-package 'epy)
-    (labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
-      (add-path epy-install-dir-rel)
-      (add-path (concat epy-install-dir-rel "extensions"))
-      (add-path (concat epy-install-dir-rel "extensions/auto-complete"))
-      ))
 
 (setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
                                                    (system-osx-p   "~/backup")))))
@@ -144,7 +174,7 @@
 
 ;;;
 ;;;; MY FUNCTIONS
-;;;==============
+;;;============================
 
 
 (require 'ibuffer)
@@ -371,7 +401,7 @@
 (define-key isearch-mode-map (kbd "C-o") 'isearch-joccur)
 
 ;; MOCCUR
-(autoload 'dired-do-moccur "color-moccur" nil t)
+;; (autoload 'dired-do-moccur "color-moccur" nil t)
 
 (setq *moccur-buffer-name-exclusion-list*
       '(".+TAGS.+" "*Completions*" "*Messages*"
@@ -424,6 +454,16 @@
 ;;;
 ;;;; MODES
 ;;;=======
+
+;;; AUTO-COMPLETE
+;; (require 'auto-complete)
+;; (require 'auto-complete-config)
+;; (setq ac-dwim t)
+;; (ac-config-default)
+;; (define-key ac-complete-mode-map "\t" 'ac-expand)
+;; (define-key ac-complete-mode-map "\r" 'ac-complete)
+;; (define-key ac-complete-mode-map "\M-n" 'ac-next)
+;; (define-key ac-complete-mode-map "\M-p" 'ac-previous)))
 
 ;;; CC MODE
 (autoload 'doxymacs-mode      "doxymacs" "doxymacs mode" t)
@@ -708,10 +748,9 @@ sorting by these (normal org priorities do not inherit)."
   (add-hook 
    'org-mode-hook
    (function (lambda ()
-               (require 'org-toc)
                (require 'org-id)
                (require 'org-jira)
-               (require 'org-wp-link)                          
+               (require 'org-wp-link)
                (require 'ob-mscgen)
 
                (when (and (require-soft 'texmathp)
@@ -726,7 +765,6 @@ sorting by these (normal org priorities do not inherit)."
                (local-set-key [(shift tab)] 'org-show-contents-or-move-to-previous-table-field)
                (local-set-key [C-S-down]    'outline-next-visible-heading)
                (local-set-key [C-S-up]      'outline-previous-visible-heading)
-               (local-set-key [?\C-c ?t]    'org-toc-show)
 
                (local-set-key [?\C-c ? ]    'outline-mark-subtree)
                (set-face-foreground 'org-hide (face-background 'default))
@@ -849,10 +887,6 @@ sorting by these (normal org priorities do not inherit)."
                       :auto-preamble t
                       :auto-postamble t
                       )))))))
-(defadvice save-buffers-kill-emacs
-  (before org-check-running-clock activate)
-  "Check for a running clock before quitting."
-  (org-check-running-clock-any-buffer))
 
 ;;; (C)PERL MODE
 (defalias 'perl-mode 'cperl-mode)
@@ -889,100 +923,30 @@ sorting by these (normal org priorities do not inherit)."
              (define-key cperl-mode-map [f1] 'perlnow-perl-check) ))
 
 ;;; PYTHON MODE
-
-(package-initialize)
+(defconst python-ide-package
+  'elpy
+  "Python IDE package to use")
 (cond 
- ((eq python-ide-package 'elpy) (eval-after-load 'python 
-				  '(progn 
-                                     (elpy-enable)
-                                     ;; (elpy-use-ipython) 
-                                     (elpy-clean-modeline))))
- ((eq python-ide-package 'epy)  
-  (progn
-    (add-hook 'python-mode-hook
-              '(lambda () 
-                 (modify-syntax-entry ?- "_" python-mode-syntax-table)
-                 (require 'jpy-completion)
-                 (require 'jpy-editing)
-                 (define-key python-mode-map (kbd "M-<right>")
-                   'balle-python-shift-right)
-                 (define-key python-mode-map (kbd "M-<left>")
-                   'balle-python-shift-left)))
-    
-    (defun pdb-current-buffer ()
-      "Run python debugger on current buffer."
-      (interactive)
-      (setq command (format "python -u -m pdb %s " (file-name-nondirectory buffer-file-name)))
-      (let ((command-with-args (read-string "Debug command: " command nil nil nil)))
-        (pdb command-with-args)))
-    
-    ;; auto-complete
-    (require 'auto-complete)
-    (require 'auto-complete-config)
-    (setq ac-dwim t)
-    (ac-config-default)
-    (define-key ac-complete-mode-map "\t" 'ac-expand)
-    (define-key ac-complete-mode-map "\r" 'ac-complete)
-    (define-key ac-complete-mode-map "\M-n" 'ac-next)
-    (define-key ac-complete-mode-map "\M-p" 'ac-previous))))
-
-;;; SCHEME MODE
-(defun comint-accumulate-and-indent (&optional prefix)
-  "Call comint-accumulate and indent-for-tab-command successively"
-  (interactive)
-  (comint-accumulate)
-  (indent-for-tab-command prefix))
-(add-hook 'scheme-mode-hook
-	  (lambda ()
-            ;; Tell emacs about the indentation of some not-so-well-known procedures.
-            (put 'with-error-handler           'scheme-indent-function 1)
-            (put 'with-exception-handler       'scheme-indent-function 1)     
-            (put 'with-exit-exception-handler  'scheme-indent-function 1)     
-            (put 'with-exit-exception-handler* 'scheme-indent-function 2)     
-            (put 'my-with-exception-handler    'scheme-indent-function 2)     
-            (put 'for-debug                    'scheme-indent-function 'defun)
-            (put 'test-expected                'scheme-indent-function 'defun)
-            (put 'call-with-input-string       'scheme-indent-function 1)     
-            (put 'with-port-locking            'scheme-indent-function 1)     
-            (setq scheme-program-name
-                  (and (getenv "PLTHOME")
-                       (file-directory-p (getenv "PLTHOME"))
-                       (expand-file-name "mzscheme.exe" (getenv "PLTHOME")))) 
-            (when (require-soft 'quack)
-              (setq quack-default-program scheme-program-name
-                    quack-fontify-style   'plt
-                    quack-global-menu-p   nil                
-                    quack-manuals (quote ((r5rs "R5RS" "http://www.schemers.org/Documents/Standards/R5RS/HTML/" nil) (plt-mzscheme "PLT MzScheme: Language Manual" plt t) (plt-mzlib "PLT MzLib: Libraries Manual" plt t) (plt-mred "PLT MrEd: Graphical Toolbox Manual" plt t) (plt-framework "PLT Framework: GUI Application Framework" plt t) (plt-drscheme "PLT DrScheme: Programming Environment Manual" plt nil) (plt-insidemz "PLT Inside PLT MzScheme" plt nil) (plt-tools "PLT Tools: DrScheme Extension Manual" plt nil) (plt-mzc "PLT mzc: MzScheme Compiler Manual" plt t) (plt-r5rs "PLT R5RS" plt t) (scsh "Scsh Reference Manual" "http://www.scsh.net/docu/html/man-Z-H-1.html" nil) (htdp "How to Design Programs" "http://www.htdp.org/" nil) (htus "How to Use Scheme" "http://www.htus.org/" nil) (t-y-scheme "Teach Yourself Scheme in Fixnum Days" "http://www.ccs.neu.edu/home/dorai/t-y-scheme/t-y-scheme.html" nil) (tspl "Scheme Programming Language (Dybvig)" "http://www.scheme.com/tspl/" nil) (sicp "Structure and Interpretation of Computer Programs" "http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-4.html" nil) (slib "SLIB" "http://swissnet.ai.mit.edu/~jaffer/SLIB.html" nil) (faq "Scheme Frequently Asked Questions" "http://www.schemers.org/Documents/FAQ/" nil)))
-                    quack-pltcollect-dirs (quote ("c:/Program Files/PLT" "c:/Program Files/PLT/collects"))
-                    quack-pretty-lambda-p nil
-                    quack-programs (quote ("c:\\Program Files\\Plt\\mred.exe -z" "bigloo" "c:/Program Files/PLT/mzscheme.exe" "c:\\Program Files\\Plt\\mred.exe" "c:\\Program Files\\Plt\\mred.exe -M errortrace -e \"(current-eventspace (make-eventspace))\" -e \"(print-structs true)\"" "c:\\Program Files\\Plt\\mred.exe /M errortrace /e \"(current-eventspace (make-eventspace))\" /e \"(print-structs true)\"" "c:\\Program Files\\Plt\\mzscheme.exe" "csi" "gosh" "gsi" "guile" "kawa" "mit-scheme" "mred -z" "mzscheme" "mzscheme -M errortrace" "rs" "scheme" "scheme48" "scsh" "sisc" "stklos" "sxi"))
-                    quack-remember-new-programs-p nil
-                    quack-tabs-are-evil-p t
-                    scheme-mit-dialect    nil                
-                    ))
-	    (define-key scheme-mode-map [f1]
-	      '(lambda ()
-		 "Lookup thing at point in info documentation for R5RS"
-		 (interactive)
-		 (ignore-errors
-		   (let ((symbol (thing-at-point 'symbol)))
-		     (info "(r5rs)")
-		     (Info-index symbol)))))))
-(add-hook 'inferior-scheme-mode-hook
-	  (function
-	   (lambda ()
-	     (turn-on-font-lock)
-	     (define-key inferior-scheme-mode-map
-	       [(shift return)] 'comint-accumulate-and-indent))))
-(autoload 'scheme-mode    "quack" "Major mode for Scheme."                           t)
-(autoload 'run-scheme     "quack"     "Switch to interactive Scheme buffer."             t)
-(autoload 'run-alt-scheme "cmuscheme" "Switch to interactive alternative Scheme buffer." t)
-(add-to-list 'interpreter-mode-alist '("scsh" . scheme-mode))
-
-;; Below we replace scheme-args-to-list so as not to destroy commands
-;; with spaces (...ram Files...).  This is crude - could check for
-;; file existence or a minus sign for options as we go along.
-(eval-after-load "cmuscheme" '(defun scheme-args-to-list (str) (list str)))
+ ((eq python-ide-package 'elpy) 
+  (eval-after-load 'python 
+    '(progn 
+       (elpy-enable)
+       (elpy-clean-modeline)
+       (cond 
+        (system-win32-p
+         (let ((virtual_env (getenv "VIRTUAL_ENV")))
+           (when virtual_env
+             (elpy-use-ipython)
+             ;; windows fixes based on ipython.bat.
+             ;; "-i" taken from https://bugs.launchpad.net/ipython/+bug/290228
+             (setq python-shell-interpreter      
+                   (format "%s\\python.exe" virtual_env)
+                   python-shell-interpreter-args 
+                   "-i -c \"from IPython import start_ipython; start_ipython()\""))))
+        (elpy-use-ipython)))))
+ ((eq python-ide-package 'ein)
+  ;; Nothing for ein yet)
+  ))
 
 ;;; SERVER MINOR MODE
 (add-hook 'server-visit-hook 

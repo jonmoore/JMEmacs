@@ -1,21 +1,3 @@
-;; epy-python.el - setup of python stuff
-
-(setenv "PYTHONPATH"
-        (concat
-         (or (getenv "PYTHONPATH") "") path-separator
-         (concat epy-install-dir "python-libs/")))
-
-(defun jpy-setup-ipython ()
-  "Setup ipython integration with python-mode"
-  (interactive)
-  (setq
-   python-shell-interpreter "ipython"
-   python-shell-interpreter-args ""
-   python-shell-prompt-regexp "In \[[0-9]+\]: "
-   python-shell-prompt-output-regexp "Out\[[0-9]+\]: "
-   python-shell-completion-setup-code ""
-   python-shell-completion-string-code "';'.join(get_ipython().complete('''%s''')[1])\n"))
-
 ;; Flymake additions
 (defun flymake-create-copy-file ()
   "Create a copy local file"
