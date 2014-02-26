@@ -59,8 +59,7 @@
 (setenv "SHELL" shell-file-name)
 (setq inhibit-default-init t)           ; don't load default.el
 
-;;; ELPA Archives
-(require 'package)
+;;; Emacs package system
 (setq package-archives
       '(("gnu"       . "http://elpa.gnu.org/packages/")
         ("melpa"     . "http://melpa.milkbox.net/packages/")
@@ -89,16 +88,6 @@
         sumatra-forward
         undo-tree))
 
-(package-initialize)
-
-(when (not package-archive-contents)
-  (package-refresh-contents))
-
-(dolist (pkg jnm-packages)
-  (when (and (not (package-installed-p pkg))
-             (assoc pkg package-archive-contents))
-    (package-install pkg)))
-
 (defun package-list-unaccounted-packages ()
   "Like `package-list-packages', but shows only the packages that
   are installed and are not in `jnm-packages'.  Useful for
@@ -110,6 +99,22 @@
                                    (not (package-built-in-p x))
                                    (package-installed-p x)))
                   (mapcar 'car package-archive-contents))))
+
+;; http://stackoverflow.com/questions/11127109/emacs-24-package-system-initialization-problems/11140619#11140619
+
+(setq package-enable-at-startup nil)
+;; alternative
+;; (add-hook 'after-init-hook 'my-after-init-hook)
+;; (defun my-after-init-hook () )
+
+;; could set package-load-list
+(package-initialize)
+(when (not package-archive-contents)
+  (package-refresh-contents))
+(dolist (pkg jnm-packages)
+  (when (and (not (package-installed-p pkg))
+             (assoc pkg package-archive-contents))
+    (package-install pkg)))
 
 ;;; PATHS
 ;; or use Info-default-directory-list
@@ -932,7 +937,7 @@ sorting by these (normal org priorities do not inherit)."
              (setq python-shell-interpreter      
                    (format "%s\\python.exe" virtual_env)
                    python-shell-interpreter-args 
-                   "-i -c \"from IPython import start_ipython; start_ipython()\""))))
+                   "-i -c \"from IPython import start_ipython; start_ipython()\" --pylab"))))
         (elpy-use-ipython)))))
  ((eq python-ide-package 'ein)
   ;; Nothing for ein yet)
