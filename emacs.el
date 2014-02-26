@@ -67,43 +67,32 @@
         ("org"       . "http://orgmode.org/elpa/")
         ("marmalade" . "http://marmalade-repo.org/packages/")))
 
-(package-initialize)
-
-(when (not package-archive-contents)
-  (package-refresh-contents))
-
+;; packages we want (only name explicit ones)
 (setq jnm-packages
-      '(
-        auctex
+      '(auctex
         auctex-latexmk
         auto-complete
         browse-kill-ring
         cdlatex
+        color-moccur
         color-theme
         ein
         elpy
         ess
-        find-file-in-project
-        fuzzy
         graphviz-dot-mode
         hexrgb
-        highlight-indentation
-        idomenu
-        iedit
         j-mode
         jira
         maxframe
-        nose
         org
         org-jira
-        popup
-        request
         sumatra-forward
-        undo-tree
-        virtualenv
-        websocket
-        xml-rpc
-        ))
+        undo-tree))
+
+(package-initialize)
+
+(when (not package-archive-contents)
+  (package-refresh-contents))
 
 (dolist (pkg jnm-packages)
   (when (and (not (package-installed-p pkg))
@@ -113,7 +102,8 @@
 (defun package-list-unaccounted-packages ()
   "Like `package-list-packages', but shows only the packages that
   are installed and are not in `jnm-packages'.  Useful for
-  cleaning out unwanted packages."
+  cleaning out unwanted packages.  Will clean out dependencies
+  but these can be reinstalled"
   (interactive)
   (package-show-package-list
    (remove-if-not (lambda (x) (and (not (memq x jnm-packages))
