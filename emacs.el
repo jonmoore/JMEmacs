@@ -932,12 +932,11 @@ sorting by these (normal org priorities do not inherit)."
          (let ((virtual_env (getenv "VIRTUAL_ENV")))
            (when virtual_env
              (elpy-use-ipython)
-             ;; windows fixes based on ipython.bat.
-             ;; "-i" taken from https://bugs.launchpad.net/ipython/+bug/290228
              (setq python-shell-interpreter      
                    (format "%s\\python.exe" virtual_env)
                    python-shell-interpreter-args 
-                   "-i -c \"from IPython import start_ipython; start_ipython()\" --pylab"))))
+                   "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
+         )
         (elpy-use-ipython)))))
  ((eq python-ide-package 'ein)
   ;; Nothing for ein yet)
