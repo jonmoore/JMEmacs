@@ -926,6 +926,9 @@ sorting by these (normal org priorities do not inherit)."
   (eval-after-load 'python 
     '(progn 
        (elpy-enable)
+       (setq elpy-default-minor-modes 
+             (delq 'highlight-indentation-mode
+                   elpy-default-minor-modes))
        (elpy-clean-modeline)
        (cond 
         (system-win32-p
