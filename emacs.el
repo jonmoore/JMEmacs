@@ -59,6 +59,10 @@
 (setenv "SHELL" shell-file-name)
 (setq inhibit-default-init t)           ; don't load default.el
 
+(when system-osx-p
+  (setq mac-command-modifier 'meta
+	mac-option-modifier nil))
+
 ;;; Emacs package system
 (setq package-archives
       '(("gnu"       . "http://elpa.gnu.org/packages/")
@@ -79,7 +83,6 @@
         elpy
         ess
         graphviz-dot-mode
-        hexrgb
         j-mode
         jira
         maxframe
@@ -115,7 +118,6 @@
   (when (and (not (package-installed-p pkg))
              (assoc pkg package-archive-contents))
     (package-install pkg)))
-
 ;;; PATHS
 ;; or use Info-default-directory-list
 (setenv "INFOPATH" (concat (concat emacs-root "/packages/org/doc")
@@ -396,7 +398,7 @@
 (define-key isearch-mode-map (kbd "C-o") 'isearch-joccur)
 
 ;; MOCCUR
-;; (autoload 'dired-do-moccur "color-moccur" nil t)
+(autoload 'dired-do-moccur "color-moccur" nil t)
 
 (setq *moccur-buffer-name-exclusion-list*
       '(".+TAGS.+" "*Completions*" "*Messages*"
@@ -1005,12 +1007,6 @@ sorting by these (normal org priorities do not inherit)."
 
 ;;; COLOR-THEME
 (require 'color-theme)
-;; taken from color-theme-initialize, but avoiding loading .el files
-(let ((my-color-list-libraries
-       (directory-files (concat (file-name-directory (locate-library "color-theme")) "/themes") 
-                        t "^color-theme.*elc")))
-  (dolist (library my-color-list-libraries)
-    (load library)))
 (color-theme-word-perfect)
 (setq inhibit-splash-screen t)
 
