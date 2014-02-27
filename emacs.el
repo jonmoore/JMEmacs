@@ -59,6 +59,10 @@
 (setenv "SHELL" shell-file-name)
 (setq inhibit-default-init t)           ; don't load default.el
 
+(when system-osx-p
+  (setq mac-command-modifier 'meta
+	mac-option-modifier nil))
+
 ;;; Emacs package system
 (setq package-archives
       '(("gnu"       . "http://elpa.gnu.org/packages/")
@@ -79,7 +83,6 @@
         elpy
         ess
         graphviz-dot-mode
-        hexrgb
         j-mode
         jira
         maxframe
@@ -115,7 +118,6 @@
   (when (and (not (package-installed-p pkg))
              (assoc pkg package-archive-contents))
     (package-install pkg)))
-
 ;;; PATHS
 ;; or use Info-default-directory-list
 (setenv "INFOPATH" (concat (concat emacs-root "/packages/org/doc")
@@ -396,7 +398,7 @@
 (define-key isearch-mode-map (kbd "C-o") 'isearch-joccur)
 
 ;; MOCCUR
-;; (autoload 'dired-do-moccur "color-moccur" nil t)
+(autoload 'dired-do-moccur "color-moccur" nil t)
 
 (setq *moccur-buffer-name-exclusion-list*
       '(".+TAGS.+" "*Completions*" "*Messages*"
@@ -921,29 +923,31 @@ sorting by these (normal org priorities do not inherit)."
 (defconst python-ide-package
   'elpy
   "Python IDE package to use")
-(cond 
- ((eq python-ide-package 'elpy) 
-  (eval-after-load 'python 
-    '(progn 
-       (elpy-enable)
+
+(case python-ide-package  
+  ('elpy   (eval-after-load 'python 
+             '(progn 
+                (elpy-enable)
        (setq elpy-default-minor-modes 
              (delq 'highlight-indentation-mode
                    elpy-default-minor-modes))
-       (elpy-clean-modeline)
-       (cond 
-        (system-win32-p
-         (let ((virtual_env (getenv "VIRTUAL_ENV")))
-           (when virtual_env
-             (elpy-use-ipython)
-             (setq python-shell-interpreter      
-                   (format "%s\\python.exe" virtual_env)
-                   python-shell-interpreter-args 
-                   "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
-         )
-        (elpy-use-ipython)))))
- ((eq python-ide-package 'ein)
-  ;; Nothing for ein yet)
-  ))
+                (elpy-clean-modeline)
+                (setq elpy-default-minor-modes
+                      (delete 'highlight-indentation-mode 
+                              elpy-default-minor-modes))
+                (cond 
+                 (system-win32-p
+                  (let ((virtual_env (getenv "VIRTUAL_ENV")))
+                    (when virtual_env
+                      (elpy-use-ipython)
+                      (setq python-shell-interpreter      
+                            (format "%s\\python.exe" virtual_env)
+                            python-shell-interpreter-args 
+                            "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
+                  )
+                 (t (elpy-use-ipython))))))
+  ('ein  ;; Nothing for ein yet
+   ))
 
 ;;; SERVER MINOR MODE
 (add-hook 'server-visit-hook 
@@ -1008,12 +1012,6 @@ sorting by these (normal org priorities do not inherit)."
 
 ;;; COLOR-THEME
 (require 'color-theme)
-;; taken from color-theme-initialize, but avoiding loading .el files
-(let ((my-color-list-libraries
-       (directory-files (concat (file-name-directory (locate-library "color-theme")) "/themes") 
-                        t "^color-theme.*elc")))
-  (dolist (library my-color-list-libraries)
-    (load library)))
 (color-theme-word-perfect)
 (setq inhibit-splash-screen t)
 
