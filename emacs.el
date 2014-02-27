@@ -923,26 +923,28 @@ sorting by these (normal org priorities do not inherit)."
 (defconst python-ide-package
   'elpy
   "Python IDE package to use")
-(cond 
- ((eq python-ide-package 'elpy) 
-  (eval-after-load 'python 
-    '(progn 
-       (elpy-enable)
-       (elpy-clean-modeline)
-       (cond 
-        (system-win32-p
-         (let ((virtual_env (getenv "VIRTUAL_ENV")))
-           (when virtual_env
-             (elpy-use-ipython)
-             (setq python-shell-interpreter      
-                   (format "%s\\python.exe" virtual_env)
-                   python-shell-interpreter-args 
-                   "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
-         )
-        (elpy-use-ipython)))))
- ((eq python-ide-package 'ein)
-  ;; Nothing for ein yet)
-  ))
+
+(case python-ide-package  
+  ('elpy   (eval-after-load 'python 
+             '(progn 
+                (elpy-enable)
+                (elpy-clean-modeline)
+                (setq elpy-default-minor-modes
+                      (delete 'highlight-indentation-mode 
+                              elpy-default-minor-modes))
+                (cond 
+                 (system-win32-p
+                  (let ((virtual_env (getenv "VIRTUAL_ENV")))
+                    (when virtual_env
+                      (elpy-use-ipython)
+                      (setq python-shell-interpreter      
+                            (format "%s\\python.exe" virtual_env)
+                            python-shell-interpreter-args 
+                            "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
+                  )
+                 (t (elpy-use-ipython))))))
+  ('ein  ;; Nothing for ein yet
+   ))
 
 ;;; SERVER MINOR MODE
 (add-hook 'server-visit-hook 
