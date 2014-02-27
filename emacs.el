@@ -65,10 +65,12 @@
 
 ;;; Emacs package system
 (setq package-archives
-      '(("gnu"       . "http://elpa.gnu.org/packages/")
-        ("melpa"     . "http://melpa.milkbox.net/packages/")
+      '(
         ("org"       . "http://orgmode.org/elpa/")
-        ("marmalade" . "http://marmalade-repo.org/packages/")))
+        ("marmalade" . "http://marmalade-repo.org/packages/")
+        ("melpa"     . "http://melpa.milkbox.net/packages/")
+        ("gnu"       . "http://elpa.gnu.org/packages/")
+        ))
 
 ;; packages we want (only name explicit ones)
 (setq jnm-packages
@@ -940,12 +942,15 @@ sorting by these (normal org priorities do not inherit)."
                   (let ((virtual_env (getenv "VIRTUAL_ENV")))
                     (when virtual_env
                       (elpy-use-ipython)
-                      (setq python-shell-interpreter      
+                      (setq python-shell-interpreter
                             (format "%s\\python.exe" virtual_env)
                             python-shell-interpreter-args 
                             "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
                   )
-                 (t (elpy-use-ipython))))))
+                 (t (elpy-use-ipython)
+                    (setq python-shell-interpreter-args
+                          "console --pylab")
+                    )))))
   ('ein  ;; Nothing for ein yet
    ))
 
