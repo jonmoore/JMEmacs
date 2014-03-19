@@ -454,16 +454,6 @@
 ;;;; MODES
 ;;;=======
 
-;;; AUTO-COMPLETE
-;; (require 'auto-complete)
-;; (require 'auto-complete-config)
-;; (setq ac-dwim t)
-;; (ac-config-default)
-;; (define-key ac-complete-mode-map "\t" 'ac-expand)
-;; (define-key ac-complete-mode-map "\r" 'ac-complete)
-;; (define-key ac-complete-mode-map "\M-n" 'ac-next)
-;; (define-key ac-complete-mode-map "\M-p" 'ac-previous)))
-
 ;;; CC MODE
 (autoload 'doxymacs-mode      "doxymacs" "doxymacs mode" t)
 (autoload 'doxymacs-font-lock "doxymacs" "doxymacs font lock" t)
@@ -674,6 +664,7 @@
                                (ibuffer-switch-to-saved-filter-groups
                                 "default")))
 
+
 ;;; J MODE
 (autoload 'j-mode "j-mode.el"  "Major mode for J." t)
 (autoload 'j-shell "j-mode.el" "Run J from emacs." t)
@@ -691,9 +682,11 @@
 
 ;;; LISP MODE
 ;; normally alt-tab, but windows masks this and we want to keep the normal behavior
-(add-hook 'emacs-lisp-mode-hook
-          (lambda ()
-            (local-set-key [(control tab)] 'PC-lisp-complete-symbol)))
+;; getting package complete is obsolete annoying message
+;; (add-hook 'emacs-lisp-mode-hook
+;;           (lambda ()
+;;             (local-set-key [(control tab)] 'PC-lisp-complete-symbol)))
+
 
 ;;; MATLAB MODE
 (add-to-list 'auto-mode-alist '("\\.m\\'" . matlab-mode))
@@ -708,6 +701,31 @@
 	    (local-set-key [(shift return)] 'matlab-comment-return)))
 (setq matlab-indent-function t
       matlab-verify-on-save-flag nil)
+
+;;; MEDIAWIKI MODE
+
+(defun use-my-mediawiki-outline-magic-keys ()
+  "Redefines mediawiki-outline-magic-keys to avoid clashing with
+control-arrow keys"
+  (defun mediawiki-outline-magic-keys ()
+    (interactive)
+    ;; (message "OUTLINE MAGIC")
+    ;; (unless  (featurep 'xemacs)
+    ;;   (local-set-key [(shift iso-lefttab)] 'outline-cycle)
+    ;;   (local-set-key [iso-left-tab] 'outline-cycle))
+
+    ;; (local-set-key [(meta left)]  'outline-promote)
+    ;; (local-set-key [(meta right)] 'outline-demote)
+
+    (local-set-key [(shift return)] 'newline-and-indent)
+
+    (local-set-key [(meta left)]  'mediawiki-simple-outline-promote)
+    (local-set-key [(meta right)] 'mediawiki-simple-outline-demote)
+    (local-set-key [(meta up)] 'outline-move-subtree-up)
+    (local-set-key [(meta down)] 'outline-move-subtree-down)))
+
+(add-hook 'outline-minor-mode-hook 'use-my-mediawiki-outline-magic-keys)
+
 
 ;;; MMIX MODE
 (autoload 'mmix-mode "mmix-mode" "Major mode for editing MMIX files" t)
@@ -930,13 +948,10 @@ sorting by these (normal org priorities do not inherit)."
   ('elpy   (eval-after-load 'python 
              '(progn 
                 (elpy-enable)
-       (setq elpy-default-minor-modes 
-             (delq 'highlight-indentation-mode
-                   elpy-default-minor-modes))
-                (elpy-clean-modeline)
                 (setq elpy-default-minor-modes
-                      (delete 'highlight-indentation-mode 
-                              elpy-default-minor-modes))
+                      '(auto-complete-mode
+                        eldoc-mode
+                        yas-minor-mode))
                 (cond 
                  (system-win32-p
                   (let ((virtual_env (getenv "VIRTUAL_ENV")))
@@ -1017,6 +1032,13 @@ sorting by these (normal org priorities do not inherit)."
 
 ;;; COLOR-THEME
 (require 'color-theme)
+;; taken from color-theme-initialize, but avoiding loading .el files
+(let ((my-color-list-libraries
+       (directory-files (concat (file-name-directory (locate-library "color-theme")) "/themes") 
+                        t "^color-theme.*elc")))
+  (dolist (library my-color-list-libraries)
+    (load library)))
+
 (color-theme-word-perfect)
 (setq inhibit-splash-screen t)
 
@@ -1029,3 +1051,4 @@ sorting by these (normal org priorities do not inherit)."
 (server-start)
 (when system-win32-p
   (w32-maximize-frame))
+(message "Finished emacs.el")

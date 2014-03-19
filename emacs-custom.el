@@ -58,7 +58,7 @@
  '(org-confirm-babel-evaluate nil)
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
  '(org-enforce-todo-checkbox-dependencies nil)
- '(partial-completion-mode t nil (complete))
+;; '(partial-completion-mode t nil (complete))
  '(perlnow-perl-module-template (concat emacs-root "/site-lisp/templates"))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
