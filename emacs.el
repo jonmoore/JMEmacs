@@ -149,25 +149,26 @@
 (setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
                                                    (system-osx-p   "~/backup")))))
 
+(defun weight-lists (from to weight)
+  (mapcar* (lambda (av bv)
+             (+ av (* (- bv av) weight)))
+           from 
+           to))
+
 (eval-after-load 'highlight-sexps
   (quote (progn
            (require 'hexrgb)
            (setq hl-sexp-background-colors
                  (let* ((hsv-back (hexrgb-hex-to-hsv
                                    (hexrgb-color-name-to-hex "blue4")))
-                        (h-back (nth 0 hsv-back))
-                        (s-back (nth 1 hsv-back))
-                        (v-back (nth 2 hsv-back))
-                        (val-cur (lambda (init target  step)
-                                   (+ init (*  (- target init) step)))))
+                        (hsv-match (hexrgb-hex-to-hsv
+                                   (hexrgb-color-name-to-hex "deep sky blue"))))
                    (progn
                      (mapcar 
                       (lambda (step)
-                        (hexrgb-hsv-to-hex 
-                         (funcall val-cur (+ .15 h-back)  h-back step)
-                         (funcall val-cur s-back         s-back step)
-                         (funcall val-cur v-back         v-back step)))
-                      (list 0 0.2 0.4 0.55 0.7 1.0))))))))
+                        (apply 'hexrgb-hsv-to-hex 
+                         (weight-lists hsv-match hsv-back  step)))
+                      (list 0.0 0.2 0.4 0.55 0.7 ))))))))
 
 (setq user-full-name "Jonathan Moore")
 
@@ -278,7 +279,7 @@
 (global-set-key [f11]               'org-clock-in-and-goto)
 (global-set-key [S-f11]             'org-clock-goto)
 
-(global-set-key [f12]               'qap-moccur-p4-grep)
+(global-set-key [f12]               'qap-p4-grep-moccur)
 (global-set-key [S-f12]             'qap-locate-windows-code-like-and-moccur )
 (global-set-key [C-f12]             'qap-locate-windows-code-contains-and-moccur )
 
@@ -341,6 +342,7 @@
                       (require 'find-dired)
                       (require-soft 'dired-column-widths)
 		      (setq dired-omit-mode t)
+                      (set-face-foreground 'dired-directory "yellow")
 		      (define-key dired-mode-map "j" 'dired-execute-file)
 		      (define-key dired-mode-map "P" 'dired-do-ps-print)
 		      (define-key dired-mode-map "O" 'dired-do-moccur)
@@ -486,10 +488,11 @@
 				   defun-close-semi))
     (c-offsets-alist            . ((arglist-close . c-lineup-arglist)
 				   (substatement-open . 0)
-				   (case-label        . 4)
+		                   (case-label        . 4)
                                    (innamespace       . 4)
-				   (block-open        . 0)
-				   (knr-argdecl-intro . -)))
+                                   (block-open        . 0)
+                                   (inline-open        . 0)
+                                   (knr-argdecl-intro . -)))
     ) "Visual C++ Programming Style")
 
 (defun jnm-toggle-hideshow-all ()
@@ -510,15 +513,48 @@
                             ("\\.hpp\\'"   (".cpp"))
                             ("\\.c\\'"     (".h"))))
 
+
+(defun jnm-parm-tempo-element (parms)
+  "Inserts tempo elements like JavaDoc but without asterisks."
+  (if parms
+      (let ((prompt (concat "Parameter " (car parms) ": ")))
+          (list 'l " " 
+                (doxymacs-doxygen-command-char) "param " 
+                (car parms) 
+                " " (list 'p prompt) '> 'n
+                (jnm-parm-tempo-element (cdr parms))))
+    nil))
+
+
 (add-hook 'c-mode-common-hook
-	  (lambda ()
-	    (define-key c-mode-base-map   "\C-m"     'c-context-line-break)
+          (lambda ()
+            (define-key c-mode-base-map   "\C-m"     'c-context-line-break)
             ;; Load my templates for cc-mode
             (when (require-soft 'tempo-c-cpp)
               (my-tempo-c-cpp-bindings))
-	    (doxymacs-mode t)
-	    (setq c-hungry-delete-key t
-                  c-auto-newline 1
+            (doxymacs-mode t)
+
+            (defconst doxymacs-function-comment-template
+                  '((let ((next-func (doxymacs-find-next-func)))
+                      (if next-func
+                          (list
+                           'l
+                           "/** " '> 'n
+                           " " 'p '> 'n
+                           " " '> 'n
+                           (jnm-parm-tempo-element (cdr (assoc 'args next-func)))
+                           (unless (string-match
+                                    (regexp-quote (cdr (assoc 'return next-func)))
+                                    doxymacs-void-types)
+                             '(l " * " > n " * " (doxymacs-doxygen-command-char)
+                                 "return " (p "Returns: ") > n))
+                           " */" '>)
+                        (progn
+                          (error "Can't find next function declaration.")
+                          nil))))
+                  "Custom JavaDoc-style template for function documentation without as many asterisks.")
+
+            (setq c-auto-newline 1
                   fill-column 90
                   indent-tabs-mode nil
                   tab-width 4
@@ -527,7 +563,7 @@
                   c-echo-syntactic-information-p nil)
             (set (make-local-variable 'dabbrev-case-fold-search) nil)
 
-	    (c-add-style "visual studio" visual-studio-c-style t)
+            (c-add-style "visual studio" visual-studio-c-style t)
             (c-toggle-auto-newline -1)
             (c-toggle-electric-state -1)
             (local-set-key [(control tab)] 'tempo-forward-mark)
@@ -545,10 +581,13 @@
                    (not (eq (get-text-property (point) 'face)
                             'font-lock-comment-face))))))
 (add-hook 'font-lock-mode-hook ;; Fontify doxygen keywords
-	  (function (lambda ()
-		      (if (or (eq major-mode 'c-mode)
-			      (eq major-mode 'c++-mode))
-			  (doxymacs-font-lock)))))
+          (function (lambda ()
+                      (when (or (eq major-mode 'c-mode)
+                                (eq major-mode 'c++-mode))
+                        (doxymacs-font-lock)
+                        (font-lock-add-keywords nil 
+                                                '(("@\\(headerfile\|sourcefile\\|owner\\)" 
+                                                   0 font-lock-keyword-face prepend)))))))
 
 ;;; DOT MODE
 (add-to-list 'auto-mode-alist '("\\.dot\\'" . graphviz-dot-mode))

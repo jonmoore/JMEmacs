@@ -2,10 +2,10 @@
 ;;;; CUSTOMIZE VARIABLES
 ;;;=====================
 (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(Buffer-menu-buffer+size-width 36)
  '(Buffer-menu-mode-width 10)
  '(TeX-view-program-selection (quote (((output-dvi style-pstricks) "dvips and start") (output-dvi "Yap") (output-pdf "Sumatra PDF") (output-html "start"))))
@@ -58,7 +58,6 @@
  '(org-confirm-babel-evaluate nil)
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
  '(org-enforce-todo-checkbox-dependencies nil)
-;; '(partial-completion-mode t nil (complete))
  '(perlnow-perl-module-template (concat emacs-root "/site-lisp/templates"))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
@@ -78,6 +77,7 @@
  '(transient-mark-mode t)
  '(truncate-partial-width-windows nil)
  '(vc-annotate-display-mode (quote fullscale))
+ '(virtualenv-root "c:/pyj/pyjvenv/")
  '(w32-list-proportional-fonts t t)
  '(warning-suppress-types (quote ((undo discard-info))))
  '(which-func-modes (quote (c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode)))
@@ -87,10 +87,10 @@
  '(woman-use-topic-at-point-default t))
 
 (custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(font-lock-builtin-face ((((class color) (background light)) (:foreground "blue"))))
  '(font-lock-comment-face ((t (:foreground "sky blue"))))
  '(font-lock-constant-face ((((class color) (background light)) (:foreground "dark green"))))
