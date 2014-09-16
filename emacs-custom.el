@@ -32,6 +32,7 @@
  '(find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
  '(globalff-regexp-search t)
  '(graphviz-dot-dot-program "dotforme")
+ '(hide-ifdef-lines t)
  '(history-delete-duplicates t)
  '(history-length 100)
  '(imenu-tree-auto-update t)

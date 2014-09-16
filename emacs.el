@@ -555,7 +555,7 @@
                   "Custom JavaDoc-style template for function documentation without as many asterisks.")
 
             (setq c-auto-newline 1
-                  fill-column 90
+                  fill-column 100
                   indent-tabs-mode nil
                   tab-width 4
                   c-default-style '((java-mode . "java") 
@@ -979,34 +979,35 @@ sorting by these (normal org priorities do not inherit)."
              (define-key cperl-mode-map [f1] 'perlnow-perl-check) ))
 
 ;;; PYTHON MODE
-(defconst python-ide-package
-  'elpy
-  "Python IDE package to use")
+;; (defconst python-ide-package
+;;   'elpy
+;;   "Python IDE package to use")
 
-(case python-ide-package  
-  ('elpy   (eval-after-load 'python 
-             '(progn 
-                (elpy-enable)
-                (setq elpy-default-minor-modes
-                      '(auto-complete-mode
-                        eldoc-mode
-                        yas-minor-mode))
-                (cond 
-                 (system-win32-p
-                  (let ((virtual_env (getenv "VIRTUAL_ENV")))
-                    (when virtual_env
-                      (elpy-use-ipython)
-                      (setq python-shell-interpreter
-                            (format "%s\\python.exe" virtual_env)
-                            python-shell-interpreter-args 
-                            "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
-                  )
-                 (t (elpy-use-ipython)
-                    (setq python-shell-interpreter-args
-                          "console --pylab")
-                    )))))
-  ('ein  ;; Nothing for ein yet
-   ))
+
+;; (case python-ide-package  
+;;   ('elpy   (eval-after-load 'python 
+;;              '(progn 
+;;                 (elpy-enable)
+;;                 (setq elpy-default-minor-modes
+;;                       '(auto-complete-mode
+;;                         eldoc-mode
+;;                         yas-minor-mode))
+;;                 (cond 
+;;                  (system-win32-p
+;;                   (let ((virtual_env (getenv "VIRTUAL_ENV")))
+;;                     (when virtual_env
+;;                       (elpy-use-ipython)
+;;                       (setq python-shell-interpreter
+;;                             (format "%s\\python.exe" virtual_env)
+;;                             python-shell-interpreter-args 
+;;                             "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
+;;                   )
+;;                  (t (elpy-use-ipython)
+;;                     (setq python-shell-interpreter-args
+;;                           "console --pylab")
+;;                     )))))
+;;   ('ein  ;; Nothing for ein yet
+;;    ))
 
 ;;; SERVER MINOR MODE
 (add-hook 'server-visit-hook 

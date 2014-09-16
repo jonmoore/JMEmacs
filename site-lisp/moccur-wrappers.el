@@ -132,10 +132,6 @@ provided term according to Windows search"
     (insert-file-contents filePath)
     (buffer-string)))
 
-(defun qap-p4-get-dirs-to-split ()
-  (nconc (mapcar #'qap-ensure-slash qap-p4-dirs-to-split)
-	 (mapcar (lambda (p) (qap-ensure-slash (qap-get-parent p))) qap-p4-dirs-to-exclude)))
-
 (defun qap-p4-run-command (command &rest params)
   "Execute shell command COMMAND and return its output as a
 string. If the command returns a non-zero exit code, raise an
@@ -164,21 +160,30 @@ error with the input and output."
    "\n"
    t))
 
-(defun qap-p4-get-subdirs-for-grep (dir to-split)
-  "Expand the specified directory into its list of
-  subdirectories, recursively applying qap-p4-split-dirs-for-grep to
-  each subdir."
+(defun qap-p4-get-dirs-to-split ()
+  "Returns a list of directories that need to be split for p4.
+This is in effect a global constant"
+  (nconc (mapcar #'qap-ensure-slash 
+                 qap-p4-dirs-to-split)
+         ;; split the parents of excluded directories so that we can
+         ;; exclude them
+	 (mapcar (lambda (p) (qap-ensure-slash (qap-get-parent p))) 
+                 qap-p4-dirs-to-exclude)))
+
+(defun qap-p4-get-subdirs-for-grep (dir)
+  "Expand DIR into its list of subdirectories, applying
+qap-p4-split-dirs-for-grep to each subdirectory."
   (mapcan #'copy-list
-	  (mapcar (lambda (subdir) (qap-p4-split-dirs-for-grep subdir to-split))
+	  (mapcar (lambda (subdir) (qap-p4-split-dirs-for-grep subdir))
 		  (qap-p4-subdirs dir))))
 
-(defun qap-p4-split-dirs-for-grep (dir to-split)
-  "If necessary, split the specified directory into a list of
-subdirectories to search."
+(defun qap-p4-split-dirs-for-grep (dir)
+  "If necessary, split DIR into a list of subdirectories to
+search."
   (if (some (lambda (dir-to-split) 
 	      (string-match-p (concat dir "/") dir-to-split)) 
 	    (qap-p4-get-dirs-to-split))
-      (qap-p4-get-subdirs-for-grep dir to-split)
+      (qap-p4-get-subdirs-for-grep dir)
     (list dir)))
 
 (defun qap-p4-get-dirs-for-grep (dir)
@@ -188,8 +193,7 @@ exclude unwanted folders"
   (remove-if (lambda (p)
 	       (some (lambda (exclusion) (string-match-p exclusion (qap-ensure-slash p)))
 		     qap-p4-dirs-to-exclude))
-	     (qap-p4-split-dirs-for-grep dir
-				      (qap-p4-get-dirs-to-split))))
+	     (qap-p4-split-dirs-for-grep dir)))
 
 (defun qap-get-current-depot-folder ()
   "Get the depot path corresponding to the current folder."
