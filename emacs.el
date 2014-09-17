@@ -17,11 +17,11 @@
 ;;; META
 (defmacro require-soft (feature &optional file)
   "*Try to require FEATURE, but don't signal an error if `require' fails."
-  `(require ,feature ,file 'noerror)) 
+  `(require ,feature ,file 'noerror))
 
 (defmacro when-available (func foo)
   "*Do something if FUNCTION is available."
-  `(when (fboundp ,func) ,foo)) 
+  `(when (fboundp ,func) ,foo))
 
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
@@ -31,7 +31,7 @@
 (defconst system-osx-p (eq system-type 'darwin)
   "Are we running on a Darwin (Mac OS X) system?")
 
-;;; 
+;;;
 ;;; ENVIRONMENT
 
 ;; use setenv because some functions call getenv, not shell-file-name
@@ -43,18 +43,18 @@
 
   (when (boundp 'cygwin-bin)
     (setq default-system-shell (concat cygwin-bin "\\bash.exe")))
-  ;; (setenv "PATH" (concat 
+  ;; (setenv "PATH" (concat
   ;;                 cygwin-bin
   ;;                        path-separator (getenv "PATH")))
   (when (boundp 'local-exec-paths)
-    (mapcar 
+    (mapcar
      (lambda (filepath)                   ;; prepend filepath to exec-path
        (setq exec-path (append
                         (list (replace-regexp-in-string  "\\\\"  "/" filepath))
                       exec-path)))
      local-exec-paths))))
- 
-(setq shell-file-name (or (getenv "SHELL") 
+
+(setq shell-file-name (or (getenv "SHELL")
                           default-system-shell))
 (setenv "SHELL" shell-file-name)
 (setq inhibit-default-init t)           ; don't load default.el
@@ -64,12 +64,20 @@
 	mac-option-modifier nil))
 
 ;;; Emacs package system
+;; elpa is needed for auctex 11.87 which is needed by auctex-latexmk
+;; MELPA versions will take precedence because they use yyyymmdd for
+;; the version number and package.el uses the version of each package
+;; with the highest version number.  Note that by design MELPA builds
+;; the latest version in source control of each package so it is
+;; inherently unstable while marmalade is a package repository where
+;; package authors upload traditionally versioned-number built
+;; versions of their packages.
 (setq package-archives
       '(
         ("org"       . "http://orgmode.org/elpa/")
-        ("marmalade" . "http://marmalade-repo.org/packages/")
         ("melpa"     . "http://melpa.milkbox.net/packages/")
-        ("gnu"       . "http://elpa.gnu.org/packages/")
+;;        ("marmalade" . "http://marmalade-repo.org/packages/")
+        ("gnu"       . "http://elpa.gnu.org/packages/") 
         ))
 
 ;; packages we want (only name explicit ones)
@@ -81,11 +89,11 @@
         cdlatex
         color-moccur
         color-theme
-        ein
+        ;; ein
         elpy
-        ess
+        ;; ess
         graphviz-dot-mode
-        j-mode
+        ;; j-mode
         jira
         maxframe
         org
@@ -125,7 +133,7 @@
 (setenv "INFOPATH" (concat (concat emacs-root "/packages/org/doc")
                            path-separator (concat emacs-root "/packages/pde/doc")
                            path-separator (concat emacs-root "/packages/w3/info")
-                           path-separator (expand-file-name (concat exec-directory "../info")) 
+                           path-separator (expand-file-name (concat exec-directory "../info"))
                            path-separator (getenv "INFOPATH")))
 
 (defun my-woman-mode-hook ()
@@ -143,8 +151,7 @@
   (add-path "/packages/Emacs-PDE-0.2.16/lisp")
   (add-path "/packages/doxymacs-1.8.0")
   (add-path "/packages/perlnow")
-  (add-path "/packages/template/lisp")
-  )
+  (add-path "/packages/template/lisp"))
 
 (setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
                                                    (system-osx-p   "~/backup")))))
@@ -152,7 +159,7 @@
 (defun weight-lists (from to weight)
   (mapcar* (lambda (av bv)
              (+ av (* (- bv av) weight)))
-           from 
+           from
            to))
 
 (eval-after-load 'highlight-sexps
@@ -164,9 +171,9 @@
                         (hsv-match (hexrgb-hex-to-hsv
                                    (hexrgb-color-name-to-hex "deep sky blue"))))
                    (progn
-                     (mapcar 
+                     (mapcar
                       (lambda (step)
-                        (apply 'hexrgb-hsv-to-hex 
+                        (apply 'hexrgb-hsv-to-hex
                          (weight-lists hsv-match hsv-back  step)))
                       (list 0.0 0.2 0.4 0.55 0.7 ))))))))
 
@@ -187,14 +194,14 @@
 ;;; COLORS AND APPEARANCE
                                         ; see also color-theme
 (tool-bar-mode -1)
-(setq 
+(setq
  frame-title-format
  '(:eval (buffer-file-names-in-selected-frame)))
-(setq query-replace-highlight t) 
-(setq search-highlight t) 
+(setq query-replace-highlight t)
+(setq search-highlight t)
 
 (set-face-attribute 'default nil
-                    :background "blue4" 
+                    :background "blue4"
                     :foreground "white")
 
 (when system-win32-p
@@ -223,8 +230,7 @@
   (setq mac-command-modifier 'meta
         mac-option-modifier   nil
         mac-emulate-three-button-mouse t
-        ns-pop-up-frames nil
-        ))
+        ns-pop-up-frames nil))
 
 ;;; control key sequences
 (global-set-key [?\C-.]             'goto-line)
@@ -300,16 +306,16 @@
   (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 
   (when system-win32-p                  ; Windows support for SumatraPDF
-    (add-hook 'LaTeX-mode-hook 
+    (add-hook 'LaTeX-mode-hook
               (lambda ()
-                (push 
-                 '("Latexmk" 
+                (push
+                 '("Latexmk"
                    "latexmk -pdflatex=\"f:/bin/pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
                    :help "Run Latexmk on file")
                  TeX-command-list)))
     (setq reftex-plug-into-AUCTeX t)
     (setq TeX-PDF-mode t)
-    (setq 
+    (setq
      TeX-source-correlate-method 'synctex
      TeX-source-correlate-mode t
      TeX-source-correlate-start-server t
@@ -325,8 +331,7 @@
                   (local-set-key [next] '(lambda ()
                                            (interactive)
                                            (funcall (lookup-key (current-global-map) [next]))
-                                           (sumatra-jump-to-line)))))))
-  )
+                                           (sumatra-jump-to-line))))))))
 
 ;;; COMINT
 (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
@@ -348,7 +353,7 @@
 		      (define-key dired-mode-map "O" 'dired-do-moccur)
 		      (define-key dired-mode-map [(control up)] 'dired-prev-subdir)
 		      (define-key dired-mode-map [(control down)] 'dired-next-subdir)
-                      (setq dired-omit-extensions (set-difference 
+                      (setq dired-omit-extensions (set-difference
                                                    dired-omit-extensions
                                                    '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj" )
                                                    :test 'string=))
@@ -358,14 +363,14 @@
 (defvar dired-ps-print-buffer-with-faces t
   "*If non-nil, `dired-do-ps-print' will print fonts, colors, and underlines.")
 (setq dired-dnd-protocol-alist nil)
-(defadvice find-dired-sentinel		
+(defadvice find-dired-sentinel
   (after column-widths-should-be-equalized)
   "Column widths should be equalized in dired mode. This enforces that when we have run find-dired"
-  (progn 
+  (progn
     (dired-column-widths-cleanup)))
 (ad-activate 'find-dired-sentinel)
 
-;;; EDIFF 
+;;; EDIFF
 (setq ediff-custom-diff-options "-c -w"
       ediff-diff-options "-w")
 (when system-win32-p (setq ediff-diff-program "c:/opt/cygwin/bin/diff"))
@@ -387,11 +392,11 @@
 
 ;;; OCCUR AND FRIENDS
 (load "ska-isearch-occur")
-(add-hook 'isearch-mode-hook 
+(add-hook 'isearch-mode-hook
           '(lambda ()
              (setq ska-isearch-window-configuration
                    (list (current-window-configuration) (point-marker)))))
-(add-hook 'isearch-mode-end-hook 
+(add-hook 'isearch-mode-end-hook
           '(lambda ()
              (ska-isearch-maybe-remove-occur-buffer)
              (setq ska-isearch-occur-opened nil)))
@@ -429,7 +434,7 @@
       pcol-column-separator "[ \t]+")
 
 ;;; PRINTING
-(setq  
+(setq
  ps-bottom-margin       36
  ps-top-margin          36
  ps-right-margin        36
@@ -492,8 +497,7 @@
                                    (innamespace       . 4)
                                    (block-open        . 0)
                                    (inline-open        . 0)
-                                   (knr-argdecl-intro . -)))
-    ) "Visual C++ Programming Style")
+                                   (knr-argdecl-intro . -)))) "Visual C++ Programming Style")
 
 (defun jnm-toggle-hideshow-all ()
   "Toggle hideshow all."
@@ -505,8 +509,7 @@
 (defun jnm-customize-hide-show ()
   (local-set-key (kbd "C-c l")       'hs-hide-level)
   (local-set-key (kbd "C-c <right>") 'hs-show-block)
-  (local-set-key (kbd "C-c <left>")  'hs-hide-block)
-  )
+  (local-set-key (kbd "C-c <left>")  'hs-hide-block))
 
 (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
                             ("\\.h\\'"     (".cpp" ".c"))
@@ -518,9 +521,9 @@
   "Inserts tempo elements like JavaDoc but without asterisks."
   (if parms
       (let ((prompt (concat "Parameter " (car parms) ": ")))
-          (list 'l " " 
-                (doxymacs-doxygen-command-char) "param " 
-                (car parms) 
+          (list 'l " "
+                (doxymacs-doxygen-command-char) "param "
+                (car parms)
                 " " (list 'p prompt) '> 'n
                 (jnm-parm-tempo-element (cdr parms))))
     nil))
@@ -558,7 +561,7 @@
                   fill-column 100
                   indent-tabs-mode nil
                   tab-width 4
-                  c-default-style '((java-mode . "java") 
+                  c-default-style '((java-mode . "java")
                                     (other . "stroustrup"))
                   c-echo-syntactic-information-p nil)
             (set (make-local-variable 'dabbrev-case-fold-search) nil)
@@ -585,8 +588,8 @@
                       (when (or (eq major-mode 'c-mode)
                                 (eq major-mode 'c++-mode))
                         (doxymacs-font-lock)
-                        (font-lock-add-keywords nil 
-                                                '(("@\\(headerfile\|sourcefile\\|owner\\)" 
+                        (font-lock-add-keywords nil
+                                                '(("@\\(headerfile\|sourcefile\\|owner\\)"
                                                    0 font-lock-keyword-face prepend)))))))
 
 ;;; DOT MODE
@@ -609,10 +612,10 @@
 
 ;;; GLOBAL AUTO REVERT MODE
 
-(defun looks-like-a-network-file (filename) 
+(defun looks-like-a-network-file (filename)
   (and filename
        (string-match "^//" filename)))
-(add-hook 'find-file-hook 
+(add-hook 'find-file-hook
           (lambda ()
             (when (looks-like-a-network-file buffer-file-name)
               (message "Disabling global auto revert mode for %s" buffer-file-name)
@@ -633,14 +636,14 @@
          (overlay-put ov 'face 'secondary-selection)
          ov)
        "Overlay variable for GUD highlighting.")
-     
+
      (defadvice gud-display-line (after my-gud-highlight act)
        "Highlight current line up to first non-whitespace character."
        (let ((bf (gud-find-file true-file)))
          (with-current-buffer bf
-           (move-overlay 
-            gud-overlay 
-            (line-beginning-position) 
+           (move-overlay
+            gud-overlay
+            (line-beginning-position)
             (save-excursion
               (search-forward-regexp "\\S-" (line-end-position) t )
               (match-beginning 0))
@@ -682,7 +685,7 @@
   (define-ibuffer-sorter filename-or-dired
     "Sort the buffers by their pathname."
     (:description "filenames plus dired")
-    (string-lessp 
+    (string-lessp
      (with-current-buffer (car a)
        (or buffer-file-name
            (if (eq major-mode 'dired-mode)
@@ -773,7 +776,7 @@ control-arrow keys"
 
 ;;; ORG MODE
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
-(defun jm-org-get-priority-from-headline 
+(defun jm-org-get-priority-from-headline
   (headline)
   "Get the priority from an org headline using a tag format - #A etc. Defaults to D.
 We do this so to provide inherited pseudo-priorities, allowing
@@ -801,7 +804,7 @@ sorting by these (normal org priorities do not inherit)."
   (setq org-clock-persist t)
   (setq org-clock-in-resume t)
   (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities)
-  (add-hook 
+  (add-hook
    'org-mode-hook
    (function (lambda ()
                (require 'org-id)
@@ -812,7 +815,7 @@ sorting by these (normal org priorities do not inherit)."
                (when (and (require-soft 'texmathp)
                           (require-soft 'cdlatex))
                  (turn-on-org-cdlatex))
-               
+
                (local-unset-key [C-tab])
                (local-set-key [C-tab] (function (lambda () (interactive) (org-cycle t))))
                (local-set-key [?\M-?] 'org-complete)
@@ -824,9 +827,9 @@ sorting by these (normal org priorities do not inherit)."
 
                (local-set-key [?\C-c ? ]    'outline-mark-subtree)
                (set-face-foreground 'org-hide (face-background 'default))
-               (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t))) 
-               
-               (setq 
+               (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
+
+               (setq
                 fill-column 90
                 org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
                 org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html" "todo.ps")))
@@ -836,16 +839,16 @@ sorting by these (normal org priorities do not inherit)."
                                                (org-agenda-with-colors nil)
                                                (org-agenda-remove-tags t))
                 org-agenda-files "~/.org_agenda_files"
-                org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down) 
+                org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
                                                     (todo user-defined-up)
-                                                    (tags category-keep priority-down) 
+                                                    (tags category-keep priority-down)
                                                     (search category-keep)))
                 org-agenda-start-with-clockreport-mode nil
                 org-agenda-todo-keyword-format "%-4s"
                 org-clock-history-length 10
                 org-clock-in-resume t
                 org-clock-persist t
-                org-disputed-keys (quote (([(control shift right)] . [(meta shift +)]) 
+                org-disputed-keys (quote (([(control shift right)] . [(meta shift +)])
                                           ([(control shift left)]  . [(meta shift -)])))
                 org-enforce-todo-dependencies t
                 org-export-mark-todo-in-toc t
@@ -859,13 +862,13 @@ sorting by these (normal org priorities do not inherit)."
                 org-log-reschedule 'time
                 org-log-redeadline 'time
                 ;; org-mode should really be smart enough to get this automatically
-                org-not-done-heading-regexp 
-                "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$" 
+                org-not-done-heading-regexp
+                "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
                 org-odd-levels-only t
                 org-publish-use-timestamps-flag t
                 org-replace-disputed-keys t
                 org-return-follows-link t
-                org-show-siblings (quote ((default . t) 
+                org-show-siblings (quote ((default . t)
                                           (isearch t)))
                 org-tag-alist '(("Ming"             . ?m)
                                 ("Petr"             . ?p)
@@ -873,17 +876,16 @@ sorting by these (normal org priorities do not inherit)."
                                 ("Richard"          . ?r)
                                 ("#A"               . ?a)
                                 ("#B"               . ?b)
-                                ("#C"               . ?c) 
+                                ("#C"               . ?c)
                                 ("PLATFORM_PROJECT" . ?q))
-                
+
                org-tags-column -80
                org-toc-default-depth 3
                org-toc-follow-mode t
                org-toc-info-mode t
                org-toc-show-subtree-mode t
-               org-use-speed-commands t
-               )
-               (org-add-link-type  "jira" 
+               org-use-speed-commands t)
+               (org-add-link-type  "jira"
                                    (lambda (path)
                                      (let ((saved-buffer (current-buffer)))
                                        (if (get-buffer "*Jira*")
@@ -902,7 +904,7 @@ sorting by these (normal org priorities do not inherit)."
                                  .done          { color: green; }
                                  .timestamp     { color: grey }
                                  .timestamp-kwd { color: CadetBlue }
-                                 .tag           { background-color:lightblue; 
+                                 .tag           { background-color:lightblue;
                                                   font-weight:normal }
                                  .target        { background-color: lavender; }
                                  pre            { border: 1pt solid #AEBDCC;
@@ -941,8 +943,7 @@ sorting by these (normal org priorities do not inherit)."
                       :expand-quoted-html   t
                       :timestamp            t
                       :auto-preamble t
-                      :auto-postamble t
-                      )))))))
+                      :auto-postamble t)))))))
 
 ;;; (C)PERL MODE
 (defalias 'perl-mode 'cperl-mode)
@@ -979,45 +980,45 @@ sorting by these (normal org priorities do not inherit)."
              (define-key cperl-mode-map [f1] 'perlnow-perl-check) ))
 
 ;;; PYTHON MODE
-;; (defconst python-ide-package
-;;   'elpy
-;;   "Python IDE package to use")
+(defconst python-ide-package
+  'elpy
+  "Python IDE package to use")
 
+(case python-ide-package  
+  ('elpy   (eval-after-load 'python 
+	     '(progn 
+		(elpy-enable)
+		(setq elpy-default-minor-modes
+		      '(auto-complete-mode
+			eldoc-mode
+			yas-minor-mode))
+		(cond 
+		 (system-win32-p
+		  (let ((virtual_env (getenv "VIRTUAL_ENV")))
+		    (when virtual_env
+		      (elpy-use-ipython)
+		      (setq python-shell-interpreter
+			    (format "%s\\python.exe" virtual_env)
+			    python-shell-interpreter-args 
+			    "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
+		  )
+		 (t (elpy-use-ipython)
+		    (setq python-shell-interpreter-args
+			  "console --pylab")
+		    )))))
+  ('ein  ;; Nothing for ein yet
+   ))
 
-;; (case python-ide-package  
-;;   ('elpy   (eval-after-load 'python 
-;;              '(progn 
-;;                 (elpy-enable)
-;;                 (setq elpy-default-minor-modes
-;;                       '(auto-complete-mode
-;;                         eldoc-mode
-;;                         yas-minor-mode))
-;;                 (cond 
-;;                  (system-win32-p
-;;                   (let ((virtual_env (getenv "VIRTUAL_ENV")))
-;;                     (when virtual_env
-;;                       (elpy-use-ipython)
-;;                       (setq python-shell-interpreter
-;;                             (format "%s\\python.exe" virtual_env)
-;;                             python-shell-interpreter-args 
-;;                             "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
-;;                   )
-;;                  (t (elpy-use-ipython)
-;;                     (setq python-shell-interpreter-args
-;;                           "console --pylab")
-;;                     )))))
-;;   ('ein  ;; Nothing for ein yet
-;;    ))
 
 ;;; SERVER MINOR MODE
-(add-hook 'server-visit-hook 
+(add-hook 'server-visit-hook
           (lambda ()
             (local-set-key "\C-z" 'server-edit)))
 
 ;;; SHELL-MODE
 (add-hook 'shell-mode-hook
 	  '(lambda ()
-             (local-set-key [home]        ; move to beginning of line, after prompt  
+             (local-set-key [home]        ; move to beginning of line, after prompt
                             'comint-bol)
 	     (local-set-key [up]          ; cycle backward through command history
                             '(lambda () (interactive)
@@ -1028,12 +1029,11 @@ sorting by these (normal org priorities do not inherit)."
                             '(lambda () (interactive)
                                (if (comint-after-pmark-p)
                                    (comint-next-input 1)
-                                 (forward-line 1))))
-             ))
+                                 (forward-line 1))))))
 
-(autoload 'shell-toggle "shell-toggle-patched" 
-  "Toggles between the *shell* buffer and whatever buffer you are editing." t) 
-(autoload 'shell-toggle-cd "shell-toggle-patched" 
+(autoload 'shell-toggle "shell-toggle-patched"
+  "Toggles between the *shell* buffer and whatever buffer you are editing." t)
+(autoload 'shell-toggle-cd "shell-toggle-patched"
   "Pops up a shell-buffer and insert a \"cd \" command." t)
 
 ;;; SPEEDBAR MODE
@@ -1061,7 +1061,7 @@ sorting by these (normal org priorities do not inherit)."
 (let* ((computername (getenv "COMPUTERNAME"))
        (local-desktop-dir (concat "~/.emacs.d/" computername )))
   (if computername
-      (progn 
+      (progn
 	(if (not (file-exists-p local-desktop-dir))
 	    (mkdir local-desktop-dir))
 	(setq desktop-path (list local-desktop-dir)))))
@@ -1074,7 +1074,7 @@ sorting by these (normal org priorities do not inherit)."
 (require 'color-theme)
 ;; taken from color-theme-initialize, but avoiding loading .el files
 (let ((my-color-list-libraries
-       (directory-files (concat (file-name-directory (locate-library "color-theme")) "/themes") 
+       (directory-files (concat (file-name-directory (locate-library "color-theme")) "/themes")
                         t "^color-theme.*elc")))
   (dolist (library my-color-list-libraries)
     (load library)))
