@@ -25,7 +25,7 @@
 
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
-  "Are we running on a WinTel system?")
+  "Are we running on a Windows system?")
 (defconst system-linux-p (or (eq system-type 'gnu/linux) (eq system-type 'linux))
   "Are we running on a GNU/Linux system?")
 (defconst system-osx-p (eq system-type 'darwin)
@@ -39,19 +39,16 @@
 (cond
  (system-win32-p
   (require 'dos-w32)
-  (setq file-name-buffer-file-type-alist (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
-
+  (setq file-name-buffer-file-type-alist 
+        (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
   (when (boundp 'cygwin-bin)
     (setq default-system-shell (concat cygwin-bin "\\bash.exe")))
-  ;; (setenv "PATH" (concat
-  ;;                 cygwin-bin
-  ;;                        path-separator (getenv "PATH")))
   (when (boundp 'local-exec-paths)
     (mapcar
      (lambda (filepath)                   ;; prepend filepath to exec-path
        (setq exec-path (append
                         (list (replace-regexp-in-string  "\\\\"  "/" filepath))
-                      exec-path)))
+                        exec-path)))
      local-exec-paths))))
 
 (setq shell-file-name (or (getenv "SHELL")
@@ -61,7 +58,9 @@
 
 (when system-osx-p
   (setq mac-command-modifier 'meta
-	mac-option-modifier nil))
+	mac-option-modifier nil)
+  (when (boundp 'local-exec-paths)
+    (setq exec-path (append local-exec-paths exec-path))))
 
 ;;; Emacs package system
 ;; elpa is needed for auctex 11.87 which is needed by auctex-latexmk
@@ -91,13 +90,15 @@
         color-theme
         ;; ein
         elpy
-        ;; ess
+        ess
         graphviz-dot-mode
         ;; j-mode
+        haskell-mode
         jira
         maxframe
         org
         org-jira
+        p4
         sumatra-forward
         undo-tree))
 
@@ -611,7 +612,6 @@
       jit-lock-stealth-time 1)
 
 ;;; GLOBAL AUTO REVERT MODE
-
 (defun looks-like-a-network-file (filename)
   (and filename
        (string-match "^//" filename)))
@@ -745,7 +745,6 @@
       matlab-verify-on-save-flag nil)
 
 ;;; MEDIAWIKI MODE
-
 (defun use-my-mediawiki-outline-magic-keys ()
   "Redefines mediawiki-outline-magic-keys to avoid clashing with
 control-arrow keys"
@@ -767,7 +766,6 @@ control-arrow keys"
     (local-set-key [(meta down)] 'outline-move-subtree-down)))
 
 (add-hook 'outline-minor-mode-hook 'use-my-mediawiki-outline-magic-keys)
-
 
 ;;; MMIX MODE
 (autoload 'mmix-mode "mmix-mode" "Major mode for editing MMIX files" t)
@@ -794,8 +792,6 @@ sorting by these (normal org priorities do not inherit)."
      ((string> pa pb) 1)
      ((string< pa pb) -1)
      (t nil))))
-
-
 
 (when (require 'org-install)
   (require 'org-clock)
