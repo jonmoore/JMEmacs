@@ -88,9 +88,11 @@
         cdlatex
         color-moccur
         color-theme
+        company-ghc
         ;; ein
         elpy
         ess
+        ghc
         graphviz-dot-mode
         ;; j-mode
         haskell-mode
@@ -375,6 +377,50 @@
 (setq ediff-custom-diff-options "-c -w"
       ediff-diff-options "-w")
 (when system-win32-p (setq ediff-diff-program "c:/opt/cygwin/bin/diff"))
+
+;;; Haskell
+(autoload 'ghc-init "ghc" nil t)
+(autoload 'ghc-debug "ghc" nil t)
+
+(setq ghc-debug t)
+(add-hook 'haskell-mode-hook
+          (lambda ()
+            (turn-on-haskell-indentation)
+            (haskell-auto-insert-module-template)
+
+            (setq haskell-process-suggest-remove-import-lines t
+                  haskell-process-auto-import-loaded-modules t
+                  haskell-process-suggest-hoogle-imports t
+                  haskell-process-log t)
+
+            ;; bindings for interactive haskell.  may need avoid some
+            ;; clashes later.
+            (define-key haskell-mode-map 
+              (kbd "C-c C-l") 'haskell-process-load-or-reload)
+            (define-key haskell-mode-map
+              (kbd "C-`") 'haskell-interactive-bring)
+            (define-key haskell-mode-map
+              (kbd "C-c C-t") 'haskell-process-do-type)
+            (define-key haskell-mode-map
+              (kbd "C-c C-i") 'haskell-process-do-info)
+            (define-key haskell-mode-map
+              (kbd "C-c C-c") 'haskell-process-cabal-build)
+            (define-key haskell-mode-map
+              (kbd "C-c C-k") 'haskell-interactive-mode-clear)
+            (define-key haskell-mode-map
+              (kbd "C-c c") 'haskell-process-cabal)
+            (define-key haskell-mode-map
+              (kbd "SPC") 'haskell-mode-contextual-space)
+            (define-key haskell-mode-map
+              (kbd "M-.") 'haskell-mode-jump-to-def)
+
+            (require 'company)
+	    (add-to-list 'company-backends 'company-ghc)
+            (company-mode)
+            (when (buffer-file-name)
+              (ghc-init))
+            (setq company-ghc-show-info t)
+            (local-set-key [?\C-c ?\C-d] 'ghc-browse-document)))
 
 ;;; INFO
 (eval-after-load "info"
@@ -1047,6 +1093,13 @@ sorting by these (normal org priorities do not inherit)."
 ;;; WIKIPEDIA MODE
 (autoload 'wikipedia-mode "wikipedia-mode" "Major mode for editing documents in Wikipedia markup." t)
 (add-to-list 'auto-mode-alist '("\\.wiki$" . wikipedia-mode))
+
+;;; YASNIPPET MINOR MODE
+
+;; yas is stupidly verbose by default
+(add-hook 'yas-minor-mode-hook
+	  '(lambda ()
+             (setq yas-verbosity 2)))
 
 ;;;
 ;;;; DESKTOP

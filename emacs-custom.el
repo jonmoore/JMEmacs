@@ -36,6 +36,7 @@
  '(find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
  '(globalff-regexp-search t)
  '(graphviz-dot-dot-program "dotforme")
+ '(haskell-process-use-presentation-mode t)
  '(hide-ifdef-lines t)
  '(history-delete-duplicates t)
  '(history-length 100)
