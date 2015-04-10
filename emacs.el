@@ -89,6 +89,7 @@
         color-moccur
         color-theme
         company-ghc
+        dirtree
         ;; ein
         elpy
         ess
@@ -102,7 +103,8 @@
         org-jira
         p4
         sumatra-forward
-        undo-tree))
+        undo-tree
+        yaml-mode))
 
 (defun package-list-unaccounted-packages ()
   "Like `package-list-packages', but shows only the packages that
