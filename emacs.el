@@ -89,6 +89,7 @@
         color-moccur
         color-theme
         company-ghc
+        dirtree
         ;; ein
         elpy
         ess
@@ -100,7 +101,8 @@
         org
         org-jira
         p4
-        undo-tree))
+        undo-tree
+        yaml-mode))
 
 (when system-win32-p
   (add-to-list 'jnm-packages 'sumatra-forward))
