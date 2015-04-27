@@ -94,15 +94,16 @@
         ess
         ghc
         graphviz-dot-mode
-        ;; j-mode
         haskell-mode
         jira
         maxframe
         org
         org-jira
         p4
-        sumatra-forward
         undo-tree))
+
+(when system-win32-p
+  (add-to-list 'jnm-packages 'sumatra-forward))
 
 (defun package-list-unaccounted-packages ()
   "Like `package-list-packages', but shows only the packages that
@@ -298,17 +299,22 @@
 
 (defun jnm-load-auctex ()
   (interactive)
-  (load "site-lisp/site-start.d/auctex.el" nil t t)
-  (require 'tex-mik)
-  (setq TeX-auto-save t)
-  (setq TeX-parse-self t)
+  (setq TeX-source-correlate-method 'synctex
+        TeX-source-correlate-mode t
+        TeX-source-correlate-start-server t
+        TeX-PDF-mode t
+        TeX-auto-save t
+        TeX-parse-self t)
+  (setq reftex-plug-into-AUCTeX t)
   (setq-default TeX-master nil)
   (add-hook 'LaTeX-mode-hook 'visual-line-mode)
   (add-hook 'LaTeX-mode-hook 'flyspell-mode)
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
   (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 
-  (when system-win32-p                  ; Windows support for SumatraPDF
+  (cond
+   (system-win32-p
+    (require 'tex-mik)
     (add-hook 'LaTeX-mode-hook
               (lambda ()
                 (push
@@ -316,13 +322,8 @@
                    "latexmk -pdflatex=\"f:/bin/pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
                    :help "Run Latexmk on file")
                  TeX-command-list)))
-    (setq reftex-plug-into-AUCTeX t)
-    (setq TeX-PDF-mode t)
-    (setq
-     TeX-source-correlate-method 'synctex
-     TeX-source-correlate-mode t
-     TeX-source-correlate-start-server t
-     TeX-view-program-list (quote (("Sumatra PDF" "f:/bin/SumatraPDF.exe -reuse-instance %o"))))
+    (setq TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
+          TeX-view-program-list (quote (("Sumatra PDF" "f:/bin/SumatraPDF.exe -reuse-instance %o"))))
     (require 'sumatra-forward)
     (add-hook 'LaTeX-mode-hook
               (lambda ()
@@ -334,7 +335,24 @@
                   (local-set-key [next] '(lambda ()
                                            (interactive)
                                            (funcall (lookup-key (current-global-map) [next]))
-                                           (sumatra-jump-to-line))))))))
+                                           (sumatra-jump-to-line)))))))
+   (system-osx-p
+    (add-hook 'LaTeX-mode-hook 
+              (lambda ()
+                (push
+                 '("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
+                   :help "Run latexmk on file")
+                 TeX-command-list)))
+    ;; (add-hook 'TeX-mode-hook 
+    ;;           '(lambda () (setq TeX-command-default "latexmk")))
+    
+    ;; use Skim as default pdf viewer Skim's displayline is used for
+    ;; forward search (from .tex to .pdf)
+    (setq TeX-view-program-selection '((output-pdf "Skim PDF Viewer")))
+    (setq TeX-view-program-list
+          '(("Skim PDF Viewer" 
+             "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))))))
+(jnm-load-auctex)
 
 ;;; COMINT
 (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
@@ -386,7 +404,6 @@
 (add-hook 'haskell-mode-hook
           (lambda ()
             (turn-on-haskell-indentation)
-            (haskell-auto-insert-module-template)
 
             (setq haskell-process-suggest-remove-import-lines t
                   haskell-process-auto-import-loaded-modules t
@@ -404,7 +421,7 @@
             (define-key haskell-mode-map
               (kbd "C-c C-i") 'haskell-process-do-info)
             (define-key haskell-mode-map
-              (kbd "C-c C-c") 'haskell-process-cabal-build)
+              (kbd "C-c C-c") 'haskell-compile)
             (define-key haskell-mode-map
               (kbd "C-c C-k") 'haskell-interactive-mode-clear)
             (define-key haskell-mode-map
@@ -413,14 +430,15 @@
               (kbd "SPC") 'haskell-mode-contextual-space)
             (define-key haskell-mode-map
               (kbd "M-.") 'haskell-mode-jump-to-def)
+            (define-key haskell-mode-map
+              (kbd "C-c C-d") 'ghc-browse-document)
 
             (require 'company)
 	    (add-to-list 'company-backends 'company-ghc)
             (company-mode)
             (when (buffer-file-name)
               (ghc-init))
-            (setq company-ghc-show-info t)
-            (local-set-key [?\C-c ?\C-d] 'ghc-browse-document)))
+            (setq company-ghc-show-info t)))
 
 ;;; INFO
 (eval-after-load "info"
@@ -1033,7 +1051,8 @@ sorting by these (normal org priorities do not inherit)."
 		(setq elpy-default-minor-modes
 		      '(auto-complete-mode
 			eldoc-mode
-			yas-minor-mode))
+			yas-minor-mode)
+                      elpy-rpc-backend "jedi")
 		(cond 
 		 (system-win32-p
 		  (let ((virtual_env (getenv "VIRTUAL_ENV")))
@@ -1090,6 +1109,10 @@ sorting by these (normal org priorities do not inherit)."
 		      (local-set-key [(shift return)] 'newline-and-indent))))
 (autoload 'longlines-mode "longlines" "Minor mode for editing long lines." t)
 
+;;; TRAMP
+(when system-win32-p
+  (setq tramp-default-method "plink"))
+
 ;;; WIKIPEDIA MODE
 (autoload 'wikipedia-mode "wikipedia-mode" "Major mode for editing documents in Wikipedia markup." t)
 (add-to-list 'auto-mode-alist '("\\.wiki$" . wikipedia-mode))
@@ -1097,9 +1120,7 @@ sorting by these (normal org priorities do not inherit)."
 ;;; YASNIPPET MINOR MODE
 
 ;; yas is stupidly verbose by default
-(add-hook 'yas-minor-mode-hook
-	  '(lambda ()
-             (setq yas-verbosity 2)))
+(setq yas-verbosity 1)
 
 ;;;
 ;;;; DESKTOP
