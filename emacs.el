@@ -122,9 +122,6 @@
 ;; http://stackoverflow.com/questions/11127109/emacs-24-package-system-initialization-problems/11140619#11140619
 
 (setq package-enable-at-startup nil)
-;; alternative
-;; (add-hook 'after-init-hook 'my-after-init-hook)
-;; (defun my-after-init-hook () )
 
 ;; could set package-load-list
 (package-initialize)
@@ -134,6 +131,7 @@
   (when (and (not (package-installed-p pkg))
              (assoc pkg package-archive-contents))
     (package-install pkg)))
+
 ;;; PATHS
 ;; or use Info-default-directory-list
 (setenv "INFOPATH" (concat (concat emacs-root "/packages/org/doc")
@@ -345,11 +343,11 @@
                  '("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
                    :help "Run latexmk on file")
                  TeX-command-list)))
-    ;; (add-hook 'TeX-mode-hook 
-    ;;           '(lambda () (setq TeX-command-default "latexmk")))
+    (add-hook 'TeX-mode-hook 
+              '(lambda () (setq TeX-command-default "latexmk")))
     
     ;; use Skim as default pdf viewer Skim's displayline is used for
-    ;; forward search (from .tex to .pdf)
+    ;; forward search from .tex to .pdf
     (setq TeX-view-program-selection '((output-pdf "Skim PDF Viewer")))
     (setq TeX-view-program-list
           '(("Skim PDF Viewer" 
