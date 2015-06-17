@@ -96,10 +96,10 @@
         ghc
         graphviz-dot-mode
         haskell-mode
-        jira
+        ;; jira
         maxframe
         org
-        org-jira
+        ;;org-jira
         p4
         undo-tree
         yaml-mode))
@@ -868,7 +868,7 @@ sorting by these (normal org priorities do not inherit)."
    'org-mode-hook
    (function (lambda ()
                (require 'org-id)
-               (require 'org-jira)
+               ;;(require 'org-jira)
                (require 'org-wp-link)
                (require 'ob-mscgen)
 
@@ -945,14 +945,14 @@ sorting by these (normal org priorities do not inherit)."
                org-toc-info-mode t
                org-toc-show-subtree-mode t
                org-use-speed-commands t)
-               (org-add-link-type  "jira"
-                                   (lambda (path)
-                                     (let ((saved-buffer (current-buffer)))
-                                       (if (get-buffer "*Jira*")
-                                           (pop-to-buffer "*Jira*" 'other-window)
-                                         (jira-mode))
-                                       (jira-show-issue path)
-                                       (pop-to-buffer saved-buffer))))
+               ;; (org-add-link-type  "jira"
+               ;;                     (lambda (path)
+               ;;                       (let ((saved-buffer (current-buffer)))
+               ;;                         (if (get-buffer "*Jira*")
+               ;;                             (pop-to-buffer "*Jira*" 'other-window)
+               ;;                           (jira-mode))
+               ;;                         (jira-show-issue path)
+               ;;                         (pop-to-buffer saved-buffer))))
                (setq org-export-html-style
                    "<style type=\"text/css\">
                                  html {
@@ -1158,7 +1158,8 @@ sorting by these (normal org priorities do not inherit)."
 (load custom-file)
 
 ;;; STARTUP
+(server-force-delete)
 (server-start)
 (when system-win32-p
-  (w32-maximize-frame))
+  (maximize-frame))
 (message "Finished emacs.el")
