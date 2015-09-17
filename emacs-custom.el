@@ -24,10 +24,14 @@
  '(dired-omit-files "^\\.?#\\|^\\.")
  '(display-buffer-reuse-frames t)
  '(doxymacs-blank-multiline-comment-template (quote ("/**" > n "  " p > n "  " > n "*/" > n)))
- '(doxymacs-doxygen-style "JavaDoc" t)
+ '(doxymacs-doxygen-style "JavaDoc")
  '(edebug-trace nil)
- '(elpy-modules (quote (elpy-module-company elpy-module-flymake elpy-module-pyvenv elpy-module-yasnippet elpy-module-sane-defaults)))
- '(elpy-project-ignored-directories (quote (".git" ".tox" "build" "dist" ".cask" "cover" "docs")))
+ '(elpy-modules
+   (quote
+    (elpy-module-company elpy-module-flymake elpy-module-pyvenv elpy-module-yasnippet elpy-module-sane-defaults)))
+ '(elpy-project-ignored-directories
+   (quote
+    (".git" ".tox" "build" "dist" ".cask" "cover" "docs")))
  '(elpy-test-runner (quote elpy-test-nose-runner))
  '(enable-local-eval t)
  '(ff-quiet-mode t)
@@ -41,8 +45,6 @@
  '(imenu-tree-auto-update t)
  '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
- '(iswitchb-default-method (quote maybe-frame))
- '(iswitchb-mode t nil (iswitchb))
  '(jit-lock-stealth-load 90)
  '(js-auto-indent-flag nil)
  '(kill-whole-line t)
@@ -55,23 +57,28 @@
  '(mac-emulate-three-button-mouse t t)
  '(matlab-vers-on-startup nil)
  '(mediawiki-draft-data-file "~/draft.txt")
- '(minibuffer-prompt-properties (quote (read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt)))
+ '(minibuffer-prompt-properties
+   (quote
+    (read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt)))
  '(next-line-add-newlines nil)
  '(org-agenda-files (quote ("~/org")))
- '(org-agenda-start-with-clockreport-mode nil)
+ '(org-agenda-start-with-clockreport-mode nil t)
  '(org-confirm-babel-evaluate nil)
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
  '(org-enforce-todo-checkbox-dependencies nil)
  '(perlnow-perl-module-template (concat emacs-root "/site-lisp/templates"))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
+ '(read-buffer-completion-ignore-case t)
  '(reftex-bibpath-environment-variables (quote ("BIBINPUTS" "TEXBIB" "c:/latex/")))
  '(reftex-toc-split-windows-horizontally t)
  '(ropemacs-autoimport-modules (quote ("os" "shutil" "sys" "logging")))
  '(ropemacs-enable-autoimport t)
  '(ropemacs-enable-shortcuts nil)
  '(ropemacs-global-prefix nil)
- '(safe-local-variable-values (quote ((generated-autoload-file concat emacs-root "/site-lisp/jnm-loaddefs.el"))))
+ '(safe-local-variable-values
+   (quote
+    ((generated-autoload-file concat emacs-root "/site-lisp/jnm-loaddefs.el"))))
  '(save-abbrevs nil)
  '(set-mark-command-repeat-pop t)
  '(sgml-basic-offset 8)
@@ -80,10 +87,11 @@
  '(transient-mark-mode t)
  '(truncate-partial-width-windows nil)
  '(vc-annotate-display-mode (quote fullscale))
- '(virtualenv-root "c:/pyj/pyjvenv/")
  '(w32-list-proportional-fonts t t)
  '(warning-suppress-types (quote ((undo discard-info))))
- '(which-func-modes (quote (c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode)))
+ '(which-func-modes
+   (quote
+    (c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode)))
  '(woman-imenu t)
  '(woman-use-own-frame nil)
  '(woman-use-topic-at-point t)

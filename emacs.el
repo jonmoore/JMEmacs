@@ -98,6 +98,7 @@
         haskell-mode
         ;; jira
         maxframe
+        minimap
         org
         ;;org-jira
         p4
@@ -185,7 +186,7 @@
 
 ;;;
 ;;;; MY FUNCTIONS
-;;;============================
+;;;========================
 
 
 (require 'ibuffer)
@@ -868,7 +869,6 @@ sorting by these (normal org priorities do not inherit)."
    'org-mode-hook
    (function (lambda ()
                (require 'org-id)
-               ;;(require 'org-jira)
                (require 'org-wp-link)
                (require 'ob-mscgen)
 
@@ -879,7 +879,7 @@ sorting by these (normal org priorities do not inherit)."
                (local-unset-key [C-tab])
                (local-set-key [C-tab] (function (lambda () (interactive) (org-cycle t))))
                (local-set-key [?\M-?] 'org-complete)
-               (local-unset-key [C-S-left]) ;; otherwise masks shifting buffers.  See org-disputed-keys?
+               (local-unset-key [C-S-left])  ;; otherwise masks shifting buffers.  See org-disputed-keys?
                (local-unset-key [C-S-right]) ;; otherwise masks shifting buffers
                (local-set-key [(shift tab)] 'org-show-contents-or-move-to-previous-table-field)
                (local-set-key [C-S-down]    'outline-next-visible-heading)
@@ -930,31 +930,14 @@ sorting by these (normal org priorities do not inherit)."
                 org-return-follows-link t
                 org-show-siblings (quote ((default . t)
                                           (isearch t)))
-                org-tag-alist '(("Ming"             . ?m)
-                                ("Petr"             . ?p)
-                                ("Qingning"         . ?q)
-                                ("Richard"          . ?r)
-                                ("#A"               . ?a)
-                                ("#B"               . ?b)
-                                ("#C"               . ?c)
-                                ("PLATFORM_PROJECT" . ?q))
-
-               org-tags-column -80
-               org-toc-default-depth 3
-               org-toc-follow-mode t
-               org-toc-info-mode t
-               org-toc-show-subtree-mode t
-               org-use-speed-commands t)
-               ;; (org-add-link-type  "jira"
-               ;;                     (lambda (path)
-               ;;                       (let ((saved-buffer (current-buffer)))
-               ;;                         (if (get-buffer "*Jira*")
-               ;;                             (pop-to-buffer "*Jira*" 'other-window)
-               ;;                           (jira-mode))
-               ;;                         (jira-show-issue path)
-               ;;                         (pop-to-buffer saved-buffer))))
+                org-tags-column -80
+                org-toc-default-depth 3
+                org-toc-follow-mode t
+                org-toc-info-mode t
+                org-toc-show-subtree-mode t
+                org-use-speed-commands t)
                (setq org-export-html-style
-                   "<style type=\"text/css\">
+                     "<style type=\"text/css\">
                                  html {
                                        font-family: Arial;
                                        font-size: 10pt;
@@ -978,32 +961,32 @@ sorting by these (normal org priorities do not inherit)."
                                                  <!--border: 1pt solid #ADB9CC;-->
                                  }
                                </style>")
-             (setq org-publish-project-alist
-                   '(("orgfiles"
-                      :base-directory "~/org/"
-                      :base-extension "org"
-                      :publishing-directory "~/org/"
-                      :publishing-function org-publish-org-to-html
-                      :headline-levels      3
-                      :section-numbers      nil
-                      :table-of-contents    t
-                      :archived-trees       headline
-                      :emphasize            t
-                      :sub-superscript      t
-                      :special-strings      t
-                      :TeX-macros           t
-                      :LaTeX-fragments      t
-                      :fixed-width          t
-                      :timestamps           t
-                      :tags                 not-in-toc
-                      :tables               t
-                      :table-auto-headline  t
-                      :convert-org-links    t
-                      :inline-images        maybe
-                      :expand-quoted-html   t
-                      :timestamp            t
-                      :auto-preamble t
-                      :auto-postamble t)))))))
+               (setq org-publish-project-alist
+                     '(("orgfiles"
+                        :base-directory "~/org/"
+                        :base-extension "org"
+                        :publishing-directory "~/org/"
+                        :publishing-function org-publish-org-to-html
+                        :headline-levels      3
+                        :section-numbers      nil
+                        :table-of-contents    t
+                        :archived-trees       headline
+                        :emphasize            t
+                        :sub-superscript      t
+                        :special-strings      t
+                        :TeX-macros           t
+                        :LaTeX-fragments      t
+                        :fixed-width          t
+                        :timestamps           t
+                        :tags                 not-in-toc
+                        :tables               t
+                        :table-auto-headline  t
+                        :convert-org-links    t
+                        :inline-images        maybe
+                        :expand-quoted-html   t
+                        :timestamp            t
+                        :auto-preamble t
+                        :auto-postamble t)))))))
 
 ;;; (C)PERL MODE
 (defalias 'perl-mode 'cperl-mode)
