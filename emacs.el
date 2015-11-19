@@ -96,12 +96,14 @@
         ghc
         graphviz-dot-mode
         haskell-mode
+        jedi
         ;; jira
         maxframe
         minimap
         org
         ;;org-jira
         p4
+        projectile
         undo-tree
         yaml-mode))
 
@@ -229,6 +231,8 @@
 (require-soft 'uniquify)
 (setq uniquify-buffer-name-style 'post-forward-angle-brackets
       uniquify-min-dir-content 0)
+(require 'ido)
+(ido-mode t)
 
 ;;; GLOBAL KEY SETTINGS
 (when system-osx-p
@@ -787,6 +791,15 @@
 (when (ignore-errors (require 'which-func))
   (which-func-mode 1)) ; shows the current function in statusbar
 
+;;; IDO MODE
+(add-hook 'ido-setup-hook
+          (lambda ()
+            (let ((kmap ido-file-dir-completion-map))
+              (define-key kmap (kbd "M-n")   'ido-next-work-file)
+              (define-key kmap (kbd "C-M-n") 'ido-next-work-directory)
+              (define-key kmap (kbd "M-p")   'ido-prev-work-file)
+              (define-key kmap (kbd "C-M-p") 'ido-prev-work-directory))))
+
 ;;; LISP MODE
 ;; normally alt-tab, but windows masks this and we want to keep the normal behavior
 ;; getting package complete is obsolete annoying message
@@ -1027,6 +1040,8 @@ sorting by these (normal org priorities do not inherit)."
   'elpy
   "Python IDE package to use")
 
+;;; elpy recommended packages
+;; jedi flake8 importmagic autopep8 nose
 (case python-ide-package  
   ('elpy   (eval-after-load 'python 
 	     '(progn 
@@ -1036,23 +1051,8 @@ sorting by these (normal org priorities do not inherit)."
 			eldoc-mode
 			yas-minor-mode)
                       elpy-rpc-backend "jedi")
-		(cond 
-		 (system-win32-p
-		  (let ((virtual_env (getenv "VIRTUAL_ENV")))
-		    (when virtual_env
-		      (elpy-use-ipython)
-		      (setq python-shell-interpreter
-			    (format "%s\\python.exe" virtual_env)
-			    python-shell-interpreter-args 
-			    "-i -c \"from IPython import start_ipython; start_ipython()\" console --pylab")))
-		  )
-		 (t (elpy-use-ipython)
-		    (setq python-shell-interpreter-args
-			  "console --pylab")
-		    )))))
-  ('ein  ;; Nothing for ein yet
-   ))
-
+                (elpy-use-ipython))))
+  ('ein))  ;; Nothing for ein yet
 
 ;;; SERVER MINOR MODE
 (add-hook 'server-visit-hook

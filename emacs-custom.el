@@ -24,14 +24,14 @@
  '(dired-omit-files "^\\.?#\\|^\\.")
  '(display-buffer-reuse-frames t)
  '(doxymacs-blank-multiline-comment-template (quote ("/**" > n "  " p > n "  " > n "*/" > n)))
- '(doxymacs-doxygen-style "JavaDoc")
+ '(doxymacs-doxygen-style "JavaDoc" t)
  '(edebug-trace nil)
  '(elpy-modules
    (quote
     (elpy-module-company elpy-module-flymake elpy-module-pyvenv elpy-module-yasnippet elpy-module-sane-defaults)))
  '(elpy-project-ignored-directories
    (quote
-    (".git" ".tox" "build" "dist" ".cask" "cover" "docs")))
+    (".git" ".tox" "build" "dist" ".cask" "cover" "docs" ".projectile" "_tcp" "*_venv")))
  '(elpy-test-runner (quote elpy-test-nose-runner))
  '(enable-local-eval t)
  '(ff-quiet-mode t)
