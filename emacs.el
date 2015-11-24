@@ -163,11 +163,11 @@
 (setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
                                                    (system-osx-p   "~/backup")))))
 
-(defun weight-lists (from to weight)
-  (mapcar* (lambda (av bv)
-             (+ av (* (- bv av) weight)))
-           from
-           to))
+(defun weight-lists (froms tos weight)
+  (mapcar* (lambda (from to)
+             (+ from (* (- to from) weight)))
+           froms
+           tos))
 
 (eval-after-load 'highlight-sexps
   (quote (progn
@@ -1046,13 +1046,51 @@ sorting by these (normal org priorities do not inherit)."
   ('elpy   (eval-after-load 'python 
 	     '(progn 
 		(elpy-enable)
-		(setq elpy-default-minor-modes
-		      '(auto-complete-mode
-			eldoc-mode
-			yas-minor-mode)
-                      elpy-rpc-backend "jedi")
+                
+		(setq
+                 elpy-modules '(
+                                elpy-module-company
+                                elpy-module-eldoc
+                                elpy-module-flymake
+                               ;; elpy-module-highlight-indentation
+                                elpy-module-pyvenv
+                                elpy-module-sane-defaults
+                                elpy-module-yasnippet
+                                )
+                 elpy-rpc-backend "jedi")
                 (elpy-use-ipython))))
   ('ein))  ;; Nothing for ein yet
+
+
+;; http://www.emacswiki.org/emacs/CompanyMode
+(defun check-expansion ()
+  (save-excursion
+    (if (looking-at "\\_>") t
+      (backward-char 1)
+      (if (looking-at "\\.") t
+        (backward-char 1)
+        (if (looking-at "->") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+    (yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (if (minibufferp)
+      (minibuffer-complete)
+    (if (or (not yas/minor-mode)
+            (null (do-yas-expand)))
+        (if (check-expansion)
+            (company-complete-common)
+          (indent-for-tab-command)))))
+
+(add-hook 'python-mode-hook
+          (lambda ()
+            (local-set-key [tab] 'tab-indent-or-complete)
+            (define-key python-mode-map "\C-c\C-ys" 'yas-insert-snippet)
+            (define-key python-mode-map "\C-c\C-yn" 'yas-new-snippet)
+            (define-key python-mode-map "\C-c\C-yv" 'yas-visit-snippet-file)))
 
 ;;; SERVER MINOR MODE
 (add-hook 'server-visit-hook
