@@ -725,9 +725,9 @@
 ;;; HTML MODE
 (autoload 'css-mode "css-mode")
 (add-to-list 'auto-mode-alist '("\\.css\\'" . css-mode))
-(add-hook 'html-mode-hook
-	  (function (lambda ()
-		      (longlines-mode nil))))
+;; (add-hook 'html-mode-hook
+;; 	  (function (lambda ()
+;; 		      (longlines-mode nil))))
 
 ;;; IBUFFER
 (setq ibuffer-saved-filter-groups
