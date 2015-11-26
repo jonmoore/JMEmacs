@@ -1241,6 +1241,15 @@ based on this and `python-shell-buffer-name', otherwise call
 (desktop-save-mode 1)
 (savehist-mode 1)
 
+;; Try to suppress errors
+(defun my-savehist-autosave (orig-fun &rest args)
+  "Save the minibuffer history if it has been modified since the last save.
+Does nothing if Savehist mode is off."
+  (condition-case nil
+      (orig-fun args)
+    (error nil)))
+(advice-add 'savehist-autosave :around #'my-savehist-autosave)
+
 ;;; COLOR-THEME
 (require 'color-theme)
 ;; taken from color-theme-initialize, but avoiding loading .el files
