@@ -1108,7 +1108,7 @@ directories . and ... FULL is passed to `directory-files'"
 the nearest ancestor directory of FILE that contains a venv, or
 nil if there is no such ancestor."
   (let ((parent-of-venv (locate-dominating-file
-                         file
+                         (file-name-directory file)
                          'child-venvs)))
     (when parent-of-venv
       (car (child-venvs parent-of-venv)))))
