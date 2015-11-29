@@ -1041,7 +1041,8 @@ sorting by these (normal org priorities do not inherit)."
   "Python IDE package to use")
 
 ;;; elpy recommended packages
-;; jedi flake8 importmagic autopep8 nose
+;; echo n | enpkg install jedi flake8 nose
+;; pip install importmagic autopep8
 (case python-ide-package  
   ('elpy   (eval-after-load 'python 
 	     '(progn 
