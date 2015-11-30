@@ -26,7 +26,8 @@
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
   "Are we running on a Windows system?")
-(defconst system-linux-p (or (eq system-type 'gnu/linux) (eq system-type 'linux))
+(defconst system-linux-p (or (eq system-type 'gnu/linux)
+                             (eq system-type 'linux))
   "Are we running on a GNU/Linux system?")
 (defconst system-osx-p (eq system-type 'darwin)
   "Are we running on a Darwin (Mac OS X) system?")
@@ -150,7 +151,8 @@
   (when system-win32-p
     (if (getenv "MANPATH")
         (setq woman-manpath
-              (woman-parse-colon-path (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
+              (woman-parse-colon-path
+               (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
 (add-hook 'woman-mode-hook 'my-woman-mode-hook)
 
 (cl-labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
@@ -233,6 +235,7 @@
 (require-soft 'uniquify)
 (setq uniquify-buffer-name-style 'post-forward-angle-brackets
       uniquify-min-dir-content 0)
+
 (require 'ido)
 (ido-mode t)
 
@@ -322,27 +325,35 @@
   (cond
    (system-win32-p
     (require 'tex-mik)
-    (add-hook 'LaTeX-mode-hook
-              (lambda ()
-                (push
-                 '("Latexmk"
-                   "latexmk -pdflatex=\"f:/bin/pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
-                   :help "Run Latexmk on file")
-                 TeX-command-list)))
-    (setq TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
-          TeX-view-program-list (quote (("Sumatra PDF" "f:/bin/SumatraPDF.exe -reuse-instance %o"))))
+
+    (add-hook
+     'LaTeX-mode-hook
+     (lambda ()
+       (push
+        '("Latexmk"
+          "latexmk -pdflatex=\"f:/bin/pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
+          :help "Run Latexmk on file")
+        TeX-command-list)))
+
+    (setq
+     TeX-view-program-selection
+     '((output-pdf "Sumatra PDF") (output-html "start"))
+     TeX-view-program-list
+     (quote (("Sumatra PDF" "f:/bin/SumatraPDF.exe -reuse-instance %o"))))
     (require 'sumatra-forward)
     (add-hook 'LaTeX-mode-hook
               (lambda ()
                 (progn
-                  (local-set-key [prior] '(lambda ()
-                                            (interactive)
-                                            (funcall (lookup-key (current-global-map) [prior]))
-                                            (sumatra-jump-to-line)))
-                  (local-set-key [next] '(lambda ()
-                                           (interactive)
-                                           (funcall (lookup-key (current-global-map) [next]))
-                                           (sumatra-jump-to-line)))))))
+                  (local-set-key
+                   [prior] '(lambda ()
+                              (interactive)
+                              (funcall (lookup-key (current-global-map) [prior]))
+                              (sumatra-jump-to-line)))
+                  (local-set-key
+                   [next] '(lambda ()
+                             (interactive)
+                             (funcall (lookup-key (current-global-map) [next]))
+                             (sumatra-jump-to-line)))))))
    (system-osx-p
     (add-hook 'LaTeX-mode-hook 
               (lambda ()
@@ -379,15 +390,19 @@
 		      (define-key dired-mode-map "j" 'dired-execute-file)
 		      (define-key dired-mode-map "P" 'dired-do-ps-print)
 		      (define-key dired-mode-map "O" 'dired-do-moccur)
-		      (define-key dired-mode-map [(control up)] 'dired-prev-subdir)
-		      (define-key dired-mode-map [(control down)] 'dired-next-subdir)
-                      (setq dired-omit-extensions (set-difference
-                                                   dired-omit-extensions
-                                                   '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj" )
-                                                   :test 'string=))
+		      (define-key dired-mode-map
+                        [(control up)] 'dired-prev-subdir)
+		      (define-key dired-mode-map
+                        [(control down)] 'dired-next-subdir)
+                      (setq dired-omit-extensions
+                            (set-difference
+                             dired-omit-extensions
+                             '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj" )
+                             :test 'string=))
 		      (setq dired-omit-mode t)
                       (setq dired-dnd-protocol-alist nil)
-                      (setq find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))))))
+                      (setq find-ls-option
+                            (quote ("-exec ls -ld {} ';'" . "-ld"))))))
 (defvar dired-ps-print-buffer-with-faces t
   "*If non-nil, `dired-do-ps-print' will print fonts, colors, and underlines.")
 (setq dired-dnd-protocol-alist nil)
@@ -482,17 +497,19 @@
 (autoload 'dired-do-moccur "color-moccur" nil t)
 
 (setq *moccur-buffer-name-exclusion-list*
-      '(".+TAGS.+" "*Completions*" "*Messages*"
-	".+\.aps" ".+\.clw"
-	".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc"
-	"\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$"
-	"\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
+      '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
+	".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
+	"\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
+	"\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
+	"\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
 (setq dmoccur-exclusion-mask
-      '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$" "\\.deb$"
-	"\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$" "\\.mdb$" "\\.adp$"
-	"\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$" "\\.png$" "\\.pbm$"
-	"\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$"
-	"\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
+      '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
+	"\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
+	"\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
+	"\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
+	"\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
+	"\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
+	"\\.pch$" "\\.pdb$" "\\.res$"))
 (setq moccur-split-word t)
 (setq dmoccur-use-list t
       dmoccur-use-project t
@@ -666,7 +683,8 @@
 
 ;;; DOT MODE
 (add-to-list 'auto-mode-alist '("\\.dot\\'" . graphviz-dot-mode))
-(autoload 'graphviz-dot-mode "graphviz-dot-mode" "Mode for editing graphviz dot files." t)
+(autoload 'graphviz-dot-mode "graphviz-dot-mode"
+  "Mode for editing graphviz dot files." t)
 
 ;;; DOXYMACS MODE
 (autoload 'doxymacs-mode "doxymacs")
@@ -689,7 +707,8 @@
 (add-hook 'find-file-hook
           (lambda ()
             (when (looks-like-a-network-file buffer-file-name)
-              (message "Disabling global auto revert mode for %s" buffer-file-name)
+              (message "Disabling global auto revert mode for %s"
+                       buffer-file-name)
               (setq global-auto-revert-ignore-buffer t))))
 
 (global-auto-revert-mode t)
@@ -856,9 +875,10 @@ control-arrow keys"
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 (defun jm-org-get-priority-from-headline
   (headline)
-  "Get the priority from an org headline using a tag format - #A etc. Defaults to D.
-We do this so to provide inherited pseudo-priorities, allowing
-sorting by these (normal org priorities do not inherit)."
+  "Get the priority from an org headline using a tag format - #A
+etc. Defaults to D.  We do this so to provide inherited
+pseudo-priorities, allowing sorting by these (normal org priorities do
+not inherit)."
   (or (and (string-match "#\\([ABC]\\)" headline) (match-string 1 headline))
       "D"))
 
@@ -1183,14 +1203,16 @@ based on this and `python-shell-buffer-name', otherwise call
 ;;; SHELL-MODE
 (add-hook 'shell-mode-hook
 	  '(lambda ()
-             (local-set-key [home]        ; move to beginning of line, after prompt
+             (local-set-key [home]
                             'comint-bol)
-	     (local-set-key [up]          ; cycle backward through command history
+	     (local-set-key [up]
+                            ;; cycle backward through command history
                             '(lambda () (interactive)
                                (if (comint-after-pmark-p)
                                    (comint-previous-input 1)
                                  (previous-line 1))))
-	     (local-set-key [down]        ; cycle forward through command history
+	     (local-set-key [down]
+                            ;; cycle forward through command history
                             '(lambda () (interactive)
                                (if (comint-after-pmark-p)
                                    (comint-next-input 1)
@@ -1218,7 +1240,8 @@ based on this and `python-shell-buffer-name', otherwise call
   (setq tramp-default-method "plink"))
 
 ;;; WIKIPEDIA MODE
-(autoload 'wikipedia-mode "wikipedia-mode" "Major mode for editing documents in Wikipedia markup." t)
+(autoload 'wikipedia-mode "wikipedia-mode"
+  "Major mode for editing documents in Wikipedia markup." t)
 (add-to-list 'auto-mode-alist '("\\.wiki$" . wikipedia-mode))
 
 ;;; YASNIPPET MINOR MODE
@@ -1257,8 +1280,9 @@ Does nothing if Savehist mode is off."
 (require 'color-theme)
 ;; taken from color-theme-initialize, but avoiding loading .el files
 (let ((my-color-list-libraries
-       (directory-files (concat (file-name-directory (locate-library "color-theme")) "/themes")
-                        t "^color-theme.*elc")))
+       (directory-files
+        (concat (file-name-directory (locate-library "color-theme")) "/themes")
+        t "^color-theme.*elc")))
   (dolist (library my-color-list-libraries)
     (load library)))
 
