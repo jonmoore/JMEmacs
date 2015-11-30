@@ -231,6 +231,9 @@
 
 (require 'ido)
 (ido-mode t)
+(require 'magit)
+
+(global-set-key (kbd "C-x g") 'magit-status)
 
 ;;; GLOBAL KEY SETTINGS
 (when system-osx-p
