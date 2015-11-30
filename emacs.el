@@ -98,12 +98,14 @@
         haskell-mode
         jedi
         ;; jira
+        magit
         maxframe
         minimap
         org
         ;;org-jira
         p4
         projectile
+        smartparens
         undo-tree
         yaml-mode))
 
