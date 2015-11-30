@@ -139,12 +139,6 @@
     (package-install pkg)))
 
 ;;; PATHS
-;; or use Info-default-directory-list
-(setenv "INFOPATH" (concat (concat emacs-root "/packages/org/doc")
-                           path-separator (concat emacs-root "/packages/pde/doc")
-                           path-separator (concat emacs-root "/packages/w3/info")
-                           path-separator (expand-file-name (concat exec-directory "../info"))
-                           path-separator (getenv "INFOPATH")))
 
 (defun my-woman-mode-hook ()
   (require 'woman)
@@ -193,7 +187,6 @@
 ;;;
 ;;;; MY FUNCTIONS
 ;;;========================
-
 
 (require 'ibuffer)
 (require 'color-moccur)
@@ -746,9 +739,6 @@
 ;;; HTML MODE
 (autoload 'css-mode "css-mode")
 (add-to-list 'auto-mode-alist '("\\.css\\'" . css-mode))
-;; (add-hook 'html-mode-hook
-;; 	  (function (lambda ()
-;; 		      (longlines-mode nil))))
 
 ;;; IBUFFER
 (setq ibuffer-saved-filter-groups
@@ -849,13 +839,6 @@
 control-arrow keys"
   (defun mediawiki-outline-magic-keys ()
     (interactive)
-    ;; (message "OUTLINE MAGIC")
-    ;; (unless  (featurep 'xemacs)
-    ;;   (local-set-key [(shift iso-lefttab)] 'outline-cycle)
-    ;;   (local-set-key [iso-left-tab] 'outline-cycle))
-
-    ;; (local-set-key [(meta left)]  'outline-promote)
-    ;; (local-set-key [(meta right)] 'outline-demote)
 
     (local-set-key [(shift return)] 'newline-and-indent)
 
