@@ -815,12 +815,12 @@
               (define-key kmap (kbd "C-M-p") 'ido-prev-work-directory))))
 
 ;;; LISP MODE
-;; normally alt-tab, but windows masks this and we want to keep the normal behavior
-;; getting package complete is obsolete annoying message
-;; (add-hook 'emacs-lisp-mode-hook
-;;           (lambda ()
-;;             (local-set-key [(control tab)] 'PC-lisp-complete-symbol)))
-
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
+            (require 'smartparens-config)
+            (smartparens-mode t)
+            (smartparens-strict-mode)
+            (sp-use-smartparens-bindings)))
 
 ;;; MATLAB MODE
 (add-to-list 'auto-mode-alist '("\\.m\\'" . matlab-mode))
