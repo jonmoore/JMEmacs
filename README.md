@@ -1,4 +1,4 @@
 JMEmacs
 =======
 
-My emacs stuff.  Should be portable across platforms.
+My emacs stuff. Should be portable across platforms.
