@@ -820,7 +820,71 @@
             (require 'smartparens-config)
             (smartparens-mode t)
             (smartparens-strict-mode)
-            (sp-use-smartparens-bindings)))
+            (let ((map smartparens-mode-map))
+              ;; Movement and navigation
+
+              (define-key map (kbd "C-M-b")                'sp-backward-sexp)
+              (define-key map (kbd "C-M-f")                'sp-forward-sexp)
+
+              (define-key map (kbd "<C-M-left>")           'sp-backward-sexp)
+              (define-key map (kbd "<C-M-right>")          'sp-forward-sexp)
+              (define-key map (kbd "<C-up>")               'sp-up-sexp)
+              (define-key map (kbd "<C-down>")             'sp-down-sexp)
+              (define-key map (kbd "<C-S-up>")             'sp-backward-up-sexp)
+              (define-key map (kbd "<C-S-down>")           'sp-backward-down-sexp)
+              
+              (define-key map (kbd "C-M-p")                'sp-previous-sexp)
+              (define-key map (kbd "C-M-n")                'sp-next-sexp)
+              (define-key map (kbd "M-a")                  'sp-beginning-of-sexp)
+              (define-key map (kbd "M-e")                  'sp-end-of-sexp)
+
+              (define-key map (kbd "M-B")                  'sp-backward-symbol)
+              (define-key map (kbd "M-F")                  'sp-forward-symbol)
+
+              (define-key map (kbd "M-p")                  'point-undo)
+              (define-key map (kbd "M-n")                  'point-redo)
+
+              ;; selection
+              (define-key map (kbd "C-]")                  'sp-select-next-thing-exchange)
+              (define-key map (kbd "C-M-]")                'sp-select-next-thing)
+
+              ;; Deleting and killing
+              (define-key map (kbd "<M-delete>")           'sp-unwrap-sexp)
+              (define-key map (kbd "<M-backspace>")        'sp-backward-unwrap-sexp)
+
+              (define-key map [remap backward-delete-char] 'sp-backward-delete-char)
+              (define-key map [remap backward-kill-word]   'sp-backward-kill-word)
+              (define-key map [remap delete-forward-char]  'sp-delete-char)
+              (define-key map [remap kill-line]            'sp-kill-hybrid-sexp)
+              (define-key map [remap kill-word]            'sp-kill-word)
+
+              (define-key map (kbd "C-M-k")                'sp-kill-sexp)
+              (define-key map (kbd "C-M-w")                'sp-copy-sexp)
+
+              ;; Depth changing
+              (define-key map (kbd "M-s")                  'sp-splice-sexp)
+              (define-key map (kbd "C-M-s")                'sp-splice-sexp-killing-around)
+              (define-key map (kbd "M-?")                  'sp-convolute-sexp)
+              (define-key map (kbd "<C-M-backspace>")   'sp-splice-sexp-killing-backward)
+              (define-key map (kbd "<C-M-delete>")      'sp-splice-sexp-killing-forward)
+
+              ;; Barf & slurp
+
+              ;; http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking
+              ;; for the first setting
+              (define-key map (kbd "C-)")                  'sp-forward-slurp-sexp)
+              (define-key map (kbd "C-}")                  'sp-forward-barf-sexp)
+              (define-key map (kbd "C-(")                  'sp-backward-slurp-sexp)
+              (define-key map (kbd "C-{")                  'sp-backward-barf-sexp)
+
+              ;; Miscellaneous commands
+              (define-key map (kbd "M-S")                  'sp-split-sexp)
+              (define-key map (kbd "M-J")                  'sp-join-sexp)
+              (define-key map (kbd "C-M-t")                'sp-transpose-sexp))
+
+            ;; Some additional bindings for strict mode
+            (let ((map smartparens-strict-mode-map))
+              (define-key map (kbd "M-q")                  'sp-indent-defun))))
 
 ;;; MATLAB MODE
 (add-to-list 'auto-mode-alist '("\\.m\\'" . matlab-mode))
