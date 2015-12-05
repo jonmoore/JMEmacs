@@ -102,9 +102,11 @@
         magit
         maxframe
         minimap
+        nexus
         org
         ;;org-jira
         p4
+        point-undo
         projectile
         smartparens
         undo-tree
@@ -232,6 +234,8 @@
 (require 'ido)
 (ido-mode t)
 (require 'magit)
+
+(require 'point-undo)
 
 (global-set-key (kbd "C-x g") 'magit-status)
 
@@ -920,6 +924,14 @@ control-arrow keys"
 (autoload 'mmix-mode "mmix-mode" "Major mode for editing MMIX files" t)
 (setq auto-mode-alist (cons '("\\.mms" . mmix-mode)
                             auto-mode-alist))
+
+;;; NXML MODE
+
+(require 'nexus-extensions)
+(add-hook 'nxml-mode-hook
+          (lambda ()
+            (local-set-key [f9]  'nexus-insert-gav-for-keyword)))
+
 
 ;;; ORG MODE
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
