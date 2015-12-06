@@ -11,7 +11,7 @@
 ;; First want to define a function that converts test-data to an array of 
 ;; structs
 (defstruct qap-project
-  "A QA Platform Project"
+  "A QAP Project"
   id
   name
   depends
