@@ -1,5 +1,3 @@
-;; -*- mode: Lisp; generated-autoload-file: "~/opt/emacs/site-lisp/jnm-loaddefs.el"; -*-
-
 ;;; DISPLAY
 (defun recenter-top    () (interactive) (recenter 0))
 (defun recenter-bottom () (interactive) (recenter (quote -)))
@@ -501,54 +499,3 @@ The value is actually the first element of list whose car equals key."
 (require 'color-moccur)
 (require 'moccur-edit) ;; missing key - see color-mocur.el
 
-;; autoloads advice - http://stackoverflow.com/questions/4189159/emacs23-elisp-how-to-properly-autoload-this-library
-;; What you really want is to get the autoloads generated for you
-;; automatically, so that your .emacs file remains pristine. Most
-;; packages have the ;;;###autoload lines in them already, and if not,
-;; you can easily add them.
-
-;; To manage this, you can put all the packages in a directory, say
-;; ~/emacs/lisp, and in there have a file named update-auto-loads.el
-;; which contains:
-
-;; ;; put this path into the load-path automatically
-;; ;;;###autoload
-;; (progn
-;;   (setq load-path (cons (file-name-directory load-file-name) load-path)))
-
-;; ;;;###autoload
-;; (defun update-autoloads-in-package-area (&optional file)
-;;   "Update autoloads for files in the diretory containing this file."
-;;   (interactive)
-;;   (let ((base (file-truename
-;;        (file-name-directory
-;;         (symbol-file 'update-autoloads-in-package-area 'defun)))))
-;; (require 'autoload)         ;ironic, i know
-;; (let ((generated-autoload-file (concat base "loaddefs.el")))
-;;   (when (not (file-exists-p generated-autoload-file))
-;;     (with-current-buffer (find-file-noselect generated-autoload-file)
-;;       (insert ";;") ;; create the file with non-zero size to appease autoload
-;;       (save-buffer)))
-;;   (cd base)
-;;   (if file
-;;       (update-file-autoloads file)
-;;     (update-autoloads-from-directories base)))))
-
-;; ;;;###autoload
-;; (defun update-autoloads-for-file-in-package-area (file)
-;;   (interactive "f")
-;;   (update-autoloads-in-package-area file))
-
-;; If you add 'update-autoloads-in-package-area to your
-;; kill-emacs-hook, then the loaddefs.el will automatically be updated
-;; every time you exit Emacs.
-
-;; And, to tie it all together, add this to your .emacs:
-
-;; (load-file "~/emacs/lisp/loaddefs.el")
-
-;; Now, when you download a new package, just save it in the
-;; ~/emacs/lisp directory, update the loaddefs via M-x
-;; update-autoloads-in-package-area (or exit emacs), and it'll be
-;; available the next time you run Emacs. No more changes to your
-;; .emacs to load things.

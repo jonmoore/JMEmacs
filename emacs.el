@@ -195,10 +195,13 @@
 (require 'moccur-edit)
 (load "moccur-wrappers")
 (load "snippets")
-(load "jnm-loaddefs")
+(load "jnm-autoloads")
+
+(add-hook 'kill-emacs-hook
+          'update-personal-autoloads)
 
 ;;; COLORS AND APPEARANCE
-                                        ; see also color-theme
+;; see also color-theme
 (tool-bar-mode -1)
 (setq
  frame-title-format
