@@ -64,50 +64,52 @@
     (setq exec-path (append local-exec-paths exec-path))))
 
 ;;; Emacs package system
-;; elpa is needed for auctex 11.87 which is needed by auctex-latexmk
-;; MELPA versions will take precedence because they use yyyymmdd for
-;; the version number and package.el uses the version of each package
-;; with the highest version number.  Note that by design MELPA builds
-;; the latest version in source control of each package so it is
-;; inherently unstable while marmalade is a package repository where
-;; package authors upload traditionally versioned-number built
-;; versions of their packages.
+
+;; elpa is needed for auctex.  MELPA versions will take precedence
+;; because they use yyyymmdd for the version number and package.el
+;; uses the version of each package with the highest version number.
 (setq package-archives
       '(
-        ("org"       . "http://orgmode.org/elpa/")
-        ("melpa"     . "http://melpa.milkbox.net/packages/")
-;;        ("marmalade" . "http://marmalade-repo.org/packages/")
-        ("gnu"       . "http://elpa.gnu.org/packages/") 
+        ("org"   . "http://orgmode.org/elpa/")
+        ("melpa" . "http://melpa.milkbox.net/packages/")
+        ("gnu"   . "http://elpa.gnu.org/packages/") 
         ))
 
 ;; packages we want (only name explicit ones)
 (setq jnm-packages
       '(auctex
         auctex-latexmk
-        auto-complete
         browse-kill-ring
         cdlatex
         color-moccur
-        color-theme
+        color-theme-modern
+        company-auctex
         company-ghc
-        dirtree
+        dired-subtree
         ;; ein
         elpy
         ess
+        esup
+        expand-region
         ghc
         graphviz-dot-mode
         haskell-mode
+        helm
+        hexrgb
         jedi
-        ;; jira
+        jira
         magit
         maxframe
         minimap
+        multiple-cursors
         nexus
         org
-        ;;org-jira
+        org-jira
+        ox-mediawiki
         p4
         point-undo
         projectile
+        shell-toggle
         smartparens
         undo-tree
         yaml-mode))
@@ -131,14 +133,20 @@
 
 (setq package-enable-at-startup nil)
 
-;; could set package-load-list
+;; http://stackoverflow.com/questions/10092322/how-to-automatically-install-emacs-packages-by-specifying-a-list-of-package-name
 (package-initialize)
-(when (not package-archive-contents)
+
+(when (find-if (lambda (package)
+		 (not (and (assoc package package-archive-contents)
+			   (package-installed-p package))))
+	       jnm-packages)
   (package-refresh-contents))
-(dolist (pkg jnm-packages)
-  (when (and (not (package-installed-p pkg))
-             (assoc pkg package-archive-contents))
-    (package-install pkg)))
+
+;; install the missing packages
+(dolist (package jnm-packages)
+  (when (and (not (package-installed-p package))
+             (assoc package package-archive-contents))
+    (package-install package)))
 
 ;;; PATHS
 
@@ -153,11 +161,8 @@
 
 (cl-labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
   (add-path "/site-lisp")
-  (add-path "/site-lisp/templates")
   (add-path "/packages")
-  (add-path "/packages/Emacs-PDE-0.2.16/lisp")
   (add-path "/packages/doxymacs-1.8.0")
-  (add-path "/packages/perlnow")
   (add-path "/packages/template/lisp"))
 
 (setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
@@ -181,7 +186,7 @@
                      (mapcar
                       (lambda (step)
                         (apply 'hexrgb-hsv-to-hex
-                         (weight-lists hsv-match hsv-back  step)))
+                         (weight-lists hsv-match hsv-back step)))
                       (list 0.0 0.2 0.4 0.55 0.7 ))))))))
 
 (setq user-full-name "Jonathan Moore")
@@ -390,6 +395,8 @@
                       (require-soft 'dired-column-widths)
 		      (setq dired-omit-mode t)
                       (set-face-foreground 'dired-directory "yellow")
+		      (define-key dired-mode-map "i" 'dired-subtree-toggle)
+		      (define-key dired-mode-map "I" 'dired-maybe-insert-subdir)
 		      (define-key dired-mode-map "j" 'dired-execute-file)
 		      (define-key dired-mode-map "P" 'dired-do-ps-print)
 		      (define-key dired-mode-map "O" 'dired-do-moccur)
@@ -480,24 +487,9 @@
     ad-do-it))
 (ad-activate 'man)
 
-;;; OCCUR AND FRIENDS
-(load "ska-isearch-occur")
-(add-hook 'isearch-mode-hook
-          '(lambda ()
-             (setq ska-isearch-window-configuration
-                   (list (current-window-configuration) (point-marker)))))
-(add-hook 'isearch-mode-end-hook
-          '(lambda ()
-             (ska-isearch-maybe-remove-occur-buffer)
-             (setq ska-isearch-occur-opened nil)))
-(define-key isearch-mode-map (kbd "M-o") 'ska-isearch-occur)
-
-;; JOCCUR
-(autoload 'joccur "joccur" nil t)
-(define-key isearch-mode-map (kbd "C-o") 'isearch-joccur)
-
 ;; MOCCUR
 (autoload 'dired-do-moccur "color-moccur" nil t)
+(define-key isearch-mode-map (kbd "M-o") 'isearch-occur)
 
 (setq *moccur-buffer-name-exclusion-list*
       '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
@@ -609,26 +601,32 @@
                             ("\\.c\\'"     (".h"))))
 
 
-(defun jnm-parm-tempo-element (parms)
-  "Inserts tempo elements like JavaDoc but without asterisks."
+(defun jnm-doxymacs-parm-tempo-element (parms)
+  "Inserts tempo elements like JavaDoc but without asterisks.
+See `doxymacs-parm-tempo-element'."
   (if parms
       (let ((prompt (concat "Parameter " (car parms) ": ")))
           (list 'l " "
                 (doxymacs-doxygen-command-char) "param "
                 (car parms)
                 " " (list 'p prompt) '> 'n
-                (jnm-parm-tempo-element (cdr parms))))
+                (jnm-doxymacs-parm-tempo-element (cdr parms))))
     nil))
-
 
 (add-hook 'c-mode-common-hook
           (lambda ()
             (define-key c-mode-base-map   "\C-m"     'c-context-line-break)
             ;; Load my templates for cc-mode
             (when (require-soft 'tempo-c-cpp)
-              (my-tempo-c-cpp-bindings))
-            (doxymacs-mode t)
+              (local-set-key (read-kbd-macro "C-<return>")   'tempo-complete-tag)
+              (local-set-key (read-kbd-macro "<f5>")   'tempo-complete-tag)
+              (tempo-use-tag-list 'c-tempo-tags)
+              (tempo-use-tag-list 'c++-tempo-tags))
 
+            ;; TODO: replace doxymacs, but with something which
+            ;; generates docs from function declarations, like
+            ;; doxymacs-find-next-func, without requiring semantic.
+            (doxymacs-mode t)
             (defconst doxymacs-function-comment-template
                   '((let ((next-func (doxymacs-find-next-func)))
                       (if next-func
@@ -1093,34 +1091,14 @@ not inherit)."
 (add-to-list 'auto-mode-alist '("\\.\\([pP][Llm]\\|al\\|t\\)\\'" . cperl-mode))
 (add-to-list 'interpreter-mode-alist '("perl" . cperl-mode))
 
-(autoload 'template-initialize "template" "template" t)
-(defadvice require (before perlnow-requires-template activate) ; muppet
-  (if (eq 'perlnow (ad-get-arg 0))
-      (require 'template)))
-(autoload 'perlnow-script     "perlnow" "perlnow" t)
-(autoload 'perlnow-module     "perlnow" "perlnow" t)
-(autoload 'perlnow-run-check  "perlnow" "perlnow" t)
-(autoload 'perlnow-run        "perlnow" "perlnow" t)
-(autoload 'perlnow-perldb     "perlnow" "perlnow" t)
-(autoload 'perlnow-perl-check "perlnow" "perlnow" t)
-(setq perlnow-script-location (substitute-in-file-name "$HOME/src/perl"))
-(setq perlnow-pm-location (substitute-in-file-name "$HOME/src/perl/lib"))
-
-(load "pde-loaddefs") ; autoloads
 (add-hook 'cperl-mode-hook
           '(lambda ()
-             (setq pde-extra-setting nil) ;; restrain maniac
-             (pde-perl-mode-hook)
-             (abbrev-mode nil) ;; restrain maniac again
+             ;; restrain
+             (abbrev-mode nil) ;; restrain again
              (setq cperl-indent-level 4)
              (setq cperl-extra-newline-before-brace nil)
-             (template-initialize)
-             (require 'perlnow)
-             (require 'pde-vars)
-             (require 'template-simple)
              (local-set-key [mouse-3] `imenu)
-             (hs-minor-mode)
-             (define-key cperl-mode-map [f1] 'perlnow-perl-check) ))
+             (hs-minor-mode)))
 
 ;;; PYTHON MODE
 (defconst python-ide-package
@@ -1283,11 +1261,6 @@ based on this and `python-shell-buffer-name', otherwise call
                                    (comint-next-input 1)
                                  (forward-line 1))))))
 
-(autoload 'shell-toggle "shell-toggle-patched"
-  "Toggles between the *shell* buffer and whatever buffer you are editing." t)
-(autoload 'shell-toggle-cd "shell-toggle-patched"
-  "Pops up a shell-buffer and insert a \"cd \" command." t)
-
 ;;; SPEEDBAR MODE
 (add-hook 'speedbar-mode-hook
 	  (lambda ()
@@ -1342,16 +1315,10 @@ Does nothing if Savehist mode is off."
 (advice-add 'savehist-autosave :around #'my-savehist-autosave)
 
 ;;; COLOR-THEME
-(require 'color-theme)
-;; taken from color-theme-initialize, but avoiding loading .el files
-(let ((my-color-list-libraries
-       (directory-files
-        (concat (file-name-directory (locate-library "color-theme")) "/themes")
-        t "^color-theme.*elc")))
-  (dolist (library my-color-list-libraries)
-    (load library)))
+;; Now using color-theme-modern
+(load-theme 'word-perfect t t)
+(enable-theme 'word-perfect)
 
-(color-theme-word-perfect)
 (setq inhibit-splash-screen t)
 
 ;;; CUSTOMIZATION
