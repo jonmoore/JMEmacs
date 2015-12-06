@@ -76,9 +76,6 @@
  '(ropemacs-enable-autoimport t)
  '(ropemacs-enable-shortcuts nil)
  '(ropemacs-global-prefix nil)
- '(safe-local-variable-values
-   (quote
-    ((generated-autoload-file concat emacs-root "/site-lisp/jnm-loaddefs.el"))))
  '(save-abbrevs nil)
  '(set-mark-command-repeat-pop t)
  '(sgml-basic-offset 8)
