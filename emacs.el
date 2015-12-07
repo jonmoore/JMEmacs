@@ -161,6 +161,7 @@
 (cl-labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
   (add-path "/site-lisp")
   (add-path "/packages")
+  (add-path "/packages/Emacs-PDE-0.2.16/lisp")
   (add-path "/packages/doxymacs-1.8.0")
   (add-path "/packages/template/lisp"))
 
