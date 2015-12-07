@@ -100,7 +100,6 @@
         jira
         magit
         maxframe
-        minimap
         multiple-cursors
         nexus
         org
