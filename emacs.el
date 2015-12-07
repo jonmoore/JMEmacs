@@ -6,22 +6,38 @@
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
 
-(defvar emacs-root
-  nil
+;;; Emacs package system
+
+;; elpa is needed for auctex.  MELPA versions will take precedence
+;; because they use yyyymmdd for the version number and package.el
+;; uses the version of each package with the highest version number.
+(setq package-archives
+      '(
+        ("org"   . "http://orgmode.org/elpa/")
+        ("melpa" . "http://melpa.milkbox.net/packages/")
+        ("gnu"   . "http://elpa.gnu.org/packages/") 
+        ))
+
+(require 'package)
+(setq package-enable-at-startup nil)
+(package-initialize)
+
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(setq use-package-always-ensure t)
+
+(eval-when-compile
+  (require 'use-package))
+(require 'diminish)                ;; if you use :diminish
+(require 'bind-key)                ;; if you use any :bind variant
+
+(defvar personal-emacs-root
+  (file-name-directory (if load-in-progress load-file-name
+                         buffer-file-name))
   "*The root of my personal emacs workspace.")
-(setq emacs-root
-      (file-name-directory (if load-in-progress load-file-name
-                             buffer-file-name)))
-(message "Running emacs.el with emacs-root %s" emacs-root)
-
-;;; META
-(defmacro require-soft (feature &optional file)
-  "*Try to require FEATURE, but don't signal an error if `require' fails."
-  `(require ,feature ,file 'noerror))
-
-(defmacro when-available (func foo)
-  "*Do something if FUNCTION is available."
-  `(when (fboundp ,func) ,foo))
+(message "Running emacs.el with personal-emacs-root %s" personal-emacs-root)
 
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
@@ -63,23 +79,9 @@
   (when (boundp 'local-exec-paths)
     (setq exec-path (append local-exec-paths exec-path))))
 
-;;; Emacs package system
-
-;; elpa is needed for auctex.  MELPA versions will take precedence
-;; because they use yyyymmdd for the version number and package.el
-;; uses the version of each package with the highest version number.
-(setq package-archives
-      '(
-        ("org"   . "http://orgmode.org/elpa/")
-        ("melpa" . "http://melpa.milkbox.net/packages/")
-        ("gnu"   . "http://elpa.gnu.org/packages/") 
-        ))
-
 ;; packages we want (only name explicit ones)
 (setq jnm-packages
-      '(auctex
-        auctex-latexmk
-        browse-kill-ring
+      '(browse-kill-ring
         cdlatex
         color-moccur
         color-theme-modern
@@ -113,8 +115,50 @@
         undo-tree
         yaml-mode))
 
-(when system-win32-p
-  (add-to-list 'jnm-packages 'sumatra-forward))
+;; (use-package browse-kill-ring)
+;; (use-package cdlatex)
+;; (use-package color-moccur)
+;; (use-package color-theme-modern)
+;; (use-package company-auctex)
+;; (use-package company-ghc)
+;; (use-package dired-subtree)
+;; (use-package elpy)
+;; (use-package ess)
+;; (use-package esup)
+;; (use-package expand-region)
+;; (use-package ghc)
+;; (use-package graphviz-dot-mode)
+;; (use-package haskell-mode)
+;; (use-package helm)
+;; (use-package hexrgb)
+;; (use-package jedi)
+;; (use-package jira)
+;; (use-package magit)
+;; (use-package maxframe)
+;; (use-package multiple-cursors)
+;; (use-package nexus)
+;; (use-package org)
+;; (use-package org-jira)
+;; (use-package ox-mediawiki)
+;; (use-package p4)
+;; (use-package point-undo)
+;; (use-package projectile)
+;; (use-package shell-toggle)
+;; (use-package smartparens)
+;; (use-package undo-tree)
+;; (use-package yaml-mode)
+
+(when (find-if (lambda (package)
+                 (not (and (assoc package package-archive-contents)
+                           (package-installed-p package))))
+               jnm-packages)
+  (package-refresh-contents))
+
+;; install the missing packages
+(dolist (package jnm-packages)
+  (when (and (not (package-installed-p package))
+             (assoc package package-archive-contents))
+    (package-install package)))
 
 (defun package-list-unaccounted-packages ()
   "Like `package-list-packages', but shows only the packages that
@@ -128,25 +172,6 @@
                                    (package-installed-p x)))
                   (mapcar 'car package-archive-contents))))
 
-;; http://stackoverflow.com/questions/11127109/emacs-24-package-system-initialization-problems/11140619#11140619
-
-(setq package-enable-at-startup nil)
-
-;; http://stackoverflow.com/questions/10092322/how-to-automatically-install-emacs-packages-by-specifying-a-list-of-package-name
-(package-initialize)
-
-(when (find-if (lambda (package)
-		 (not (and (assoc package package-archive-contents)
-			   (package-installed-p package))))
-	       jnm-packages)
-  (package-refresh-contents))
-
-;; install the missing packages
-(dolist (package jnm-packages)
-  (when (and (not (package-installed-p package))
-             (assoc package package-archive-contents))
-    (package-install package)))
-
 ;;; PATHS
 
 (defun my-woman-mode-hook ()
@@ -158,7 +183,7 @@
                (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
 (add-hook 'woman-mode-hook 'my-woman-mode-hook)
 
-(cl-labels ((add-path (p) (add-to-list 'load-path (concat emacs-root p))))
+(cl-labels ((add-path (p) (add-to-list 'load-path (concat personal-emacs-root p))))
   (add-path "/site-lisp")
   (add-path "/packages")
   (add-path "/packages/Emacs-PDE-0.2.16/lisp")
@@ -228,11 +253,11 @@
 (put 'upcase-region   'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'narrow-to-page  'disabled nil)
-(when (require-soft 'browse-kill-ring)
-  (browse-kill-ring-default-keybindings))
+(require 'browse-kill-ring)
+(browse-kill-ring-default-keybindings)
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq require-final-newline t)
-(require-soft 'uniquify)
+(require 'uniquify)
 (setq uniquify-buffer-name-style 'post-forward-angle-brackets
       uniquify-min-dir-content 0)
 
@@ -330,52 +355,52 @@
   (cond
    (system-win32-p
     (require 'tex-mik)
-
-    (add-hook
-     'LaTeX-mode-hook
-     (lambda ()
-       (push
-        '("Latexmk"
-          "latexmk -pdflatex=\"f:/bin/pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
-          :help "Run Latexmk on file")
-        TeX-command-list)))
-
-    (setq
-     TeX-view-program-selection
-     '((output-pdf "Sumatra PDF") (output-html "start"))
-     TeX-view-program-list
-     (quote (("Sumatra PDF" "f:/bin/SumatraPDF.exe -reuse-instance %o"))))
     (require 'sumatra-forward)
+    
+    (add-hook 'TeX-mode-hook 
+              '(lambda ()
+                 (setq
+                  TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
+                  TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o")))))
     (add-hook 'LaTeX-mode-hook
               (lambda ()
-                (progn
-                  (local-set-key
-                   [prior] '(lambda ()
-                              (interactive)
-                              (funcall (lookup-key (current-global-map) [prior]))
-                              (sumatra-jump-to-line)))
-                  (local-set-key
-                   [next] '(lambda ()
-                             (interactive)
-                             (funcall (lookup-key (current-global-map) [next]))
-                             (sumatra-jump-to-line)))))))
+                (push
+                 '("Latexmk"
+                   "latexmk -pdflatex=\"pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
+                   :help "Run Latexmk on file")
+                 TeX-command-list)
+                (local-set-key [prior] '(lambda ()
+                                          (interactive)
+                                          (funcall (lookup-key (current-global-map) [prior]))
+                                          (sumatra-jump-to-line)))
+                (local-set-key [next] '(lambda ()
+                                         (interactive)
+                                         (funcall (lookup-key (current-global-map) [next]))
+                                         (sumatra-jump-to-line))))))
    (system-osx-p
+    (add-hook 'TeX-mode-hook 
+              '(lambda ()
+                 ;; use Skim as default pdf viewer. Skim's displayline
+                 ;; is used for forward search from .tex to .pdf
+                 (setq
+                  TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
+                  TeX-view-program-list '(("Skim PDF Viewer" 
+                                           "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
+                  TeX-command-default "latexmk")))
     (add-hook 'LaTeX-mode-hook 
               (lambda ()
                 (push
                  '("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
                    :help "Run latexmk on file")
-                 TeX-command-list)))
-    (add-hook 'TeX-mode-hook 
-              '(lambda () (setq TeX-command-default "latexmk")))
-    
-    ;; use Skim as default pdf viewer Skim's displayline is used for
-    ;; forward search from .tex to .pdf
-    (setq TeX-view-program-selection '((output-pdf "Skim PDF Viewer")))
-    (setq TeX-view-program-list
-          '(("Skim PDF Viewer" 
-             "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))))))
-(jnm-load-auctex)
+                 TeX-command-list))))))
+
+(use-package tex-site
+  :ensure auctex
+  :config
+  (jnm-load-auctex))
+(use-package auctex-latexmk
+  :ensure auctex-latexmk
+  )
 
 ;;; COMINT
 (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
@@ -389,7 +414,7 @@
 (add-hook 'dired-mode-hook
 	  (function (lambda ()
                       (require 'find-dired)
-                      (require-soft 'dired-column-widths)
+                      (require 'dired-column-widths)
 		      (setq dired-omit-mode t)
                       (set-face-foreground 'dired-directory "yellow")
 		      (define-key dired-mode-map "i" 'dired-subtree-toggle)
@@ -614,11 +639,11 @@ See `doxymacs-parm-tempo-element'."
           (lambda ()
             (define-key c-mode-base-map   "\C-m"     'c-context-line-break)
             ;; Load my templates for cc-mode
-            (when (require-soft 'tempo-c-cpp)
-              (local-set-key (read-kbd-macro "C-<return>")   'tempo-complete-tag)
-              (local-set-key (read-kbd-macro "<f5>")   'tempo-complete-tag)
-              (tempo-use-tag-list 'c-tempo-tags)
-              (tempo-use-tag-list 'c++-tempo-tags))
+            (require 'tempo-c-cpp)
+            (local-set-key (read-kbd-macro "C-<return>")   'tempo-complete-tag)
+            (local-set-key (read-kbd-macro "<f5>")   'tempo-complete-tag)
+            (tempo-use-tag-list 'c-tempo-tags)
+            (tempo-use-tag-list 'c++-tempo-tags)
 
             ;; TODO: replace doxymacs, but with something which
             ;; generates docs from function declarations, like
@@ -966,10 +991,10 @@ not inherit)."
                (require 'org-id)
                (require 'org-wp-link)
                (require 'ob-mscgen)
-
-               (when (and (require-soft 'texmathp)
-                          (require-soft 'cdlatex))
-                 (turn-on-org-cdlatex))
+               (require 'texmathp)
+               (require 'cdlatex)
+               
+               (turn-on-org-cdlatex)
 
                (local-unset-key [C-tab])
                (local-set-key [C-tab] (function (lambda () (interactive) (org-cycle t))))
@@ -1320,7 +1345,7 @@ Does nothing if Savehist mode is off."
 
 ;;; CUSTOMIZATION
 (setq custom-file ;; set explicitly to avoid writing back to ~/.emacs.el
-      (expand-file-name "emacs-custom.el" emacs-root))
+      (expand-file-name "emacs-custom.el" personal-emacs-root))
 (load custom-file)
 
 ;;; STARTUP
