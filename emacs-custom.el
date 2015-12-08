@@ -62,10 +62,12 @@
     (read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt)))
  '(next-line-add-newlines nil)
  '(org-agenda-files (quote ("~/org")))
- '(org-agenda-start-with-clockreport-mode nil t)
+ '(org-agenda-start-with-clockreport-mode nil)
+ '(org-checkbox-hierarchical-statistics nil)
  '(org-confirm-babel-evaluate nil)
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
  '(org-enforce-todo-checkbox-dependencies nil)
+ '(org-hierarchical-todo-statistics nil)
  '(perlnow-perl-module-template (concat emacs-root "/site-lisp/templates"))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
@@ -99,6 +101,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(cursor ((t (:background "yellow"))))
  '(font-lock-builtin-face ((((class color) (background light)) (:foreground "blue"))))
  '(font-lock-comment-face ((t (:foreground "sky blue"))))
  '(font-lock-constant-face ((((class color) (background light)) (:foreground "dark green"))))
