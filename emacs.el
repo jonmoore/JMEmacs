@@ -5,79 +5,44 @@
 ;;
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
-
-;;; Emacs package system
-
-;; elpa is needed for auctex.  MELPA versions will take precedence
-;; because they use yyyymmdd for the version number and package.el
-;; uses the version of each package with the highest version number.
-(setq package-archives
-      '(
-        ("org"   . "http://orgmode.org/elpa/")
-        ("melpa" . "http://melpa.milkbox.net/packages/")
-        ("gnu"   . "http://elpa.gnu.org/packages/") 
-        ))
-
-(require 'package)
-(setq package-enable-at-startup nil)
-(package-initialize)
-
-;; Bootstrap `use-package'
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-(setq use-package-always-ensure t)
-
-(eval-when-compile
-  (require 'use-package))
-(require 'diminish)                ;; if you use :diminish
-(require 'bind-key)                ;; if you use any :bind variant
-
 (defvar personal-emacs-root
   (file-name-directory (if load-in-progress load-file-name
                          buffer-file-name))
   "*The root of my personal emacs workspace.")
 (message "Running emacs.el with personal-emacs-root %s" personal-emacs-root)
 
-;;; SYSTEM
-(defconst system-win32-p (eq system-type 'windows-nt)
-  "Are we running on a Windows system?")
-(defconst system-linux-p (or (eq system-type 'gnu/linux)
-                             (eq system-type 'linux))
-  "Are we running on a GNU/Linux system?")
-(defconst system-osx-p (eq system-type 'darwin)
-  "Are we running on a Darwin (Mac OS X) system?")
+;;; Emacs package system
 
-;;;
-;;; ENVIRONMENT
+;; elpa is needed for auctex.  MELPA versions will take precedence
+;; because they use yyyymmdd for the version number and package.el
+;; uses the version of each package with the highest version number.
+(require 'package)
+(setq package-archives
+      '(("org"   . "http://orgmode.org/elpa/")
+        ("melpa" . "http://melpa.milkbox.net/packages/")
+        ("gnu"   . "http://elpa.gnu.org/packages/")))
+(package-initialize)
+(setq package-enable-at-startup nil)
 
-;; use setenv because some functions call getenv, not shell-file-name
-(require 'cl)
-(cond
- (system-win32-p
-  (require 'dos-w32)
-  (setq file-name-buffer-file-type-alist 
-        (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
-  (when (boundp 'cygwin-bin)
-    (setq default-system-shell (concat cygwin-bin "\\bash.exe")))
-  (when (boundp 'local-exec-paths)
-    (mapcar
-     (lambda (filepath)                   ;; prepend filepath to exec-path
-       (setq exec-path (append
-                        (list (replace-regexp-in-string  "\\\\"  "/" filepath))
-                        exec-path)))
-     local-exec-paths))))
+;; Bootstrap `use-package'
+(defun install-use-package ()
+  (when (not (package-installed-p 'use-package))
+    (package-install 'use-package)))
 
-(setq shell-file-name (or (getenv "SHELL")
-                          default-system-shell))
-(setenv "SHELL" shell-file-name)
-(setq inhibit-default-init t)           ; don't load default.el
+(condition-case nil
+    (install-use-package)
+  (error
+   (package-refresh-contents)
+   (install-use-package)))
 
-(when system-osx-p
-  (setq mac-command-modifier 'meta
-	mac-option-modifier nil)
-  (when (boundp 'local-exec-paths)
-    (setq exec-path (append local-exec-paths exec-path))))
+(setq use-package-verbose t
+      use-package-always-ensure t)
+
+(eval-when-compile
+  (require 'use-package))
+
+(use-package diminish)
+(use-package bind-key)
 
 ;; packages we want (only name explicit ones)
 (setq jnm-packages
@@ -105,6 +70,7 @@
         multiple-cursors
         nexus
         org
+        org-dashboard
         org-jira
         ox-mediawiki
         p4
@@ -114,6 +80,32 @@
         smartparens
         undo-tree
         yaml-mode))
+
+(when (find-if (lambda (package)
+                 (not (and (assoc package package-archive-contents)
+                           (package-installed-p package))))
+               jnm-packages)
+  (package-refresh-contents))
+
+;; install the missing packages
+(dolist (package jnm-packages)
+  (when (and (not (package-installed-p package))
+             (assoc package package-archive-contents))
+    (package-install package)))
+
+;; http://stackoverflow.com/questions/11127109/emacs-24-package-system-initialization-problems
+
+(defun package-list-unaccounted-packages ()
+  "Like `package-list-packages', but shows only the packages that
+  are installed and are not in `jnm-packages'.  Useful for
+  cleaning out unwanted packages.  Will clean out dependencies
+  but these can be reinstalled"
+  (interactive)
+  (package-show-package-list
+   (remove-if-not (lambda (x) (and (not (memq x jnm-packages))
+                                   (not (package-built-in-p x))
+                                   (package-installed-p x)))
+                  (mapcar 'car package-archive-contents))))
 
 ;; (use-package browse-kill-ring)
 ;; (use-package cdlatex)
@@ -148,29 +140,45 @@
 ;; (use-package undo-tree)
 ;; (use-package yaml-mode)
 
-(when (find-if (lambda (package)
-                 (not (and (assoc package package-archive-contents)
-                           (package-installed-p package))))
-               jnm-packages)
-  (package-refresh-contents))
+;;; SYSTEM
+(defconst system-win32-p (eq system-type 'windows-nt)
+  "Are we running on a Windows system?")
+(defconst system-linux-p (or (eq system-type 'gnu/linux)
+                             (eq system-type 'linux))
+  "Are we running on a GNU/Linux system?")
+(defconst system-osx-p (eq system-type 'darwin)
+  "Are we running on a Darwin (Mac OS X) system?")
 
-;; install the missing packages
-(dolist (package jnm-packages)
-  (when (and (not (package-installed-p package))
-             (assoc package package-archive-contents))
-    (package-install package)))
+;;;
+;;; ENVIRONMENT
 
-(defun package-list-unaccounted-packages ()
-  "Like `package-list-packages', but shows only the packages that
-  are installed and are not in `jnm-packages'.  Useful for
-  cleaning out unwanted packages.  Will clean out dependencies
-  but these can be reinstalled"
-  (interactive)
-  (package-show-package-list
-   (remove-if-not (lambda (x) (and (not (memq x jnm-packages))
-                                   (not (package-built-in-p x))
-                                   (package-installed-p x)))
-                  (mapcar 'car package-archive-contents))))
+;; use setenv because some functions call getenv, not shell-file-name
+(require 'cl)
+(cond
+ (system-win32-p
+  (require 'dos-w32)
+  (setq file-name-buffer-file-type-alist
+        (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
+  (when (boundp 'cygwin-bin)
+    (setq default-system-shell (concat cygwin-bin "\\bash.exe")))
+  (when (boundp 'local-exec-paths)
+    (mapcar
+     (lambda (filepath)                   ;; prepend filepath to exec-path
+       (setq exec-path (append
+                        (list (replace-regexp-in-string  "\\\\"  "/" filepath))
+                        exec-path)))
+     local-exec-paths))))
+
+(setq shell-file-name (or (getenv "SHELL")
+                          default-system-shell))
+(setenv "SHELL" shell-file-name)
+(setq inhibit-default-init t)           ; don't load default.el
+
+(when system-osx-p
+  (setq mac-command-modifier 'meta
+	mac-option-modifier nil)
+  (when (boundp 'local-exec-paths)
+    (setq exec-path (append local-exec-paths exec-path))))
 
 ;;; PATHS
 
@@ -190,7 +198,8 @@
   (add-path "/packages/doxymacs-1.8.0")
   (add-path "/packages/template/lisp"))
 
-(setq backup-directory-alist (list (cons "." (cond (system-win32-p "c:/tmp/emacs_backup")
+(setq backup-directory-alist (list (cons "." (cond (system-win32-p
+                                                    (concat (getenv "TEMP") "\\emacs_backup"))
                                                    (system-osx-p   "~/backup")))))
 
 (defun weight-lists (froms tos weight)
@@ -222,7 +231,7 @@
 
 (require 'ibuffer)
 (require 'color-moccur)
-(require 'moccur-edit)
+;; (require 'moccur-edit) - causing warnings about redefinition
 (load "moccur-wrappers")
 (load "snippets")
 (load "jnm-autoloads")
@@ -356,8 +365,8 @@
    (system-win32-p
     (require 'tex-mik)
     (require 'sumatra-forward)
-    
-    (add-hook 'TeX-mode-hook 
+
+    (add-hook 'TeX-mode-hook
               '(lambda ()
                  (setq
                   TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
@@ -378,16 +387,16 @@
                                          (funcall (lookup-key (current-global-map) [next]))
                                          (sumatra-jump-to-line))))))
    (system-osx-p
-    (add-hook 'TeX-mode-hook 
+    (add-hook 'TeX-mode-hook
               '(lambda ()
                  ;; use Skim as default pdf viewer. Skim's displayline
                  ;; is used for forward search from .tex to .pdf
                  (setq
                   TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
-                  TeX-view-program-list '(("Skim PDF Viewer" 
+                  TeX-view-program-list '(("Skim PDF Viewer"
                                            "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
                   TeX-command-default "latexmk")))
-    (add-hook 'LaTeX-mode-hook 
+    (add-hook 'LaTeX-mode-hook
               (lambda ()
                 (push
                  '("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
@@ -466,7 +475,7 @@
 
             ;; bindings for interactive haskell.  may need avoid some
             ;; clashes later.
-            (define-key haskell-mode-map 
+            (define-key haskell-mode-map
               (kbd "C-c C-l") 'haskell-process-load-or-reload)
             (define-key haskell-mode-map
               (kbd "C-`") 'haskell-interactive-bring)
@@ -553,6 +562,10 @@
  ps-n-up-printing        1
  ps-number-of-columns    1
  ps-print-color-p      t)
+
+;;; PROJECTILE
+(use-package projectile
+	     :disabled t)
 
 ;;; SHELL-TOGGLE
 ;; shell-toggle tries to use term by default but this doesn't work on windows
@@ -859,7 +872,7 @@ See `doxymacs-parm-tempo-element'."
               (define-key map (kbd "<C-down>")             'sp-down-sexp)
               (define-key map (kbd "<C-S-up>")             'sp-backward-up-sexp)
               (define-key map (kbd "<C-S-down>")           'sp-backward-down-sexp)
-              
+
               (define-key map (kbd "C-M-p")                'sp-previous-sexp)
               (define-key map (kbd "C-M-n")                'sp-next-sexp)
               (define-key map (kbd "M-a")                  'sp-beginning-of-sexp)
@@ -968,7 +981,7 @@ not inherit)."
       "D"))
 
 (defun jm-org-agenda-cmp-headline-priorities
-  (a b)
+    (a b)
   "Compare the priorities in two org headlines using
 `jm-org-get-priority-from-headline'"
   (let* ((pa (jm-org-get-priority-from-headline  a))
@@ -978,135 +991,98 @@ not inherit)."
      ((string< pa pb) -1)
      (t nil))))
 
-(when (require 'org-install)
-  (require 'org-clock)
+(require 'org-install)
+(require 'org-clock)
 
-  (org-clock-persistence-insinuate)
-  (setq org-clock-persist t)
-  (setq org-clock-in-resume t)
-  (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities)
-  (add-hook
-   'org-mode-hook
-   (function (lambda ()
-               (require 'org-id)
-               (require 'org-wp-link)
-               (require 'ob-mscgen)
-               (require 'texmathp)
-               (require 'cdlatex)
-               
-               (turn-on-org-cdlatex)
+(org-clock-persistence-insinuate)
+(setq org-clock-persist t
+      org-clock-in-resume t
+      ;; org-disputed-keys has to be set before org is loaded
+      org-disputed-keys '(([(control shift right)] . [(meta shift +)])
+                          ([(control shift left)]  . [(meta shift -)]))
+      org-replace-disputed-keys t)
 
-               (local-unset-key [C-tab])
-               (local-set-key [C-tab] (function (lambda () (interactive) (org-cycle t))))
-               (local-set-key [?\M-?] 'org-complete)
-               (local-unset-key [C-S-left])  ;; otherwise masks shifting buffers.  See org-disputed-keys?
-               (local-unset-key [C-S-right]) ;; otherwise masks shifting buffers
-               (local-set-key [(shift tab)] 'org-show-contents-or-move-to-previous-table-field)
-               (local-set-key [C-S-down]    'outline-next-visible-heading)
-               (local-set-key [C-S-up]      'outline-previous-visible-heading)
+(with-eval-after-load 'org
+  (require 'org-agenda)
+  (require 'org-id)
+  (require 'org-wp-link)
+  (require 'texmathp)
+  (require 'cdlatex)
+  (require 'ox)
+  
+  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
+  
+  (setq
 
-               (local-set-key [?\C-c ? ]    'outline-mark-subtree)
-               (set-face-foreground 'org-hide (face-background 'default))
-               (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
+   org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
+   org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
+   org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html")))
+   org-agenda-files "~/.org_agenda_files"
+   org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
+                                       (todo user-defined-up)
+                                       (tags category-keep priority-down)
+                                       (search category-keep)))
+   org-agenda-start-with-clockreport-mode nil
+   org-agenda-todo-keyword-format "%-4s"
 
-               (setq
-                fill-column 90
-                org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
-                org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html" "todo.ps")))
-                org-agenda-exporter-settings '((ps-number-of-columns 2)
-                                               (ps-landscape-mode t)
-                                               (htmlize-output-type 'css)
-                                               (org-agenda-with-colors nil)
-                                               (org-agenda-remove-tags t))
-                org-agenda-files "~/.org_agenda_files"
-                org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
-                                                    (todo user-defined-up)
-                                                    (tags category-keep priority-down)
-                                                    (search category-keep)))
-                org-agenda-start-with-clockreport-mode nil
-                org-agenda-todo-keyword-format "%-4s"
-                org-clock-history-length 10
-                org-clock-in-resume t
-                org-clock-persist t
-                org-disputed-keys (quote (([(control shift right)] . [(meta shift +)])
-                                          ([(control shift left)]  . [(meta shift -)])))
-                org-enforce-todo-dependencies t
-                org-export-mark-todo-in-toc t
-                org-export-html-validation-link nil
-                org-export-with-priority t
-                org-export-with-LaTeX-fragments t
-                org-export-with-section-numbers nil
-                org-fast-tag-selection-single-key nil
-                org-hide-leading-stars t
-                org-log-done t
-                org-log-reschedule 'time
-                org-log-redeadline 'time
-                ;; org-mode should really be smart enough to get this automatically
-                org-not-done-heading-regexp
-                "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
-                org-odd-levels-only t
-                org-publish-use-timestamps-flag t
-                org-replace-disputed-keys t
-                org-return-follows-link t
-                org-show-siblings (quote ((default . t)
-                                          (isearch t)))
-                org-tags-column -80
-                org-toc-default-depth 3
-                org-toc-follow-mode t
-                org-toc-info-mode t
-                org-toc-show-subtree-mode t
-                org-use-speed-commands t)
-               (setq org-export-html-style
-                     "<style type=\"text/css\">
-                                 html {
-                                       font-family: Arial;
-                                       font-size: 10pt;
-                                 }
-                                 .title         { text-align: center; }
-                                 .todo          { color: red; }
-                                 .done          { color: green; }
-                                 .timestamp     { color: grey }
-                                 .timestamp-kwd { color: CadetBlue }
-                                 .tag           { background-color:lightblue;
-                                                  font-weight:normal }
-                                 .target        { background-color: lavender; }
-                                 pre            { border: 1pt solid #AEBDCC;
-                                                  background-color: #F3F5F7;
-                                                  padding: 5pt;
-                                                  font-family: 'Courier New';
-                                 }
-                                 table          { border-collapse: collapse; }
-                                 td, th         {
-                                                 vertical-align: top;
-                                                 <!--border: 1pt solid #ADB9CC;-->
-                                 }
-                               </style>")
-               (setq org-publish-project-alist
-                     '(("orgfiles"
-                        :base-directory "~/org/"
-                        :base-extension "org"
-                        :publishing-directory "~/org/"
-                        :publishing-function org-publish-org-to-html
-                        :headline-levels      3
-                        :section-numbers      nil
-                        :table-of-contents    t
-                        :archived-trees       headline
-                        :emphasize            t
-                        :sub-superscript      t
-                        :special-strings      t
-                        :TeX-macros           t
-                        :LaTeX-fragments      t
-                        :fixed-width          t
-                        :timestamps           t
-                        :tags                 not-in-toc
-                        :tables               t
-                        :table-auto-headline  t
-                        :convert-org-links    t
-                        :inline-images        maybe
-                        :expand-quoted-html   t
-                        :timestamp            t
-                        :auto-preamble t
-                        :auto-postamble t)))))))
+   org-clock-history-length 10
+   org-clock-in-resume t
+   org-clock-persist t
+
+   org-enforce-todo-dependencies t
+
+   org-export-headline-levels       3
+   org-export-mark-todo-in-toc      t
+   org-export-with-creator          nil
+   org-export-with-email            nil
+   org-export-with-emphasize        t
+   org-export-with-fixed-width      t
+   org-export-with-priority         t
+   org-export-with-section-numbers  nil
+   org-export-with-special-strings  t
+   org-export-with-sub-superscripts t
+   org-export-with-tables           t
+   org-export-with-tags             'not-in-toc
+   org-export-with-timestamp        t
+   org-export-with-toc              t
+   org-html-inline-images           t
+   org-html-link-org-files-as-html  t
+   org-html-preamble                t
+   org-html-postamble               'auto
+   org-html-validation-link         nil
+
+   org-fast-tag-selection-single-key nil
+   org-hide-leading-stars t
+
+   org-log-done t
+   org-log-reschedule 'time
+   org-log-redeadline 'time
+
+   ;; org-mode should really be smart enough to get this automatically
+   org-not-done-heading-regexp
+   "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
+   org-odd-levels-only t
+   org-publish-use-timestamps-flag t
+   org-return-follows-link t
+   org-show-siblings (quote ((default . t)
+                             (isearch t)))
+   org-tags-column -80
+   org-toc-default-depth 3
+   org-use-speed-commands t)
+  
+  (define-key org-mode-map [C-tab]       (function (lambda () (interactive) (org-cycle t))))
+  (define-key org-mode-map [?\M-?]       'org-complete)
+  (define-key org-mode-map [(shift tab)] 'org-show-contents-or-move-to-previous-table-field)
+  (define-key org-mode-map [C-S-down]    'outline-next-visible-heading)
+  (define-key org-mode-map [C-S-up]      'outline-previous-visible-heading)
+  (define-key org-mode-map [?\C-c ? ]    'outline-mark-subtree))
+
+(add-hook
+ 'org-mode-hook
+ '(lambda ()
+    (turn-on-org-cdlatex)
+    (set-face-foreground 'org-hide (face-background 'default))
+    (setq fill-column 90)))
 
 ;;; (C)PERL MODE
 (defalias 'perl-mode 'cperl-mode)
@@ -1130,11 +1106,11 @@ not inherit)."
 ;;; elpy recommended packages
 ;; echo n | enpkg install jedi flake8 nose
 ;; pip install importmagic autopep8
-(case python-ide-package  
-  ('elpy   (eval-after-load 'python 
-	     '(progn 
+(case python-ide-package
+  ('elpy   (eval-after-load 'python
+	     '(progn
 		(elpy-enable)
-                
+
 		(setq
                  elpy-modules '(
                                 elpy-module-company
@@ -1200,7 +1176,7 @@ nil if there is no such ancestor."
                          'child-venvs)))
     (when parent-of-venv
       (car (child-venvs parent-of-venv)))))
-   
+
 (defun activate-venv-if-python ()
   "For a `python-mode' buffer with an associated file, activates
 the virtual environment for the file defined by `venv-for'"
