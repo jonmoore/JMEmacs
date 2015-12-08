@@ -454,19 +454,18 @@ then update the mode line."
           (org-clock-sum-current-item (org-clock-get-sum-start)))
     (org-clock-update-mode-line)))
 
-
 ;;; MISC STUFF
 
-(defun assoc-regexp-exact  (key list-including-regexps)
-  "Return non-nil if key is `equal' to the car of an element of list.
+(defun assoc-regexp-exact  (key list)
+  "Return non-nil if KEY is `equal' to the car of an element of LIST.
 The value is actually the first element of list whose car equals key."
   (assoc-if 
    (lambda (x) 
      (string-match x key))
-   list-including-regexps))
+   list))
 
 (defun char-syntax-to-string (character)
-  "return the syntax class of character as a string.  See also
+  "Return the syntax class of CHARACTER as a string.  See also
 `describe-syntax'"
   (string (char-syntax  character)))
 
@@ -479,23 +478,4 @@ The value is actually the first element of list whose car equals key."
   (message "Filename is %s" filename)
   (insert-file-contents filename)
   (end-of-buffer))
-;;; CUSTOM LOCATE AND MOCCUR 
-
-;; command outputs 
-;; lists of files 
-;; - from Windows Search
-;; - from p4 grep
-
-;; file selection
-;; - by name
-;; - by contents
-;; - by other arguments supported by the search engine
-;; this is per search engine
-
-;; post-processing/viewing with moccur
-
-;;; MOCCUR 
-(require 'ibuffer)
-(require 'color-moccur)
-(require 'moccur-edit) ;; missing key - see color-mocur.el
 

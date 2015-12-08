@@ -19,7 +19,7 @@ as a parameter.  Prints a list of matching paths to stdout."
   :type '(string)
   :group 'qap-locate)
 
-(defcustom qap-locate-windows-default-root "C:/p4ws"
+(defcustom qap-locate-windows-default-root nil
   "Root location to use when searching on windows"
   :type '(directory)
   :group 'qap-locate)
@@ -108,7 +108,23 @@ provided term according to Windows search"
 
 (defconst qap-max-pathlist-length 8000
   "Maximum length of a list of paths, to avoid hitting maximum command line length")
-  
+
+(defvar qap-p4-dirs-to-split nil
+  "A list of depot folders that should be split in order to avoid
+hitting 'p4 grep' scope restrictions. Any attempt to grep a
+directory that is in this list or that contains one of the listed
+directories as a descendant, will be split into the minimum
+number of individual commands necessary to ensure that all the
+direct subdirectories of the listed directories are searched in
+isolation.")
+
+(defvar qap-p4-dirs-to-exclude nil
+  "A list of depot folders that should be excluded from any
+search. The parent of each of these folders will be implicitly
+added to the list of folders to split. After the list of folders
+has been resolved, any of these folders (and their descendants)
+present in the list will be removed.")
+
 (defun qap-ensure-slash (p)
   "Ensure string ends with slash"
   (if (string= (substring p -1) "/")

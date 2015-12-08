@@ -1,5 +1,4 @@
 (require 'cl)
-(require 'org-install)
 
 (setq test-data
       '(("ID" "" "" "NAME" "" "DEPENDS" "LEAD")
@@ -31,14 +30,15 @@ row"
                                  (if (string= "" depends-string) nil
                                    (split-string depends-string ","))))))
 
-(defun qap-parse-projects (headers data)
+(defun qap-parse-projects (headers rows)
   "Return a list of qap-projects based on parsing table"
   (remove-if (lambda (project)
                (string= "" (qap-project-name project)))
-    (mapcar (lambda (row) (qap-parse-project headers row)) data)))
+             (mapcar (lambda (row) (qap-parse-project headers row))
+                     rows)))
 
-(defun qap-extract-dependencies (headers data)
-  "Take a table as for `org-dot-format-task-table' and 
+(defun qap-extract-dependencies (headers rows)
+  "Take a table as for `qap-dot-format-task-table' and 
 generate the dependencies of a list of cons-cell pairs
 in the form (from . to)"
   (reduce 'append (mapcar (lambda (project)
@@ -46,9 +46,9 @@ in the form (from . to)"
                                    (tos (qap-project-depends project)))
                               (mapcar
                                (lambda (to) (cons from to)) tos)))
-                          (qap-parse-projects headers data))))
+                          (qap-parse-projects headers rows))))
 
-(defun qap-dot-format-task-table (headers data)
+(defun qap-dot-format-task-table (headers rows)
   "Used to format a table of dependencies, as below
 #+name: major-dependencies
 | ID | Name  | Deps |
@@ -73,7 +73,7 @@ Thus table is passed as a list of lists, row-major.
    'identity 
    (append
     ;; lines labelling the nodes
-    (let* ((projects (qap-parse-projects headers data))
+    (let* ((projects (qap-parse-projects headers rows))
           (leads    (delete-dups (mapcar 'qap-project-lead 
                                          projects))))
       (append
@@ -90,7 +90,7 @@ Thus table is passed as a list of lists, row-major.
                                                nil))
                                            projects))
                                     ";")))
-                 leads)
+               leads)
        ;; Label project nodes
        (mapcar (lambda (project)
                  (format "%s [label=\"%s\"]" 
@@ -101,9 +101,5 @@ Thus table is passed as a list of lists, row-major.
     (mapcar
      (lambda (pair) 
        (format "%s -> %s" (car pair) (cdr pair)))
-     (qap-extract-dependencies headers data)))
+     (qap-extract-dependencies headers rows)))
    ";\n"))
-
-
-
-
