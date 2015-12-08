@@ -234,8 +234,6 @@
 ;;;========================
 
 (require 'ibuffer)
-(require 'color-moccur)
-;; (require 'moccur-edit) - causing warnings about redefinition
 (load "moccur-wrappers")
 (load "snippets")
 (load "jnm-autoloads")
@@ -524,28 +522,33 @@
 (ad-activate 'man)
 
 ;; MOCCUR
-(autoload 'dired-do-moccur "color-moccur" nil t)
-(define-key isearch-mode-map (kbd "M-o") 'isearch-occur)
-
-(setq *moccur-buffer-name-exclusion-list*
-      '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
-	".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
-	"\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
-	"\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
-	"\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
-(setq dmoccur-exclusion-mask
-      '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
-	"\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
-	"\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
-	"\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
-	"\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
-	"\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
-	"\\.pch$" "\\.pdb$" "\\.res$"))
-(setq moccur-split-word t)
-(setq dmoccur-use-list t
-      dmoccur-use-project t
-      dmoccur-list '(("dir" default-directory (".*") dir)))
-(define-key Buffer-menu-mode-map "O" 'Buffer-menu-moccur)
+(use-package color-moccur
+  :commands (moccur dired-do-moccur isearch-moccur isearch-moccur-all)
+  :config  (use-package moccur-edit
+             :ensure nil)
+  :bind ("M-s O" . moccur)
+  :init
+  (bind-key "O"   'Buffer-menu-moccur Buffer-menu-mode-map)
+  (bind-key "M-o" 'isearch-moccur     isearch-mode-map)    
+  (bind-key "M-O" 'isearch-moccur-all isearch-mode-map)    
+  (setq moccur-split-word t
+        dmoccur-use-list t
+        dmoccur-use-project t
+        dmoccur-list '(("dir" default-directory (".*") dir)))
+  (setq *moccur-buffer-name-exclusion-list*
+        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
+          ".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
+          "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
+          "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
+          "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
+  (setq dmoccur-exclusion-mask
+        '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
+          "\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
+          "\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
+          "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
+          "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
+          "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
+          "\\.pch$" "\\.pdb$" "\\.res$")))
 
 ;;; PRETTY COLUMN
 (autoload 'pretty-column "pretty-column" "Pretty column" t)
@@ -566,7 +569,7 @@
  ps-line-number          t
  ps-n-up-printing        1
  ps-number-of-columns    1
- ps-print-color-p      t)
+ ps-print-color-p       t)
 
 ;;; PROJECTILE
 (use-package projectile
