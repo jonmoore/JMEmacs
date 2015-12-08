@@ -21,32 +21,11 @@
       '(("org"   . "http://orgmode.org/elpa/")
         ("melpa" . "http://melpa.milkbox.net/packages/")
         ("gnu"   . "http://elpa.gnu.org/packages/")))
-(package-initialize)
-(setq package-enable-at-startup nil)
-
-;; Bootstrap `use-package'
-(defun install-use-package ()
-  (when (not (package-installed-p 'use-package))
-    (package-install 'use-package)))
-
-(condition-case nil
-    (install-use-package)
-  (error
-   (package-refresh-contents)
-   (install-use-package)))
-
-(setq use-package-verbose t
-      use-package-always-ensure t)
-
-(eval-when-compile
-  (require 'use-package))
-
-(use-package diminish)
-(use-package bind-key)
 
 ;; packages we want (only name explicit ones)
 (setq jnm-packages
-      '(browse-kill-ring
+      '(
+        browse-kill-ring
         cdlatex
         color-moccur
         color-theme-modern
@@ -69,9 +48,9 @@
         maxframe
         multiple-cursors
         nexus
-        org
         org-dashboard
         org-jira
+	org-plus-contrib
         ox-mediawiki
         p4
         point-undo
@@ -79,8 +58,13 @@
         shell-toggle
         smartparens
         undo-tree
+	use-package
         yaml-mode))
 
+(package-initialize)
+(setq package-enable-at-startup nil)
+
+(require 'cl)
 (when (find-if (lambda (package)
                  (not (and (assoc package package-archive-contents)
                            (package-installed-p package))))
@@ -106,6 +90,26 @@
                                    (not (package-built-in-p x))
                                    (package-installed-p x)))
                   (mapcar 'car package-archive-contents))))
+
+;; Bootstrap `use-package'
+(defun install-use-package ()
+  (when (not (package-installed-p 'use-package))
+    (package-install 'use-package)))
+
+(condition-case nil
+    (install-use-package)
+  (error
+   (package-refresh-contents)
+   (install-use-package)))
+
+(setq use-package-verbose t
+      use-package-always-ensure t)
+
+(eval-when-compile
+  (require 'use-package))
+
+(use-package diminish)
+(use-package bind-key)
 
 ;; (use-package browse-kill-ring)
 ;; (use-package cdlatex)
@@ -262,8 +266,12 @@
 (put 'upcase-region   'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'narrow-to-page  'disabled nil)
-(require 'browse-kill-ring)
-(browse-kill-ring-default-keybindings)
+(use-package browse-kill-ring
+  :bind ("M-y" . browse-kill-ring))
+
+;; (require 'browse-kill-ring)
+;; (browse-kill-ring-default-keybindings)
+
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq require-final-newline t)
 (require 'uniquify)
@@ -272,11 +280,8 @@
 
 (require 'ido)
 (ido-mode t)
-(require 'magit)
 
 (require 'point-undo)
-
-(global-set-key (kbd "C-x g") 'magit-status)
 
 ;;; GLOBAL KEY SETTINGS
 (when system-osx-p
@@ -925,6 +930,14 @@ See `doxymacs-parm-tempo-element'."
             ;; Some additional bindings for strict mode
             (let ((map smartparens-strict-mode-map))
               (define-key map (kbd "M-q")                  'sp-indent-defun))))
+;;; MAGIT
+(use-package magit
+  :commands (magit-status)
+  :config
+  (setq magit-popup-use-prefix-argument 'default
+	magit-revert-buffers t
+	magit-completing-read-function 'magit-ido-completing-read)
+  :bind ("C-x g" . magit-status))
 
 ;;; MATLAB MODE
 (add-to-list 'auto-mode-alist '("\\.m\\'" . matlab-mode))
@@ -991,7 +1004,6 @@ not inherit)."
      ((string< pa pb) -1)
      (t nil))))
 
-(require 'org-install)
 (require 'org-clock)
 
 (org-clock-persistence-insinuate)
