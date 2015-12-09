@@ -11,139 +11,6 @@
   "*The root of my personal emacs workspace.")
 (message "Running emacs.el with personal-emacs-root %s" personal-emacs-root)
 
-;;; Emacs package system
-
-;; elpa is needed for auctex.  MELPA versions will take precedence
-;; because they use yyyymmdd for the version number and package.el
-;; uses the version of each package with the highest version number.
-(require 'package)
-(setq package-archives
-      '(("org"   . "http://orgmode.org/elpa/")
-        ("melpa" . "http://melpa.milkbox.net/packages/")
-        ("gnu"   . "http://elpa.gnu.org/packages/")))
-
-;; packages we want (only name explicit ones)
-(setq jnm-packages
-      '(
-        browse-kill-ring
-        cdlatex
-        color-moccur
-        color-theme-modern
-        company-auctex
-        company-ghc
-        dired-subtree
-        ;; ein
-        elpy
-        ess
-        esup
-        expand-region
-        ghc
-        graphviz-dot-mode
-        haskell-mode
-        helm
-        hexrgb
-        jedi
-        jira
-        magit
-        maxframe
-        multiple-cursors
-        nexus
-        org-dashboard
-        org-jira
-	org-plus-contrib
-        ox-mediawiki
-        p4
-        point-undo
-        projectile
-        shell-toggle
-        smartparens
-        undo-tree
-	use-package
-        yaml-mode))
-
-(package-initialize)
-(setq package-enable-at-startup nil)
-
-(require 'cl)
-(when (find-if (lambda (package)
-                 (not (and (assoc package package-archive-contents)
-                           (package-installed-p package))))
-               jnm-packages)
-  (package-refresh-contents))
-
-;; install the missing packages
-(dolist (package jnm-packages)
-  (when (and (not (package-installed-p package))
-             (assoc package package-archive-contents))
-    (package-install package)))
-
-;; http://stackoverflow.com/questions/11127109/emacs-24-package-system-initialization-problems
-
-(defun package-list-unaccounted-packages ()
-  "Like `package-list-packages', but shows only the packages that
-  are installed and are not in `jnm-packages'.  Useful for
-  cleaning out unwanted packages.  Will clean out dependencies
-  but these can be reinstalled"
-  (interactive)
-  (package-show-package-list
-   (remove-if-not (lambda (x) (and (not (memq x jnm-packages))
-                                   (not (package-built-in-p x))
-                                   (package-installed-p x)))
-                  (mapcar 'car package-archive-contents))))
-
-;; Bootstrap `use-package'
-(defun install-use-package ()
-  (when (not (package-installed-p 'use-package))
-    (package-install 'use-package)))
-
-(condition-case nil
-    (install-use-package)
-  (error
-   (package-refresh-contents)
-   (install-use-package)))
-
-(setq use-package-verbose t
-      use-package-always-ensure t)
-
-(eval-when-compile
-  (require 'use-package))
-
-(use-package diminish)
-(use-package bind-key)
-
-;; (use-package browse-kill-ring)
-;; (use-package cdlatex)
-;; (use-package color-moccur)
-;; (use-package color-theme-modern)
-;; (use-package company-auctex)
-;; (use-package company-ghc)
-;; (use-package dired-subtree)
-;; (use-package elpy)
-;; (use-package ess)
-;; (use-package esup)
-;; (use-package expand-region)
-;; (use-package ghc)
-;; (use-package graphviz-dot-mode)
-;; (use-package haskell-mode)
-;; (use-package helm)
-;; (use-package hexrgb)
-;; (use-package jedi)
-;; (use-package jira)
-;; (use-package magit)
-;; (use-package maxframe)
-;; (use-package multiple-cursors)
-;; (use-package nexus)
-;; (use-package org)
-;; (use-package org-jira)
-;; (use-package ox-mediawiki)
-;; (use-package p4)
-;; (use-package point-undo)
-;; (use-package projectile)
-;; (use-package shell-toggle)
-;; (use-package smartparens)
-;; (use-package undo-tree)
-;; (use-package yaml-mode)
-
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
   "Are we running on a Windows system?")
@@ -153,79 +20,74 @@
 (defconst system-osx-p (eq system-type 'darwin)
   "Are we running on a Darwin (Mac OS X) system?")
 
-;;;
-;;; ENVIRONMENT
-
-;; use setenv because some functions call getenv, not shell-file-name
-(require 'cl)
-(cond
- (system-win32-p
-  (require 'dos-w32)
-  (setq file-name-buffer-file-type-alist
-        (delete '("\\.tp[ulpw]$" . t) file-name-buffer-file-type-alist))
-  (when (boundp 'cygwin-bin)
-    (setq default-system-shell (concat cygwin-bin "\\bash.exe")))
-  (when (boundp 'local-exec-paths)
-    (mapcar
-     (lambda (filepath)                   ;; prepend filepath to exec-path
-       (setq exec-path (append
-                        (list (replace-regexp-in-string  "\\\\"  "/" filepath))
-                        exec-path)))
-     local-exec-paths))))
-
-(setq shell-file-name (or (getenv "SHELL")
-                          default-system-shell))
-(setenv "SHELL" shell-file-name)
 (setq inhibit-default-init t)           ; don't load default.el
 
+;;; Set exec-path and SHELL
+
+;; Set exec-path early to accommodate magit
+(when system-win32-p
+  (require 'dos-w32)
+  (setq exec-path (append
+		   (mapcar (lambda (path) (replace-regexp-in-string  "\\\\"  "/" path))
+			   (bound-and-true-p
+			    local-exec-paths))
+		   exec-path)))
 (when system-osx-p
   (setq mac-command-modifier 'meta
 	mac-option-modifier nil)
-  (when (boundp 'local-exec-paths)
-    (setq exec-path (append local-exec-paths exec-path))))
+  (setq exec-path (append (bound-and-true-p
+			   local-exec-paths)
+			  exec-path)))
 
-;;; PATHS
+(setq shell-file-name (or (getenv "SHELL")
+                          default-system-shell))
+;; use setenv because some functions call getenv, not shell-file-name
+(setenv "SHELL" shell-file-name)
+(setq load-prefer-newer t)
 
-(defun my-woman-mode-hook ()
-  (require 'woman)
-  (when system-win32-p
-    (if (getenv "MANPATH")
-        (setq woman-manpath
-              (woman-parse-colon-path
-               (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
-(add-hook 'woman-mode-hook 'my-woman-mode-hook)
+;;; Emacs package system
+(require 'package)
 
-(cl-labels ((add-path (p) (add-to-list 'load-path (concat personal-emacs-root p))))
-  (add-path "/site-lisp")
-  (add-path "/packages")
-  (add-path "/packages/Emacs-PDE-0.2.16/lisp")
-  (add-path "/packages/doxymacs-1.8.0")
-  (add-path "/packages/template/lisp"))
+(setq package-enable-at-startup nil)
+(setq package-archives
+      '(("org"   . "http://orgmode.org/elpa/")
+        ("melpa" . "http://melpa.milkbox.net/packages/")
+        ("gnu"   . "http://elpa.gnu.org/packages/")))
+(package-initialize)
 
-(setq backup-directory-alist (list (cons "." (cond (system-win32-p
-                                                    (concat (getenv "TEMP") "\\emacs_backup"))
-                                                   (system-osx-p   "~/backup")))))
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 
-(defun weight-lists (froms tos weight)
-  (mapcar* (lambda (from to)
-             (+ from (* (- to from) weight)))
-           froms
-           tos))
+(setq use-package-verbose t
+      use-package-always-ensure t)
 
-(eval-after-load 'highlight-sexps
-  (quote (progn
-           (require 'hexrgb)
-           (setq hl-sexp-background-colors
-                 (let* ((hsv-back (hexrgb-hex-to-hsv
-                                   (hexrgb-color-name-to-hex "blue4")))
-                        (hsv-match (hexrgb-hex-to-hsv
-                                   (hexrgb-color-name-to-hex "deep sky blue"))))
-                   (progn
-                     (mapcar
-                      (lambda (step)
-                        (apply 'hexrgb-hsv-to-hex
-                         (weight-lists hsv-match hsv-back step)))
-                      (list 0.0 0.2 0.4 0.55 0.7 ))))))))
+(eval-when-compile
+  (require 'use-package))
+
+(require 'bind-key)
+(require 'diminish)
+
+;;; Personal lisp directory
+(mapc
+ (lambda (relpath)
+   (add-to-list 'load-path (concat personal-emacs-root relpath)))
+ '("/lisp"
+   "/lisp/doxymacs-1.8.0"))
+(require 'update-personal-autoloads)
+(update-personal-autoloads)
+(load "personal-autoloads")
+
+;;;
+;;; ENVIRONMENT
+
+(setq backup-directory-alist
+      (list
+       (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
+		       (system-osx-p   "~/backup")))))
+
+(require 'cl)
 
 (setq user-full-name "Jonathan Moore")
 
@@ -233,23 +95,16 @@
 ;;;; MY FUNCTIONS
 ;;;========================
 
-(require 'ibuffer)
-(load "moccur-wrappers")
-(load "snippets")
-(load "jnm-autoloads")
-
 ;;; COLORS AND APPEARANCE
 ;; see also color-theme
 (tool-bar-mode -1)
-(setq
- frame-title-format
- '(:eval (buffer-file-names-in-selected-frame)))
-(setq query-replace-highlight t)
-(setq search-highlight t)
+(setq frame-title-format  '(:eval (buffer-file-names-in-selected-frame))
+      query-replace-highlight t
+      search-highlight t)
 
-(set-face-attribute 'default nil
-                    :background "blue4"
-                    :foreground "white")
+;; (set-face-attribute 'default nil
+;;                     :background "blue4"
+;;                     :foreground "white")
 
 (when system-win32-p
   (set-face-attribute 'default  nil :family "Consolas"    :height 120))
@@ -258,28 +113,16 @@
   (set-face-attribute 'default  nil :family "Inconsolata" :height 200))
 
 ;;; GLOBAL EDITING SETTINGS
-(autoload 'scroll-up-in-place   "scroll-in-place" "scroll-up-in-place"   t)
-(autoload 'scroll-down-in-place "scroll-in-place" "scroll-down-in-place" t)
-
 (put 'upcase-region   'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'narrow-to-page  'disabled nil)
-(use-package browse-kill-ring
-  :bind ("M-y" . browse-kill-ring))
-
-;; (require 'browse-kill-ring)
-;; (browse-kill-ring-default-keybindings)
 
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq require-final-newline t)
-(require 'uniquify)
-(setq uniquify-buffer-name-style 'post-forward-angle-brackets
-      uniquify-min-dir-content 0)
+
 
 (require 'ido)
 (ido-mode t)
-
-(require 'point-undo)
 
 ;;; GLOBAL KEY SETTINGS
 (when system-osx-p
@@ -322,7 +165,6 @@
 (global-set-key [C-S-right]         'select-next-buffer)
 (global-set-key [home]              'beginning-of-buffer)
 (global-set-key [end]               'end-of-buffer)
-(require 'scroll-in-place)
 (global-set-key [prior]             '(lambda () (interactive) (scroll-down-in-place)))
 (global-set-key [next]              '(lambda () (interactive) (scroll-up-in-place)))
 
@@ -333,11 +175,9 @@
 (global-set-key [f6]                'rotate-buffer-to-next-window)
 (global-set-key [M-f6]              'rotate-buffer-to-next-window-and-select)
 (global-set-key [f7]                'e-select-next-window)
-(autoload 'e-select-next-window "e-other-window" "e-other-window" t)
 
 ;; TODO
-(when system-win32-p
-  (global-set-key [f8]              'w32-frame-cycle-size))
+(global-set-key [f8]                'cycle-frame-maximized)
 (global-set-key [f11]               'org-clock-in-and-goto)
 (global-set-key [S-f11]             'org-clock-goto)
 
@@ -346,10 +186,11 @@
 (global-set-key [C-f12]             'qap-locate-windows-code-contains-and-moccur )
 
 ;;;
-;;;; APPLICATIONS
-;;;==============
+;;;; PACKAGES
+;;;==========
 
-(defun jnm-load-auctex ()
+;; TODO tidy tex settings
+(defun jnm-config-auctex ()
   (interactive)
   (setq TeX-source-correlate-method 'synctex
         TeX-source-correlate-mode t
@@ -359,234 +200,68 @@
         TeX-parse-self t)
   (setq reftex-plug-into-AUCTeX t)
   (setq-default TeX-master nil)
+  
+  (cond
+   (system-win32-p
+    (require 'tex-mik)
+    (require 'sumatra-forward)
+    
+    (setq
+     TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
+     TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
+   (system-osx-p
+    ;; use Skim as default pdf viewer. Skim's displayline is used for
+    ;; forward search from .tex to .pdf
+    (setq
+     TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
+     TeX-view-program-list '(("Skim PDF Viewer"
+                              "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
+     TeX-command-default "latexmk"))))
+
+(use-package tex-site
+  :ensure auctex
+  :config
+  (jnm-config-auctex))
+
+(use-package latex
+  :defer t
+  :ensure auctex
+  :init
   (add-hook 'LaTeX-mode-hook 'visual-line-mode)
   (add-hook 'LaTeX-mode-hook 'flyspell-mode)
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
   (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 
-  (cond
-   (system-win32-p
-    (require 'tex-mik)
-    (require 'sumatra-forward)
-
-    (add-hook 'TeX-mode-hook
-              '(lambda ()
-                 (setq
-                  TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
-                  TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o")))))
-    (add-hook 'LaTeX-mode-hook
-              (lambda ()
-                (push
-                 '("Latexmk"
-                   "latexmk -pdflatex=\"pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
-                   :help "Run Latexmk on file")
-                 TeX-command-list)
-                (local-set-key [prior] '(lambda ()
-                                          (interactive)
-                                          (funcall (lookup-key (current-global-map) [prior]))
-                                          (sumatra-jump-to-line)))
-                (local-set-key [next] '(lambda ()
-                                         (interactive)
-                                         (funcall (lookup-key (current-global-map) [next]))
-                                         (sumatra-jump-to-line))))))
-   (system-osx-p
-    (add-hook 'TeX-mode-hook
-              '(lambda ()
-                 ;; use Skim as default pdf viewer. Skim's displayline
-                 ;; is used for forward search from .tex to .pdf
-                 (setq
-                  TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
-                  TeX-view-program-list '(("Skim PDF Viewer"
-                                           "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
-                  TeX-command-default "latexmk")))
-    (add-hook 'LaTeX-mode-hook
-              (lambda ()
-                (push
-                 '("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
-                   :help "Run latexmk on file")
-                 TeX-command-list))))))
-
-(use-package tex-site
-  :ensure auctex
   :config
-  (jnm-load-auctex))
+  (when system-win32-p
+    (define-key LaTeX-mode-map [prior] '(lambda ()
+                                          (scroll-down-in-place)
+                                          (sumatra-jump-to-line)))
+    (define-key LaTeX-mode-map [next]  '(lambda ()
+                                          (scroll-up-in-place)
+                                          (sumatra-jump-to-line)))))
+
 (use-package auctex-latexmk
   :ensure auctex-latexmk
-  )
+  :config
+  (push
+   (cond
+    (system-win32-p
+     '("Latexmk" "latexmk -pdflatex=\"pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
+       :help "Run Latexmk on file"))
+    (system-osx-p
+     '("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
+       :help "Run latexmk on file")))
+   TeX-command-list))
 
-;;; COMINT
-(add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
+(use-package browse-kill-ring)
 
-;;; CYGWIN SHELL
-(setq process-coding-system-alist '(("bash" . undecided-unix)))
+(use-package cdlatex)
+(use-package color-moccur)
+(use-package color-theme-modern)
 
-;;; DIRED
-(require 'dired-x)
-;; Standard customization hooks
-(add-hook 'dired-mode-hook
-	  (function (lambda ()
-                      (require 'find-dired)
-                      (require 'dired-column-widths)
-		      (setq dired-omit-mode t)
-                      (set-face-foreground 'dired-directory "yellow")
-		      (define-key dired-mode-map "i" 'dired-subtree-toggle)
-		      (define-key dired-mode-map "I" 'dired-maybe-insert-subdir)
-		      (define-key dired-mode-map "j" 'dired-execute-file)
-		      (define-key dired-mode-map "P" 'dired-do-ps-print)
-		      (define-key dired-mode-map "O" 'dired-do-moccur)
-		      (define-key dired-mode-map
-                        [(control up)] 'dired-prev-subdir)
-		      (define-key dired-mode-map
-                        [(control down)] 'dired-next-subdir)
-                      (setq dired-omit-extensions
-                            (set-difference
-                             dired-omit-extensions
-                             '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj" )
-                             :test 'string=))
-		      (setq dired-omit-mode t)
-                      (setq dired-dnd-protocol-alist nil)
-                      (setq find-ls-option
-                            (quote ("-exec ls -ld {} ';'" . "-ld"))))))
-(defvar dired-ps-print-buffer-with-faces t
-  "*If non-nil, `dired-do-ps-print' will print fonts, colors, and underlines.")
-(setq dired-dnd-protocol-alist nil)
-(defadvice find-dired-sentinel
-  (after column-widths-should-be-equalized)
-  "Column widths should be equalized in dired mode. This enforces that when we have run find-dired"
-  (progn
-    (dired-column-widths-cleanup)))
-(ad-activate 'find-dired-sentinel)
-
-;;; EDIFF
-(setq ediff-custom-diff-options "-c -w"
-      ediff-diff-options "-w")
-(when system-win32-p (setq ediff-diff-program "c:/opt/cygwin/bin/diff"))
-
-;;; Haskell
-(autoload 'ghc-init "ghc" nil t)
-(autoload 'ghc-debug "ghc" nil t)
-
-(setq ghc-debug t)
-(add-hook 'haskell-mode-hook
-          (lambda ()
-            (turn-on-haskell-indentation)
-
-            (setq haskell-process-suggest-remove-import-lines t
-                  haskell-process-auto-import-loaded-modules t
-                  haskell-process-suggest-hoogle-imports t
-                  haskell-process-log t)
-
-            ;; bindings for interactive haskell.  may need avoid some
-            ;; clashes later.
-            (define-key haskell-mode-map
-              (kbd "C-c C-l") 'haskell-process-load-or-reload)
-            (define-key haskell-mode-map
-              (kbd "C-`") 'haskell-interactive-bring)
-            (define-key haskell-mode-map
-              (kbd "C-c C-t") 'haskell-process-do-type)
-            (define-key haskell-mode-map
-              (kbd "C-c C-i") 'haskell-process-do-info)
-            (define-key haskell-mode-map
-              (kbd "C-c C-c") 'haskell-compile)
-            (define-key haskell-mode-map
-              (kbd "C-c C-k") 'haskell-interactive-mode-clear)
-            (define-key haskell-mode-map
-              (kbd "C-c c") 'haskell-process-cabal)
-            (define-key haskell-mode-map
-              (kbd "SPC") 'haskell-mode-contextual-space)
-            (define-key haskell-mode-map
-              (kbd "M-.") 'haskell-mode-jump-to-def)
-            (define-key haskell-mode-map
-              (kbd "C-c C-d") 'ghc-browse-document)
-
-            (require 'company)
-	    (add-to-list 'company-backends 'company-ghc)
-            (company-mode)
-            (when (buffer-file-name)
-              (ghc-init))
-            (setq company-ghc-show-info t)))
-
-;;; INFO
-(eval-after-load "info"
-  '(progn
-     (define-key Info-mode-map ";"           'Info-search-next)
-     (define-key Info-mode-map ":"           'Info-search-backward)
-     (define-key Info-mode-map [(shift tab)] 'Info-prev-reference)))
-
-;;; MAN
-;; Man-getpage-in-background
-(defadvice man (around ad-man-uses-bash-shell )
-  "Advises `man' to use bash as the shell."
-  (let ((shell-file-name "bash"))
-    ad-do-it))
-(ad-activate 'man)
-
-;; MOCCUR
-(use-package color-moccur
-  :commands (moccur dired-do-moccur isearch-moccur isearch-moccur-all)
-  :config  (use-package moccur-edit
-             :ensure nil)
-  :bind ("M-s O" . moccur)
-  :init
-  (bind-key "O"   'Buffer-menu-moccur Buffer-menu-mode-map)
-  (bind-key "M-o" 'isearch-moccur     isearch-mode-map)    
-  (bind-key "M-O" 'isearch-moccur-all isearch-mode-map)    
-  (setq moccur-split-word t
-        dmoccur-use-list t
-        dmoccur-use-project t
-        dmoccur-list '(("dir" default-directory (".*") dir)))
-  (setq *moccur-buffer-name-exclusion-list*
-        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
-          ".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
-          "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
-          "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
-          "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
-  (setq dmoccur-exclusion-mask
-        '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
-          "\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
-          "\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
-          "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
-          "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
-          "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
-          "\\.pch$" "\\.pdb$" "\\.res$")))
-
-;;; PRETTY COLUMN
-(autoload 'pretty-column "pretty-column" "Pretty column" t)
-(autoload 'pretty-rectangle "pretty-column" "Pretty rectangle" t)
-(setq pcol-str-separator " "
-      pcol-column-separator "[ \t]+")
-
-;;; PRINTING
-(setq
- ps-bottom-margin       36
- ps-top-margin          36
- ps-right-margin        36
- ps-left-margin         36
- ps-header-offset       36
- ps-inter-column        18
- ps-n-up-margin         18
- ps-landscape-mode     nil
- ps-line-number          t
- ps-n-up-printing        1
- ps-number-of-columns    1
- ps-print-color-p       t)
-
-;;; PROJECTILE
-(use-package projectile
-	     :disabled t)
-
-;;; SHELL-TOGGLE
-;; shell-toggle tries to use term by default but this doesn't work on windows
-(when system-win32-p
-  (setq shell-toggle-launch-shell 'shell))
-
-;;; WOMAN
-(autoload 'woman           "woman" "Decode and browse a UN*X man page." t)
-(autoload 'woman-find-file "woman" "Find, decode and browse a specific UN*X man-page file." t)
-
-;;;
-;;;; MODES
-;;;=======
+(use-package browse-kill-ring
+  :bind ("M-y" . browse-kill-ring))
 
 ;;; CC MODE
 (autoload 'doxymacs-mode      "doxymacs" "doxymacs mode" t)
@@ -596,15 +271,13 @@
 (setq c-offsets-alist '((member-init-intro . ++)))
 
 ;;; C++ MODE
-(add-to-list 'auto-mode-alist '("\\.c$" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.h$" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.cpp$" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.hpp$" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.cxx$" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.hxx$" . c++-mode))
+
+(use-package cc-mode
+  :defer t
+  :mode
+  ("\\.c\\'" "\\.h\\'" "\\.cpp\\'" "\\.hpp\\'" "\\.cxx\\'" "\\.hxx\\'"))
 
 ;; Customizations for all modes in CC Mode.
-(autoload 'ooh-maybe-insert-cpp-guard "once-only-header" nil t)
 (defconst visual-studio-c-style
   '((c-tab-always-indent        . t)
     (c-comment-only-line-offset . 0)
@@ -725,14 +398,75 @@ See `doxymacs-parm-tempo-element'."
                                                 '(("@\\(headerfile\|sourcefile\\|owner\\)"
                                                    0 font-lock-keyword-face prepend)))))))
 
-;;; DOT MODE
-(add-to-list 'auto-mode-alist '("\\.dot\\'" . graphviz-dot-mode))
-(autoload 'graphviz-dot-mode "graphviz-dot-mode"
-  "Mode for editing graphviz dot files." t)
-
 ;;; DOXYMACS MODE
 (autoload 'doxymacs-mode "doxymacs")
 (setq doxymacs-doxygen-style "JavaDoc")
+
+;;; COMINT
+(add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
+
+(use-package company-auctex
+    :defer t)
+(use-package company-ghc
+  :defer t
+  :init
+  (setq company-ghc-show-info t)
+  :config
+  (add-to-list 'company-backends 'company-ghc))
+
+;;; CYGWIN SHELL
+(setq process-coding-system-alist '(("bash" . undecided-unix)))
+
+;;; DIRED
+(use-package dired-subtree)
+(add-hook 'dired-load-hook
+          '(lambda ()
+             (require 'dired-x)
+             (require 'find-dired)
+             (require 'dired-column-widths)
+             (require 'dired-subtree)))
+(add-hook 'dired-mode-hook
+	  (function (lambda ()
+                      (require 'dired-x)
+                      (setq dired-omit-mode t)
+                      (set-face-foreground 'dired-directory "yellow")
+		      (define-key dired-mode-map "i" 'dired-subtree-toggle)
+		      (define-key dired-mode-map "I" 'dired-maybe-insert-subdir)
+		      (define-key dired-mode-map "j" 'dired-execute-file)
+		      (define-key dired-mode-map "P" 'dired-do-ps-print)
+		      (define-key dired-mode-map "O" 'dired-do-moccur)
+		      (define-key dired-mode-map
+                        [(control up)] 'dired-prev-subdir)
+		      (define-key dired-mode-map
+                        [(control down)] 'dired-next-subdir)
+                      (setq dired-omit-extensions
+                            (set-difference
+                             dired-omit-extensions
+                             '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj" )
+                             :test 'string=))
+		      (setq dired-omit-mode t)
+                      (setq dired-dnd-protocol-alist nil)
+                      (setq find-ls-option
+                            (quote ("-exec ls -ld {} ';'" . "-ld"))))))
+(defvar dired-ps-print-buffer-with-faces t
+  "*If non-nil, `dired-do-ps-print' will print fonts, colors, and underlines.")
+(defadvice find-dired-sentinel
+    (after column-widths-should-be-equalized)
+  "Column widths should be equalized in dired mode. This enforces that when we have run find-dired"
+  (progn
+    (dired-column-widths-cleanup)))
+(ad-activate 'find-dired-sentinel)
+
+;;; EDIFF
+(setq ediff-custom-diff-options "-c -w"
+      ediff-diff-options "-w")
+
+(use-package ess
+  :defer t)
+
+(use-package esup)
+
+(use-package expand-region)
 
 ;;; FONT LOCK MODE
 (global-font-lock-mode t)
@@ -743,6 +477,10 @@ See `doxymacs-parm-tempo-element'."
       jit-lock-defer-time nil
       jit-lock-stealth-nice nil
       jit-lock-stealth-time 1)
+
+(use-package ghc)
+
+(setq ghc-debug t)
 
 ;;; GLOBAL AUTO REVERT MODE
 (defun looks-like-a-network-file (filename)
@@ -756,6 +494,10 @@ See `doxymacs-parm-tempo-element'."
               (setq global-auto-revert-ignore-buffer t))))
 
 (global-auto-revert-mode t)
+
+;;; GRAPHVIZ-DOT-MODE
+(use-package graphviz-dot-mode
+  :mode "\\.dot\\'")
 
 ;;; GUD MODE
 (eval-after-load 'gud
@@ -787,11 +529,70 @@ See `doxymacs-parm-tempo-element'."
            (delete-overlay gud-overlay)))
      (add-hook 'kill-buffer-hook 'gud-kill-buffer))))
 
+(use-package haskell-mode
+  :defer t
+  :init
+  (setq haskell-process-suggest-remove-import-lines t
+        haskell-process-auto-import-loaded-modules t
+        haskell-process-suggest-hoogle-imports t
+        haskell-process-log t)
+  :config 
+  (bind-key (kbd "C-c C-l") 'haskell-process-load-or-reload haskell-mode-map)
+  (bind-key (kbd "C-`")     'haskell-interactive-bring      haskell-mode-map)
+  ;;  (bind-key (kbd "C-c C-t") 'haskell-process-do-type        haskell-mode-map)
+  (bind-key (kbd "C-c C-i") 'haskell-process-do-info        haskell-mode-map)
+  ;;  (bind-key (kbd "C-c C-c") 'haskell-compile                haskell-mode-map)
+  ;; (bind-key (kbd "C-c C-k") 'haskell-interactive-mode-clear haskell-mode-map)
+  ;; (bind-key (kbd "C-c c")   'haskell-process-cabal          haskell-mode-map)
+  (bind-key (kbd "SPC")     'haskell-mode-contextual-space  haskell-mode-map)
+  (bind-key (kbd "M-.")     'haskell-mode-jump-to-def       haskell-mode-map)
+  ;;(bind-key (kbd "C-c C-d") 'ghc-browse-document            haskell-mode-map)
+  
+  (require 'company)
+  (require 'company-ghc))
+
+
+(add-hook 'haskell-mode-hook
+          (lambda ()
+            (turn-on-haskell-indentation)
+            (company-mode)
+            (when (buffer-file-name)
+              (ghc-init))))
+
+(use-package helm
+  :disabled t
+  :config
+  (helm-mode -1))
+
+(use-package hexrgb)
+
+(defun weight-lists (froms tos weight)
+  (mapcar* (lambda (from to)
+             (+ from (* (- to from) weight)))
+           froms tos))
+
+(use-package highlight-sexps
+  :ensure nil
+  :config
+  (setq hl-sexp-background-colors
+        (let* ((hsv-back (hexrgb-hex-to-hsv
+                          (hexrgb-color-name-to-hex "blue4")))
+               (hsv-match (hexrgb-hex-to-hsv
+                           (hexrgb-color-name-to-hex "deep sky blue"))))
+          (progn
+            (mapcar
+             (lambda (step)
+               (apply 'hexrgb-hsv-to-hex
+                      (weight-lists hsv-match hsv-back step)))
+             (list 0.0 0.2 0.4 0.55 0.7 ))))))
+
+
 ;;; HTML MODE
 (autoload 'css-mode "css-mode")
 (add-to-list 'auto-mode-alist '("\\.css\\'" . css-mode))
 
 ;;; IBUFFER
+(use-package ibuffer)
 (setq ibuffer-saved-filter-groups
       (quote (("default"
                ("dired"   (mode . dired-mode))
@@ -838,6 +639,25 @@ See `doxymacs-parm-tempo-element'."
                                 "default")))
 
 
+;;; IDO MODE
+(add-hook 'ido-setup-hook
+          (lambda ()
+            (let ((kmap ido-file-dir-completion-map))
+              (define-key kmap (kbd "M-n")   'ido-next-work-file)
+              (define-key kmap (kbd "C-M-n") 'ido-next-work-directory)
+              (define-key kmap (kbd "M-p")   'ido-prev-work-file)
+              (define-key kmap (kbd "C-M-p") 'ido-prev-work-directory))))
+
+(use-package jira
+  :defer t)
+
+;;; INFO
+(use-package info
+  :init
+  (bind-key ";"           'Info-search-next     Info-mode-map)
+  (bind-key ":"           'Info-search-backward Info-mode-map)
+  (bind-key [(shift tab)] 'Info-prev-reference  Info-mode-map))
+
 ;;; J MODE
 (autoload 'j-mode "j-mode.el"  "Major mode for J." t)
 (autoload 'j-shell "j-mode.el" "Run J from emacs." t)
@@ -852,15 +672,6 @@ See `doxymacs-parm-tempo-element'."
 (require 'cl)
 (when (ignore-errors (require 'which-func))
   (which-func-mode 1)) ; shows the current function in statusbar
-
-;;; IDO MODE
-(add-hook 'ido-setup-hook
-          (lambda ()
-            (let ((kmap ido-file-dir-completion-map))
-              (define-key kmap (kbd "M-n")   'ido-next-work-file)
-              (define-key kmap (kbd "C-M-n") 'ido-next-work-directory)
-              (define-key kmap (kbd "M-p")   'ido-prev-work-file)
-              (define-key kmap (kbd "C-M-p") 'ido-prev-work-directory))))
 
 ;;; LISP MODE
 (add-hook 'emacs-lisp-mode-hook
@@ -933,14 +744,24 @@ See `doxymacs-parm-tempo-element'."
             ;; Some additional bindings for strict mode
             (let ((map smartparens-strict-mode-map))
               (define-key map (kbd "M-q")                  'sp-indent-defun))))
+
 ;;; MAGIT
+
 (use-package magit
-  :commands (magit-status)
+  :defer t
   :config
   (setq magit-popup-use-prefix-argument 'default
 	magit-revert-buffers t
 	magit-completing-read-function 'magit-ido-completing-read)
   :bind ("C-x g" . magit-status))
+
+;;; MAN
+;; Man-getpage-in-background
+(defadvice man (around ad-man-uses-bash-shell )
+  "Advises `man' to use bash as the shell."
+  (let ((shell-file-name "bash"))
+    ad-do-it))
+(ad-activate 'man)
 
 ;;; MATLAB MODE
 (add-to-list 'auto-mode-alist '("\\.m\\'" . matlab-mode))
@@ -956,7 +777,13 @@ See `doxymacs-parm-tempo-element'."
 (setq matlab-indent-function t
       matlab-verify-on-save-flag nil)
 
+(use-package maxframe)
+
 ;;; MEDIAWIKI MODE
+(use-package mediawiki
+  :ensure nil
+  :defer t)
+
 (defun use-my-mediawiki-outline-magic-keys ()
   "Redefines mediawiki-outline-magic-keys to avoid clashing with
 control-arrow keys"
@@ -977,16 +804,66 @@ control-arrow keys"
 (setq auto-mode-alist (cons '("\\.mms" . mmix-mode)
                             auto-mode-alist))
 
+(use-package multiple-cursors
+  :defer t)
+
+;; MOCCUR
+(use-package color-moccur
+  :config
+  (use-package moccur-edit
+    :ensure nil)
+  :bind ("M-s O" . moccur)
+  :init
+  (bind-key "O"   'Buffer-menu-moccur Buffer-menu-mode-map)
+  (bind-key "M-o" 'isearch-moccur     isearch-mode-map)    
+  (bind-key "M-O" 'isearch-moccur-all isearch-mode-map)    
+  (setq moccur-split-word t
+        dmoccur-use-list t
+        dmoccur-use-project t
+        dmoccur-list '(("dir" default-directory (".*") dir)))
+  (setq *moccur-buffer-name-exclusion-list*
+        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
+          ".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
+          "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
+          "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
+          "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
+  (setq dmoccur-exclusion-mask
+        '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
+          "\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
+          "\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
+          "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
+          "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
+          "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
+          "\\.pch$" "\\.pdb$" "\\.res$")))
+
 ;;; NXML MODE
 
+(use-package nexus
+  :defer t)
 (require 'nexus-extensions)
+
 (add-hook 'nxml-mode-hook
           (lambda ()
             (local-set-key [f9]  'nexus-insert-gav-for-keyword)))
 
 
 ;;; ORG MODE
-(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+(use-package org
+  :defer t
+  :mode "\\.org'"
+  :init
+  (setq org-clock-persist t
+        org-clock-in-resume t
+        ;; org-disputed-keys has to be set before org is loaded
+        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
+                            ([(control shift left)]  . [(meta shift -)]))
+        org-replace-disputed-keys t)
+  )
+(use-package org-jira
+  :defer t)
+(use-package ox-mediawiki
+  :defer t)
+
 (defun jm-org-get-priority-from-headline
   (headline)
   "Get the priority from an org headline using a tag format - #A
@@ -1007,15 +884,7 @@ not inherit)."
      ((string< pa pb) -1)
      (t nil))))
 
-(require 'org-clock)
-
 (org-clock-persistence-insinuate)
-(setq org-clock-persist t
-      org-clock-in-resume t
-      ;; org-disputed-keys has to be set before org is loaded
-      org-disputed-keys '(([(control shift right)] . [(meta shift +)])
-                          ([(control shift left)]  . [(meta shift -)]))
-      org-replace-disputed-keys t)
 
 (with-eval-after-load 'org
   (require 'org-agenda)
@@ -1032,7 +901,6 @@ not inherit)."
    org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
    org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
    org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html")))
-   org-agenda-files "~/.org_agenda_files"
    org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
                                        (todo user-defined-up)
                                        (tags category-keep priority-down)
@@ -1099,6 +967,8 @@ not inherit)."
     (set-face-foreground 'org-hide (face-background 'default))
     (setq fill-column 90)))
 
+(use-package p4)
+
 ;;; (C)PERL MODE
 (defalias 'perl-mode 'cperl-mode)
 (add-to-list 'auto-mode-alist '("\\.\\([pP][Llm]\\|al\\|t\\)\\'" . cperl-mode))
@@ -1113,10 +983,42 @@ not inherit)."
              (local-set-key [mouse-3] `imenu)
              (hs-minor-mode)))
 
+(use-package point-undo)
+
+(use-package projectile)
+
+;;; PRETTY COLUMN
+(setq pcol-str-separator " "
+      pcol-column-separator "[ \t]+")
+
+;;; PRINTING
+(setq
+ ps-bottom-margin       36
+ ps-top-margin          36
+ ps-right-margin        36
+ ps-left-margin         36
+ ps-header-offset       36
+ ps-inter-column        18
+ ps-n-up-margin         18
+ ps-landscape-mode     nil
+ ps-line-number          t
+ ps-n-up-printing        1
+ ps-number-of-columns    1
+ ps-print-color-p       t)
+
+;;; PROJECTILE
+;; (use-package projectile
+;; 	     :disabled t)
+
 ;;; PYTHON MODE
+(use-package elpy
+  :defer t)
 (defconst python-ide-package
   'elpy
   "Python IDE package to use")
+
+(use-package jedi
+  :defer t)
 
 ;;; elpy recommended packages
 ;; echo n | enpkg install jedi flake8 nose
@@ -1140,105 +1042,6 @@ not inherit)."
                 (elpy-use-ipython))))
   ('ein))  ;; Nothing for ein yet
 
-;; http://www.emacswiki.org/emacs/CompanyMode
-(defun check-expansion ()
-  (save-excursion
-    (if (looking-at "\\_>") t
-      (backward-char 1)
-      (if (looking-at "\\.") t
-        (backward-char 1)
-        (if (looking-at "->") t nil)))))
-
-(defun do-yas-expand ()
-  (let ((yas/fallback-behavior 'return-nil))
-    (yas/expand)))
-
-(defun tab-indent-or-complete ()
-  (interactive)
-  (if (minibufferp)
-      (minibuffer-complete)
-    (if (or (not yas/minor-mode)
-            (null (do-yas-expand)))
-        (if (check-expansion)
-            (company-complete-common)
-          (indent-for-tab-command)))))
-
-(defun dir-has-venv (dir)
-  "Returns if DIR contains a python virtual environment"
-  (or (file-exists-p (format "%s/bin/activate" dir))
-      (file-exists-p (format "%s/Scripts/activate.bat" dir))))
-
-(defun directory-files-children (dir &optional full)
-  "Returns the child directories of DIR, excluding special
-directories . and ... FULL is passed to `directory-files'"
-  (directory-files dir full directory-files-no-dot-files-regexp))
-
-(defun child-venvs (dir)
-  "Return a list of children of DIR that are python virtual
-  environments, formatted as directories, or nil if there are no
-  such directories."
-  (mapcar
-   'file-name-as-directory
-   (remove-if-not 'dir-has-venv
-                  (directory-files-children dir t))))
-
-(defun venv-for (file)
-  "Returns the venv to use for FILE, defined as the first venv in
-the nearest ancestor directory of FILE that contains a venv, or
-nil if there is no such ancestor."
-  (let ((parent-of-venv (locate-dominating-file
-                         (file-name-directory file)
-                         'child-venvs)))
-    (when parent-of-venv
-      (car (child-venvs parent-of-venv)))))
-
-(defun activate-venv-if-python ()
-  "For a `python-mode' buffer with an associated file, activates
-the virtual environment for the file defined by `venv-for'"
-  (when (equal major-mode 'python-mode)
-    (when buffer-file-name
-      (let ((venv (venv-for buffer-file-name)))
-        (when venv
-          (setq-local pyvenv-activate venv)
-          (pyvenv-track-virtualenv))))))
-
-(defun pyvenv-virtualenv-list-with-second-level (&optional noerror)
-  "If NOERROR is set, do not raise an error if WORKON_HOME is not
-configured."
-  (let ((workon (pyvenv-workon-home))
-        (result nil))
-    (if (not (file-directory-p workon))
-        (when (not noerror)
-          (error "Can't find a workon home directory, set $WORKON_HOME"))
-      (dolist (child (directory-files-children workon))
-        (when (dir-has-venv (format "%s/%s" workon child))
-          (setq result (cons child result)))
-        (let ((workon-child (format "%s/%s" workon child)))
-          (dolist (grandchild (directory-files-children workon-child))
-            (when (dir-has-venv (format "%s/%s" workon-child grandchild))
-              (setq result (cons (format "%s/%s" child grandchild)
-                                 result))))))
-      (sort result (lambda (a b)
-                     (string-lessp (downcase a)
-                                   (downcase b)))))))
-
-(defun pyvenv-use-venv ()
-  "Basically my version of pyvenv workon, but taking venvs from
-up to two directories down."
-  (interactive)
-  (cl-letf (((symbol-function 'pyvenv-virtualenv-list)
-             'pyvenv-virtualenv-list-with-second-level))
-    (call-interactively 'pyvenv-workon))
-  (elpy-rpc-restart))
-
-;; https://github.com/jorgenschaefer/elpy/issues/690
-(defun my-python-shell-get-process-name (orig-fun &rest args)
-  "If `pyvenv-virtual-env-name' is set then return a buffer name
-based on this and `python-shell-buffer-name', otherwise call
-`python-shell-get-process-name'"
-  (if pyvenv-virtual-env-name
-      (format "%s[%s]" python-shell-buffer-name pyvenv-virtual-env-name)
-    (apply orig-fun args)))
 (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
 
 (add-hook 'python-mode-hook
@@ -1251,12 +1054,24 @@ based on this and `python-shell-buffer-name', otherwise call
 
 (add-hook 'post-command-hook 'activate-venv-if-python)
 
+(use-package scroll-in-place
+  :ensure nil)
+
 ;;; SERVER MINOR MODE
-(add-hook 'server-visit-hook
-          (lambda ()
-            (local-set-key "\C-z" 'server-edit)))
+(use-package server
+  :config
+  (add-hook 'server-visit-hook
+            (lambda ()
+              (local-set-key "\C-z" 'server-edit))))
+
+;;; SHELL-TOGGLE
+;; shell-toggle tries to use term by default but this doesn't work on windows
+(when system-win32-p
+  (setq shell-toggle-launch-shell 'shell))
 
 ;;; SHELL-MODE
+(use-package shell-toggle)
+
 (add-hook 'shell-mode-hook
 	  '(lambda ()
              (local-set-key [home]
@@ -1274,30 +1089,46 @@ based on this and `python-shell-buffer-name', otherwise call
                                    (comint-next-input 1)
                                  (forward-line 1))))))
 
+(use-package smartparens)
+
 ;;; SPEEDBAR MODE
-(add-hook 'speedbar-mode-hook
-	  (lambda ()
-	    (speedbar-add-supported-extension ".org")
-	    (auto-raise-mode 1)))
+(use-package speedbar
+  :config
+  (add-hook 'speedbar-mode-hook
+            (lambda ()
+              (speedbar-add-supported-extension ".org")
+              (auto-raise-mode 1))))
 
 ;;; TEXT MODE
 (add-hook 'text-mode-hook
 	  (function (lambda ()
 		      (local-set-key [(shift return)] 'newline-and-indent))))
-(autoload 'longlines-mode "longlines" "Minor mode for editing long lines." t)
 
 ;;; TRAMP
 (when system-win32-p
   (setq tramp-default-method "plink"))
 
+(use-package undo-tree)
+
 ;;; WIKIPEDIA MODE
-(autoload 'wikipedia-mode "wikipedia-mode"
-  "Major mode for editing documents in Wikipedia markup." t)
-(add-to-list 'auto-mode-alist '("\\.wiki$" . wikipedia-mode))
+(use-package wikipedia-mode
+  :ensure nil
+  :mode "\\.wiki\\'")
+
+(use-package woman
+  :defer t
+  :config
+  (defun my-woman-mode-hook ()
+    (when system-win32-p
+      (if (getenv "MANPATH")
+          (setq woman-manpath
+                (woman-parse-colon-path
+                 (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
+  (add-hook 'woman-mode-hook 'my-woman-mode-hook))
+
+(use-package yaml-mode)
 
 ;;; YASNIPPET MINOR MODE
-
-;; yas is stupidly verbose by default
 (setq yas-verbosity 1)
 
 ;;;
