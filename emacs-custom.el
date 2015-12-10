@@ -35,7 +35,7 @@
  '(elpy-test-runner (quote elpy-test-nose-runner))
  '(enable-local-eval t)
  '(ff-quiet-mode t)
- '(find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
+ '(find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")) t)
  '(globalff-regexp-search t)
  '(graphviz-dot-dot-program "dotforme")
  '(haskell-process-use-presentation-mode t)
@@ -63,6 +63,20 @@
  '(next-line-add-newlines nil)
  '(org-agenda-files (quote ("~/org")))
  '(org-agenda-start-with-clockreport-mode nil)
+ '(org-capture-templates
+   (quote
+    (("t" "Task" entry
+      (file+headline "" "Tasks")
+      "* TODO %?\n  %u\n  %a")
+     ("o" "Outlook messages to convert to task" entry
+      (file "~/org/misc.org")
+      "* TODO %^{task}
+%a
+:  From:    %:sender
+:  Subject: %:title
+
+%?
+  -----------" :jump-to-captured t :empty-lines-before 1))))
  '(org-checkbox-hierarchical-statistics nil)
  '(org-confirm-babel-evaluate nil)
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))

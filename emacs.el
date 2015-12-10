@@ -887,12 +887,14 @@ not inherit)."
 (org-clock-persistence-insinuate)
 
 (with-eval-after-load 'org
+  (require 'cdlatex)
   (require 'org-agenda)
   (require 'org-id)
+  (require 'org-jira)
+  (require 'org-outlook)
   (require 'org-wp-link)
-  (require 'texmathp)
-  (require 'cdlatex)
   (require 'ox)
+  (require 'texmathp)
   
   (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
   
