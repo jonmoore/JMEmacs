@@ -74,6 +74,53 @@ Special commands:
 
 ;;;***
 
+;;;### (autoloads nil "moccur-wrappers" "moccur-wrappers.el" (22121
+;;;;;;  36491 0 0))
+;;; Generated autoloads from moccur-wrappers.el
+
+(autoload 'qap-locate-windows "moccur-wrappers" "\
+
+
+\(fn TERMS)" t nil)
+
+(autoload 'qap-locate-windows-code-like-and-moccur "moccur-wrappers" "\
+Does an moccur regexp search among files with names like the
+provided term according to Windows search
+
+\(fn TEXTMATCH)" t nil)
+
+(autoload 'qap-locate-windows-code-contains-and-moccur "moccur-wrappers" "\
+Does an moccur regexp search among files containign the
+provided term according to Windows search
+
+\(fn TEXTMATCH)" t nil)
+
+(autoload 'qap-p4-grep-list-dirs "moccur-wrappers" "\
+Show a list of directories that would be searched by
+qap-p4-moccur-grep
+
+\(fn)" t nil)
+
+(autoload 'qap-p4-grep-moccur "moccur-wrappers" "\
+Perform a p4 grep of the current directory and all
+descendants, honouring the qap-p4-dirs-to-split and
+qap-p4-dirs-to-exclude lists. You can check the results of the
+split and exclude lists by using M-x qap-p4-grep-list-dirs.
+
+\(fn REGEX)" t nil)
+
+(autoload 'qap-p4-grep-count-matches "moccur-wrappers" "\
+Count matches for regex
+
+\(fn REGEX)" t nil)
+
+(autoload 'moccur-wrappers-test "moccur-wrappers" "\
+
+
+\(fn REGEX)" t nil)
+
+;;;***
+
 ;;;### (autoloads nil "once-only-header" "once-only-header.el" (22054
 ;;;;;;  50227 0 0))
 ;;; Generated autoloads from once-only-header.el
@@ -862,9 +909,9 @@ wikipedia-draft-data-file.
 ;;;***
 
 ;;;### (autoloads nil nil ("dired-column-widths.el" "ediff-trees.el"
-;;;;;;  "moccur-edit.el" "moccur-wrappers.el" "nexus-extensions.el"
-;;;;;;  "org-planning.el" "org-wp-link.el" "sumatra-forward.el" "tempo-c-cpp.el")
-;;;;;;  (22119 43661 78000 0))
+;;;;;;  "moccur-edit.el" "nexus-extensions.el" "org-planning.el"
+;;;;;;  "org-wp-link.el" "sumatra-forward.el" "tempo-c-cpp.el") (22123
+;;;;;;  34602 944000 0))
 
 ;;;***
 

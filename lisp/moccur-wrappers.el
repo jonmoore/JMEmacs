@@ -62,6 +62,7 @@ as a parameter.  Prints a list of matching paths to stdout."
         sql-where
       (call-interactively sql-where))))
 
+;;;###autoload
 (defun qap-locate-windows (terms)
   (interactive)
   (let* ((sql-select (mapconcat 'identity 
@@ -77,6 +78,7 @@ as a parameter.  Prints a list of matching paths to stdout."
      (shell-command-to-string 
       (concat qap-locate-windows-search-command " " arglist)))))
 
+;;;###autoload
 (defun qap-locate-windows-code-like-and-moccur (textMatch)
   "Does an moccur regexp search among files with names like the
 provided term according to Windows search"
@@ -90,6 +92,7 @@ provided term according to Windows search"
        'qap-locate-term-code-search
        'qap-locate-term-itemname-like)))))
 
+;;;###autoload
 (defun qap-locate-windows-code-contains-and-moccur (textMatch)
   "Does an moccur regexp search among files containign the
 provided term according to Windows search"
@@ -273,6 +276,7 @@ convert the results to a list of local paths"
 			results))
 		    dirs))))
   
+;;;###autoload
 (defun qap-p4-grep-list-dirs ()
   "Show a list of directories that would be searched by
 qap-p4-moccur-grep"
@@ -282,6 +286,7 @@ qap-p4-moccur-grep"
 			      (qap-p4-get-dirs-for-grep (qap-get-current-depot-folder)) 
 			      "\n"))))
 
+;;;###autoload
 (defun qap-p4-grep-moccur (regex)
   "Perform a p4 grep of the current directory and all
 descendants, honouring the qap-p4-dirs-to-split and
@@ -292,11 +297,13 @@ split and exclude lists by using M-x qap-p4-grep-list-dirs."
                (lambda ()
                  (qap-p4-grep regex))))
 
+;;;###autoload
 (defun qap-p4-grep-count-matches (regex)
   "Count matches for regex"
   (interactive "sRegex: ")
   (message (format "%d matches" (length (qap-p4-grep regex)))))
 
+;;;###autoload
 (defun moccur-wrappers-test (regex)
   (interactive "sRegex: ")  
   (message (format "%S" (qap-p4-grep regex))))
