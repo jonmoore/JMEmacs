@@ -50,7 +50,8 @@
 
 (setq package-enable-at-startup nil)
 (setq package-archives
-      '(("org"   . "http://orgmode.org/elpa/")
+      '(
+        ("org"   . "http://orgmode.org/elpa/")
         ("melpa" . "http://melpa.milkbox.net/packages/")
         ("gnu"   . "http://elpa.gnu.org/packages/")))
 (package-initialize)
@@ -219,6 +220,7 @@
      TeX-command-default "latexmk"))))
 
 (use-package tex-site
+  :defer t
   :ensure auctex
   :config
   (jnm-config-auctex))
@@ -242,6 +244,7 @@
                                           (sumatra-jump-to-line)))))
 
 (use-package auctex-latexmk
+  :defer t
   :ensure auctex-latexmk
   :config
   (push
@@ -457,6 +460,9 @@ See `doxymacs-parm-tempo-element'."
     (dired-column-widths-cleanup)))
 (ad-activate 'find-dired-sentinel)
 
+(use-package discover-my-major
+  :defer t)
+
 ;;; EDIFF
 (setq ediff-custom-diff-options "-c -w"
       ediff-diff-options "-w")
@@ -464,9 +470,13 @@ See `doxymacs-parm-tempo-element'."
 (use-package ess
   :defer t)
 
-(use-package esup)
+(use-package esup
+  :defer t)
 
-(use-package expand-region)
+(use-package expand-region
+  :defer t)
+
+(use-package flycheck)
 
 ;;; FONT LOCK MODE
 (global-font-lock-mode t)
@@ -478,9 +488,9 @@ See `doxymacs-parm-tempo-element'."
       jit-lock-stealth-nice nil
       jit-lock-stealth-time 1)
 
-(use-package ghc)
-
-(setq ghc-debug t)
+(use-package ghc
+  :defer t
+  :config (setq ghc-debug t))
 
 ;;; GLOBAL AUTO REVERT MODE
 (defun looks-like-a-network-file (filename)
@@ -564,7 +574,12 @@ See `doxymacs-parm-tempo-element'."
   :config
   (helm-mode -1))
 
-(use-package hexrgb)
+;; for `describe-keymap'
+(use-package help-fns+
+  :defer t)
+
+(use-package hexrgb
+  :defer t)
 
 (defun weight-lists (froms tos weight)
   (mapcar* (lambda (from to)
@@ -573,6 +588,7 @@ See `doxymacs-parm-tempo-element'."
 
 (use-package highlight-sexps
   :ensure nil
+  :defer t
   :config
   (setq hl-sexp-background-colors
         (let* ((hsv-back (hexrgb-hex-to-hsv
@@ -745,6 +761,9 @@ See `doxymacs-parm-tempo-element'."
             (let ((map smartparens-strict-mode-map))
               (define-key map (kbd "M-q")                  'sp-indent-defun))))
 
+(use-package macrostep
+  :defer t)
+
 ;;; MAGIT
 
 (use-package magit
@@ -861,6 +880,8 @@ control-arrow keys"
   )
 (use-package org-jira
   :defer t)
+(use-package ob-ipython
+  :defer t)
 (use-package ox-mediawiki
   :defer t)
 
@@ -891,7 +912,8 @@ not inherit)."
   (require 'org-agenda)
   (require 'org-id)
   (require 'org-jira)
-  (require 'org-outlook)
+  (require 'pyvenv)
+  ;; (require 'org-outlook) ;; disable for now
   (require 'org-wp-link)
   (require 'ox)
   (require 'texmathp)
@@ -987,7 +1009,8 @@ not inherit)."
 
 (use-package point-undo)
 
-(use-package projectile)
+(use-package projectile
+  :defer t)
 
 ;;; PRETTY COLUMN
 (setq pcol-str-separator " "
@@ -1013,29 +1036,42 @@ not inherit)."
 ;; 	     :disabled t)
 
 ;;; PYTHON MODE
-(use-package elpy
+(use-package ein
   :defer t)
+
+(use-package elpy
+  :defer t
+  :init
+  (add-hook 'jedi-mode-hook
+            
+            'jedi-direx:setup))
+
 (defconst python-ide-package
   'elpy
   "Python IDE package to use")
 
 (use-package jedi
   :defer t)
+(use-package jedi-direx
+  :defer t)
+
+(use-package live-py-mode
+  :defer t)
 
 ;;; elpy recommended packages
-;; echo n | enpkg install jedi flake8 nose
-;; pip install importmagic autopep8
+;; echo n | enpkg install jedi flake8 nose pylint
+;; pip install importmagic autopep8 flake8-pep257
 (case python-ide-package
   ('elpy   (eval-after-load 'python
 	     '(progn
 		(elpy-enable)
-
+		(bind-key "\C-cx" 'jedi-direx:pop-to-buffer python-mode-map)
 		(setq
                  elpy-modules '(
                                 elpy-module-company
                                 elpy-module-eldoc
-                                elpy-module-flymake
-                               ;; elpy-module-highlight-indentation
+                                ;; elpy-module-flymake ;; use flycheck instead
+                                ;; elpy-module-highlight-indentation
                                 elpy-module-pyvenv
                                 elpy-module-sane-defaults
                                 elpy-module-yasnippet
@@ -1054,6 +1090,17 @@ not inherit)."
             (define-key python-mode-map "\C-c\C-yn" 'yas-new-snippet)
             (define-key python-mode-map "\C-c\C-yv" 'yas-visit-snippet-file)))
 
+;; The reason for post-command-hook instead of when openign a file is
+;; that some of the variables set are global.  May still want to have
+;; a hook that lets us set up jedi correctly.
+
+;; something like 
+(add-hook  'jedi-mode-hook
+           (lambda ()
+             (setq-local jedi:environment-root pyvenv-virtual-env)
+             (activate-venv-if-python)
+             (jedi:install-server)
+             (jedi-direx:setup)))
 (add-hook 'post-command-hook 'activate-venv-if-python)
 
 (use-package scroll-in-place
@@ -1072,7 +1119,8 @@ not inherit)."
   (setq shell-toggle-launch-shell 'shell))
 
 ;;; SHELL-MODE
-(use-package shell-toggle)
+(use-package shell-toggle
+  :defer t)
 
 (add-hook 'shell-mode-hook
 	  '(lambda ()
@@ -1095,6 +1143,7 @@ not inherit)."
 
 ;;; SPEEDBAR MODE
 (use-package speedbar
+  :defer t
   :config
   (add-hook 'speedbar-mode-hook
             (lambda ()
@@ -1115,6 +1164,7 @@ not inherit)."
 ;;; WIKIPEDIA MODE
 (use-package wikipedia-mode
   :ensure nil
+  :defer t
   :mode "\\.wiki\\'")
 
 (use-package woman
@@ -1128,7 +1178,8 @@ not inherit)."
                  (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
   (add-hook 'woman-mode-hook 'my-woman-mode-hook))
 
-(use-package yaml-mode)
+(use-package yaml-mode
+    :defer t)
 
 ;;; YASNIPPET MINOR MODE
 (setq yas-verbosity 1)

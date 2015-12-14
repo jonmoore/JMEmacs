@@ -4,7 +4,6 @@
 ;;;###autoload
 (defun recenter-bottom () (interactive) (recenter (quote -)))
 
-
 ;;; EDITING
 ;;;###autoload
 (defun insert-time ()   
@@ -20,31 +19,6 @@
   (interactive)
   (let ((case-fold-search isearch-case-fold-search))
     (joccur (if isearch-regexp isearch-string (regexp-quote isearch-string)))))
-
-;;;###autoload
-(defun pretty-print-keymap-recurse (kmap prefix)
-  "Engine for pretty-print-keymap"
-  (unless (keymapp kmap) (error "kmap is not a keymap"))
-  (mapconcat 
-   (lambda (x) 
-     (cond 
-      ((functionp (cdr x)) 
-       (concat prefix
-               (if (symbolp (car x)) (symbol-name (car x)) (char-to-string (car x)))
-               "\t"
-               (symbol-name (cdr x))))
-      ((eq (cadr x) 'keymap)  
-       (pretty-print-keymap-recurse
-        (cdr x)
-        (concat prefix (char-to-string (car x)) " " )))
-      (error "Unexpected element found while traversing keymap")))
-   (cdr kmap)
-   "\n"))
-
-;;;###autoload
-(defun pretty-print-keymap (kmap)
-  "Function for doing pretty printing on very simple keymaps.  Not at all general"
-  (pretty-print-keymap-recurse kmap ""))
 
 ;;; FORMATTING
 
@@ -297,8 +271,8 @@ If `dired-ps-print-buffer-with-faces' is non-nil, use
    (dired-get-marked-files nil arg)))
 ;;; SHELL
 
-                                        ; This probably needs revisions as it was taken straight from 
-                                        ; EmacsWiki
+;; This probably needs revisions as it was taken straight from 
+;; EmacsWiki
 
 
 ;;;###autoload
