@@ -912,6 +912,7 @@ not inherit)."
   (require 'org-agenda)
   (require 'org-id)
   (require 'org-jira)
+  (require 'pyvenv)
   ;; (require 'org-outlook) ;; disable for now
   (require 'org-wp-link)
   (require 'ox)
