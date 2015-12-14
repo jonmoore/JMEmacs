@@ -52,15 +52,25 @@ nil if there is no such ancestor."
       (car (child-venvs parent-of-venv)))))
 
 ;;;###autoload
+(defun activate-venv-if-buffer-file-name ()
+  "If the `buffer-file-name' is set, activate the virtual
+environment for it as defined by `venv-for'"
+  (when buffer-file-name
+    (let ((venv (venv-for buffer-file-name)))
+      (when venv
+        (setq-local pyvenv-activate venv)
+        (pyvenv-track-virtualenv)))))
+
+(defvar activate-venv-modes
+  '(python-mode org-mode)
+  "List of modes which `activate-venv-if-python' will try to set
+  the venv for")
+
+;;;###autoload
 (defun activate-venv-if-python ()
-  "For a `python-mode' buffer with an associated file, activates
-the virtual environment for the file defined by `venv-for'"
-  (when (equal major-mode 'python-mode)
-    (when buffer-file-name
-      (let ((venv (venv-for buffer-file-name)))
-        (when venv
-          (setq-local pyvenv-activate venv)
-          (pyvenv-track-virtualenv))))))
+  "Activate a Python venv if appropriate."
+  (when (memq major-mode activate-venv-modes)
+    (activate-venv-if-buffer-file-name)))
 
 ;;;###autoload
 (defun pyvenv-virtualenv-list-with-second-level (&optional noerror)
