@@ -574,6 +574,10 @@ See `doxymacs-parm-tempo-element'."
   :config
   (helm-mode -1))
 
+;; for `describe-keymap'
+(use-package help-fns+
+  :defer t)
+
 (use-package hexrgb
   :defer t)
 
