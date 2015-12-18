@@ -576,7 +576,8 @@ See `doxymacs-parm-tempo-element'."
 
 ;; for `describe-keymap'
 (use-package help-fns+
-  :defer t)
+  ;;:defer nil
+  )
 
 (use-package hexrgb
   :defer t)
@@ -1103,6 +1104,12 @@ not inherit)."
              (jedi-direx:setup)))
 (add-hook 'post-command-hook 'activate-venv-if-python)
 
+(use-package restclient
+  :disabled t)
+
+(use-package company-restclient
+  :disabled t)
+
 (use-package scroll-in-place
   :ensure nil)
 
@@ -1149,6 +1156,9 @@ not inherit)."
             (lambda ()
               (speedbar-add-supported-extension ".org")
               (auto-raise-mode 1))))
+
+(use-package sr-speedbar
+  :defer t)
 
 ;;; TEXT MODE
 (add-hook 'text-mode-hook

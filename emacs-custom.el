@@ -67,7 +67,9 @@
    (quote
     (("t" "Task" entry
       (file+headline "" "Tasks")
-      "* TODO %?\n  %u\n  %a")
+      "* TODO %?
+  %u
+  %a")
      ("o" "Outlook messages to convert to task" entry
       (file "~/org/misc.org")
       "* TODO %^{task}
@@ -94,11 +96,13 @@
  '(ropemacs-enable-autoimport t)
  '(ropemacs-enable-shortcuts nil)
  '(ropemacs-global-prefix nil)
+ '(safe-local-variable-values (quote ((activate-venv-disabled . t))))
  '(save-abbrevs nil)
  '(set-mark-command-repeat-pop t)
  '(sgml-basic-offset 8)
  '(show-paren-style (quote expression))
  '(show-trailing-whitespace nil)
+ '(speedbar-vc-do-check nil)
  '(transient-mark-mode t)
  '(truncate-partial-width-windows nil)
  '(vc-annotate-display-mode (quote fullscale))

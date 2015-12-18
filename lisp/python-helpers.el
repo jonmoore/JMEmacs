@@ -52,7 +52,7 @@ nil if there is no such ancestor."
       (car (child-venvs parent-of-venv)))))
 
 ;;;###autoload
-(defun activate-venv-if-buffer-file-name ()
+(defun activate-venv-if-visiting-file ()
   "If the `buffer-file-name' is set, activate the virtual
 environment for it as defined by `venv-for'"
   (when buffer-file-name
@@ -66,11 +66,18 @@ environment for it as defined by `venv-for'"
   "List of modes which `activate-venv-if-python' will try to set
   the venv for")
 
+(defvar activate-venv-disabled
+  nil
+  "Set to disable activating venvs automatically.  Most useful to
+set as a file or directory variable to prevent scanning files
+on shared drives.")
+
 ;;;###autoload
 (defun activate-venv-if-python ()
   "Activate a Python venv if appropriate."
-  (when (memq major-mode activate-venv-modes)
-    (activate-venv-if-buffer-file-name)))
+  (when (and (memq major-mode activate-venv-modes)
+             (not (bound-and-true-p activate-venv-disabled)))
+    (activate-venv-if-visiting-file)))
 
 ;;;###autoload
 (defun pyvenv-virtualenv-list-with-second-level (&optional noerror)
