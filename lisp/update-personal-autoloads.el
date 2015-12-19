@@ -12,9 +12,9 @@
 (require 'autoload)
 (require 'cl)
 
-(defun should-update-directory-autoloads (dir)
+(defun has-files-newer-than-autoload (dir autoload-file)
   (find-if (lambda (file)
-             (file-newer-than-file-p file generated-autoload-file))
+             (file-newer-than-file-p file autoload-file))
            (directory-files dir t directory-files-no-dot-files-regexp)))
 
 ;;;###autoload
@@ -27,16 +27,19 @@ is defined.  The autoloads are saved to this directory."
                (file-name-directory
                 (symbol-file 'update-personal-autoloads 'defun)))))
                                         ;ironic, i know
-    (let ((generated-autoload-file (concat base "personal-autoloads.el")))
-      (when (not (file-exists-p generated-autoload-file))
-        (with-current-buffer (find-file-noselect generated-autoload-file)
-          (insert ";;") ;; create the file with non-zero size to appease autoload
-          (save-buffer)))
+    (let* ((generated-autoload-file (concat base "personal-autoloads.el"))
+           (autoloads-was-empty
+            (when (not (file-exists-p generated-autoload-file))
+              (with-current-buffer (find-file-noselect generated-autoload-file)
+                (insert ";;") ;; create the file with non-zero size to appease autoload
+                (save-buffer)
+                t))))
       (cd base)
       (if file
           (update-file-autoloads file)
         (when (or force
-                  (should-update-directory-autoloads base))
+                  autoloads-was-empty
+                  (has-files-newer-than-autoload base generated-autoload-file))
           (update-directory-autoloads base))))))
 
 (provide 'update-personal-autoloads)
