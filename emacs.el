@@ -877,7 +877,8 @@ control-arrow keys"
         ;; org-disputed-keys has to be set before org is loaded
         org-disputed-keys '(([(control shift right)] . [(meta shift +)])
                             ([(control shift left)]  . [(meta shift -)]))
-        org-replace-disputed-keys t)
+        org-replace-disputed-keys t
+        org-list-allow-alphabetical t)
   )
 (use-package org-jira
   :defer t)
