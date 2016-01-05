@@ -902,7 +902,7 @@ not inherit)."
   :init
   (setq org-clock-persist t
         org-clock-in-resume t
-        ;; org-disputed-keys has to be set before org is loaded
+        org-list-allow-alphabetical t
         org-disputed-keys '(([(control shift right)] . [(meta shift +)])
                             ([(control shift left)]  . [(meta shift -)]))
         org-replace-disputed-keys t)
