@@ -17,29 +17,30 @@
              (file-newer-than-file-p file autoload-file))
            (directory-files dir t directory-files-no-dot-files-regexp)))
 
+(defun update-personal-autoloads-ex (base generated-autoload-file)
+  "Update autoloads for all files in directory BASE, saving the
+  autoloads to GENERATED-AUTOLOAD-FILE"
+  (let ((autoloads-was-empty (not (file-exists-p generated-autoload-file))))
+    (cd base)
+    (when autoloads-was-empty
+      ;; create the file with non-zero size to appease autoload
+      (with-current-buffer (find-file-noselect generated-autoload-file)
+        (insert ";;") 
+        (save-buffer)))
+    (when (or autoloads-was-empty
+              (has-files-newer-than-autoload base generated-autoload-file))
+      (update-directory-autoloads base))))
+
 ;;;###autoload
-(defun update-personal-autoloads (&optional file force)
-  "Update personal autoloads for FILE. If FILE is nil, update
-autoloads for all files in the directory in which this function
-is defined.  The autoloads are saved to this directory."
-  (interactive "f")
+(defun update-personal-autoloads ()
+  "Update personal autoloads for all files in the directory in
+which this function is defined.  The autoloads are saved to this
+directory."
   (let ((base (file-truename
                (file-name-directory
                 (symbol-file 'update-personal-autoloads 'defun)))))
-                                        ;ironic, i know
-    (let* ((generated-autoload-file (concat base "personal-autoloads.el"))
-           (autoloads-was-empty
-            (when (not (file-exists-p generated-autoload-file))
-              (with-current-buffer (find-file-noselect generated-autoload-file)
-                (insert ";;") ;; create the file with non-zero size to appease autoload
-                (save-buffer)
-                t))))
-      (cd base)
-      (if file
-          (update-file-autoloads file)
-        (when (or force
-                  autoloads-was-empty
-                  (has-files-newer-than-autoload base generated-autoload-file))
-          (update-directory-autoloads base))))))
+    (update-personal-autoloads-ex
+     base
+     (concat base "personal-autoloads.el"))))
 
 (provide 'update-personal-autoloads)
