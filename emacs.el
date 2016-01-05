@@ -868,17 +868,7 @@ control-arrow keys"
 
 
 ;;; ORG MODE
-(use-package org
-  :defer t
-  :mode "\\.org'"
-  :init
-  (setq org-clock-persist t
-        org-clock-in-resume t
-        ;; org-disputed-keys has to be set before org is loaded
-        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
-                            ([(control shift left)]  . [(meta shift -)]))
-        org-replace-disputed-keys t)
-  )
+
 (use-package org-jira
   :defer t)
 (use-package ob-ipython
@@ -906,21 +896,34 @@ not inherit)."
      ((string< pa pb) -1)
      (t nil))))
 
-(org-clock-persistence-insinuate)
-
-(with-eval-after-load 'org
+(use-package org
+  :defer t
+  :mode "\\.org'"
+  :init
+  (setq org-clock-persist t
+        org-clock-in-resume t
+        ;; org-disputed-keys has to be set before org is loaded
+        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
+                            ([(control shift left)]  . [(meta shift -)]))
+        org-replace-disputed-keys t)
+  :config
   (require 'cdlatex)
   (require 'org-agenda)
   (require 'org-id)
   (require 'org-jira)
   (require 'pyvenv)
+  (require 'ob-ipython)
   ;; (require 'org-outlook) ;; disable for now
   (require 'org-wp-link)
   (require 'ox)
   (require 'texmathp)
+  (org-clock-persistence-insinuate))
+
+(with-eval-after-load 'org
   
   (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
-  
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+
   (setq
 
    org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
