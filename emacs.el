@@ -259,7 +259,9 @@
 
 (use-package browse-kill-ring)
 
-(use-package cdlatex)
+(use-package cdlatex
+  :defer t)
+
 (use-package color-moccur)
 (use-package color-theme-modern)
 
@@ -880,10 +882,13 @@ control-arrow keys"
   (headline)
   "Get the priority from an org headline using a tag format - #A
 etc. Defaults to D.  We do this so to provide inherited
-pseudo-priorities, allowing sorting by these (normal org priorities do
-not inherit)."
-  (or (and (string-match "#\\([ABC]\\)" headline) (match-string 1 headline))
-      "D"))
+pseudo-priorities, allowing sorting by these (normal org
+priorities do not inherit)."
+  ((or  )r
+   (and
+    (string-match "#\\([ABC]\\)" headline)
+    (match-string 1 headline))
+   "D"))
 
 (defun jm-org-agenda-cmp-headline-priorities
     (a b)
@@ -896,33 +901,13 @@ not inherit)."
      ((string< pa pb) -1)
      (t nil))))
 
-(use-package org
-  :defer t
-  :mode "\\.org'"
-  :init
-  (setq org-clock-persist t
-        org-clock-in-resume t
-        org-list-allow-alphabetical t
-        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
-                            ([(control shift left)]  . [(meta shift -)]))
-        org-replace-disputed-keys t)
-  :config
-  (require 'cdlatex)
-  (require 'org-agenda)
-  (require 'org-id)
-  (require 'org-jira)
-  (require 'pyvenv)
-  (require 'ob-ipython)
-  ;; (require 'org-outlook) ;; disable for now
-  (require 'org-wp-link)
-  (require 'ox)
-  (require 'texmathp)
-  (org-clock-persistence-insinuate))
+(defun my-org-config ()
+  "Configure org-mode for me, after it has been loaded.  For use
+by `:config' in `use-package'"
 
-(with-eval-after-load 'org
-  
   (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+
 
   (setq
 
@@ -935,7 +920,7 @@ not inherit)."
                                        (search category-keep)))
    org-agenda-start-with-clockreport-mode nil
    org-agenda-todo-keyword-format "%-4s"
-
+   
    org-clock-history-length 10
    org-clock-in-resume t
    org-clock-persist t
@@ -979,14 +964,44 @@ not inherit)."
                              (isearch t)))
    org-tags-column -80
    org-toc-default-depth 3
-   org-use-speed-commands t)
+   org-use-speed-commands t))
+
+(use-package org
+  :defer t
+  :mode "\\.org'"
+
+  :init
+  (setq org-clock-persist t
+        org-clock-in-resume t
+        org-list-allow-alphabetical t
+        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
+                            ([(control shift left)]  . [(meta shift -)]))
+        org-replace-disputed-keys t)
+
+  (bind-keys
+   :map org-mode-map
+   ([C-tab]       . (lambda () (interactive) (org-cycle t)))
+   ([?\M-?]       . org-complete)
+   ([(shift tab)] . org-show-contents-or-move-to-previous-table-field)
+   ([C-S-down]    . outline-next-visible-heading)
+   ([C-S-up]      . outline-previous-visible-heading)
+   ([?\C-c ? ]    . outline-mark-subtree))
   
-  (define-key org-mode-map [C-tab]       (function (lambda () (interactive) (org-cycle t))))
-  (define-key org-mode-map [?\M-?]       'org-complete)
-  (define-key org-mode-map [(shift tab)] 'org-show-contents-or-move-to-previous-table-field)
-  (define-key org-mode-map [C-S-down]    'outline-next-visible-heading)
-  (define-key org-mode-map [C-S-up]      'outline-previous-visible-heading)
-  (define-key org-mode-map [?\C-c ? ]    'outline-mark-subtree))
+  :config
+  (require 'texmathp)
+
+  (require 'org-agenda)
+  (require 'org-id)
+  
+  (require 'ox)
+  (require 'pyvenv)
+  (require 'org-wp-link)
+  (require 'ob-ipython)
+  (require 'org-jira)
+  ;; (require 'org-outlook) ;; disable for now
+
+  (org-clock-persistence-insinuate)
+  (my-org-config))
 
 (add-hook
  'org-mode-hook
@@ -1149,7 +1164,12 @@ not inherit)."
                                    (comint-next-input 1)
                                  (forward-line 1))))))
 
+;; Beware: Windows intercepts Ctrl-shift-0 / C-), bound to
+;; sp-forward-slurp-sexp. See
+;; https://support.microsoft.com/en-us/kb/967893 for how to fix this.
+;; May reoccur.
 (use-package smartparens)
+
 
 ;;; SPEEDBAR MODE
 (use-package speedbar
