@@ -280,7 +280,7 @@
 (use-package cc-mode
   :defer t
   :mode
-  ("\\.c\\'" "\\.h\\'" "\\.cpp\\'" "\\.hpp\\'" "\\.cxx\\'" "\\.hxx\\'"))
+  ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode))
 
 ;; Customizations for all modes in CC Mode.
 (defconst visual-studio-c-style
@@ -320,7 +320,6 @@
                             ("\\.h\\'"     (".cpp" ".c"))
                             ("\\.hpp\\'"   (".cpp"))
                             ("\\.c\\'"     (".h"))))
-
 
 (defun jnm-doxymacs-parm-tempo-element (parms)
   "Inserts tempo elements like JavaDoc but without asterisks.
@@ -394,6 +393,7 @@ See `doxymacs-parm-tempo-element'."
                  (lambda ()
                    (not (eq (get-text-property (point) 'face)
                             'font-lock-comment-face))))))
+
 (add-hook 'font-lock-mode-hook ;; Fontify doxygen keywords
           (function (lambda ()
                       (when (or (eq major-mode 'c-mode)
@@ -878,24 +878,71 @@ control-arrow keys"
 (use-package ox-mediawiki
   :defer t)
 
-(defun jm-org-get-priority-from-headline
-  (headline)
-  "Get the priority from an org headline using a tag format - #A
-etc. Defaults to D.  We do this so to provide inherited
-pseudo-priorities, allowing sorting by these (normal org
-priorities do not inherit)."
-  ((or  )r
-   (and
-    (string-match "#\\([ABC]\\)" headline)
-    (match-string 1 headline))
-   "D"))
+(defvar jira-priority-alist
+  '(("Blocker"  . ?A)
+    ("Critical" . ?A)
+    ("Major"    . ?B)
+    ("Minor"    . ?C))
+  "An alist mapping Jira priorities to single characters.")
+
+(defun in-a-jira-buffer ()
+  "Return if the current buffer is a Jira one, created with
+`org-jira-get-issues'."
+  (when (string-match "jira" buffer-file-name)
+    t))
+
+(defun headline-is-for-jira (headline)
+  "Return if HEADLINE is for a buffer created by
+`org-jira-get-issues'."
+  (org-with-point-at
+      (get-text-property 1 'org-hd-marker headline)
+    (in-a-jira-buffer)))
+
+(defun jira-priority-from-jira-headline (headline)
+  "Return the Jira priority for HEADLINE, as a string, as
+reported by Jira, e.g. \"Major\".  This is needed because of the
+conflict between the use of \"priority\" for `org-mode'
+properties and Jira properties."
+  (org-with-point-at
+      (get-text-property 1 'org-hd-marker headline)
+    (let ((org-special-properties nil))
+      (cdr (assoc "PRIORITY" (org-entry-properties nil "priority"))))))
+
+(defun priority-from-jira-headline (headline)
+  "Get the priority from an org headline from an `org-mode' file
+created with `org-jira-get-issues'."
+  (let* ((jira-priority (jira-priority-from-jira-headline headline))
+         (priority (cdr (assoc jira-priority jira-priority-alist))))
+    (string (or priority
+                org-default-priority))))
+
+(defun priority-from-normal-headline-tags (headline)
+  "Get the priority from the org headline HEADLINE using org tags
+- #A etc. Defaults to `org-default-priority', converted to a
+string.  We use tags as pseudo-priorities to allow for priority
+inheritance, which I want."
+  (or 
+   (and (string-match "#\\([ABC]\\)" headline)
+        (match-string 1 headline))
+   (string org-default-priority)))
+
+(defun jm-priority-from-headline (headline)
+  "Return the priority from an org `agenda-mode' headline
+HEADLINE as a string, e.g. \"A\", calling either
+`priority-from-normal-headline-tags' or `priority-from-jira-headline'
+according to `headline-is-for-jira'."
+  (cond
+   ((headline-is-for-jira headline)
+    (priority-from-jira-headline headline))
+   (t
+    (priority-from-normal-headline-tags headline))))
 
 (defun jm-org-agenda-cmp-headline-priorities
     (a b)
   "Compare the priorities in two org headlines using
-`jm-org-get-priority-from-headline'"
-  (let* ((pa (jm-org-get-priority-from-headline  a))
-         (pb (jm-org-get-priority-from-headline  b)))
+`jm-priority-from-headline'"
+  (let* ((pa (jm-priority-from-headline a))
+         (pb (jm-priority-from-headline b)))
     (cond
      ((string> pa pb) 1)
      ((string< pa pb) -1)
@@ -986,7 +1033,7 @@ by `:config' in `use-package'"
    ([C-S-down]    . outline-next-visible-heading)
    ([C-S-up]      . outline-previous-visible-heading)
    ([?\C-c ? ]    . outline-mark-subtree))
-  
+  t
   :config
   (require 'texmathp)
 

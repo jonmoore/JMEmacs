@@ -81,6 +81,7 @@
   -----------" :jump-to-captured t :empty-lines-before 1))))
  '(org-checkbox-hierarchical-statistics nil)
  '(org-confirm-babel-evaluate nil)
+ '(org-default-priority 68)
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
  '(org-enforce-todo-checkbox-dependencies nil)
  '(org-hierarchical-todo-statistics nil)
