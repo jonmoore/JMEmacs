@@ -877,6 +877,8 @@ control-arrow keys"
   :defer t)
 (use-package ox-mediawiki
   :defer t)
+(use-package org-plus-contrib
+  :defer t)
 
 (defun jm-org-get-priority-from-headline
   (headline)
@@ -978,6 +980,7 @@ by `:config' in `use-package'"
                             ([(control shift left)]  . [(meta shift -)]))
         org-replace-disputed-keys t)
 
+  :config
   (bind-keys
    :map org-mode-map
    ([C-tab]       . (lambda () (interactive) (org-cycle t)))
