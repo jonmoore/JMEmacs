@@ -117,9 +117,9 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq require-final-newline t)
 
-
-(require 'ido)
-(ido-mode t)
+;; Try switching to helm
+;; (require 'ido)
+;; (ido-mode t)
 
 ;;; GLOBAL KEY SETTINGS
 (when system-osx-p
