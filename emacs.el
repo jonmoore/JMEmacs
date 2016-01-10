@@ -1267,7 +1267,13 @@ by `:config' in `use-package'"
 (when system-win32-p
   (setq tramp-default-method "plink"))
 
-(use-package undo-tree)
+(use-package undo-tree
+  :defer t
+  :ensure t
+  :diminish undo-tree-mode
+  :config
+  (progn
+    (global-undo-tree-mode)))
 
 ;;; WIKIPEDIA MODE
 (use-package wikipedia-mode
