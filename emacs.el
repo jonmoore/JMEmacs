@@ -51,7 +51,7 @@
 (setq package-enable-at-startup nil)
 (setq package-archives
       '(
-        ("org"   . "http://orgmode.org/elpa/")
+;;        ("org"   . "http://orgmode.org/elpa/")
         ("melpa" . "http://melpa.milkbox.net/packages/")
         ("gnu"   . "http://elpa.gnu.org/packages/")))
 (package-initialize)
@@ -102,10 +102,6 @@
 (setq frame-title-format  '(:eval (buffer-file-names-in-selected-frame))
       query-replace-highlight t
       search-highlight t)
-
-;; (set-face-attribute 'default nil
-;;                     :background "blue4"
-;;                     :foreground "white")
 
 (when system-win32-p
   (set-face-attribute 'default  nil :family "Consolas"    :height 120))
@@ -410,6 +406,11 @@ See `doxymacs-parm-tempo-element'."
 ;;; COMINT
 (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
 
+(use-package company
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook 'company-mode))
+
 (use-package company-auctex
     :defer t)
 (use-package company-ghc
@@ -492,7 +493,8 @@ See `doxymacs-parm-tempo-element'."
 
 (use-package ghc
   :defer t
-  :config (setq ghc-debug t))
+  :config
+  (setq ghc-debug t))
 
 ;;; GLOBAL AUTO REVERT MODE
 (defun looks-like-a-network-file (filename)
@@ -563,7 +565,6 @@ See `doxymacs-parm-tempo-element'."
   (require 'company)
   (require 'company-ghc))
 
-
 (add-hook 'haskell-mode-hook
           (lambda ()
             (turn-on-haskell-indentation)
@@ -571,6 +572,8 @@ See `doxymacs-parm-tempo-element'."
             (when (buffer-file-name)
               (ghc-init))))
 
+;; See http://emacs.stackexchange.com/questions/2867/how-should-i-change-my-workflow-when-moving-from-ido-to-helm
+;; for incremental switching
 (use-package helm
   :disabled t
   :config
@@ -1181,7 +1184,7 @@ by `:config' in `use-package'"
             (define-key python-mode-map "\C-c\C-yn" 'yas-new-snippet)
             (define-key python-mode-map "\C-c\C-yv" 'yas-visit-snippet-file)))
 
-;; The reason for post-command-hook instead of when openign a file is
+;; The reason for post-command-hook instead of when opening a file is
 ;; that some of the variables set are global.  May still want to have
 ;; a hook that lets us set up jedi correctly.
 
@@ -1307,7 +1310,8 @@ by `:config' in `use-package'"
 (desktop-save-mode 1)
 (savehist-mode 1)
 
-;; Try to suppress errors
+;; Try to suppress errors.  May not be needed now we are not using ido
+;; so much.
 (defun my-savehist-autosave (orig-fun &rest args)
   "Save the minibuffer history if it has been modified since the last save.
 Does nothing if Savehist mode is off."
