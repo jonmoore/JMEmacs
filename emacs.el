@@ -871,21 +871,41 @@ control-arrow keys"
 
 ;;; ORG MODE
 
-(use-package org-jira
-  :defer t)
 (use-package ob-ipython
   :defer t)
-(use-package ox-mediawiki
+(use-package org-jira
   :defer t)
 (use-package org-plus-contrib
   :defer t)
+(use-package org-ref
+  :defer t
+  :config
+  (when (bound-and-true-p bibliography-directory)
+    (setq reftex-default-bibliography (list (concat bibliography-directory "/jonmoore.bib")))
+    
+    (setq org-ref-bibliography-notes (concat bibliography-directory "/notes.org")
+          org-ref-default-bibliography reftex-default-bibliography
+          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
+          org-ref-insert-cite-key "C-c )")
+    
+    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
+    (setq helm-bibtex-library-path org-ref-pdf-directory)
+    (setq helm-bibtex-pdf-open-function 'org-open-file)
+    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
 
-(defvar jira-priority-alist
-  '(("Blocker"  . ?A)
-    ("Critical" . ?A)
-    ("Major"    . ?B)
-    ("Minor"    . ?C))
-  "An alist mapping Jira priorities to single characters.")
+(use-package ox-mediawiki
+  :defer t)
+
+(use-package ox-reveal
+  :defer t
+  :config
+  (setq org-reveal-root "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/"
+        org-reveal-hlevel 2))
+
+;; http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/moon.css
+
+(use-package kanban
+  :defer t)
 
 (defun in-a-jira-buffer ()
   "Return if the current buffer is a Jira one, created with
@@ -910,44 +930,47 @@ properties and Jira properties."
     (let ((org-special-properties nil))
       (cdr (assoc "PRIORITY" (org-entry-properties nil "priority"))))))
 
+(defvar jira-priority-alist
+  '(("Blocker"  . ?A)
+    ("Critical" . ?A)
+    ("Major"    . ?B)
+    ("Minor"    . ?C))
+  "Alist of Jira priorities vs `org-mode' single-characters
+  priorities.")
+
 (defun priority-from-jira-headline (headline)
   "Get the priority from an org headline from an `org-mode' file
 created with `org-jira-get-issues'."
-  (let* ((jira-priority (jira-priority-from-jira-headline headline))
-         (priority (cdr (assoc jira-priority jira-priority-alist))))
-    (string (or priority
-                org-default-priority))))
+  (let ((jira-priority (jira-priority-from-jira-headline headline)))
+    (or (cdr (assoc jira-priority jira-priority-alist))
+        org-default-priority)))
 
 (defun priority-from-normal-headline-tags (headline)
   "Get the priority from the org headline HEADLINE using org tags
 - #A etc. Defaults to `org-default-priority', converted to a
 string.  We use tags as pseudo-priorities to allow for priority
 inheritance, which I want."
-  (or 
-   (and (string-match "#\\([ABC]\\)" headline)
-        (match-string 1 headline))
-   (string org-default-priority)))
+  (if (string-match "#\\([ABC]\\)" headline)
+      (string-to-char (match-string 1 headline))
+    org-default-priority))
 
 (defun jm-priority-from-headline (headline)
   "Return the priority from an org `agenda-mode' headline
 HEADLINE as a string, e.g. \"A\", calling either
 `priority-from-normal-headline-tags' or `priority-from-jira-headline'
 according to `headline-is-for-jira'."
-  (cond
-   ((headline-is-for-jira headline)
-    (priority-from-jira-headline headline))
-   (t
-    (priority-from-normal-headline-tags headline))))
+  (if (headline-is-for-jira headline)
+      (priority-from-jira-headline headline)
+    (priority-from-normal-headline-tags headline)))
 
-(defun jm-org-agenda-cmp-headline-priorities
-    (a b)
+(defun jm-org-agenda-cmp-headline-priorities (a b)
   "Compare the priorities in two org headlines using
 `jm-priority-from-headline'"
   (let* ((pa (jm-priority-from-headline a))
          (pb (jm-priority-from-headline b)))
     (cond
-     ((string> pa pb) 1)
-     ((string< pa pb) -1)
+     ((> pa pb) 1)
+     ((< pa pb) -1)
      (t nil))))
 
 (defun my-org-config ()
@@ -956,7 +979,6 @@ by `:config' in `use-package'"
 
   (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-
 
   (setq
 
@@ -1008,7 +1030,6 @@ by `:config' in `use-package'"
    "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
    org-odd-levels-only t
    org-publish-use-timestamps-flag t
-   org-return-follows-link t
    org-show-siblings (quote ((default . t)
                              (isearch t)))
    org-tags-column -80
@@ -1036,8 +1057,7 @@ by `:config' in `use-package'"
    ([C-S-down]    . outline-next-visible-heading)
    ([C-S-up]      . outline-previous-visible-heading)
    ([?\C-c ? ]    . outline-mark-subtree))
-  t
-  :config
+
   (require 'texmathp)
 
   (require 'org-agenda)
@@ -1048,6 +1068,7 @@ by `:config' in `use-package'"
   (require 'org-wp-link)
   (require 'ob-ipython)
   (require 'org-jira)
+  (require 'org-ref)
   ;; (require 'org-outlook) ;; disable for now
 
   (org-clock-persistence-insinuate)

@@ -85,6 +85,7 @@
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
  '(org-enforce-todo-checkbox-dependencies nil)
  '(org-hierarchical-todo-statistics nil)
+ '(org-ref-show-citation-on-enter nil)
  '(org-reveal-root
    (quote https://cdn\.jsdelivr\.net/reveal\.js/3\.0\.0/js/reveal\.min\.js))
  '(perlnow-perl-module-template (concat emacs-root "/site-lisp/templates"))
