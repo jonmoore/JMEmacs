@@ -1064,6 +1064,7 @@ by `:config' in `use-package'"
   (require 'org-id)
   
   (require 'ox)
+  (require 'ox-reveal)
   (require 'pyvenv)
   (require 'org-wp-link)
   (require 'ob-ipython)
