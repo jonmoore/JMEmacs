@@ -39,6 +39,7 @@
  '(globalff-regexp-search t)
  '(graphviz-dot-dot-program "dotforme")
  '(haskell-process-use-presentation-mode t)
+ '(helm-ff-lynx-style-map nil nil nil "Disabling any helm keybinding is a sensible default")
  '(hide-ifdef-lines t)
  '(history-delete-duplicates t)
  '(history-length 100)

@@ -572,17 +572,77 @@ See `doxymacs-parm-tempo-element'."
             (when (buffer-file-name)
               (ghc-init))))
 
+
+(use-package helm-descbinds
+  :bind
+  ("C-h b" . helm-descbinds)
+  )
+
 ;; See http://emacs.stackexchange.com/questions/2867/how-should-i-change-my-workflow-when-moving-from-ido-to-helm
 ;; for incremental switching
 (use-package helm
-  :disabled t
+  :bind
+  ("C-x b"   .  helm-mini)
+  ("C-x C-b" .  helm-buffers-list)
+  ("C-c h"   .  helm-command-prefix)
+  ("C-x b"   .  helm-mini)
+
+  :init ;; can maybe make this use :bind
+
+  ;; Must be before loading helm-config (WTF) per
+  ;; http://tuhdo.github.io/helm-intro.html
+  (global-set-key (kbd "C-c h") 'helm-command-prefix)
+  (global-unset-key (kbd "C-x c"))
+
   :config
-  (helm-mode -1))
+  (require 'helm-config)
+  (require 'helm-files)
+  
+  (bind-key "C-x C-r" 'helm-recentf)
+  (bind-key "M-s o"   'helm-swoop)
+  (bind-key "M-s /"   'helm-multi-swoop)
+
+  (bind-key "M-x"     'helm-M-x)
+  (bind-key "M-y"     'helm-show-kill-ring)
+  (bind-key "C-x C-f" 'helm-find-files)
+
+  (bind-key "C-h SPC" 'helm-all-mark-rings)
+
+  ;; rebind tab to run persistent action
+  (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action)
+  ;; list actions using C-z
+  (define-key helm-map (kbd "C-z")  'helm-select-action)
+
+  (bind-key "a"       'helm-apropos                    helm-command-map)
+  (bind-key "M-:"     'helm-eval-expression-with-eldoc helm-command-map)
+  (bind-key "<tab>"   'helm-lisp-completion-at-point   helm-command-map)
+  (bind-key "o"       'helm-occur                      helm-command-map)
+  
+  ;; helm-find-files-map and helm-read-file-map have some annoying
+  ;; keybindings, so repair some of them.
+
+  (define-key helm-find-files-map (kbd "C-x o")         'helm-ff-run-switch-other-window)
+  (define-key helm-find-files-map (kbd "C-x 5 o")       'helm-ff-run-switch-other-frame)
+  (define-key helm-find-files-map (kbd "C-h m")         'describe-mode)
+  (define-key helm-read-file-map (kbd "C-h m")         'describe-mode)
+
+  ;; WTF!!!
+  ;; (define-key map (kbd "C-<backspace>") 'helm-ff-run-toggle-auto-update)
+  (define-key helm-find-files-map (kbd "C-<backspace>") 'backward-kill-word)
+  (define-key helm-read-file-map (kbd "C-<backspace>") 'backward-kill-word)
+  
+  ;; Suspicious but maybe useful
+  ;; (define-key map (kbd "M-R")           'helm-ff-run-rename-file)
+  ;; (define-key map (kbd "M-C")           'helm-ff-run-copy-file)
+  ;; (define-key map (kbd "M-D")           'helm-ff-run-delete-file)
+  ;; (define-key map (kbd "M-%")           'helm-ff-run-query-replace-on-marked)
+  ;; (define-key map (kbd "M-p")           'helm-ff-run-switch-to-history)
+  )
+
+(helm-mode)
 
 ;; for `describe-keymap'
-(use-package help-fns+
-  ;;:defer nil
-  )
+(use-package help-fns+)
 
 (use-package hexrgb
   :defer t)
