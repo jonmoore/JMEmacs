@@ -1296,10 +1296,22 @@ by `:config' in `use-package'"
                                    (comint-next-input 1)
                                  (forward-line 1))))))
 
-;; Beware: Windows intercepts Ctrl-shift-0 / C-), bound to
-;; sp-forward-slurp-sexp. See
+;; Beware: In a complete WTF, Windows intercepts Ctrl-shift-0 / C-),
+;; bound to sp-forward-slurp-sexp. See
 ;; https://support.microsoft.com/en-us/kb/967893 for how to fix this.
-;; May reoccur.
+;; Remove the shortcut assignment to make the application work as
+;; expected. To do this, follow these steps:
+;; Click Start, and then click Control Panel.
+;; Double-click Regional and Language Options.
+;; Click Keyboards and Languages, and then click Change keyboards.
+;; Click Advanced Key Settings, and select Between input languages.
+;; Click change Key Sequence.
+;; For Switch Keyboard Layout, select Not Assigned.
+;; Click OK to close each dialog box.
+
+;; This problem is likely to reoccur between logins. Other possible
+;; sources of help
+;; http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
 (use-package smartparens)
 
 
