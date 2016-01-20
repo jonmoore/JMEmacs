@@ -900,10 +900,7 @@ control-arrow keys"
   :defer t)
 
 (use-package ox-reveal
-  :defer t
-  :config
-  (setq org-reveal-root "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/"
-        org-reveal-hlevel 2))
+  :defer t)
 
 ;; http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/moon.css
 

@@ -86,8 +86,8 @@
  '(org-enforce-todo-checkbox-dependencies nil)
  '(org-hierarchical-todo-statistics nil)
  '(org-ref-show-citation-on-enter nil)
- '(org-reveal-root
-   (quote https://cdn\.jsdelivr\.net/reveal\.js/3\.0\.0/js/reveal\.min\.js))
+ '(org-reveal-hlevel 2)
+ '(org-reveal-root "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/")
  '(perlnow-perl-module-template (concat emacs-root "/site-lisp/templates"))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
