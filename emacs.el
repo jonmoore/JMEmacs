@@ -1194,7 +1194,6 @@ by `:config' in `use-package'"
   :defer t
   :init
   (add-hook 'jedi-mode-hook
-            
             'jedi-direx:setup))
 
 (defconst python-ide-package
@@ -1217,18 +1216,7 @@ by `:config' in `use-package'"
 	     '(progn
 		(elpy-enable)
 		(bind-key "\C-cx" 'jedi-direx:pop-to-buffer python-mode-map)
-		(setq
-                 elpy-modules '(
-                                elpy-module-company
-                                elpy-module-eldoc
-                                ;; elpy-module-flymake ;; use flycheck instead
-                                ;; elpy-module-highlight-indentation
-                                elpy-module-pyvenv
-                                elpy-module-sane-defaults
-                                elpy-module-yasnippet
-                                )
-                 elpy-rpc-backend "jedi")
-                (elpy-use-ipython))))
+		(setq elpy-rpc-backend "jedi"))))
   ('ein))  ;; Nothing for ein yet
 
 (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
@@ -1241,10 +1229,6 @@ by `:config' in `use-package'"
             (define-key python-mode-map "\C-c\C-yn" 'yas-new-snippet)
             (define-key python-mode-map "\C-c\C-yv" 'yas-visit-snippet-file)))
 
-;; The reason for post-command-hook instead of when opening a file is
-;; that some of the variables set are global.  May still want to have
-;; a hook that lets us set up jedi correctly.
-
 ;; something like 
 (add-hook  'jedi-mode-hook
            (lambda ()
@@ -1252,7 +1236,22 @@ by `:config' in `use-package'"
              (activate-venv-if-python)
              (jedi:install-server)
              (jedi-direx:setup)))
+
+;; The reason for post-command-hook instead of when opening a file is
+;; that some of the variables set are global.  May still want to have
+;; a hook that lets us set up jedi correctly.
 (add-hook 'post-command-hook 'activate-venv-if-python)
+
+(advice-add  'pyvenv-run-virtualenvwrapper-hook
+             :filter-return 'ignore-errors)
+
+;; Try to suppress errors
+(defun my-ignore-errors (orig-fun &rest args)
+  "Ignore errors due to calling ORIG-FUN."
+  (condition-case nil
+      (orig-fun args)
+    (error nil)))
+(advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors)
 
 (use-package restclient
   :disabled t)

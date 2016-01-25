@@ -28,7 +28,7 @@
  '(edebug-trace nil)
  '(elpy-modules
    (quote
-    (elpy-module-company elpy-module-flymake elpy-module-pyvenv elpy-module-yasnippet elpy-module-sane-defaults)))
+    (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-yasnippet elpy-module-sane-defaults)))
  '(elpy-project-ignored-directories
    (quote
     (".git" ".tox" "build" "dist" ".cask" "cover" "docs" ".projectile" "_tcp" "*_venv")))

@@ -32,24 +32,53 @@
 directories . and ... FULL is passed to `directory-files'"
   (directory-files dir full directory-files-no-dot-files-regexp))
 
-(defun child-venvs (dir)
-  "Return a list of children of DIR that are python virtual
-  environments, formatted as directories, or nil if there are no
-  such directories."
-  (mapcar
+(defun venvs-from-candidates (candidate-dirs)
+  ""
+  (mapcar  
    'file-name-as-directory
-   (remove-if-not 'dir-has-venv
-                  (directory-files-children dir t))))
+   (remove-if-not 'dir-has-venv candidate-dirs)))
 
-(defun venv-for (file)
+(defun direct-child-venvs (dir)
+  "Return a list of children of DIR that are python virtual
+environments, formatted as directories, or nil if there are no
+such directories."
+  (venvs-from-candidates 
+   (directory-files-children dir t)))
+
+(defun tcp-venv-candidates (dir)
+  "Return a list of descendants of DIR that may be python virtual
+  environments for TCP projects rooted at DIR"
+  (let ((default-directory dir))
+    (file-expand-wildcards "_tcp/work/*/py2/venv" t)))
+
+(defun direct-tcp-venvs (dir)
+  "Return a list of children of DIR that are python virtual
+environments, formatted as directories, or nil if there are no
+such directories."
+  (venvs-from-candidates 
+   (tcp-venv-candidates dir)))
+
+(defun venv-for-with-func (file direct-venvs-func)
   "Returns the venv to use for FILE, defined as the first venv in
 the nearest ancestor directory of FILE that contains a venv, or
 nil if there is no such ancestor."
   (let ((parent-of-venv (locate-dominating-file
                          (file-name-directory file)
-                         'child-venvs)))
+                         direct-venvs-func)))
     (when parent-of-venv
-      (car (child-venvs parent-of-venv)))))
+      (car (funcall direct-venvs-func parent-of-venv)))))
+
+(defun direct-venvs (dir)
+  (append
+   (direct-child-venvs dir)
+   (direct-tcp-venvs dir)))
+
+(defun venv-for (file)
+  "Returns the venv to use for FILE, defined as the first venv in
+the nearest ancestor directory of FILE that contains a venv, or
+nil if there is no such ancestor."
+  (or
+   (venv-for-with-func file 'direct-venvs)))
 
 ;;;###autoload
 (defun activate-venv-if-visiting-file ()
@@ -77,7 +106,9 @@ on shared drives.")
   "Activate a Python venv if appropriate."
   (when (and (memq major-mode activate-venv-modes)
              (not (bound-and-true-p activate-venv-disabled)))
-    (activate-venv-if-visiting-file)))
+    (activate-venv-if-visiting-file)
+    (when pyvenv-virtual-env
+      (elpy-use-ipython))))
 
 ;;;###autoload
 (defun pyvenv-virtualenv-list-with-second-level (&optional noerror)
@@ -89,9 +120,9 @@ configured."
         (when (not noerror)
           (error "Can't find a workon home directory, set $WORKON_HOME"))
       (dolist (child (directory-files-children workon))
-        (when (dir-has-venv (format "%s/%s" workon child))
-          (setq result (cons child result)))
         (let ((workon-child (format "%s/%s" workon child)))
+          (when (dir-has-venv workon-child)
+            (setq result (cons child result)))
           (dolist (grandchild (directory-files-children workon-child))
             (when (dir-has-venv (format "%s/%s" workon-child grandchild))
               (setq result (cons (format "%s/%s" child grandchild)
