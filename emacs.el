@@ -479,6 +479,12 @@ See `doxymacs-parm-tempo-element'."
 (use-package expand-region
   :defer t)
 
+(use-package ffap
+  :defer t
+  ;; Please stop pinging random hosts!  See
+  ;; https://github.com/technomancy/emacs-starter-kit/issues/39
+  :config (setq ffap-machine-p-known 'reject))
+
 (use-package flycheck)
 
 ;;; FONT LOCK MODE
@@ -597,12 +603,17 @@ See `doxymacs-parm-tempo-element'."
   :config
   (require 'helm-config)
   (require 'helm-files)
-  
+
+  ;; Disable helm completion in some modes
+  (setq helm-mode-no-completion-in-region-in-modes
+        '(inferior-python-mode))
+
   (bind-key "C-x C-r" 'helm-recentf)
   (bind-key "M-s o"   'helm-swoop)
   (bind-key "M-s /"   'helm-multi-swoop)
 
   (bind-key "M-x"     'helm-M-x)
+  (bind-key "M-X"     'execute-extended-command) ;; old binding of M-x
   (bind-key "M-y"     'helm-show-kill-ring)
   (bind-key "C-x C-f" 'helm-find-files)
 
