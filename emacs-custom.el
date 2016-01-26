@@ -26,16 +26,19 @@
  '(doxymacs-blank-multiline-comment-template (quote ("/**" > n "  " p > n "  " > n "*/" > n)))
  '(doxymacs-doxygen-style "JavaDoc" t)
  '(edebug-trace nil)
+ '(elpy-company-hide-modeline nil)
  '(elpy-modules
    (quote
-    (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-yasnippet elpy-module-sane-defaults)))
+    (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-sane-defaults)))
  '(elpy-project-ignored-directories
    (quote
     (".git" ".tox" "build" "dist" ".cask" "cover" "docs" ".projectile" "_tcp" "*_venv")))
+ '(elpy-rpc-error-timeout 300 nil nil "This is a workround for https://github.com/jorgenschaefer/elpy/issues/597, due to a bug in jedi. Alternatively could try an earlier version of jedi.")
  '(elpy-test-runner (quote elpy-test-nose-runner))
  '(enable-local-eval t)
  '(ff-quiet-mode t)
  '(find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")) t)
+ '(flycheck-keymap-prefix "f")
  '(globalff-regexp-search t)
  '(graphviz-dot-dot-program "dotforme")
  '(haskell-process-use-presentation-mode t)

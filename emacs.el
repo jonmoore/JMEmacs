@@ -1205,7 +1205,14 @@ by `:config' in `use-package'"
   :defer t
   :init
   (add-hook 'jedi-mode-hook
-            'jedi-direx:setup))
+            'jedi-direx:setup)
+  :config
+  (bind-key "C-c C-n" nil elpy-mode-map)
+  (bind-key "C-c C-p" nil elpy-mode-map)
+
+  ;; The default version goes off to the web when reporting errors!!
+  ;; I'll assume we don't need _latest
+  (setq elpy-config--get-config my-elpy-config--get-config))
 
 (defconst python-ide-package
   'elpy
@@ -1222,19 +1229,28 @@ by `:config' in `use-package'"
 ;;; elpy recommended packages
 ;; echo n | enpkg install jedi flake8 nose pylint
 ;; pip install importmagic autopep8 flake8-pep257
+
+
 (case python-ide-package
-  ('elpy   (eval-after-load 'python
-	     '(progn
-		(elpy-enable)
-		(bind-key "\C-cx" 'jedi-direx:pop-to-buffer python-mode-map)
-		(setq elpy-rpc-backend "jedi"))))
+  ('elpy
+   (eval-after-load 'python
+     '(progn
+        (elpy-enable)
+        (bind-key "\C-cx" 'jedi-direx:pop-to-buffer python-mode-map)
+        (setq elpy-rpc-backend "jedi")
+        (add-hook 'inferior-python-mode-hook
+                  '(lambda ()
+                     (progn
+                       (inferior-python-mode-buffer-init)
+                       (local-set-key [tab] 'yas-or-company-or-indent-for-tab)
+                       (local-set-key (kbd "C-M-i") 'python-shell-completion-complete-or-indent)))))))
   ('ein))  ;; Nothing for ein yet
 
 (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
 
 (add-hook 'python-mode-hook
           (lambda ()
-            (local-set-key [tab] 'tab-indent-or-complete)
+            (local-set-key [tab] 'yas-or-company-or-indent-for-tab)
             (define-key python-mode-map "\C-c\C-u"  'pyvenv-use-venv)
             (define-key python-mode-map "\C-c\C-ys" 'yas-insert-snippet)
             (define-key python-mode-map "\C-c\C-yn" 'yas-new-snippet)

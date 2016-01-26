@@ -1,27 +1,3 @@
-
-;; http://www.emacswiki.org/emacs/CompanyMode
-(defun check-expansion ()
-  (save-excursion
-    (if (looking-at "\\_>") t
-      (backward-char 1)
-      (if (looking-at "\\.") t
-        (backward-char 1)
-        (if (looking-at "->") t nil)))))
-
-(defun do-yas-expand ()
-  (let ((yas/fallback-behavior 'return-nil))
-    (yas/expand)))
-
-(defun tab-indent-or-complete ()
-  (interactive)
-  (if (minibufferp)
-      (minibuffer-complete)
-    (if (or (not yas/minor-mode)
-            (null (do-yas-expand)))
-        (if (check-expansion)
-            (company-complete-common)
-          (indent-for-tab-command)))))
-
 (defun dir-has-venv (dir)
   "Returns if DIR contains a python virtual environment"
   (or (file-exists-p (format "%s/bin/activate" dir))
@@ -113,7 +89,11 @@ on shared drives.")
 ;;;###autoload
 (defun pyvenv-virtualenv-list-with-second-level (&optional noerror)
   "If NOERROR is set, do not raise an error if WORKON_HOME is not
-configured."
+configured.
+
+TODO: Can this be simplified with my other functions for handling
+venvs?
+"
   (let ((workon (pyvenv-workon-home))
         (result nil))
     (if (not (file-directory-p workon))
@@ -150,3 +130,90 @@ based on this and `python-shell-buffer-name', otherwise call
   (if pyvenv-virtual-env-name
       (format "%s[%s]" python-shell-buffer-name pyvenv-virtual-env-name)
     (apply orig-fun args)))
+
+;;;###autoload
+(defun inferior-python-mode-buffer-init ()
+  "Initialisation for `inferior-python-mode' copied from
+`elpy-module-company'"
+
+  ;; We want immediate completions from company.
+  (set (make-local-variable 'company-idle-delay)
+       0)
+  ;; And annotations should be right-aligned.
+  (set (make-local-variable 'company-tooltip-align-annotations)
+       t)
+  ;; Also, dabbrev in comments and strings is nice.
+  (set (make-local-variable 'company-dabbrev-code-everywhere)
+       t)
+  ;; Add our own backend and remove a bunch of backends that
+  ;; interfere in Python mode.
+  (set (make-local-variable 'company-backends)
+       (cons 'inferior-python-mode-company-backend
+             (delq 'company-semantic
+                   (delq 'company-ropemacs
+                         (delq 'company-capf
+                                  (mapcar #'identity company-backends))))))
+  (company-mode 1))
+
+;;;###autoload
+(defun inferior-python-mode-company-backend (command &optional arg &rest ignored)
+  "A company-mode backend for `inferior-python-mode' using Elpy."
+  (interactive (list 'interactive))
+  (pcase command
+    (`prefix
+     (when (and (eq major-mode 'inferior-python-mode)
+                (not (company-in-string-or-comment)))
+       (company-grab-symbol-cons "\\." 1)))
+    (_ (elpy-company-backend command arg ignored))))
+
+;;;###autoload
+(defvar my-elpy-config--get-config
+  "import json
+import sys
+
+config = {}
+config['python_version'] = ('{major}.{minor}.{micro}'
+                            .format(major=sys.version_info[0],
+                                    minor=sys.version_info[1],
+                                    micro=sys.version_info[2]))
+
+try:
+    import elpy
+    config['elpy_version'] = elpy.__version__
+except:
+    config['elpy_version'] = None
+
+try:
+    import jedi
+    if isinstance(jedi.__version__, tuple):
+        config['jedi_version'] = '.'.join(str(x) for x in jedi.__version__)
+    else:
+        config['jedi_version'] = jedi.__version__
+except:
+    config['jedi_version'] = None
+
+try:
+    import rope
+    config['rope_version'] = rope.VERSION
+except:
+    config['rope_version'] = None
+
+try:
+    import importmagic
+    config['importmagic_version'] = importmagic.__version__
+except:
+    config['importmagic_version'] = None
+
+try:
+    import autopep8
+    config['autopep8_version'] = autopep8.__version__
+except:
+    config['autopep8_version'] = None
+
+json.dump(config, sys.stdout)"
+
+"My version of `elpy-config--get-config'. The default version can
+cause hangs because it triggers going off to the web, even when
+reporting errors!!  I'll assume we don't need _latest
+information")
+  

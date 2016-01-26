@@ -33,6 +33,7 @@ using fill-paragraph. "
       (mark-paragraph)
       (fill-individual-paragraphs (point) (mark))
       (indent-region (point) (mark)))))
+
 ;;;###autoload
 (defun delete-blank-lines-around-point-or-in-region ()
   "Delete blank lines in the region.
