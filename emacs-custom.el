@@ -67,6 +67,7 @@
  '(next-line-add-newlines nil)
  '(org-agenda-files (quote ("~/org")))
  '(org-agenda-start-with-clockreport-mode nil)
+ '(org-agenda-todo-ignore-scheduled 5)
  '(org-capture-templates
    (quote
     (("t" "Task" entry

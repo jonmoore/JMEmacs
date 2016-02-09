@@ -1326,14 +1326,16 @@ by `:config' in `use-package'"
 ;; bound to sp-forward-slurp-sexp. See
 ;; https://support.microsoft.com/en-us/kb/967893 for how to fix this.
 ;; Remove the shortcut assignment to make the application work as
-;; expected. To do this, follow these steps:
-;; Click Start, and then click Control Panel.
-;; Double-click Regional and Language Options.
-;; Click Keyboards and Languages, and then click Change keyboards.
-;; Click Advanced Key Settings, and select Between input languages.
-;; Click change Key Sequence.
-;; For Switch Keyboard Layout, select Not Assigned.
-;; Click OK to close each dialog box.
+;; expected. To do this:
+;; Start
+;; ->Region and Language
+;; ->Keyboards and Languages
+;; ->Change keyboards
+;; ->Advanced Key Settings
+;; ->Between input languages
+;; ->Change Key Sequence
+;; Set Switch Keyboard Layout to Not Assigned.
+;; Click OK...
 
 ;; This problem is likely to reoccur between logins. Other possible
 ;; sources of help
