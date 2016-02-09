@@ -1,7 +1,7 @@
 ;; Support Nexus GAV insertion with ido
 
 (require 'nexus)
-(require 'ido)
+(require 'helm)
 
 ;;; Some helper utilities that could be useful (or taken from)
 ;;; elsewhere.
@@ -161,11 +161,18 @@ returning more data"
              'jm-parse-nexus-artifact-xml-alist))
     (nexus-search-internal-keyword keyword)))
 
+(defun gav-alists-to-helm-source (gav-alists)
+  "Return a helm source for GAV-ALISTS"
+  (list
+   (cons 'name "test")
+   (cons 'candidates (mapcar 'nexus-gav-from-gav-alist gav-alists))
+   (cons 'action 'identity)))
+
 (defun nexus-choose-gav-from-alists (gav-alists)
   "Choose a GAV from GAV-ALISTS"
-  (ido-completing-read
-   "Choose GAV:"
-   (mapcar 'nexus-gav-from-gav-alist gav-alists)))
+  (helm :sources
+        (gav-alists-to-helm-source
+         gav-alists)))
 
 (defun nexus-choose-gav-for-keyword (keyword)
   "Search Nexus for KEYWORD and choose a GAV from the results."
@@ -198,6 +205,7 @@ distro of GAVs, e.g. from `nexus-choose-gav-alist-for-keyword'."
       (nexus-fetch-pom
        gav-alist))))))
 
+;;;###autoload
 (defun nexus-insert-gav-for-keyword (keyword)
   "Search Nexus for KEYWORD and insert a GAV from the results"
   (interactive "sSearch Nexus for:")
