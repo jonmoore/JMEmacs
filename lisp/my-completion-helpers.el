@@ -23,7 +23,9 @@
   (if (minibufferp)
       (minibuffer-complete)
     (if (not (try-yas-expand))
-        (if (check-company-expansion)
-            (company-complete-common)
+        (if (save-excursion (check-company-expansion))
+            (progn
+              (check-company-expansion)
+              (company-complete-common))
           (indent-for-tab-command)))))
 
