@@ -1,12 +1,34 @@
+(require 'cl)
+
+
+(defun file-attribute-name (file-attribute-list)
+  "Return the file name from a file attribute list, as from
+`file-attributes'"
+  (car file-attribute-list))
+
+(defun file-attribute-directory (file-attribute-list)
+  "Return the directory property from a file attribute list, as
+from `file-attributes'"
+  (cadr file-attribute-list))
+
+(defun directory-files-children (dir &optional full)
+  "Returns the child directories of DIR, excluding special
+directories . and ... FULL is passed to
+`directory-files-and-attributes'"
+  ;; On mapped network drives it can be much faster to call
+  ;; directory-files-and-attributes rather than directory-files, then
+  ;; file-directory-p
+
+  (mapcar
+   'file-attribute-name
+   (remove-if-not
+    'file-attribute-directory
+    (directory-files-and-attributes dir full directory-files-no-dot-files-regexp))))
+
 (defun dir-has-venv (dir)
   "Returns if DIR contains a python virtual environment"
   (or (file-exists-p (format "%s/bin/activate" dir))
       (file-exists-p (format "%s/Scripts/activate.bat" dir))))
-
-(defun directory-files-children (dir &optional full)
-  "Returns the child directories of DIR, excluding special
-directories . and ... FULL is passed to `directory-files'"
-  (directory-files dir full directory-files-no-dot-files-regexp))
 
 (defun venvs-from-candidates (candidate-dirs)
   ""
@@ -25,7 +47,7 @@ such directories."
   "Return a list of descendants of DIR that may be python virtual
   environments for TCP projects rooted at DIR"
   (let ((default-directory dir))
-    (file-expand-wildcards "_tcp/work/*/py2/venv" t)))
+    (file-expand-wildcards "_tcp/work/*/py2/venv*" t)))
 
 (defun direct-tcp-venvs (dir)
   "Return a list of children of DIR that are python virtual
@@ -209,6 +231,14 @@ try:
     config['autopep8_version'] = autopep8.__version__
 except:
     config['autopep8_version'] = None
+
+try:
+    import yapf
+    config['yapf_version'] = yapf.__version__
+    config['yapf_latest'] = latest('yapf', config['yapf_version'])
+except:
+    config['yapf_version'] = None
+    config['yapf_latest'] = latest('yapf')
 
 json.dump(config, sys.stdout)"
 
