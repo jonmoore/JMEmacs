@@ -220,7 +220,14 @@ exclude unwanted folders"
   ;; with spaces in the paths. Perforce just separates the three
   ;; representations of the path by spaces, but the second one will
   ;; always start with "//"
-  (car (split-string (qap-p4-run-command "where" ".") " //")))
+  ;;
+  ;; Use "p4 where" and remove "/..." rather than "p4 where ." so this
+  ;; works when the current directory is the highest level mapped in
+  ;; the p4 view.
+  (replace-regexp-in-string
+   "/\\.\\.\\."
+   ""
+   (car (split-string (qap-p4-run-command "where") " //"))))
 
 (defun qap-depot-to-local-paths (paths)
   "Convert a list of depot paths (with version numbers) into a
