@@ -485,7 +485,69 @@ See `doxymacs-parm-tempo-element'."
   ;; https://github.com/technomancy/emacs-starter-kit/issues/39
   :config (setq ffap-machine-p-known 'reject))
 
-(use-package flycheck)
+(defun adjust-flycheck-automatic-syntax-eagerness ()
+  "Adjust how often we check for errors based on if there are any.
+This lets us fix any errors as quickly as possible, but in a
+clean buffer we're an order of magnitude laxer about checking."
+  (setq flycheck-idle-change-delay
+        (if flycheck-current-errors 0.3 3.0)))
+
+(use-package flycheck
+  :config
+  ;; Each buffer gets its own idle-change-delay because of the
+  ;; buffer-sensitive adjustment above.
+  (make-variable-buffer-local 'flycheck-idle-change-delay)
+  (add-hook 'flycheck-after-syntax-check-hook
+            'adjust-flycheck-automatic-syntax-eagerness)
+  (flycheck-add-next-checker 'python-flake8 'python-pylint)
+  )
+
+;; Tried the barebones rst checker, but that's a bad idea for Sphinx
+;; docs per lunaryorn:
+;; https://github.com/flycheck/flycheck/issues/745#issuecomment-139555416
+;;
+;; "Falling back to plain rst renders Flycheck almost unusable,
+;; particularly in documents which use many Sphinx-specific
+;; directives."
+;;
+;; Also, the barebones checker assumes that .py files are executable,
+;; which requires hacking on Windows, e.g. setting
+;; `flycheck-executable-find' and `flycheck-command-wrapper-function'
+;; to custom functions
+
+
+;;  (defun python-script-p (filename)
+;   "If FILENAME is a string, return t if it looks like a python
+;;  script, otherwise nil.  Return nil if FILENAME is nil."
+;;   (and filename
+;;        (string-equal (file-name-extension filename)
+;;                      "py")))
+
+;; (defun python-script-find (command)
+;;   (let ((found-file (locate-file command exec-path '("" ".py") 'readable)))
+;;     (when (python-script-p found-file)
+;;       found-file)))
+
+;; (defun my-flycheck-executable-find (command)
+;;   "Call `executable-find' with .py recognized as an executable extension."
+;;   (or
+;;    (executable-find command)
+;;    (python-script-find command)))
+
+;; (defun my-flycheck-command-wrapper-function (command)
+;;   (let ((program (car command))
+;;         (args (cdr command)))
+;;     (if (python-script-p program)
+;;         (append (list "python.exe"
+;;                       (python-script-find program))
+;;                 args)
+;;       command)))
+
+;; (setq flycheck-executable-find 'my-flycheck-executable-find)
+;; (setq flycheck-command-wrapper-function
+;;       'my-flycheck-command-wrapper-function)
+
+
 
 ;;; FONT LOCK MODE
 (global-font-lock-mode t)
