@@ -103,11 +103,14 @@
       query-replace-highlight t
       search-highlight t)
 
-(when system-win32-p
-  (set-face-attribute 'default  nil :family "Consolas"    :height 120))
-;; Inconsolata needs to be installed otherwise you can end up with Times New Roman
-(when system-osx-p
-  (set-face-attribute 'default  nil :family "Inconsolata" :height 200))
+(mapc (lambda (face)
+        (cond
+         (system-win32-p
+          (set-face-attribute face nil :family "Consolas"    :height 120))
+         ;; Inconsolata needs to be installed otherwise you can end up with Times New Roman
+         (system-osx-p
+          (set-face-attribute face nil :family "Inconsolata" :height 200))))
+      '(default tooltip)) 
 
 ;;; GLOBAL EDITING SETTINGS
 (put 'upcase-region   'disabled nil)
@@ -116,10 +119,6 @@
 
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq require-final-newline t)
-
-;; Try switching to helm
-;; (require 'ido)
-;; (ido-mode t)
 
 ;;; GLOBAL KEY SETTINGS
 (when system-osx-p
@@ -419,6 +418,10 @@ See `doxymacs-parm-tempo-element'."
   (setq company-ghc-show-info t)
   :config
   (add-to-list 'company-backends 'company-ghc))
+
+(use-package company-quickhelp
+  :ensure t
+  )
 
 ;;; CYGWIN SHELL
 (setq process-coding-system-alist '(("bash" . undecided-unix)))
@@ -1316,7 +1319,8 @@ by `:config' in `use-package'"
             (define-key python-mode-map "\C-c\C-u"  'pyvenv-use-venv)
             (define-key python-mode-map "\C-c\C-ys" 'yas-insert-snippet)
             (define-key python-mode-map "\C-c\C-yn" 'yas-new-snippet)
-            (define-key python-mode-map "\C-c\C-yv" 'yas-visit-snippet-file)))
+            (define-key python-mode-map "\C-c\C-yv" 'yas-visit-snippet-file)
+            (company-quickhelp-mode t)))
 
 ;; something like 
 (add-hook  'jedi-mode-hook
