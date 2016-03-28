@@ -500,6 +500,9 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-hook 'flycheck-after-syntax-check-hook
             'adjust-flycheck-automatic-syntax-eagerness)
   (flycheck-add-next-checker 'python-flake8 'python-pylint)
+  
+  (pycoverage-define-flycheck-checker)
+  (add-to-list 'flycheck-checkers 'python-pycoverage)
   )
 
 ;; Tried the barebones rst checker, but that's a bad idea for Sphinx
@@ -510,30 +513,30 @@ clean buffer we're an order of magnitude laxer about checking."
 ;; particularly in documents which use many Sphinx-specific
 ;; directives."
 ;;
+
 ;; Also, the barebones checker assumes that .py files are executable,
 ;; which requires hacking on Windows, e.g. setting
 ;; `flycheck-executable-find' and `flycheck-command-wrapper-function'
-;; to custom functions
-
-
+;; to custom functions, as below.
+;;
 ;;  (defun python-script-p (filename)
 ;   "If FILENAME is a string, return t if it looks like a python
 ;;  script, otherwise nil.  Return nil if FILENAME is nil."
 ;;   (and filename
 ;;        (string-equal (file-name-extension filename)
 ;;                      "py")))
-
+;;
 ;; (defun python-script-find (command)
 ;;   (let ((found-file (locate-file command exec-path '("" ".py") 'readable)))
 ;;     (when (python-script-p found-file)
 ;;       found-file)))
-
+;;
 ;; (defun my-flycheck-executable-find (command)
 ;;   "Call `executable-find' with .py recognized as an executable extension."
 ;;   (or
 ;;    (executable-find command)
 ;;    (python-script-find command)))
-
+;;
 ;; (defun my-flycheck-command-wrapper-function (command)
 ;;   (let ((program (car command))
 ;;         (args (cdr command)))
@@ -542,7 +545,7 @@ clean buffer we're an order of magnitude laxer about checking."
 ;;                       (python-script-find program))
 ;;                 args)
 ;;       command)))
-
+;;
 ;; (setq flycheck-executable-find 'my-flycheck-executable-find)
 ;; (setq flycheck-command-wrapper-function
 ;;       'my-flycheck-command-wrapper-function)
@@ -873,14 +876,15 @@ clean buffer we're an order of magnitude laxer about checking."
               (define-key map [remap kill-word]            'sp-kill-word)
 
               (define-key map (kbd "C-M-k")                'sp-kill-sexp)
+              (define-key map (kbd "C-M-S-k")              'sp-backward-kill-sexp)
               (define-key map (kbd "C-M-w")                'sp-copy-sexp)
 
               ;; Depth changing
               (define-key map (kbd "M-s")                  'sp-splice-sexp)
               (define-key map (kbd "C-M-s")                'sp-splice-sexp-killing-around)
               (define-key map (kbd "M-?")                  'sp-convolute-sexp)
-              (define-key map (kbd "<C-M-backspace>")   'sp-splice-sexp-killing-backward)
-              (define-key map (kbd "<C-M-delete>")      'sp-splice-sexp-killing-forward)
+              (define-key map (kbd "<C-M-backspace>")      'sp-splice-sexp-killing-backward)
+              (define-key map (kbd "<C-M-delete>")         'sp-splice-sexp-killing-forward)
 
               ;; Barf & slurp
 
@@ -1236,6 +1240,11 @@ by `:config' in `use-package'"
 (use-package projectile
   :defer t)
 
+;; Not really needed since I use flycheck.  See
+;; pycoverage-define-flycheck-checker
+(use-package pycoverage
+  :defer t)
+
 ;;; PRETTY COLUMN
 (setq pcol-str-separator " "
       pcol-column-separator "[ \t]+")
@@ -1493,8 +1502,11 @@ Does nothing if Savehist mode is off."
 (setq inhibit-splash-screen t)
 
 ;;; CUSTOMIZATION
-(setq custom-file ;; set explicitly to avoid writing back to ~/.emacs.el
-      (expand-file-name "emacs-custom.el" personal-emacs-root))
+(setq
+ ;; set these to avoid writing back to ~
+ custom-file (expand-file-name "emacs-custom.el" personal-emacs-root)
+ custom-theme-directory personal-emacs-root)
+
 (load custom-file)
 
 ;;; STARTUP

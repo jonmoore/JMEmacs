@@ -12,13 +12,12 @@ from `file-attributes'"
   (cadr file-attribute-list))
 
 (defun directory-files-children (dir &optional full)
-  "Returns the child directories of DIR, excluding special
+  "Return the child directories of DIR, excluding special
 directories . and ... FULL is passed to
-`directory-files-and-attributes'"
+`directory-files-and-attributes'."
   ;; On mapped network drives it can be much faster to call
   ;; directory-files-and-attributes rather than directory-files, then
   ;; file-directory-p
-
   (mapcar
    'file-attribute-name
    (remove-if-not
@@ -40,21 +39,25 @@ directories . and ... FULL is passed to
   "Return a list of children of DIR that are python virtual
 environments, formatted as directories, or nil if there are no
 such directories."
-  (venvs-from-candidates 
+  (venvs-from-candidates
    (directory-files-children dir t)))
 
-(defun tcp-venv-candidates (dir)
-  "Return a list of descendants of DIR that may be python virtual
-  environments for TCP projects rooted at DIR"
-  (let ((default-directory dir))
+(defun tcp-venv-candidates (tcpdir)
+  "Return a list of descendants of TCPDIR that may be python virtual
+  environments for TCP projects rooted at TCPDIR"
+  (let ((default-directory tcpdir))
     (file-expand-wildcards "_tcp/work/*/py2/venv*" t)))
 
-(defun direct-tcp-venvs (dir)
-  "Return a list of children of DIR that are python virtual
-environments, formatted as directories, or nil if there are no
-such directories."
-  (venvs-from-candidates 
-   (tcp-venv-candidates dir)))
+(defun tcp-venvs (tcpdir)
+  "Return a list of descendants of TCPDIR that are python virtual
+  environments for TCP projects rooted at TCPDIR."
+  (venvs-from-candidates
+   (tcp-venv-candidates tcpdir)))
+
+(defun direct-venvs (dir)
+  (append
+   (direct-child-venvs dir)
+   (tcp-venvs dir)))
 
 (defun venv-for-with-func (file direct-venvs-func)
   "Returns the venv to use for FILE, defined as the first venv in
@@ -66,11 +69,6 @@ nil if there is no such ancestor."
     (when parent-of-venv
       (car (funcall direct-venvs-func parent-of-venv)))))
 
-(defun direct-venvs (dir)
-  (append
-   (direct-child-venvs dir)
-   (direct-tcp-venvs dir)))
-
 (defun venv-for (file)
   "Returns the venv to use for FILE, defined as the first venv in
 the nearest ancestor directory of FILE that contains a venv, or
@@ -78,15 +76,73 @@ nil if there is no such ancestor."
   (or
    (venv-for-with-func file 'direct-venvs)))
 
+(defun tcpdir-for (file)
+  "Return the TCP directory for FILE."
+  (locate-dominating-file
+   (file-name-directory file)
+   "_tcp"))
+
+(defvar tcp-active-directory
+  nil
+  "The currently active TCP directory")
+
+(defvar tcp-activate-disabled
+  nil
+  "Set to disable activating TCP automatically.")
+
+(defun tcp-python-activate (tcpdir)
+  "Do Python-related setup, other than venvs, for the TCP project
+rooted at TCPDIR."
+  (make-local-variable 'process-environment)
+  (setq-local
+   process-environment (append
+                        (list
+                         (format
+                          "PYTHONPATH=%s"
+                          (concat (file-name-as-directory tcpdir)
+                                  "src")))
+                        process-environment)))
+
+(defun tcp-python-deactivate ()
+  "Deactivate any Python-related settings for TCP."
+  )
+
+(defun tcp-python-sync ()
+  "Set Python-related variables for TCP."
+  (unless (or (not buffer-file-name)
+              tcp-activate-disabled)
+    (let ((tcpdir (tcpdir-for buffer-file-name)))
+      (if tcpdir
+          (progn
+            (setq-local tcp-active-directory tcpdir)
+            (tcp-python-activate tcpdir)
+            (setq-local tcp-activate-disabled t))
+        (tcp-python-deactivate)
+        (setq-local tcp-activate-disabled t)))))
+
 ;;;###autoload
 (defun activate-venv-if-visiting-file ()
   "If the `buffer-file-name' is set, activate the virtual
 environment for it as defined by `venv-for'"
-  (when buffer-file-name
+
+  ;; Avoid wasting time when visiting files without buffers, with
+  ;; already-active venvs, or with venv activation disabled.  In these
+  ;; cases there is no useful work to do.
+  (unless (or (not buffer-file-name)
+              (and pyvenv-activate
+                   (string-equal pyvenv-activate  ;; local
+                                 pyvenv-virtual-env ;; global
+                                 ))
+              activate-venv-disabled)
     (let ((venv (venv-for buffer-file-name)))
-      (when venv
-        (setq-local pyvenv-activate venv)
-        (pyvenv-track-virtualenv)))))
+      (if venv
+          (progn
+            (setq-local pyvenv-activate venv)
+            (pyvenv-track-virtualenv))
+        
+        (pyvenv-deactivate)
+        (setq-local pyvenv-activate nil)
+        (setq-local activate-venv-disabled t)))))
 
 (defvar activate-venv-modes
   '(python-mode org-mode)
@@ -105,6 +161,7 @@ on shared drives.")
   (when (and (memq major-mode activate-venv-modes)
              (not (bound-and-true-p activate-venv-disabled)))
     (activate-venv-if-visiting-file)
+    (tcp-python-sync)
     (when pyvenv-virtual-env
       (elpy-use-ipython))))
 
@@ -246,4 +303,76 @@ json.dump(config, sys.stdout)"
 cause hangs because it triggers going off to the web, even when
 reporting errors!!  I'll assume we don't need _latest
 information")
+
+(require 'flycheck)
+
+;; Redefine some pydoc functions that don't work on Windows
+
+;;;###autoload
+(defun pycoverage-define-flycheck-checker ()
+  "Register a checker for pycoverage with flycheck"
   
+  (flycheck-define-checker python-pycoverage
+    "A Python test coverage checker checker using the pycoverage tool.
+
+See `https://github.com/mattharrison/pycoverage.el'.
+
+For this checker to work the Python package cov2emacslib must be
+installed in the active virtual environment.
+
+As cov2emacslib is not yet on PyPI it is probably easiest to do
+that using the git code, as in
+
+1. Ensure git is on PATH.  See `git-bin-dir' if configured.
+
+2. Run
+  pip install -e git+https://github.com/mattharrison/pycoverage.el#egg=pkg&subdirectory=cov2emacs
+
+"
+    :command ("python" "-m" "cov2emacslib.__init__"
+              "--compile-mode" "--python-file" source-original)
+    :error-patterns
+    ((warning line-start
+              (file-name) ":"
+              line ":"
+              (message)
+              line-end))
+    :modes (python-mode)
+    :next-checkers ((t . python-flake8))))
+
+(warn "Redefining functions in pydoc")
+
+;;;###autoload
+(defun pydoc-browse ()
+  "Open a browser to pydoc.
+Attempts to find an open port, and to reuse the process."
+  (interactive)
+  (unless *pydoc-browser-process*
+    ;; find an open port
+    (if (executable-find "lsof")
+	(loop for port from 1025
+	      if (string= "" (shell-command-to-string (format "lsof -i :%s" port)))
+	      return (setq *pydoc-browser-port* (number-to-string port)))
+      ;; Windows may not have an lsof command.
+      (setq *pydoc-browser-port* "1234"))
+    
+    (setq *pydoc-browser-process*
+          (apply
+           #'start-process
+           "pydoc-browser" "*pydoc-browser*"
+           (append (split-string pydoc-command)
+                   `("-p" ,*pydoc-browser-port*)))))
+  (browse-url (format "http://localhost:%s" *pydoc-browser-port*)))
+
+
+;;;###autoload
+(defun pydoc-browse-kill ()
+  "Kill the pydoc browser."
+  (interactive)
+  (when *pydoc-browser-process*
+    (condition-case nil 
+        (kill-process *pydoc-browser-process*)
+      (error nil))
+    (setq *pydoc-browser-process* nil
+	  *pydoc-browser-port* nil)))
+
