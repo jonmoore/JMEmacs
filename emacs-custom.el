@@ -24,7 +24,7 @@
  '(dired-omit-files "^\\.?#\\|^\\.")
  '(display-buffer-reuse-frames t)
  '(doxymacs-blank-multiline-comment-template (quote ("/**" > n "  " p > n "  " > n "*/" > n)))
- '(doxymacs-doxygen-style "JavaDoc" t)
+ '(doxymacs-doxygen-style "JavaDoc")
  '(edebug-trace nil)
  '(elpy-company-hide-modeline nil)
  '(elpy-modules
