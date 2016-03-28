@@ -5,3 +5,4 @@
 # For OS X
 .DS_Store
 *personal-autoloads.el
+*.cov2emacs.log
