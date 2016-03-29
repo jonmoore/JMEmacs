@@ -408,10 +408,12 @@ See `doxymacs-parm-tempo-element'."
 (use-package company
   :ensure t
   :config
-  (add-hook 'prog-mode-hook 'company-mode))
+  (add-hook 'prog-mode-hook 'company-mode)
+  (bind-key (kbd "C-o") 'helm-company company-active-map))
 
 (use-package company-auctex
-    :defer t)
+  :defer t)
+
 (use-package company-ghc
   :defer t
   :init
@@ -420,8 +422,7 @@ See `doxymacs-parm-tempo-element'."
   (add-to-list 'company-backends 'company-ghc))
 
 (use-package company-quickhelp
-  :ensure t
-  )
+  :ensure t)
 
 ;;; CYGWIN SHELL
 (setq process-coding-system-alist '(("bash" . undecided-unix)))
@@ -719,6 +720,12 @@ clean buffer we're an order of magnitude laxer about checking."
   )
 
 (helm-mode)
+
+(use-package helm-company
+  :ensure t)
+
+(use-package helm-swoop
+  :ensure t)
 
 ;; for `describe-keymap'
 (use-package help-fns+)
