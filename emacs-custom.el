@@ -46,6 +46,7 @@
  '(graphviz-dot-dot-program "dotforme")
  '(haskell-process-use-presentation-mode t)
  '(helm-ff-lynx-style-map nil nil nil "Disabling any helm keybinding is a sensible default")
+ '(helm-org-rifle-re-end-part nil)
  '(hide-ifdef-lines t)
  '(history-delete-duplicates t)
  '(history-length 100)

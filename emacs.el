@@ -650,8 +650,7 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package helm-descbinds
   :bind
-  ("C-h b" . helm-descbinds)
-  )
+  ("C-h b" . helm-descbinds))
 
 ;; See http://emacs.stackexchange.com/questions/2867/how-should-i-change-my-workflow-when-moving-from-ido-to-helm
 ;; for incremental switching
@@ -722,6 +721,9 @@ clean buffer we're an order of magnitude laxer about checking."
 (helm-mode)
 
 (use-package helm-company
+  :ensure t)
+
+(use-package helm-org-rifle
   :ensure t)
 
 (use-package helm-swoop

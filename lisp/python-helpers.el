@@ -90,6 +90,9 @@ nil if there is no such ancestor."
   nil
   "Set to disable activating TCP automatically.")
 
+;; possibly a cleaner way to do this
+;; https://github.com/lunaryorn/.emacs.d/blob/master/lisp/flycheck-virtualenv.el
+;; albeit using hack-local-variables-hook
 (defun tcp-python-activate (tcpdir)
   "Do Python-related setup, other than venvs, for the TCP project
 rooted at TCPDIR."
@@ -109,6 +112,7 @@ rooted at TCPDIR."
 
 (defun tcp-python-sync ()
   "Set Python-related variables for TCP."
+  (interactive)
   (unless (or (not buffer-file-name)
               tcp-activate-disabled)
     (let ((tcpdir (tcpdir-for buffer-file-name)))
@@ -311,7 +315,7 @@ information")
 ;;;###autoload
 (defun pycoverage-define-flycheck-checker ()
   "Register a checker for pycoverage with flycheck"
-  
+  (interactive)
   (flycheck-define-checker python-pycoverage
     "A Python test coverage checker checker using the pycoverage tool.
 
