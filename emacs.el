@@ -120,6 +120,11 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq require-final-newline t)
 
+(setq kill-buffer-query-functions
+      (remq
+       'server-kill-buffer-query-function
+        kill-buffer-query-functions))
+
 ;;; GLOBAL KEY SETTINGS
 (when system-osx-p
   (setq mac-command-modifier 'meta
