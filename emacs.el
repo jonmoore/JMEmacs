@@ -50,9 +50,7 @@
 
 (setq package-enable-at-startup nil)
 (setq package-archives
-      '(
-;;        ("org"   . "http://orgmode.org/elpa/")
-        ("melpa" . "http://melpa.milkbox.net/packages/")
+      '(("melpa" . "http://melpa.milkbox.net/packages/")
         ("gnu"   . "http://elpa.gnu.org/packages/")))
 (package-initialize)
 
@@ -62,7 +60,8 @@
   (package-install 'use-package))
 
 (setq use-package-verbose t
-      use-package-always-ensure t)
+      use-package-always-ensure t
+      use-package-always-defer t)
 
 (eval-when-compile
   (require 'use-package))
@@ -123,7 +122,7 @@
 (setq kill-buffer-query-functions
       (remq
        'server-kill-buffer-query-function
-        kill-buffer-query-functions))
+       kill-buffer-query-functions))
 
 ;;; GLOBAL KEY SETTINGS
 (when system-osx-p
@@ -220,13 +219,19 @@
      TeX-command-default "latexmk"))))
 
 (use-package tex-site
-  :defer t
   :ensure auctex
   :config
   (jnm-config-auctex))
 
+(defun latex-sumatra-scroll-down ()
+  (scroll-down-in-place)
+  (sumatra-jump-to-line))
+
+(defun latex-sumatra-scroll-up ()
+  (scroll-up-in-place)
+  (sumatra-jump-to-line))
+
 (use-package latex
-  :defer t
   :ensure auctex
   :init
   (add-hook 'LaTeX-mode-hook 'visual-line-mode)
@@ -234,17 +239,12 @@
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
   (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 
-  :config
-  (when system-win32-p
-    (define-key LaTeX-mode-map [prior] '(lambda ()
-                                          (scroll-down-in-place)
-                                          (sumatra-jump-to-line)))
-    (define-key LaTeX-mode-map [next]  '(lambda ()
-                                          (scroll-up-in-place)
-                                          (sumatra-jump-to-line)))))
+  :if system-win32-p
+  :bind (:map LaTeX-mode-map
+              ("<prior>" . latex-sumatra-scroll-down)
+              ("<next>"  .  latex-sumatra-scroll-up)))
 
 (use-package auctex-latexmk
-  :defer t
   :ensure auctex-latexmk
   :config
   (push
@@ -257,16 +257,13 @@
        :help "Run latexmk on file")))
    TeX-command-list))
 
-(use-package browse-kill-ring)
+(use-package browse-kill-ring
+  :bind ("M-y" . browse-kill-ring))
 
-(use-package cdlatex
-  :defer t)
+(use-package cdlatex)
 
 (use-package color-moccur)
 (use-package color-theme-modern)
-
-(use-package browse-kill-ring
-  :bind ("M-y" . browse-kill-ring))
 
 ;;; CC MODE
 (autoload 'doxymacs-mode      "doxymacs" "doxymacs mode" t)
@@ -278,7 +275,6 @@
 ;;; C++ MODE
 
 (use-package cc-mode
-  :defer t
   :mode
   ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode))
 
@@ -326,11 +322,11 @@
 See `doxymacs-parm-tempo-element'."
   (if parms
       (let ((prompt (concat "Parameter " (car parms) ": ")))
-          (list 'l " "
-                (doxymacs-doxygen-command-char) "param "
-                (car parms)
-                " " (list 'p prompt) '> 'n
-                (jnm-doxymacs-parm-tempo-element (cdr parms))))
+        (list 'l " "
+              (doxymacs-doxygen-command-char) "param "
+              (car parms)
+              " " (list 'p prompt) '> 'n
+              (jnm-doxymacs-parm-tempo-element (cdr parms))))
     nil))
 
 (add-hook 'c-mode-common-hook
@@ -348,24 +344,24 @@ See `doxymacs-parm-tempo-element'."
             ;; doxymacs-find-next-func, without requiring semantic.
             (doxymacs-mode t)
             (defconst doxymacs-function-comment-template
-                  '((let ((next-func (doxymacs-find-next-func)))
-                      (if next-func
-                          (list
-                           'l
-                           "/** " '> 'n
-                           " " 'p '> 'n
-                           " " '> 'n
-                           (jnm-parm-tempo-element (cdr (assoc 'args next-func)))
-                           (unless (string-match
-                                    (regexp-quote (cdr (assoc 'return next-func)))
-                                    doxymacs-void-types)
-                             '(l " * " > n " * " (doxymacs-doxygen-command-char)
-                                 "return " (p "Returns: ") > n))
-                           " */" '>)
-                        (progn
-                          (error "Can't find next function declaration.")
-                          nil))))
-                  "Custom JavaDoc-style template for function documentation without as many asterisks.")
+              '((let ((next-func (doxymacs-find-next-func)))
+                  (if next-func
+                      (list
+                       'l
+                       "/** " '> 'n
+                       " " 'p '> 'n
+                       " " '> 'n
+                       (jnm-parm-tempo-element (cdr (assoc 'args next-func)))
+                       (unless (string-match
+                                (regexp-quote (cdr (assoc 'return next-func)))
+                                doxymacs-void-types)
+                         '(l " * " > n " * " (doxymacs-doxygen-command-char)
+                             "return " (p "Returns: ") > n))
+                       " */" '>)
+                    (progn
+                      (error "Can't find next function declaration.")
+                      nil))))
+              "Custom JavaDoc-style template for function documentation without as many asterisks.")
 
             (setq c-auto-newline 1
                   fill-column 100
@@ -411,23 +407,20 @@ See `doxymacs-parm-tempo-element'."
 (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
 
 (use-package company
-  :ensure t
   :config
   (add-hook 'prog-mode-hook 'company-mode)
-  (bind-key (kbd "C-o") 'helm-company company-active-map))
+  :bind  (:map company-active-map
+               ("C-o" . helm-company)))
 
-(use-package company-auctex
-  :defer t)
+(use-package company-auctex)
 
 (use-package company-ghc
-  :defer t
   :init
   (setq company-ghc-show-info t)
   :config
   (add-to-list 'company-backends 'company-ghc))
 
-(use-package company-quickhelp
-  :ensure t)
+(use-package company-quickhelp)
 
 ;;; CYGWIN SHELL
 (setq process-coding-system-alist '(("bash" . undecided-unix)))
@@ -472,24 +465,15 @@ See `doxymacs-parm-tempo-element'."
     (dired-column-widths-cleanup)))
 (ad-activate 'find-dired-sentinel)
 
-(use-package discover-my-major
-  :defer t)
-
 ;;; EDIFF
 (setq ediff-custom-diff-options "-c -w"
       ediff-diff-options "-w")
 
-(use-package ess
-  :defer t)
+(use-package ess)
 
-(use-package esup
-  :defer t)
-
-(use-package expand-region
-  :defer t)
+(use-package expand-region)
 
 (use-package ffap
-  :defer t
   ;; Please stop pinging random hosts!  See
   ;; https://github.com/technomancy/emacs-starter-kit/issues/39
   :config (setq ffap-machine-p-known 'reject))
@@ -529,7 +513,7 @@ clean buffer we're an order of magnitude laxer about checking."
 ;; to custom functions, as below.
 ;;
 ;;  (defun python-script-p (filename)
-;   "If FILENAME is a string, return t if it looks like a python
+                                        ;   "If FILENAME is a string, return t if it looks like a python
 ;;  script, otherwise nil.  Return nil if FILENAME is nil."
 ;;   (and filename
 ;;        (string-equal (file-name-extension filename)
@@ -572,7 +556,6 @@ clean buffer we're an order of magnitude laxer about checking."
       jit-lock-stealth-time 1)
 
 (use-package ghc
-  :defer t
   :config
   (setq ghc-debug t))
 
@@ -596,59 +579,50 @@ clean buffer we're an order of magnitude laxer about checking."
 ;;; GUD MODE
 (eval-after-load 'gud
   (quote (progn
-     (define-key gud-mode-map '[f5]   'gud-cont)
-     (define-key gud-mode-map '[S-f5] 'gud-break)
-     (define-key gud-mode-map '[f10]  'gud-next)
-     (define-key gud-mode-map '[f11]  'gud-step)
+           (define-key gud-mode-map '[f5]   'gud-cont)
+           (define-key gud-mode-map '[S-f5] 'gud-break)
+           (define-key gud-mode-map '[f10]  'gud-next)
+           (define-key gud-mode-map '[f11]  'gud-step)
 
-     (defvar gud-overlay
-       (let* ((ov (make-overlay (point-min) (point-min))))
-         (overlay-put ov 'face 'secondary-selection)
-         ov)
-       "Overlay variable for GUD highlighting.")
+           (defvar gud-overlay
+             (let* ((ov (make-overlay (point-min) (point-min))))
+               (overlay-put ov 'face 'secondary-selection)
+               ov)
+             "Overlay variable for GUD highlighting.")
 
-     (defadvice gud-display-line (after my-gud-highlight act)
-       "Highlight current line up to first non-whitespace character."
-       (let ((bf (gud-find-file true-file)))
-         (with-current-buffer bf
-           (move-overlay
-            gud-overlay
-            (line-beginning-position)
-            (save-excursion
-              (search-forward-regexp "\\S-" (line-end-position) t )
-              (match-beginning 0))
-            (current-buffer)))))
-     (defun gud-kill-buffer ()
-       (if (derived-mode-p 'gud-mode)
-           (delete-overlay gud-overlay)))
-     (add-hook 'kill-buffer-hook 'gud-kill-buffer))))
+           (defadvice gud-display-line (after my-gud-highlight act)
+             "Highlight current line up to first non-whitespace character."
+             (let ((bf (gud-find-file true-file)))
+               (with-current-buffer bf
+                 (move-overlay
+                  gud-overlay
+                  (line-beginning-position)
+                  (save-excursion
+                    (search-forward-regexp "\\S-" (line-end-position) t )
+                    (match-beginning 0))
+                  (current-buffer)))))
+           (defun gud-kill-buffer ()
+             (if (derived-mode-p 'gud-mode)
+                 (delete-overlay gud-overlay)))
+           (add-hook 'kill-buffer-hook 'gud-kill-buffer))))
 
 (use-package haskell-mode
-  :defer t
   :init
   (setq haskell-process-suggest-remove-import-lines t
         haskell-process-auto-import-loaded-modules t
         haskell-process-suggest-hoogle-imports t
         haskell-process-log t)
-  :config 
-  (bind-key (kbd "C-c C-l") 'haskell-process-load-or-reload haskell-mode-map)
-  (bind-key (kbd "C-`")     'haskell-interactive-bring      haskell-mode-map)
-  ;;  (bind-key (kbd "C-c C-t") 'haskell-process-do-type        haskell-mode-map)
-  (bind-key (kbd "C-c C-i") 'haskell-process-do-info        haskell-mode-map)
-  ;;  (bind-key (kbd "C-c C-c") 'haskell-compile                haskell-mode-map)
-  ;; (bind-key (kbd "C-c C-k") 'haskell-interactive-mode-clear haskell-mode-map)
-  ;; (bind-key (kbd "C-c c")   'haskell-process-cabal          haskell-mode-map)
-  (bind-key (kbd "SPC")     'haskell-mode-contextual-space  haskell-mode-map)
-  (bind-key (kbd "M-.")     'haskell-mode-jump-to-def       haskell-mode-map)
-  ;;(bind-key (kbd "C-c C-d") 'ghc-browse-document            haskell-mode-map)
-  
-  (require 'company)
-  (require 'company-ghc))
+  :bind
+  (:map haskell-mode-map
+        ("C-c C-l"  . haskell-process-load-or-reload)
+        ("C-`"      . haskell-interactive-bring)
+        ("C-c C-i"  . haskell-process-do-info)
+        ("SPC"      . haskell-mode-contextual-space)
+        ("M-."      . haskell-mode-jump-to-def)))
 
 (add-hook 'haskell-mode-hook
           (lambda ()
             (turn-on-haskell-indentation)
-            (company-mode)
             (when (buffer-file-name)
               (ghc-init))))
 
@@ -661,84 +635,56 @@ clean buffer we're an order of magnitude laxer about checking."
 ;; for incremental switching
 (use-package helm
   :bind
-  ("C-x b"   .  helm-mini)
-  ("C-x C-b" .  helm-buffers-list)
-  ("C-c h"   .  helm-command-prefix)
-  ("C-x b"   .  helm-mini)
+  (("C-c h"          . helm-command-prefix)
+   ("C-h SPC"        . helm-all-mark-rings)
+   ("C-x C-b"        . helm-buffers-list)
+   ("C-x C-f"        . helm-find-files)
+   ("C-x C-r"        . helm-recentf)
+   ("C-x b"          . helm-mini)
+   ("M-X"            . execute-extended-command) ;; old binding of M-x
+   ("M-s /"          . helm-multi-swoop)
+   ("M-s o"          . helm-swoop)
+   ("M-x"            . helm-M-x)
+   ("M-y"            . helm-show-kill-ring)
 
-  :init ;; can maybe make this use :bind
+   :map helm-map
+   ("<tab>"          . helm-execute-persistent-action)
+   ("C-z"            . helm-select-action)
 
-  ;; Must be before loading helm-config (WTF) per
-  ;; http://tuhdo.github.io/helm-intro.html
-  (global-set-key (kbd "C-c h") 'helm-command-prefix)
-  (global-unset-key (kbd "C-x c"))
+   :map helm-command-map
+   ("a"              . helm-apropos)
+   ("M-:"            . helm-eval-expression-with-eldoc)
+   ("<tab>"          . helm-lisp-completion-at-point)
+   ("o"              . helm-occur)
+   
+   :map helm-find-files-map
+   ("C-x o"          . helm-ff-run-switch-other-window)
+   ("C-x 5 o"        . helm-ff-run-switch-other-frame)
+   ("C-h m"          . describe-mode)
+   ("C-<backspace>"  . backward-kill-word)
+   
+   :map helm-read-file-map
+   ("C-h m"          . describe-mode)
+   ("C-<backspace>"  . backward-kill-word))
 
   :config
   (require 'helm-config)
   (require 'helm-files)
-
+  (global-unset-key (kbd "C-x c"))
   ;; Disable helm completion in some modes
   (setq helm-mode-no-completion-in-region-in-modes
-        '(inferior-python-mode))
+        '(inferior-python-mode)))
 
-  (bind-key "C-x C-r" 'helm-recentf)
-  (bind-key "M-s o"   'helm-swoop)
-  (bind-key "M-s /"   'helm-multi-swoop)
-
-  (bind-key "M-x"     'helm-M-x)
-  (bind-key "M-X"     'execute-extended-command) ;; old binding of M-x
-  (bind-key "M-y"     'helm-show-kill-ring)
-  (bind-key "C-x C-f" 'helm-find-files)
-
-  (bind-key "C-h SPC" 'helm-all-mark-rings)
-
-  ;; rebind tab to run persistent action
-  (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action)
-  ;; list actions using C-z
-  (define-key helm-map (kbd "C-z")  'helm-select-action)
-
-  (bind-key "a"       'helm-apropos                    helm-command-map)
-  (bind-key "M-:"     'helm-eval-expression-with-eldoc helm-command-map)
-  (bind-key "<tab>"   'helm-lisp-completion-at-point   helm-command-map)
-  (bind-key "o"       'helm-occur                      helm-command-map)
-  
-  ;; helm-find-files-map and helm-read-file-map have some annoying
-  ;; keybindings, so repair some of them.
-
-  (define-key helm-find-files-map (kbd "C-x o")         'helm-ff-run-switch-other-window)
-  (define-key helm-find-files-map (kbd "C-x 5 o")       'helm-ff-run-switch-other-frame)
-  (define-key helm-find-files-map (kbd "C-h m")         'describe-mode)
-  (define-key helm-read-file-map (kbd "C-h m")         'describe-mode)
-
-  ;; WTF!!!
-  ;; (define-key map (kbd "C-<backspace>") 'helm-ff-run-toggle-auto-update)
-  (define-key helm-find-files-map (kbd "C-<backspace>") 'backward-kill-word)
-  (define-key helm-read-file-map (kbd "C-<backspace>") 'backward-kill-word)
-  
-  ;; Suspicious but maybe useful
-  ;; (define-key map (kbd "M-R")           'helm-ff-run-rename-file)
-  ;; (define-key map (kbd "M-C")           'helm-ff-run-copy-file)
-  ;; (define-key map (kbd "M-D")           'helm-ff-run-delete-file)
-  ;; (define-key map (kbd "M-%")           'helm-ff-run-query-replace-on-marked)
-  ;; (define-key map (kbd "M-p")           'helm-ff-run-switch-to-history)
-  )
+(use-package helm-company)
+(use-package helm-org-rifle)
+(use-package helm-swoop)
 
 (helm-mode)
 
-(use-package helm-company
-  :ensure t)
 
-(use-package helm-org-rifle
-  :ensure t)
+(use-package help-fns+) ; for `describe-keymap'
 
-(use-package helm-swoop
-  :ensure t)
-
-;; for `describe-keymap'
-(use-package help-fns+)
-
-(use-package hexrgb
-  :defer t)
+(use-package hexrgb)
 
 (defun weight-lists (froms tos weight)
   (mapcar* (lambda (from to)
@@ -747,7 +693,6 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package highlight-sexps
   :ensure nil
-  :defer t
   :config
   (setq hl-sexp-background-colors
         (let* ((hsv-back (hexrgb-hex-to-hsv
@@ -813,18 +758,7 @@ clean buffer we're an order of magnitude laxer about checking."
                                (ibuffer-switch-to-saved-filter-groups
                                 "default")))
 
-
-;;; IDO MODE
-(add-hook 'ido-setup-hook
-          (lambda ()
-            (let ((kmap ido-file-dir-completion-map))
-              (define-key kmap (kbd "M-n")   'ido-next-work-file)
-              (define-key kmap (kbd "C-M-n") 'ido-next-work-directory)
-              (define-key kmap (kbd "M-p")   'ido-prev-work-file)
-              (define-key kmap (kbd "C-M-p") 'ido-prev-work-directory))))
-
-(use-package jira
-  :defer t)
+(use-package jira)
 
 ;;; INFO
 (use-package info
@@ -833,20 +767,7 @@ clean buffer we're an order of magnitude laxer about checking."
   (bind-key ":"           'Info-search-backward Info-mode-map)
   (bind-key [(shift tab)] 'Info-prev-reference  Info-mode-map))
 
-;;; J MODE
-(autoload 'j-mode "j-mode.el"  "Major mode for J." t)
-(autoload 'j-shell "j-mode.el" "Run J from emacs." t)
-(setq auto-mode-alist
-      (cons '("\\.ij[rstp]" . j-mode) auto-mode-alist))
-(setq j-command "jconsole")
-(setq j-path "~/j/bin/")
-(add-hook 'j-mode-hook
-          (lambda ()
-            (which-func-mode 1)))
-
 (require 'cl)
-(when (ignore-errors (require 'which-func))
-  (which-func-mode 1)) ; shows the current function in statusbar
 
 ;;; LISP MODE
 (add-hook 'emacs-lisp-mode-hook
@@ -921,13 +842,11 @@ clean buffer we're an order of magnitude laxer about checking."
             (let ((map smartparens-strict-mode-map))
               (define-key map (kbd "M-q")                  'sp-indent-defun))))
 
-(use-package macrostep
-  :defer t)
+(use-package macrostep)
 
 ;;; MAGIT
 
 (use-package magit
-  :defer t
   :config
   (setq magit-popup-use-prefix-argument 'default
 	magit-revert-buffers t
@@ -942,26 +861,10 @@ clean buffer we're an order of magnitude laxer about checking."
     ad-do-it))
 (ad-activate 'man)
 
-;;; MATLAB MODE
-(add-to-list 'auto-mode-alist '("\\.m\\'" . matlab-mode))
-(autoload 'matlab-mode  "matlab" "Enter Matlab mode."       t)
-(autoload 'matlab-shell "matlab" "Interactive Matlab mode." t)
-(add-hook 'matlab-mode-hook
-	  (lambda ()
-	    (auto-fill-mode -1)
-	    (setq fill-column 76)
-	    (imenu-add-to-menubar "Find")
-	    (local-set-key [?\M-\;]    'comment-dwim)
-	    (local-set-key [(shift return)] 'matlab-comment-return)))
-(setq matlab-indent-function t
-      matlab-verify-on-save-flag nil)
-
 (use-package maxframe)
 
 ;;; MEDIAWIKI MODE
-(use-package mediawiki
-  :ensure nil
-  :defer t)
+(use-package mediawiki)
 
 (defun use-my-mediawiki-outline-magic-keys ()
   "Redefines mediawiki-outline-magic-keys to avoid clashing with
@@ -983,8 +886,7 @@ control-arrow keys"
 (setq auto-mode-alist (cons '("\\.mms" . mmix-mode)
                             auto-mode-alist))
 
-(use-package multiple-cursors
-  :defer t)
+(use-package multiple-cursors)
 
 ;; MOCCUR
 (use-package color-moccur
@@ -1017,30 +919,27 @@ control-arrow keys"
 
 ;;; NXML MODE
 
-(use-package nexus
-  :defer t)
+(use-package nexus)
+
 (require 'nexus-extensions)
 
 (add-hook 'nxml-mode-hook
           (lambda ()
             (local-set-key [f9]  'nexus-insert-gav-for-keyword)))
 
-
 ;;; ORG MODE
 
-(use-package ob-ipython
-  :defer t)
-(use-package org-jira
-  :defer t)
-(use-package org-plus-contrib
-  :defer t)
+(use-package ob-ipython)
+(use-package org-jira)
+(use-package org-plus-contrib)
 (use-package org-ref
-  :defer t
   :config
   (when (bound-and-true-p bibliography-directory)
-    (setq reftex-default-bibliography (list (concat bibliography-directory "/jonmoore.bib")))
+    (setq reftex-default-bibliography
+	  (list (concat bibliography-directory "/jonmoore.bib")))
     
-    (setq org-ref-bibliography-notes (concat bibliography-directory "/notes.org")
+    (setq org-ref-bibliography-notes
+	  (concat bibliography-directory "/notes.org")
           org-ref-default-bibliography reftex-default-bibliography
           org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
           org-ref-insert-cite-key "C-c )")
@@ -1050,16 +949,10 @@ control-arrow keys"
     (setq helm-bibtex-pdf-open-function 'org-open-file)
     (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
 
-(use-package ox-mediawiki
-  :defer t)
-
-(use-package ox-reveal
-  :defer t)
-
+(use-package ox-mediawiki)
+(use-package ox-reveal)
 ;; http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/moon.css
-
-(use-package kanban
-  :defer t)
+(use-package kanban)
 
 (defun in-a-jira-buffer ()
   "Return if the current buffer is a Jira one, created with
@@ -1190,8 +1083,11 @@ by `:config' in `use-package'"
    org-toc-default-depth 3
    org-use-speed-commands t))
 
+(defun org-cycle-t ()
+  (interactive)
+  (org-cycle t))
+
 (use-package org
-  :defer t
   :mode "\\.org'"
 
   :init
@@ -1202,21 +1098,19 @@ by `:config' in `use-package'"
                             ([(control shift left)]  . [(meta shift -)]))
         org-replace-disputed-keys t)
 
+  :bind
+  (:map org-mode-map
+        ("<C-tab>"    . org-cycle-t)
+	("M-?"        . org-complete)
+	("<backtab>"  . org-show-contents-or-move-to-previous-table-field)
+	("<C-S-down>" . outline-next-visible-heading)
+	("<C-S-up>"   . outline-previous-visible-heading)
+	("C-c ?"      . outline-mark-subtree))
+
   :config
-  (bind-keys
-   :map org-mode-map
-   ([C-tab]       . (lambda () (interactive) (org-cycle t)))
-   ([?\M-?]       . org-complete)
-   ([(shift tab)] . org-show-contents-or-move-to-previous-table-field)
-   ([C-S-down]    . outline-next-visible-heading)
-   ([C-S-up]      . outline-previous-visible-heading)
-   ([?\C-c ? ]    . outline-mark-subtree))
-
   (require 'texmathp)
-
   (require 'org-agenda)
   (require 'org-id)
-  
   (require 'ox)
   (require 'ox-reveal)
   (require 'pyvenv)
@@ -1254,13 +1148,11 @@ by `:config' in `use-package'"
 
 (use-package point-undo)
 
-(use-package projectile
-  :defer t)
+(use-package projectile)
 
 ;; Not really needed since I use flycheck.  See
 ;; pycoverage-define-flycheck-checker
-(use-package pycoverage
-  :defer t)
+(use-package pycoverage)
 
 ;;; PRETTY COLUMN
 (setq pcol-str-separator " "
@@ -1286,11 +1178,9 @@ by `:config' in `use-package'"
 ;; 	     :disabled t)
 
 ;;; PYTHON MODE
-(use-package ein
-  :defer t)
+(use-package ein)
 
 (use-package elpy
-  :defer t
   :init
   (add-hook 'jedi-mode-hook
             'jedi-direx:setup)
@@ -1306,19 +1196,13 @@ by `:config' in `use-package'"
   'elpy
   "Python IDE package to use")
 
-(use-package jedi
-  :defer t)
-(use-package jedi-direx
-  :defer t)
-
-(use-package live-py-mode
-  :defer t)
+(use-package jedi)
+(use-package jedi-direx)
+(use-package live-py-mode)
 
 ;;; elpy recommended packages
 ;; echo n | enpkg install jedi flake8 nose pylint
 ;; pip install importmagic autopep8 flake8-pep257
-
-
 (case python-ide-package
   ('elpy
    (eval-after-load 'python
@@ -1369,14 +1253,11 @@ by `:config' in `use-package'"
     (error nil)))
 (advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors)
 
-(use-package restclient
-  :disabled t)
+(use-package restclient)
 
-(use-package company-restclient
-  :disabled t)
+(use-package company-restclient)
 
-(use-package scroll-in-place
-  :ensure nil)
+(require 'scroll-in-place)
 
 ;;; SERVER MINOR MODE
 (use-package server
@@ -1391,8 +1272,7 @@ by `:config' in `use-package'"
   (setq shell-toggle-launch-shell 'shell))
 
 ;;; SHELL-MODE
-(use-package shell-toggle
-  :defer t)
+(use-package shell-toggle)
 
 (add-hook 'shell-mode-hook
 	  '(lambda ()
@@ -1417,32 +1297,24 @@ by `:config' in `use-package'"
 ;; Remove the shortcut assignment to make the application work as
 ;; expected. To do this:
 ;; Start
-;; ->Region and Language
-;; ->Keyboards and Languages
-;; ->Change keyboards
-;; ->Advanced Key Settings
-;; ->Between input languages
-;; ->Change Key Sequence
+;; ->Region and Language ->Keyboards and Languages->Change keyboards
+;; ->Advanced Key Settings->Between input languages->Change Key Sequence
 ;; Set Switch Keyboard Layout to Not Assigned.
 ;; Click OK...
 
-;; This problem is likely to reoccur between logins. Other possible
-;; sources of help
+;; This problem reoccurs between logins. More info
 ;; http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
 (use-package smartparens)
 
-
 ;;; SPEEDBAR MODE
 (use-package speedbar
-  :defer t
   :config
   (add-hook 'speedbar-mode-hook
             (lambda ()
               (speedbar-add-supported-extension ".org")
               (auto-raise-mode 1))))
 
-(use-package sr-speedbar
-  :defer t)
+(use-package sr-speedbar)
 
 ;;; TEXT MODE
 (add-hook 'text-mode-hook
@@ -1454,21 +1326,18 @@ by `:config' in `use-package'"
   (setq tramp-default-method "plink"))
 
 (use-package undo-tree
-  :defer t
-  :ensure t
   :diminish undo-tree-mode
   :config
   (progn
     (global-undo-tree-mode)))
 
+;;; WHICH FUNCTION MODE
+(which-function-mode 1)
+
 ;;; WIKIPEDIA MODE
-(use-package wikipedia-mode
-  :ensure nil
-  :defer t
-  :mode "\\.wiki\\'")
+(add-to-list 'auto-mode-alist '("\\.wiki\\'" . wikipedia-mode))
 
 (use-package woman
-  :defer t
   :config
   (defun my-woman-mode-hook ()
     (when system-win32-p
@@ -1478,8 +1347,7 @@ by `:config' in `use-package'"
                  (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
   (add-hook 'woman-mode-hook 'my-woman-mode-hook))
 
-(use-package yaml-mode
-    :defer t)
+(use-package yaml-mode)
 
 ;;; YASNIPPET MINOR MODE
 (setq yas-verbosity 1)
@@ -1502,8 +1370,7 @@ by `:config' in `use-package'"
 (desktop-save-mode 1)
 (savehist-mode 1)
 
-;; Try to suppress errors.  May not be needed now we are not using ido
-;; so much.
+;; Try to suppress ido errors.
 (defun my-savehist-autosave (orig-fun &rest args)
   "Save the minibuffer history if it has been modified since the last save.
 Does nothing if Savehist mode is off."
@@ -1513,7 +1380,6 @@ Does nothing if Savehist mode is off."
 (advice-add 'savehist-autosave :around #'my-savehist-autosave)
 
 ;;; COLOR-THEME
-;; Now using color-theme-modern
 (load-theme 'word-perfect t t)
 (enable-theme 'word-perfect)
 
