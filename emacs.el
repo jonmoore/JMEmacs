@@ -59,15 +59,14 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(eval-when-compile
+  (require 'use-package))
+(require 'bind-key)
+(require 'diminish)
+
 (setq use-package-verbose t
       use-package-always-ensure t
       use-package-always-defer t)
-
-(eval-when-compile
-  (require 'use-package))
-
-(require 'bind-key)
-(require 'diminish)
 
 ;;; Personal lisp directory
 (mapc
@@ -87,7 +86,7 @@
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
 		       (system-osx-p   "~/backup")))))
 
-(require 'cl)
+;; (require 'cl)
 
 (setq user-full-name "Jonathan Moore")
 
@@ -676,6 +675,8 @@ clean buffer we're an order of magnitude laxer about checking."
         '(inferior-python-mode)))
 
 (use-package helm-company)
+(when system-osx-p
+  (use-package helm-cscope))
 (use-package helm-org-rifle)
 (use-package helm-swoop)
 
@@ -1180,43 +1181,37 @@ by `:config' in `use-package'"
 ;;; PYTHON MODE
 (use-package ein)
 
+;;; elpy recommended packages
+;; echo n | enpkg install jedi flake8 nose pylint
+;; pip install importmagic autopep8 flake8-pep257
 (use-package elpy
   :init
-  (add-hook 'jedi-mode-hook
-            'jedi-direx:setup)
+  (add-hook 'jedi-mode-hook 'jedi-direx:setup)
+  (eval-after-load 'python '(elpy-enable))
+
+  :bind
+  (:map
+   elpy-mode-map
+   ("C-c C-n" . nil)
+   ("C-c C-p" . nil)
+   :map python-mode-map
+   ("C-c x" . jedi-direx:pop-to-buffer))
   :config
-  (bind-key "C-c C-n" nil elpy-mode-map)
-  (bind-key "C-c C-p" nil elpy-mode-map)
+  (setq elpy-rpc-backend "jedi")
 
   ;; The default version goes off to the web when reporting errors!!
   ;; I'll assume we don't need _latest
-  (setq elpy-config--get-config my-elpy-config--get-config))
-
-(defconst python-ide-package
-  'elpy
-  "Python IDE package to use")
+  (setq elpy-config--get-config my-elpy-config--get-config)
+  (add-hook 'inferior-python-mode-hook
+            '(lambda ()
+               (progn
+                 (inferior-python-mode-buffer-init)
+                 (local-set-key [tab] 'yas-or-company-or-indent-for-tab)
+                 (local-set-key (kbd "C-M-i") 'python-shell-completion-complete-or-indent)))))
 
 (use-package jedi)
 (use-package jedi-direx)
 (use-package live-py-mode)
-
-;;; elpy recommended packages
-;; echo n | enpkg install jedi flake8 nose pylint
-;; pip install importmagic autopep8 flake8-pep257
-(case python-ide-package
-  ('elpy
-   (eval-after-load 'python
-     '(progn
-        (elpy-enable)
-        (bind-key "\C-cx" 'jedi-direx:pop-to-buffer python-mode-map)
-        (setq elpy-rpc-backend "jedi")
-        (add-hook 'inferior-python-mode-hook
-                  '(lambda ()
-                     (progn
-                       (inferior-python-mode-buffer-init)
-                       (local-set-key [tab] 'yas-or-company-or-indent-for-tab)
-                       (local-set-key (kbd "C-M-i") 'python-shell-completion-complete-or-indent)))))))
-  ('ein))  ;; Nothing for ein yet
 
 (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
 
@@ -1229,7 +1224,6 @@ by `:config' in `use-package'"
             (define-key python-mode-map "\C-c\C-yv" 'yas-visit-snippet-file)
             (company-quickhelp-mode t)))
 
-;; something like 
 (add-hook  'jedi-mode-hook
            (lambda ()
              (setq-local jedi:environment-root pyvenv-virtual-env)

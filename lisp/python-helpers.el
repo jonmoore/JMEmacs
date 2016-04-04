@@ -1,6 +1,3 @@
-(require 'cl)
-
-
 (defun file-attribute-name (file-attribute-list)
   "Return the file name from a file attribute list, as from
 `file-attributes'"

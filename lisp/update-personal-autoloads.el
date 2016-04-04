@@ -10,7 +10,6 @@
 ;; which contains:
 
 (require 'autoload)
-(require 'cl)
 
 (defun has-files-newer-than-autoload (dir autoload-file)
   (find-if (lambda (file)
