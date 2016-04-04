@@ -1350,7 +1350,11 @@ by `:config' in `use-package'"
 (use-package yaml-mode)
 
 ;;; YASNIPPET MINOR MODE
-(setq yas-verbosity 1)
+(use-package yasnippet
+  :config
+  (setq yas-verbosity 1))
+
+(use-package ztree)
 
 ;;;
 ;;;; DESKTOP
