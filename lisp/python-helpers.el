@@ -366,14 +366,3 @@ Attempts to find an open port, and to reuse the process."
   (browse-url (format "http://localhost:%s" *pydoc-browser-port*)))
 
 
-;;;###autoload
-(defun pydoc-browse-kill ()
-  "Kill the pydoc browser."
-  (interactive)
-  (when *pydoc-browser-process*
-    (condition-case nil 
-        (kill-process *pydoc-browser-process*)
-      (error nil))
-    (setq *pydoc-browser-process* nil
-	  *pydoc-browser-port* nil)))
-
