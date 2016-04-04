@@ -865,7 +865,9 @@ clean buffer we're an order of magnitude laxer about checking."
 (use-package maxframe)
 
 ;;; MEDIAWIKI MODE
-(use-package mediawiki)
+(use-package mediawiki
+  :mode "\\.wiki\\'"
+  )
 
 (defun use-my-mediawiki-outline-magic-keys ()
   "Redefines mediawiki-outline-magic-keys to avoid clashing with
@@ -1327,9 +1329,6 @@ by `:config' in `use-package'"
 
 ;;; WHICH FUNCTION MODE
 (which-function-mode 1)
-
-;;; WIKIPEDIA MODE
-(add-to-list 'auto-mode-alist '("\\.wiki\\'" . wikipedia-mode))
 
 (use-package woman
   :config
