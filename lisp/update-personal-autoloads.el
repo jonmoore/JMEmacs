@@ -10,9 +10,10 @@
 ;; which contains:
 
 (require 'autoload)
+(require 'cl-lib)
 
 (defun has-files-newer-than-autoload (dir autoload-file)
-  (find-if (lambda (file)
+  (cl-find-if (lambda (file)
              (file-newer-than-file-p file autoload-file))
            (directory-files dir t directory-files-no-dot-files-regexp)))
 
