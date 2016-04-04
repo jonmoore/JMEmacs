@@ -180,9 +180,9 @@
 (global-set-key [f11]               'org-clock-in-and-goto)
 (global-set-key [S-f11]             'org-clock-goto)
 
-(global-set-key [f12]               'qap-p4-grep-moccur)
-(global-set-key [S-f12]             'qap-locate-windows-code-like-and-moccur )
-(global-set-key [C-f12]             'qap-locate-windows-code-contains-and-moccur )
+(global-set-key [f12]               'p4-grep-moccur)
+(global-set-key [S-f12]             'windows-search-moccur-like)
+(global-set-key [C-f12]             'windows-search-moccur-contains)
 
 ;;;
 ;;;; PACKAGES
@@ -893,14 +893,11 @@ control-arrow keys"
 
 ;; MOCCUR
 (use-package color-moccur
-  :config
-  (use-package moccur-edit
-    :ensure nil)
-  :bind ("M-s O" . moccur)
+  :bind (("M-s O" . moccur)
+         :map isearch-mode-map
+         ("M-o" . isearch-moccur )
+         ("M-O" . isearch-moccur-all))
   :init
-  (bind-key "O"   'Buffer-menu-moccur Buffer-menu-mode-map)
-  (bind-key "M-o" 'isearch-moccur     isearch-mode-map)    
-  (bind-key "M-O" 'isearch-moccur-all isearch-mode-map)    
   (setq moccur-split-word t
         dmoccur-use-list t
         dmoccur-use-project t
@@ -918,7 +915,9 @@ control-arrow keys"
           "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
           "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
           "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
-          "\\.pch$" "\\.pdb$" "\\.res$")))
+          "\\.pch$" "\\.pdb$" "\\.res$"))
+  :config
+  (require 'moccur-edit))
 
 ;;; NXML MODE
 
