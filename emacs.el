@@ -39,8 +39,6 @@
 			   local-exec-paths)
 			  exec-path)))
 
-(setq shell-file-name (or (getenv "SHELL")
-                          default-system-shell))
 ;; use setenv because some functions call getenv, not shell-file-name
 (setenv "SHELL" shell-file-name)
 (setq load-prefer-newer t)
@@ -69,6 +67,11 @@
       use-package-always-defer t)
 
 ;;; Personal lisp directory
+;; (mapcar (lambda (relpath)
+;;           (concat personal-emacs-root relpath))
+;;         '("lisp"
+;;           "lisp/doxymacs-1.8.0"))
+
 (mapc
  (lambda (relpath)
    (add-to-list 'load-path (concat personal-emacs-root relpath)))
@@ -80,13 +83,10 @@
 
 ;;;
 ;;; ENVIRONMENT
-
 (setq backup-directory-alist
       (list
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
 		       (system-osx-p   "~/backup")))))
-
-;; (require 'cl)
 
 (setq user-full-name "Jonathan Moore")
 
@@ -130,59 +130,45 @@
         mac-emulate-three-button-mouse t
         ns-pop-up-frames nil))
 
-;;; control key sequences
-(global-set-key [?\C-.]             'goto-line)
-(global-set-key [?\C-c ?b]          'browse-url-at-point)
-(global-set-key [?\C-c ?a]          'org-agenda)
-(global-set-key [?\C-c ?l]          'org-store-link)
-(global-set-key [?\C-c ?r]          'rename-file-and-buffer)
-(global-set-key [?\C-c ?m]          'move-file-and-buffer)
-(global-set-key [?\C-c ?\C-o]       'search-buffers)
-(global-set-key [?\C-c ?\C-x ?\C-o] 'moccur)
-(global-set-key [?\C-x ?\C-b]       '(lambda () (interactive) (ibuffer nil "Ibuffer")))
-(global-set-key [?\C-x ?\C-j]       'dired-jump)
-(global-set-key [?\C-n]             '(lambda () (interactive) (scroll-up-in-place 1)))
-(global-set-key [?\C-p]             '(lambda () (interactive) (scroll-down-in-place 1)))
-(global-set-key [?\C-r]             'isearch-backward-regexp)
-(global-set-key [?\C-\M-r]          'isearch-backward)
-(global-set-key [?\C-s]             'isearch-forward-regexp)
-(global-set-key [?\C-\M-s]          'isearch-backward)
-(global-set-key [?\C-x ?\C-o]       'delete-blank-lines-around-point-or-in-region)
-(global-set-key [?\C-z]             'kill-buffer)
+(bind-keys
+ ("C-c a"        . org-agenda)
+ ("C-c b"        . browse-url-at-point)
+ ("C-c l"        . org-store-link)
+ ("C-c m"        . move-file-and-buffer)
+ ("C-c r"        . rename-file-and-buffer)
+ ;; ("C-x C-b"      . (lambda () (interactive) (ibuffer nil "Ibuffer")))
+ ("C-x C-o"      . delete-blank-lines-around-point-or-in-region)
+ ("C-x LFD"      . dired-jump)
 
-;;; meta
-(global-set-key [?\M-.]             'find-function)
-;; use numeric codes 91 and 93 for [ and ] because embedding them with
-;; ?M-[ and ?M-] confuses forward-sexp, which is used by customization
-(global-set-key [(meta 91)]        'undo)
-(global-set-key [(meta 93)]        'repeat)
+ ("C-n"          . (lambda () (interactive) (scroll-up-in-place 1)))
+ ("C-p"          . (lambda () (interactive) (scroll-down-in-place 1)))
 
-;;; special keys
-(global-set-key [M-up]              'enlarge-window)
-(global-set-key [M-down]            'shrink-window)
-(global-set-key [C-S-left]          'select-last-buffer)
-(global-set-key [C-S-right]         'select-next-buffer)
-(global-set-key [home]              'beginning-of-buffer)
-(global-set-key [end]               'end-of-buffer)
-(global-set-key [prior]             '(lambda () (interactive) (scroll-down-in-place)))
-(global-set-key [next]              '(lambda () (interactive) (scroll-up-in-place)))
+ ("C-r"          . isearch-backward-regexp)
+ ("M-C-r"        . isearch-backward)
+ ("C-s"          . isearch-forward-regexp)
+ ("M-C-s"        . isearch-backward)
 
-;;; function keys
-(global-set-key [f4]                'shell-toggle)
-(global-set-key [f5]                'other-window)
-(global-set-key [S-f5]              'swap-buffers-previous-window-and-select)
-(global-set-key [f6]                'rotate-buffer-to-next-window)
-(global-set-key [M-f6]              'rotate-buffer-to-next-window-and-select)
-(global-set-key [f7]                'e-select-next-window)
-
-;; TODO
-(global-set-key [f8]                'cycle-frame-maximized)
-(global-set-key [f11]               'org-clock-in-and-goto)
-(global-set-key [S-f11]             'org-clock-goto)
-
-(global-set-key [f12]               'p4-grep-moccur)
-(global-set-key [S-f12]             'windows-search-moccur-like)
-(global-set-key [C-f12]             'windows-search-moccur-contains)
+ 
+ ("M-."          . find-function)
+ ("M-["          . undo)
+ ("M-]"          . repeat)
+ ("<C-S-left>"   . select-last-buffer)
+ ("<C-S-right>"  . select-next-buffer)
+ ("<home>"       . beginning-of-buffer)
+ ("<end>"        . end-of-buffer)
+ ("<prior>"      . (lambda () (interactive) (scroll-down-in-place)))
+ ("<next>"       . (lambda () (interactive) (scroll-up-in-place)))
+ ("<f4>"         . shell-toggle)
+ ("<f5>"         . other-window)
+ ("<S-f5>"       . swap-buffers-previous-window-and-select)
+ ("<f6>"         . rotate-buffer-to-next-window)
+ ("<S-f6>"       . rotate-buffer-to-next-window-and-select)
+ ("<f8>"         . cycle-frame-maximized)
+ ("<f11>"        . org-clock-in-and-goto)
+ ("<S-f11>"      . org-clock-goto)
+ ("<f12>"        . p4-grep-moccur)
+ ("<S-f12>"      . windows-search-moccur-like)
+ ("<C-f12>"      . windows-search-moccur-contains))
 
 ;;;
 ;;;; PACKAGES
@@ -190,7 +176,6 @@
 
 ;; TODO tidy tex settings
 (defun jnm-config-auctex ()
-  (interactive)
   (setq TeX-source-correlate-method 'synctex
         TeX-source-correlate-mode t
         TeX-source-correlate-start-server t
@@ -408,8 +393,9 @@ See `doxymacs-parm-tempo-element'."
 (use-package company
   :config
   (add-hook 'prog-mode-hook 'company-mode)
-  :bind  (:map company-active-map
-               ("C-o" . helm-company)))
+  :bind  (:map
+          company-active-map
+          ("C-o" . helm-company)))
 
 (use-package company-auctex)
 
@@ -419,62 +405,84 @@ See `doxymacs-parm-tempo-element'."
   :config
   (add-to-list 'company-backends 'company-ghc))
 
-(use-package company-quickhelp)
+(use-package company-quickhelp
+  :init
+  (company-quickhelp-mode t))
+
+(use-package company-restclient)
 
 ;;; CYGWIN SHELL
 (setq process-coding-system-alist '(("bash" . undecided-unix)))
 
 ;;; DIRED
 (use-package dired-subtree)
-(add-hook 'dired-load-hook
-          '(lambda ()
-             (require 'dired-x)
-             (require 'find-dired)
-             (require 'dired-column-widths)
-             (require 'dired-subtree)))
-(add-hook 'dired-mode-hook
-	  (function (lambda ()
-                      (require 'dired-x)
-                      (setq dired-omit-mode t)
-                      (set-face-foreground 'dired-directory "yellow")
-		      (define-key dired-mode-map "i" 'dired-subtree-toggle)
-		      (define-key dired-mode-map "I" 'dired-maybe-insert-subdir)
-		      (define-key dired-mode-map "j" 'dired-execute-file)
-		      (define-key dired-mode-map "P" 'dired-do-ps-print)
-		      (define-key dired-mode-map "O" 'dired-do-moccur)
-		      (define-key dired-mode-map
-                        [(control up)] 'dired-prev-subdir)
-		      (define-key dired-mode-map
-                        [(control down)] 'dired-next-subdir)
-                      (setq dired-omit-extensions
-                            (set-difference
-                             dired-omit-extensions
-                             '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj" )
-                             :test 'string=))
-		      (setq dired-omit-mode t)
-                      (setq dired-dnd-protocol-alist nil)
-                      (setq find-ls-option
-                            (quote ("-exec ls -ld {} ';'" . "-ld"))))))
-(defvar dired-ps-print-buffer-with-faces t
-  "*If non-nil, `dired-do-ps-print' will print fonts, colors, and underlines.")
-(defadvice find-dired-sentinel
-    (after column-widths-should-be-equalized)
-  "Column widths should be equalized in dired mode. This enforces that when we have run find-dired"
-  (progn
-    (dired-column-widths-cleanup)))
-(ad-activate 'find-dired-sentinel)
 
-;;; EDIFF
-(setq ediff-custom-diff-options "-c -w"
-      ediff-diff-options "-w")
+(use-package dired
+  :ensure nil ; actually part of the emacs package
+  :bind (:map
+	 dired-mode-map
+	 ("i" . dired-subtree-toggle)
+	 ("I" . dired-maybe-insert-subdir)
+	 ("j" . dired-execute-file)
+	 ("P" . dired-do-ps-print)
+	 ("O" . dired-do-moccur)
+	 ("<C-up>" . dired-prev-subdir)
+	 ("<C-down>" . dired-next-subdir))
+  :config
+  (require 'dired-x)
+  (require 'find-dired)
+  (require 'dired-column-widths)
+  (require 'dired-subtree)
 
-(use-package ess)
+  (set-face-foreground 'dired-directory "yellow")
+  (setq dired-omit-mode t
+	dired-dnd-protocol-alist nil
+	find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))
+	dired-omit-extensions (set-difference
+			       dired-omit-extensions
+			       '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
+			       :test 'string=)))
+
+(use-package ediff
+  :config
+  (setq ediff-custom-diff-options "-c -w"
+	ediff-diff-options "-w"))
+
+(use-package ein)
+
+(use-package elpy
+  ;; elpy recommended packages
+  ;; echo n | enpkg install jedi flake8 nose pylint
+  ;; pip install importmagic autopep8 flake8-pep257
+ :init
+  (add-hook 'jedi-mode-hook 'jedi-direx:setup)
+  (eval-after-load 'python '(elpy-enable))
+
+  :bind
+  (:map
+   elpy-mode-map
+   ("C-c C-n" . nil)
+   ("C-c C-p" . nil)
+   :map python-mode-map
+   ("<tab> "    . yas-or-company-or-indent-for-tab)
+   ("C-c C-u"   . pyvenv-use-venv)
+   ("C-c C-y n" . yas-new-snippet)
+   ("C-c C-y s" . yas-insert-snippet)
+   ("C-c C-y v" . yas-visit-snippet-file)
+   ("C-c x"     . jedi-direx:pop-to-buffer)
+   :map inferior-python-mode-map
+   ("<tab> " . yas-or-company-or-indent-for-tab)
+   ("M-TAB" . python-shell-completion-complete-or-indent))
+  :config
+  (add-hook 'inferior-python-mode-hook 'inferior-python-mode-buffer-init)
+  (setq elpy-rpc-backend "jedi")
+  ;; The default version goes off to the web when reporting errors!!
+  ;; I'll assume we don't need _latest
+  (setq elpy-config--get-config my-elpy-config--get-config))
 
 (use-package expand-region)
 
 (use-package ffap
-  ;; Please stop pinging random hosts!  See
-  ;; https://github.com/technomancy/emacs-starter-kit/issues/39
   :config (setq ffap-machine-p-known 'reject))
 
 (defun adjust-flycheck-automatic-syntax-eagerness ()
@@ -488,61 +496,15 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   ;; Each buffer gets its own idle-change-delay because of the
   ;; buffer-sensitive adjustment above.
+
+  
   (make-variable-buffer-local 'flycheck-idle-change-delay)
   (add-hook 'flycheck-after-syntax-check-hook
             'adjust-flycheck-automatic-syntax-eagerness)
   (flycheck-add-next-checker 'python-flake8 'python-pylint)
   
   (pycoverage-define-flycheck-checker)
-  (add-to-list 'flycheck-checkers 'python-pycoverage)
-  )
-
-;; Tried the barebones rst checker, but that's a bad idea for Sphinx
-;; docs per lunaryorn:
-;; https://github.com/flycheck/flycheck/issues/745#issuecomment-139555416
-;;
-;; "Falling back to plain rst renders Flycheck almost unusable,
-;; particularly in documents which use many Sphinx-specific
-;; directives."
-;;
-
-;; Also, the barebones checker assumes that .py files are executable,
-;; which requires hacking on Windows, e.g. setting
-;; `flycheck-executable-find' and `flycheck-command-wrapper-function'
-;; to custom functions, as below.
-;;
-;;  (defun python-script-p (filename)
-                                        ;   "If FILENAME is a string, return t if it looks like a python
-;;  script, otherwise nil.  Return nil if FILENAME is nil."
-;;   (and filename
-;;        (string-equal (file-name-extension filename)
-;;                      "py")))
-;;
-;; (defun python-script-find (command)
-;;   (let ((found-file (locate-file command exec-path '("" ".py") 'readable)))
-;;     (when (python-script-p found-file)
-;;       found-file)))
-;;
-;; (defun my-flycheck-executable-find (command)
-;;   "Call `executable-find' with .py recognized as an executable extension."
-;;   (or
-;;    (executable-find command)
-;;    (python-script-find command)))
-;;
-;; (defun my-flycheck-command-wrapper-function (command)
-;;   (let ((program (car command))
-;;         (args (cdr command)))
-;;     (if (python-script-p program)
-;;         (append (list "python.exe"
-;;                       (python-script-find program))
-;;                 args)
-;;       command)))
-;;
-;; (setq flycheck-executable-find 'my-flycheck-executable-find)
-;; (setq flycheck-command-wrapper-function
-;;       'my-flycheck-command-wrapper-function)
-
-
+  (add-to-list 'flycheck-checkers 'python-pycoverage))
 
 ;;; FONT LOCK MODE
 (global-font-lock-mode t)
@@ -732,6 +694,7 @@ clean buffer we're an order of magnitude laxer about checking."
   (:opstring "printed"
              :modifier-p nil)
   (ps-print-buffer-with-faces))
+
 (defun my-ibuffer-hook ()
   ;; add another sorting method for ibuffer (allow the grouping of
   ;; filenames and dired buffers
@@ -759,8 +722,6 @@ clean buffer we're an order of magnitude laxer about checking."
                                (ibuffer-switch-to-saved-filter-groups
                                 "default")))
 
-(use-package jira)
-
 ;;; INFO
 (use-package info
   :init
@@ -768,7 +729,9 @@ clean buffer we're an order of magnitude laxer about checking."
   (bind-key ":"           'Info-search-backward Info-mode-map)
   (bind-key [(shift tab)] 'Info-prev-reference  Info-mode-map))
 
-(require 'cl)
+(use-package jira)
+
+(use-package kanban)
 
 ;;; LISP MODE
 (add-hook 'emacs-lisp-mode-hook
@@ -954,7 +917,6 @@ control-arrow keys"
 (use-package ox-mediawiki)
 (use-package ox-reveal)
 ;; http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/moon.css
-(use-package kanban)
 
 (defun in-a-jira-buffer ()
   "Return if the current buffer is a Jira one, created with
@@ -1125,12 +1087,11 @@ by `:config' in `use-package'"
   (org-clock-persistence-insinuate)
   (my-org-config))
 
-(add-hook
- 'org-mode-hook
- '(lambda ()
-    (turn-on-org-cdlatex)
-    (set-face-foreground 'org-hide (face-background 'default))
-    (setq fill-column 90)))
+(defun my-org-mode-hook-fn ()
+  (turn-on-org-cdlatex)    
+  (set-face-foreground 'org-hide (face-background 'default))    
+  (setq fill-column 90))
+(add-hook 'org-mode-hook 'my-org-mode-hook-fn)
 
 (use-package p4)
 
@@ -1139,14 +1100,14 @@ by `:config' in `use-package'"
 (add-to-list 'auto-mode-alist '("\\.\\([pP][Llm]\\|al\\|t\\)\\'" . cperl-mode))
 (add-to-list 'interpreter-mode-alist '("perl" . cperl-mode))
 
-(add-hook 'cperl-mode-hook
-          '(lambda ()
-             ;; restrain
-             (abbrev-mode nil) ;; restrain again
-             (setq cperl-indent-level 4)
-             (setq cperl-extra-newline-before-brace nil)
-             (local-set-key [mouse-3] `imenu)
-             (hs-minor-mode)))
+(defun my-cperl-mode-hook-fn ()
+  ;; restrain
+  (abbrev-mode nil) ;; restrain again
+  (setq cperl-indent-level 4)
+  (setq cperl-extra-newline-before-brace nil)
+  (local-set-key [mouse-3] `imenu)
+  (hs-minor-mode))
+(add-hook 'cperl-mode-hook 'my-cperl-mode-hook-fn)
 
 (use-package point-undo)
 
@@ -1176,61 +1137,22 @@ by `:config' in `use-package'"
  ps-print-color-p       t)
 
 ;;; PROJECTILE
-;; (use-package projectile
-;; 	     :disabled t)
+(use-package projectile
+  :disabled t)
 
-;;; PYTHON MODE
-(use-package ein)
+(defun my-jedi-mode-hook-fn ()
+  (setq-local jedi:environment-root pyvenv-virtual-env)
+  (activate-venv-if-python)
+  (jedi:install-server)
+  (jedi-direx:setup))
 
-;;; elpy recommended packages
-;; echo n | enpkg install jedi flake8 nose pylint
-;; pip install importmagic autopep8 flake8-pep257
-(use-package elpy
-  :init
-  (add-hook 'jedi-mode-hook 'jedi-direx:setup)
-  (eval-after-load 'python '(elpy-enable))
-
-  :bind
-  (:map
-   elpy-mode-map
-   ("C-c C-n" . nil)
-   ("C-c C-p" . nil)
-   :map python-mode-map
-   ("C-c x" . jedi-direx:pop-to-buffer))
+(use-package jedi
   :config
-  (setq elpy-rpc-backend "jedi")
-
-  ;; The default version goes off to the web when reporting errors!!
-  ;; I'll assume we don't need _latest
-  (setq elpy-config--get-config my-elpy-config--get-config)
-  (add-hook 'inferior-python-mode-hook
-            '(lambda ()
-               (progn
-                 (inferior-python-mode-buffer-init)
-                 (local-set-key [tab] 'yas-or-company-or-indent-for-tab)
-                 (local-set-key (kbd "C-M-i") 'python-shell-completion-complete-or-indent)))))
-
-(use-package jedi)
+  (add-hook  'jedi-mode-hook 'my-jedi-mode-hook-fn))
 (use-package jedi-direx)
 (use-package live-py-mode)
 
 (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
-
-(add-hook 'python-mode-hook
-          (lambda ()
-            (local-set-key [tab] 'yas-or-company-or-indent-for-tab)
-            (define-key python-mode-map "\C-c\C-u"  'pyvenv-use-venv)
-            (define-key python-mode-map "\C-c\C-ys" 'yas-insert-snippet)
-            (define-key python-mode-map "\C-c\C-yn" 'yas-new-snippet)
-            (define-key python-mode-map "\C-c\C-yv" 'yas-visit-snippet-file)
-            (company-quickhelp-mode t)))
-
-(add-hook  'jedi-mode-hook
-           (lambda ()
-             (setq-local jedi:environment-root pyvenv-virtual-env)
-             (activate-venv-if-python)
-             (jedi:install-server)
-             (jedi-direx:setup)))
 
 ;; The reason for post-command-hook instead of when opening a file is
 ;; that some of the variables set are global.  May still want to have
@@ -1240,53 +1162,45 @@ by `:config' in `use-package'"
 (advice-add  'pyvenv-run-virtualenvwrapper-hook
              :filter-return 'ignore-errors)
 
-;; Try to suppress errors
-(defun my-ignore-errors (orig-fun &rest args)
-  "Ignore errors due to calling ORIG-FUN."
-  (condition-case nil
-      (orig-fun args)
-    (error nil)))
-(advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors)
+;; ;; Try to suppress errors
+;; (defun my-ignore-errors (orig-fun &rest args)
+;;   "Ignore errors due to calling ORIG-FUN."
+;;   (condition-case nil
+;;       (orig-fun args)
+;;     (error nil)))
+;; (advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors)
 
 (use-package restclient)
 
-(use-package company-restclient)
-
 (require 'scroll-in-place)
 
-;;; SERVER MINOR MODE
-(use-package server
-  :config
-  (add-hook 'server-visit-hook
-            (lambda ()
-              (local-set-key "\C-z" 'server-edit))))
+(defun shell-cycle-backward-through-command-history ()
+  (interactive)
+  (if (comint-after-pmark-p)
+      (comint-previous-input 1)
+    (previous-line 1)))
+(defun shell-cycle-forward-through-command-history ()
+  (interactive)
+  (if (comint-after-pmark-p)
+      (comint-previous-input 1)
+    (forward-line 1)))
 
-;;; SHELL-TOGGLE
-;; shell-toggle tries to use term by default but this doesn't work on windows
-(when system-win32-p
+(use-package shell
+  :init
+  :bind
+  (:map
+   shell-mode-map
+   ("<home>" . comint-bol)
+   ("<up>"   . shell-cycle-backward-through-command-history)
+   ("<down>" . shell-cycle-forward-through-command-history)))
+
+(use-package shell-toggle
+  ;; shell-toggle tries to use term by default but this doesn't work on windows
+  :if system-win32-p
+  :config
   (setq shell-toggle-launch-shell 'shell))
 
-;;; SHELL-MODE
-(use-package shell-toggle)
-
-(add-hook 'shell-mode-hook
-	  '(lambda ()
-             (local-set-key [home]
-                            'comint-bol)
-	     (local-set-key [up]
-                            ;; cycle backward through command history
-                            '(lambda () (interactive)
-                               (if (comint-after-pmark-p)
-                                   (comint-previous-input 1)
-                                 (previous-line 1))))
-	     (local-set-key [down]
-                            ;; cycle forward through command history
-                            '(lambda () (interactive)
-                               (if (comint-after-pmark-p)
-                                   (comint-next-input 1)
-                                 (forward-line 1))))))
-
-;; Beware: In a complete WTF, Windows intercepts Ctrl-shift-0 / C-),
+;; Beware: In a complete WTF, Windows intercepts Ctrl-shift-0,
 ;; bound to sp-forward-slurp-sexp. See
 ;; https://support.microsoft.com/en-us/kb/967893 for how to fix this.
 ;; Remove the shortcut assignment to make the application work as
@@ -1301,43 +1215,34 @@ by `:config' in `use-package'"
 ;; http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
 (use-package smartparens)
 
-;;; SPEEDBAR MODE
+(defun my-speedbar-mode-hook-fn ()
+  (speedbar-add-supported-extension ".org")              
+  (auto-raise-mode 1))
+
 (use-package speedbar
   :config
-  (add-hook 'speedbar-mode-hook
-            (lambda ()
-              (speedbar-add-supported-extension ".org")
-              (auto-raise-mode 1))))
+  (add-hook 'speedbar-mode-hook 'my-speedbar-mode-hook-fn))
 
 (use-package sr-speedbar)
 
-;;; TEXT MODE
-(add-hook 'text-mode-hook
-	  (function (lambda ()
-		      (local-set-key [(shift return)] 'newline-and-indent))))
+(use-package text-mode
+  :ensure nil
+  :bind
+  (:map text-mode-map
+        ([(shift return)] . newline-and-indent)))
 
-;;; TRAMP
-(when system-win32-p
+(use-package tramp
+  :if system-win32-p
+  :config
   (setq tramp-default-method "plink"))
 
 (use-package undo-tree
   :diminish undo-tree-mode
   :config
-  (progn
-    (global-undo-tree-mode)))
+  (global-undo-tree-mode))
 
 ;;; WHICH FUNCTION MODE
 (which-function-mode 1)
-
-(use-package woman
-  :config
-  (defun my-woman-mode-hook ()
-    (when system-win32-p
-      (if (getenv "MANPATH")
-          (setq woman-manpath
-                (woman-parse-colon-path
-                 (replace-regexp-in-string ".*;" "" (getenv "MANPATH")))))))
-  (add-hook 'woman-mode-hook 'my-woman-mode-hook))
 
 (use-package yaml-mode)
 

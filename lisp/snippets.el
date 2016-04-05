@@ -236,6 +236,9 @@ even when they are not"
 
 ;;; DIRED 
 
+(defvar dired-ps-print-buffer-with-faces t
+  "*If non-nil, `dired-do-ps-print' will print fonts, colors, and underlines.")
+
 ;;;###autoload
 (defun dired-do-ps-print (&optional arg)
   "Print the marked (or next ARG) files with ps-print.el.
