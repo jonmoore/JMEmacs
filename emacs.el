@@ -39,6 +39,16 @@
  '("/lisp"
    "/lisp/doxymacs-1.8.0"))
 
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(eval-when-compile
+  (require 'use-package))
+(require 'bind-key)
+(require 'diminish)
+
 ;;; PERSONAL LISP
 (require 'update-personal-autoloads)
 (update-personal-autoloads)
@@ -99,92 +109,80 @@
         mac-emulate-three-button-mouse t
         ns-pop-up-frames nil))
 
-(bind-keys
- ("C-c a"        . org-agenda)
- ("C-c b"        . browse-url-at-point)
- ("C-c l"        . org-store-link)
- ("C-c m"        . move-file-and-buffer)
- ("C-c r"        . rename-file-and-buffer)
- ;; ("C-x C-b"      . (lambda () (interactive) (ibuffer nil "Ibuffer")))
- ("C-x C-o"      . delete-blank-lines-around-point-or-in-region)
- ("C-x LFD"      . dired-jump)
- 
- ("C-n"          . (lambda () (interactive) (scroll-up-in-place 1)))
- ("C-p"          . (lambda () (interactive) (scroll-down-in-place 1)))
- 
- ("C-r"          . isearch-backward-regexp)
- ("M-C-r"        . isearch-backward)
- ("C-s"          . isearch-forward-regexp)
- ("M-C-s"        . isearch-backward)
+(bind-keys ("C-c a"        . org-agenda)
+           ("C-c b"        . browse-url-at-point)
+           ("C-c l"        . org-store-link)
+           ("C-c m"        . move-file-and-buffer)
+           ("C-c r"        . rename-file-and-buffer)
+           ;; ("C-x C-b"      . (lambda () (interactive) (ibuffer nil "Ibuffer")))
+           ("C-x C-o"      . delete-blank-lines-around-point-or-in-region)
+           ("C-x LFD"      . dired-jump)
+           
+           ("C-n"          . (lambda () (interactive) (scroll-up-in-place 1)))
+           ("C-p"          . (lambda () (interactive) (scroll-down-in-place 1)))
+           
+           ("C-r"          . isearch-backward-regexp)
+           ("M-C-r"        . isearch-backward)
+           ("C-s"          . isearch-forward-regexp)
+           ("M-C-s"        . isearch-backward)
 
- 
- ("M-."          . find-function)
- ("M-["          . undo)
- ("M-]"          . repeat)
- ("<C-S-left>"   . select-last-buffer)
- ("<C-S-right>"  . select-next-buffer)
- ("<home>"       . beginning-of-buffer)
- ("<end>"        . end-of-buffer)
- ("<prior>"      . (lambda () (interactive) (scroll-down-in-place)))
- ("<next>"       . (lambda () (interactive) (scroll-up-in-place)))
- ("<f4>"         . shell-toggle)
- ("<f5>"         . other-window)
- ("<S-f5>"       . swap-buffers-previous-window-and-select)
- ("<f6>"         . rotate-buffer-to-next-window)
- ("<S-f6>"       . rotate-buffer-to-next-window-and-select)
- ("<f8>"         . cycle-frame-maximized)
- ("<f11>"        . org-clock-in-and-goto)
- ("<S-f11>"      . org-clock-goto)
- ("<f12>"        . p4-grep-moccur)
- ("<S-f12>"      . windows-search-moccur-like)
- ("<C-f12>"      . windows-search-moccur-contains))
-
+           
+           ("M-."          . find-function)
+           ("M-["          . undo)
+           ("M-]"          . repeat)
+           ("<C-S-left>"   . select-last-buffer)
+           ("<C-S-right>"  . select-next-buffer)
+           ("<home>"       . beginning-of-buffer)
+           ("<end>"        . end-of-buffer)
+           ("<prior>"      . (lambda () (interactive) (scroll-down-in-place)))
+           ("<next>"       . (lambda () (interactive) (scroll-up-in-place)))
+           ("<f4>"         . shell-toggle)
+           ("<f5>"         . other-window)
+           ("<S-f5>"       . swap-buffers-previous-window-and-select)
+           ("<f6>"         . rotate-buffer-to-next-window)
+           ("<S-f6>"       . rotate-buffer-to-next-window-and-select)
+           ("<f8>"         . cycle-frame-maximized)
+           ("<f11>"        . org-clock-in-and-goto)
+           ("<S-f11>"      . org-clock-goto)
+           ("<f12>"        . p4-grep-moccur)
+           ("<S-f12>"      . windows-search-moccur-like)
+           ("<C-f12>"      . windows-search-moccur-contains))
 
 ;;;
 ;;;; PACKAGES
 ;;;==========
-
-;; Bootstrap `use-package'
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-(eval-when-compile
-  (require 'use-package))
-(require 'bind-key)
-(require 'diminish)
 
 (setq use-package-verbose t
       use-package-always-ensure t
       use-package-always-defer t)
 
 (use-package tex-site
-  :ensure auctex
-  :config
-  (setq TeX-source-correlate-method 'synctex
-        TeX-source-correlate-mode t
-        TeX-source-correlate-start-server t
-        TeX-PDF-mode t
-        TeX-auto-save t
-        TeX-parse-self t)
-  (setq reftex-plug-into-AUCTeX t)
-  (setq-default TeX-master nil)
-  (cond
-   (system-win32-p
-    (setq
-     TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
-     TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
-   (system-osx-p
-    ;; use Skim as default pdf viewer. Skim's displayline is used for
-    ;; forward search from .tex to .pdf
-    (setq
-     TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
-     TeX-view-program-list '(("Skim PDF Viewer"
-                              "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
-     TeX-command-default "latexmk")))
-  (when system-win32-p
-    (require 'tex-mik)
-    (require 'sumatra-forward)))
+	     :ensure auctex
+	     :config
+	     (setq TeX-source-correlate-method 'synctex
+		   TeX-source-correlate-mode t
+		   TeX-source-correlate-start-server t
+		   TeX-PDF-mode t
+		   TeX-auto-save t
+		   TeX-parse-self t)
+	     (setq reftex-plug-into-AUCTeX t)
+	     (setq-default TeX-master nil)
+	     (cond
+	      (system-win32-p
+	       (setq
+		TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
+		TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
+	      (system-osx-p
+	       ;; use Skim as default pdf viewer. Skim's displayline is used for
+	       ;; forward search from .tex to .pdf
+	       (setq
+		TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
+		TeX-view-program-list '(("Skim PDF Viewer"
+					 "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
+		TeX-command-default "latexmk")))
+	     (when system-win32-p
+	       (require 'tex-mik)
+	       (require 'sumatra-forward)))
 
 (defun latex-sumatra-scroll-down ()
   (scroll-down-in-place)
@@ -195,33 +193,33 @@
   (sumatra-jump-to-line))
 
 (use-package latex
-  :ensure auctex
-  :init
-  (add-hook 'LaTeX-mode-hook 'visual-line-mode)
-  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
-  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+	     :ensure auctex
+	     :init
+	     (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+	     (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+	     (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+	     (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 
-  :if system-win32-p
-  :bind (:map LaTeX-mode-map
-              ("<prior>" . latex-sumatra-scroll-down)
-              ("<next>"  .  latex-sumatra-scroll-up)))
+	     :if system-win32-p
+	     :bind (:map LaTeX-mode-map
+			 ("<prior>" . latex-sumatra-scroll-down)
+			 ("<next>"  .  latex-sumatra-scroll-up)))
 
 (use-package auctex-latexmk
-  :ensure auctex-latexmk
-  :config
-  (push
-   (cond
-    (system-win32-p
-     '("Latexmk" "latexmk -pdflatex=\"pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
-       :help "Run Latexmk on file"))
-    (system-osx-p
-     '("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
-       :help "Run latexmk on file")))
-   TeX-command-list))
+	     :ensure auctex-latexmk
+	     :config
+	     (push
+	      (cond
+	       (system-win32-p
+		'("Latexmk" "latexmk -pdflatex=\"pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
+		  :help "Run Latexmk on file"))
+	       (system-osx-p
+		'("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
+		  :help "Run latexmk on file")))
+	      TeX-command-list))
 
 (use-package browse-kill-ring
-  :bind ("M-y" . browse-kill-ring))
+	     :bind ("M-y" . browse-kill-ring))
 
 (use-package cdlatex)
 
@@ -258,11 +256,11 @@
   (if jnm-hs-hide (hs-hide-all) (hs-show-all)))
 
 (use-package hideshow
-  :bind
-  (:map hs-minor-mode-map
-        ("C-c l" . hs-hide-level)
-        ("C-c <right>" . hs-show-block)
-        ("C-c <left> " . hs-hide-block)))
+	     :bind
+	     (:map hs-minor-mode-map
+		   ("C-c l" . hs-hide-level)
+		   ("C-c <right>" . hs-show-block)
+		   ("C-c <left> " . hs-hide-block)))
 
 (defun my-c-mode-common-hook-fn ()
 
@@ -287,25 +285,25 @@
                   'font-lock-comment-face)))))
 
 (use-package cc-mode
-  :mode
-  ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode)
-  :bind
-  (:map c-mode-base-map
-        ("<C-return>"	. tempo-complete-tag)
-        ("<C-tab>"	. tempo-forward-mark)
-        ("RET"		. c-context-line-break)
-        ("M-o"		. ff-find-other-file))
-  :init
-  (add-hook 'c-mode-common-hook 'my-c-mode-common-hook-fn)
-  :config
-  (require 'tempo-c-cpp)
-  (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
-                              ("\\.h\\'"     (".cpp" ".c"))
-                              ("\\.hpp\\'"   (".cpp"))
-                              ("\\.c\\'"     (".h")))
-        c-default-style '((java-mode . "java")
-                          (other . "stroustrup"))
-        c-echo-syntactic-information-p nil))
+	     :mode
+	     ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode)
+	     :bind
+	     (:map c-mode-base-map
+		   ("<C-return>"	. tempo-complete-tag)
+		   ("<C-tab>"	. tempo-forward-mark)
+		   ("RET"		. c-context-line-break)
+		   ("M-o"		. ff-find-other-file))
+	     :init
+	     (add-hook 'c-mode-common-hook 'my-c-mode-common-hook-fn)
+	     :config
+	     (require 'tempo-c-cpp)
+	     (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
+					 ("\\.h\\'"     (".cpp" ".c"))
+					 ("\\.hpp\\'"   (".cpp"))
+					 ("\\.c\\'"     (".h")))
+		   c-default-style '((java-mode . "java")
+				     (other . "stroustrup"))
+		   c-echo-syntactic-information-p nil))
 
 (use-package color-moccur)
 (use-package color-theme-modern)
@@ -314,54 +312,54 @@
 (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
 
 (use-package company
-  :config
-  (add-hook 'prog-mode-hook 'company-mode)
-  :bind  (:map company-active-map
-               ("C-o" . helm-company)))
+	     :config
+	     (add-hook 'prog-mode-hook 'company-mode)
+	     :bind  (:map company-active-map
+			  ("C-o" . helm-company)))
 
 (use-package company-auctex)
 
 (use-package company-ghc
-  :init
-  (setq company-ghc-show-info t)
-  :config
-  (add-to-list 'company-backends 'company-ghc))
+	     :init
+	     (setq company-ghc-show-info t)
+	     :config
+	     (add-to-list 'company-backends 'company-ghc))
 
 (use-package company-quickhelp
-  :init
-  (company-quickhelp-mode t))
+	     :init
+	     (company-quickhelp-mode t))
 
 (use-package company-restclient)
 
 (use-package css-mode
-  :mode "\\.css\\'")
+	     :mode "\\.css\\'")
 
 (use-package dired-subtree)
 
 (use-package dired
-  :ensure nil ; actually part of the emacs package
-  :bind (:map dired-mode-map
-              ("i" . dired-subtree-toggle)
-              ("I" . dired-maybe-insert-subdir)
-              ("j" . dired-execute-file)
-              ("P" . dired-do-ps-print)
-              ("O" . dired-do-moccur)
-              ("<C-up>" . dired-prev-subdir)
-              ("<C-down>" . dired-next-subdir))
-  :config
-  (require 'dired-x)
-  (require 'find-dired)
-  (require 'dired-column-widths)
-  (require 'dired-subtree)
+	     :ensure nil ; actually part of the emacs package
+	     :bind (:map dired-mode-map
+			 ("i" . dired-subtree-toggle)
+			 ("I" . dired-maybe-insert-subdir)
+			 ("j" . dired-execute-file)
+			 ("P" . dired-do-ps-print)
+			 ("O" . dired-do-moccur)
+			 ("<C-up>" . dired-prev-subdir)
+			 ("<C-down>" . dired-next-subdir))
+	     :config
+	     (require 'dired-x)
+	     (require 'find-dired)
+	     (require 'dired-column-widths)
+	     (require 'dired-subtree)
 
-  (set-face-foreground 'dired-directory "yellow")
-  (setq dired-omit-mode t
-	dired-dnd-protocol-alist nil
-	find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))
-	dired-omit-extensions (set-difference
-			       dired-omit-extensions
-			       '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
-			       :test 'string=)))
+	     (set-face-foreground 'dired-directory "yellow")
+	     (setq dired-omit-mode t
+		   dired-dnd-protocol-alist nil
+		   find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))
+		   dired-omit-extensions (set-difference
+					  dired-omit-extensions
+					  '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
+					  :test 'string=)))
 
 (defun jnm-doxymacs-parm-tempo-element (parms)
   "Inserts tempo elements like JavaDoc but without asterisks.
@@ -397,52 +395,53 @@ See `doxymacs-parm-tempo-element'."
   without as many asterisks.")
 
 (use-package doxymacs
-  :ensure nil
-  :commands  (doxymacs-mode doxymacs-font-lock)
-  :init
-  (setq doxymacs-doxygen-style "JavaDoc"))
+	     :ensure nil
+	     :commands  (doxymacs-mode doxymacs-font-lock)
+	     :init
+	     (setq doxymacs-doxygen-style "JavaDoc"))
 
 (use-package ediff
-  :config
-  (setq ediff-custom-diff-options "-c -w"
-	ediff-diff-options "-w"))
+	     :config
+	     (setq ediff-custom-diff-options "-c -w"
+		   ediff-diff-options "-w"))
 
 (use-package ein)
 
 (use-package elpy
-  ;; elpy recommended packages
-  ;; echo n | enpkg install jedi flake8 nose pylint
-  ;; pip install importmagic autopep8 flake8-pep257
- :init
-  (add-hook 'jedi-mode-hook 'jedi-direx:setup)
-  (eval-after-load 'python '(elpy-enable))
+	     ;; elpy recommended packages
+	     ;; echo n | enpkg jedi flake8 nose pylint
+	     ;; pip install importmagic autopep8 flake8-pep257
 
-  :bind
-  (:map
-   elpy-mode-map
-   ("C-c C-n" . nil)
-   ("C-c C-p" . nil)
-   :map python-mode-map
-   ("<tab> "    . yas-or-company-or-indent-for-tab)
-   ("C-c C-u"   . pyvenv-use-venv)
-   ("C-c C-y n" . yas-new-snippet)
-   ("C-c C-y s" . yas-insert-snippet)
-   ("C-c C-y v" . yas-visit-snippet-file)
-   ("C-c x"     . jedi-direx:pop-to-buffer)
-   :map inferior-python-mode-map
-   ("<tab> " . yas-or-company-or-indent-for-tab)
-   ("M-TAB" . python-shell-completion-complete-or-indent))
-  :config
-  (add-hook 'inferior-python-mode-hook 'inferior-python-mode-buffer-init)
-  (setq elpy-rpc-backend "jedi")
-  ;; The default version goes off to the web when reporting errors!!
-  ;; I'll assume we don't need _latest
-  (setq elpy-config--get-config my-elpy-config--get-config))
+	     :init
+	     (setq elpy-rpc-backend "jedi")
+	     (eval-after-load 'python '(elpy-enable))
+	     
+	     :bind
+	     (:map
+	      elpy-mode-map
+	      ("C-c C-n" . nil)
+	      ("C-c C-p" . nil)
+	      :map python-mode-map
+	      ("<tab> "    . yas-or-company-or-indent-for-tab)
+	      ("C-c C-u"   . pyvenv-use-venv)
+	      ("C-c C-y n" . yas-new-snippet)
+	      ("C-c C-y s" . yas-insert-snippet)
+	      ("C-c C-y v" . yas-visit-snippet-file)
+	      ("C-c x"     . jedi-direx:pop-to-buffer)
+	      :map inferior-python-mode-map
+	      ("<tab> " . yas-or-company-or-indent-for-tab)
+	      ("M-TAB" . python-shell-completion-complete-or-indent))
+	     :config
+	     (add-hook 'inferior-python-mode-hook 'inferior-python-mode-buffer-init)
+	     
+	     ;; The default version goes off to the web when reporting errors!!
+	     ;; I'll assume we don't need _latest
+	     (setq elpy-config--get-config my-elpy-config--get-config))
 
 (use-package expand-region)
 
 (use-package ffap
-  :config (setq ffap-machine-p-known 'reject))
+	     :config (setq ffap-machine-p-known 'reject))
 
 (defun adjust-flycheck-automatic-syntax-eagerness ()
   "Adjust how often we check for errors based on if there are any.
@@ -452,20 +451,20 @@ clean buffer we're an order of magnitude laxer about checking."
         (if flycheck-current-errors 0.3 3.0)))
 
 (use-package flycheck
-  :config
-  ;; Each buffer gets its own idle-change-delay because of the
-  ;; buffer-sensitive adjustment above.
+	     :config
+	     ;; Each buffer gets its own idle-change-delay because of the
+	     ;; buffer-sensitive adjustment above.
 
-  
-  (make-variable-buffer-local 'flycheck-idle-change-delay)
-  (add-hook 'flycheck-after-syntax-check-hook
-            'adjust-flycheck-automatic-syntax-eagerness)
-  (flycheck-add-next-checker 'python-flake8 'python-pylint)
-  
-  (pycoverage-define-flycheck-checker)
-  (add-to-list 'flycheck-checkers 'python-pycoverage))
+	     
+	     (make-variable-buffer-local 'flycheck-idle-change-delay)
+	     (add-hook 'flycheck-after-syntax-check-hook
+		       'adjust-flycheck-automatic-syntax-eagerness)
+	     (flycheck-add-next-checker 'python-flake8 'python-pylint)
+	     
+	     (pycoverage-define-flycheck-checker)
+	     (add-to-list 'flycheck-checkers 'python-pycoverage))
 
-;;; FONT LOCK MODE
+
 (defun my-font-lock-mode-hook-fn ()
   (when (or (eq major-mode 'c-mode)
             (eq major-mode 'c++-mode))
@@ -476,17 +475,17 @@ clean buffer we're an order of magnitude laxer about checking."
         0 font-lock-keyword-face prepend)))))
 
 (use-package font-lock-mode
-  :ensure nil
-  :init
-  (global-font-lock-mode t)
-  :config
-  (add-hook 'font-lock-mode-hook 'my-font-lock-mode-hook-fn))
+	     :ensure nil
+	     :init
+	     (global-font-lock-mode t)
+	     :config
+	     (add-hook 'font-lock-mode-hook 'my-font-lock-mode-hook-fn))
 
 (use-package ghc
-  :config
-  (setq ghc-debug t))
+	     :config
+	     (setq ghc-debug t))
 
-;;; GLOBAL AUTO REVERT MODE
+
 (defun disable-autorevert-for-network-files ()
   (when (and buffer-file-name
              (string-match "^//" buffer-file-name))
@@ -495,17 +494,17 @@ clean buffer we're an order of magnitude laxer about checking."
     (setq global-auto-revert-ignore-buffer t)))
 
 (use-package autorevert
-  :ensure nil
-  :init
-  (global-auto-revert-mode t)
-  (add-hook 'find-file-hook
-            'disable-autorevert-for-network-files))
+	     :ensure nil
+	     :init
+	     (global-auto-revert-mode t)
+	     (add-hook 'find-file-hook
+		       'disable-autorevert-for-network-files))
 
-;;; GRAPHVIZ-DOT-MODE
+
 (use-package graphviz-dot-mode
-  :mode "\\.dot\\'")
+	     :mode "\\.dot\\'")
 
-;;; GUD MODE
+
 (defvar gud-overlay
   (let* ((ov (make-overlay (point-min) (point-min))))
     (overlay-put ov 'face 'secondary-selection)
@@ -529,15 +528,15 @@ clean buffer we're an order of magnitude laxer about checking."
        (current-buffer)))))
 
 (use-package gud
-  :ensure nil
-  :bind (:map gud-mode-map
-              ("<f5>"   . gud-cont)
-              ("<S-f5>" . gud-break)
-              ("<f10>"  . gud-next)
-              ("<f11>"  . gud-step))
-  :config
-  (add-hook 'kill-buffer-hook 'gud-kill-buffer)
-  (advice-add 'gud-display-line :after #'gud-display-line--my-gud-highlight))
+	     :ensure nil
+	     :bind (:map gud-mode-map
+			 ("<f5>"   . gud-cont)
+			 ("<S-f5>" . gud-break)
+			 ("<f10>"  . gud-next)
+			 ("<f11>"  . gud-step))
+	     :config
+	     (add-hook 'kill-buffer-hook 'gud-kill-buffer)
+	     (advice-add 'gud-display-line :after #'gud-display-line--my-gud-highlight))
 
 (defun my-haskell-mode-hook ()
   (turn-on-haskell-indentation)  
@@ -545,68 +544,68 @@ clean buffer we're an order of magnitude laxer about checking."
     (ghc-init)))
 
 (use-package haskell-mode
-  :init
-  (setq haskell-process-suggest-remove-import-lines t
-        haskell-process-auto-import-loaded-modules t
-        haskell-process-suggest-hoogle-imports t
-        haskell-process-log t)
-  (add-hook 'haskell-mode-hook
-            'my-haskell-mode-hook)
-  :bind
-  (:map haskell-mode-map
-        ("C-c C-l"  . haskell-process-load-or-reload)
-        ("C-`"      . haskell-interactive-bring)
-        ("C-c C-i"  . haskell-process-do-info)
-        ("SPC"      . haskell-mode-contextual-space)
-        ("M-."      . haskell-mode-jump-to-def)))
+	     :init
+	     (setq haskell-process-suggest-remove-import-lines t
+		   haskell-process-auto-import-loaded-modules t
+		   haskell-process-suggest-hoogle-imports t
+		   haskell-process-log t)
+	     (add-hook 'haskell-mode-hook
+		       'my-haskell-mode-hook)
+	     :bind
+	     (:map haskell-mode-map
+		   ("C-c C-l"  . haskell-process-load-or-reload)
+		   ("C-`"      . haskell-interactive-bring)
+		   ("C-c C-i"  . haskell-process-do-info)
+		   ("SPC"      . haskell-mode-contextual-space)
+		   ("M-."      . haskell-mode-jump-to-def)))
 
 (use-package helm-descbinds
-  :bind
-  ("C-h b" . helm-descbinds))
+	     :bind
+	     ("C-h b" . helm-descbinds))
 
 ;; See http://emacs.stackexchange.com/questions/2867/how-should-i-change-my-workflow-when-moving-from-ido-to-helm
 ;; for incremental switching
 (use-package helm
-  :bind
-  (("C-c h"          . helm-command-prefix)
-   ("C-h SPC"        . helm-all-mark-rings)
-   ("C-x C-b"        . helm-buffers-list)
-   ("C-x C-f"        . helm-find-files)
-   ("C-x C-r"        . helm-recentf)
-   ("C-x b"          . helm-mini)
-   ("M-X"            . execute-extended-command) ;; old binding of M-x
-   ("M-s /"          . helm-multi-swoop)
-   ("M-s o"          . helm-swoop)
-   ("M-x"            . helm-M-x)
-   ("M-y"            . helm-show-kill-ring)
+	     :bind
+	     (("C-c h"          . helm-command-prefix)
+	      ("C-h SPC"        . helm-all-mark-rings)
+	      ("C-x C-b"        . helm-buffers-list)
+	      ("C-x C-f"        . helm-find-files)
+	      ("C-x C-r"        . helm-recentf)
+	      ("C-x b"          . helm-mini)
+	      ("M-X"            . execute-extended-command) ;; old binding of M-x
+	      ("M-s /"          . helm-multi-swoop)
+	      ("M-s o"          . helm-swoop)
+	      ("M-x"            . helm-M-x)
+	      ("M-y"            . helm-show-kill-ring)
 
-   :map helm-map
-   ("<tab>"          . helm-execute-persistent-action)
-   ("C-z"            . helm-select-action)
-   
-   :map helm-command-map
-   ("a"              . helm-apropos)
-   ("M-:"            . helm-eval-expression-with-eldoc)
-   ("<tab>"          . helm-lisp-completion-at-point)
-   ("o"              . helm-occur)
-   
-   :map helm-find-files-map
-   ("C-x o"          . helm-ff-run-switch-other-window)
-   ("C-x 5 o"        . helm-ff-run-switch-other-frame)
-   ("C-h m"          . describe-mode)
-   ("C-<backspace>"  . backward-kill-word)
-   
-   :map helm-read-file-map
-   ("C-h m"          . describe-mode)
-   ("C-<backspace>"  . backward-kill-word))
+	      :map helm-map
+	      ("<tab>"          . helm-execute-persistent-action)
+	      ("C-z"            . helm-select-action)
+	      
+	      :map helm-command-map
+	      ("a"              . helm-apropos)
+	      ("M-:"            . helm-eval-expression-with-eldoc)
+	      ("<tab>"          . helm-lisp-completion-at-point)
+	      ("o"              . helm-occur)
+	      
+	      :map helm-find-files-map
+	      ("C-x o"          . helm-ff-run-switch-other-window)
+	      ("C-x 5 o"        . helm-ff-run-switch-other-frame)
+	      ("C-h m"          . describe-mode)
+	      ("C-<backspace>"  . backward-kill-word)
+	      
+	      :map helm-read-file-map
+	      ("C-h m"          . describe-mode)
+	      ("C-<backspace>"  . backward-kill-word))
 
-  :config
-  (require 'helm-config)
-  (require 'helm-files)
-  (global-unset-key (kbd "C-x c"))
-  ;; Disable helm completion in some modes
-  (setq helm-mode-no-completion-in-region-in-modes
-        '(inferior-python-mode)))
+	     :config
+	     (require 'helm-config)
+	     (require 'helm-files)
+	     (global-unset-key (kbd "C-x c"))
+	     ;; Disable helm completion in some modes
+	     (setq helm-mode-no-completion-in-region-in-modes
+		   '(inferior-python-mode)))
 
 (use-package helm-company)
 (when system-osx-p
@@ -626,230 +625,244 @@ clean buffer we're an order of magnitude laxer about checking."
            froms tos))
 
 (use-package highlight-sexps
-  :ensure nil
-  :config
-  (setq hl-sexp-background-colors
-        (let* ((hsv-back (hexrgb-hex-to-hsv
-                          (hexrgb-color-name-to-hex "blue4")))
-               (hsv-match (hexrgb-hex-to-hsv
-                           (hexrgb-color-name-to-hex "deep sky blue"))))
-          (mapcar
-           (lambda (step)
-             (apply 'hexrgb-hsv-to-hex
-                    (weight-lists hsv-match hsv-back step)))
-           (list 0.0 0.2 0.4 0.55 0.7 )))))
+	     :ensure nil
+	     :config
+	     (setq hl-sexp-background-colors
+		   (let* ((hsv-back (hexrgb-hex-to-hsv
+				     (hexrgb-color-name-to-hex "blue4")))
+			  (hsv-match (hexrgb-hex-to-hsv
+				      (hexrgb-color-name-to-hex "deep sky blue"))))
+		     (mapcar
+		      (lambda (step)
+			(apply 'hexrgb-hsv-to-hex
+			       (weight-lists hsv-match hsv-back step)))
+		      (list 0.0 0.2 0.4 0.55 0.7 )))))
 
 (defun my-ibuffer-hook ()
   (ibuffer-switch-to-saved-filter-groups "default"))
 
 (use-package ibuffer
-  :bind
-  (:map ibuffer-mode-map
-        ("P" . ibuffer-do-ps-print)
-        ("s p" . ibuffer-do-sort-by-filename-or-dired))
-  :init
-  (add-hook 'ibuffer-mode-hook 'my-ibuffer-hook)
-  :config
-  (setq ibuffer-saved-filter-groups
-      (quote (("default"
-               ("dired"   (mode . dired-mode))
-               ("C/C++"   (mode . c++-mode))
-               ("org"     (mode . org-mode))
-               ("script"  (mode . sh-mode))
-               ("pl"      (or (mode . perl-mode) (mode . cperl-mode)))
-               ("py"      (or (mode . python-mode)))
-               ("emacs"   (or
-                           (name . "^\\*"))))))
-      ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*" "\\*vc\\*")
-      ibuffer-display-summary nil)
-  
-  (define-ibuffer-op ibuffer-do-ps-print ()
-    "Print marked buffers as with `ps-print-buffer-with-faces'."
-    (:opstring "printed"
-               :modifier-p nil)
-    (ps-print-buffer-with-faces))
+	     :bind
+	     (:map ibuffer-mode-map
+		   ("P" . ibuffer-do-ps-print)
+		   ("s p" . ibuffer-do-sort-by-filename-or-dired))
+	     :init
+	     (add-hook 'ibuffer-mode-hook 'my-ibuffer-hook)
+	     :config
+	     (setq ibuffer-saved-filter-groups
+		   (quote (("default"
+			    ("dired"   (mode . dired-mode))
+			    ("C/C++"   (mode . c++-mode))
+			    ("org"     (mode . org-mode))
+			    ("script"  (mode . sh-mode))
+			    ("pl"      (or (mode . perl-mode) (mode . cperl-mode)))
+			    ("py"      (or (mode . python-mode)))
+			    ("emacs"   (or
+					(name . "^\\*"))))))
+		   ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*" "\\*vc\\*")
+		   ibuffer-display-summary nil)
+	     
+	     (define-ibuffer-op ibuffer-do-ps-print ()
+	       "Print marked buffers as with `ps-print-buffer-with-faces'."
+	       (:opstring "printed"
+			  :modifier-p nil)
+	       (ps-print-buffer-with-faces))
 
-  (define-ibuffer-sorter filename-or-dired
-    "Sort the buffers by their pathname."
-    (:description "filenames plus dired")
-    (string-lessp
-     (with-current-buffer (car a)
-       (or buffer-file-name
-           (if (eq major-mode 'dired-mode)
-               (expand-file-name dired-directory))
-           ;; so that all non pathnames are at the end
-           "~"))
-     (with-current-buffer (car b)
-       (or buffer-file-name
-           (if (eq major-mode 'dired-mode)
-               (expand-file-name dired-directory))
-           ;; so that all non pathnames are at the end
-           "~")))))
+	     (define-ibuffer-sorter filename-or-dired
+	       "Sort the buffers by their pathname."
+	       (:description "filenames plus dired")
+	       (string-lessp
+		(with-current-buffer (car a)
+		  (or buffer-file-name
+		      (if (eq major-mode 'dired-mode)
+			  (expand-file-name dired-directory))
+		      ;; so that all non pathnames are at the end
+		      "~"))
+		(with-current-buffer (car b)
+		  (or buffer-file-name
+		      (if (eq major-mode 'dired-mode)
+			  (expand-file-name dired-directory))
+		      ;; so that all non pathnames are at the end
+		      "~")))))
 
-;;; INFO
 (use-package info
-  :init
-  (bind-key ";"           'Info-search-next     Info-mode-map)
-  (bind-key ":"           'Info-search-backward Info-mode-map)
-  (bind-key [(shift tab)] 'Info-prev-reference  Info-mode-map))
+	     :init
+	     (bind-key ";"           'Info-search-next     Info-mode-map)
+	     (bind-key ":"           'Info-search-backward Info-mode-map)
+	     (bind-key [(shift tab)] 'Info-prev-reference  Info-mode-map))
+
+(defun my-jedi-mode-hook-fn ()
+  (setq-local jedi:environment-root pyvenv-virtual-env)
+  (activate-venv-if-python)
+  (jedi:install-server)
+  (jedi-direx:setup))
+
+(use-package jedi
+	     :config
+	     (add-hook  'jedi-mode-hook 'my-jedi-mode-hook-fn))
+(use-package jedi-direx)
 
 (use-package jira)
 
 (use-package kanban)
 
+(defun my-emacs-lisp-mode-hook ()
+  (smartparens-mode t)
+  (smartparens-strict-mode))
+
 ;;; LISP MODE
-(add-hook 'emacs-lisp-mode-hook
-          (lambda ()
-            (require 'smartparens-config)
-            (smartparens-mode t)
-            (smartparens-strict-mode)
-            (let ((map smartparens-mode-map))
-              ;; Movement and navigation
+(use-package lisp-mode
+	     :ensure nil
 
-              (define-key map (kbd "C-M-b")                'sp-backward-sexp)
-              (define-key map (kbd "C-M-f")                'sp-forward-sexp)
+	     :init
+	     (require 'smartparens-config)
+	     (add-hook 'emacs-lisp-mode-hook #'my-emacs-lisp-mode-hook)
 
-              (define-key map (kbd "<C-M-left>")           'sp-backward-sexp)
-              (define-key map (kbd "<C-M-right>")          'sp-forward-sexp)
-              (define-key map (kbd "<C-up>")               'sp-up-sexp)
-              (define-key map (kbd "<C-down>")             'sp-down-sexp)
-              (define-key map (kbd "<C-S-up>")             'sp-backward-up-sexp)
-              (define-key map (kbd "<C-S-down>")           'sp-backward-down-sexp)
+	     :bind
+	     (:map
+	      smartparens-mode-map
+	      
+	      ("C-M-b" . sp-backward-sexp)
+	      ("C-M-f" . sp-forward-sexp)
 
-              (define-key map (kbd "C-M-p")                'sp-previous-sexp)
-              (define-key map (kbd "C-M-n")                'sp-next-sexp)
-              (define-key map (kbd "M-a")                  'sp-beginning-of-sexp)
-              (define-key map (kbd "M-e")                  'sp-end-of-sexp)
+	      ("<C-M-left>" . sp-backward-sexp)
+	      ("<C-M-right>" . sp-forward-sexp)
+	      ("<C-up>" . sp-up-sexp)
+	      ("<C-down>" . sp-down-sexp)
+	      ("<C-S-up>" . sp-backward-up-sexp)
+	      ("<C-S-down>" . sp-backward-down-sexp)
 
-              (define-key map (kbd "M-B")                  'sp-backward-symbol)
-              (define-key map (kbd "M-F")                  'sp-forward-symbol)
+	      ("C-M-p" . sp-previous-sexp)
+	      ("C-M-n" . sp-next-sexp)
+	      ("M-a" . sp-beginning-of-sexp)
+	      ("M-e" . sp-end-of-sexp)
 
-              (define-key map (kbd "M-p")                  'point-undo)
-              (define-key map (kbd "M-n")                  'point-redo)
+	      ("M-B" . sp-backward-symbol)
+	      ("M-F" . sp-forward-symbol)
 
-              ;; selection
-              (define-key map (kbd "C-]")                  'sp-select-next-thing-exchange)
-              (define-key map (kbd "C-M-]")                'sp-select-next-thing)
+	      ("M-p" . point-undo)
+	      ("M-n" . point-redo)
 
-              ;; Deleting and killing
-              (define-key map (kbd "<M-delete>")           'sp-unwrap-sexp)
-              (define-key map (kbd "<M-backspace>")        'sp-backward-unwrap-sexp)
+	      ;; selection
+	      ("C-]" . sp-select-next-thing-exchange)
+	      ("C-M-]" . sp-select-next-thing)
 
-              (define-key map [remap backward-delete-char] 'sp-backward-delete-char)
-              (define-key map [remap backward-kill-word]   'sp-backward-kill-word)
-              (define-key map [remap delete-forward-char]  'sp-delete-char)
-              (define-key map [remap kill-line]            'sp-kill-hybrid-sexp)
-              (define-key map [remap kill-word]            'sp-kill-word)
+	      ;; Deleting and killing
+	      ("<M-delete>" . sp-unwrap-sexp)
+	      ("<M-backspace>" . sp-backward-unwrap-sexp)
 
-              (define-key map (kbd "C-M-k")                'sp-kill-sexp)
-              (define-key map (kbd "C-M-S-k")              'sp-backward-kill-sexp)
-              (define-key map (kbd "C-M-w")                'sp-copy-sexp)
+	      ([remap backward-delete-char] . sp-backward-delete-char)
+	      ([remap backward-kill-word]   . sp-backward-kill-word)
+	      ([remap delete-forward-char]  . sp-delete-char)
+	      ([remap kill-line]            . sp-kill-hybrid-sexp)
+	      ([remap kill-word]            . sp-kill-word)
 
-              ;; Depth changing
-              (define-key map (kbd "M-s")                  'sp-splice-sexp)
-              (define-key map (kbd "C-M-s")                'sp-splice-sexp-killing-around)
-              (define-key map (kbd "M-?")                  'sp-convolute-sexp)
-              (define-key map (kbd "<C-M-backspace>")      'sp-splice-sexp-killing-backward)
-              (define-key map (kbd "<C-M-delete>")         'sp-splice-sexp-killing-forward)
+	      ("C-M-k" . sp-kill-sexp)
+	      ("C-M-S-k" . sp-backward-kill-sexp)
+	      ("C-M-w" . sp-copy-sexp)
 
-              ;; Barf & slurp
+	      ;; Depth changing
+	      ("M-s" . sp-splice-sexp)
+	      ("C-M-s" . sp-splice-sexp-killing-around)
+	      ("M-?" . sp-convolute-sexp)
+	      ("<C-M-backspace>" . sp-splice-sexp-killing-backward)
+	      ("<C-M-delete>" . sp-splice-sexp-killing-forward)
 
-              ;; http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking
-              ;; for the first setting
-              (define-key map (kbd "C-)")                  'sp-forward-slurp-sexp)
-              (define-key map (kbd "C-}")                  'sp-forward-barf-sexp)
-              (define-key map (kbd "C-(")                  'sp-backward-slurp-sexp)
-              (define-key map (kbd "C-{")                  'sp-backward-barf-sexp)
+	      ;; Barf & slurp
 
-              ;; Miscellaneous commands
-              (define-key map (kbd "M-S")                  'sp-split-sexp)
-              (define-key map (kbd "M-J")                  'sp-join-sexp)
-              (define-key map (kbd "C-M-t")                'sp-transpose-sexp))
+	      ;; http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking
+	      ;; for the first setting
+	      ("C-)" . sp-forward-slurp-sexp)
+	      ("C-}" . sp-forward-barf-sexp)
+	      ("C-(" . sp-backward-slurp-sexp)
+	      ("C-{" . sp-backward-barf-sexp)
 
-            ;; Some additional bindings for strict mode
-            (let ((map smartparens-strict-mode-map))
-              (define-key map (kbd "M-q")                  'sp-indent-defun))))
+	      ;; Miscellaneous commands
+	      ("M-S" . sp-split-sexp)
+	      ("M-J" . sp-join-sexp)
+	      ("C-M-t" . sp-transpose-sexp)
+	      
+	      :map smartparens-strict-mode-map
+	      ("M-q" . sp-indent-defun)))
+
+(use-package live-py-mode)
 
 (use-package macrostep)
 
-;;; MAGIT
-
 (use-package magit
-  :config
-  (setq magit-popup-use-prefix-argument 'default
-	magit-revert-buffers t
-	magit-completing-read-function 'magit-ido-completing-read)
-  :bind ("C-x g" . magit-status))
+	     :config
+	     (setq magit-popup-use-prefix-argument 'default
+		   magit-revert-buffers t
+		   magit-completing-read-function 'magit-ido-completing-read)
+	     :bind ("C-x g" . magit-status))
 
-;;; MAN
 (defun man--man-around (orig-fun &rest args)
   "Advises `man' to use bash as the shell."
   (let ((shell-file-name "bash"))
     (apply orig-fun args)))
 
 (use-package man
-  :config
-  (advice-add 'man :around #'man--man-around))
+	     :config
+	     (advice-add 'man :around #'man--man-around))
 
 
 (use-package maxframe
-  :init
-  (maximize-frame))
+	     :init
+	     (maximize-frame))
 
 (use-package mediawiki
-  :mode "\\.wiki\\'"
-  :bind
-  (:map mediawiki-mode-map
-        ("RET"       . newline-and-indent)
-        ("<M-left>"  . mediawiki-simple-outline-promote)
-        ("<M-right>" . mediawiki-simple-outline-demote)
-        ("<M-up>"    . outline-move-subtree-up)
-        ("<M-down>"  . outline-move-subtree-down)))
+	     :mode "\\.wiki\\'"
+	     :bind
+	     (:map mediawiki-mode-map
+		   ("RET"       . newline-and-indent)
+		   ("<M-left>"  . mediawiki-simple-outline-promote)
+		   ("<M-right>" . mediawiki-simple-outline-demote)
+		   ("<M-up>"    . outline-move-subtree-up)
+		   ("<M-down>"  . outline-move-subtree-down)))
 
 (use-package mmix-mode
-  :ensure nil
-  :mode "\\.mms\\'")
+	     :ensure nil
+	     :mode "\\.mms\\'")
 
 (use-package multiple-cursors)
 
-;; MOCCUR
 (use-package color-moccur
-  :bind (("M-s O" . moccur)
-         :map isearch-mode-map
-         ("M-o" . isearch-moccur )
-         ("M-O" . isearch-moccur-all))
-  :init
-  (setq moccur-split-word t
-        dmoccur-use-list t
-        dmoccur-use-project t
-        dmoccur-list '(("dir" default-directory (".*") dir)))
-  (setq *moccur-buffer-name-exclusion-list*
-        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
-          ".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
-          "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
-          "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
-          "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
-  (setq dmoccur-exclusion-mask
-        '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
-          "\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
-          "\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
-          "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
-          "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
-          "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
-          "\\.pch$" "\\.pdb$" "\\.res$"))
-  :config
-  (require 'moccur-edit))
+	     :bind (("M-s O" . moccur)
+		    :map isearch-mode-map
+		    ("M-o" . isearch-moccur )
+		    ("M-O" . isearch-moccur-all))
+	     :init
+	     (setq moccur-split-word t
+		   dmoccur-use-list t
+		   dmoccur-use-project t
+		   dmoccur-list '(("dir" default-directory (".*") dir)))
+	     (setq *moccur-buffer-name-exclusion-list*
+		   '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
+		     ".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
+		     "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
+		     "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
+		     "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
+	     (setq dmoccur-exclusion-mask
+		   '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
+		     "\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
+		     "\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
+		     "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
+		     "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
+		     "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
+		     "\\.pch$" "\\.pdb$" "\\.res$"))
+	     :config
+	     (require 'moccur-edit))
 
 (use-package nexus)
 
 (require 'nexus-extensions)
 
 (use-package nxml-mode
-  :ensure nil
-  :bind
-  (:map
-   nxml-mode-map
-   ("<f9>" . nexus-insert-gav-for-keyword)))
+	     :ensure nil
+	     :bind
+	     (:map
+	      nxml-mode-map
+	      ("<f9>" . nexus-insert-gav-for-keyword)))
 
 ;;; ORG MODE
 
@@ -863,8 +876,8 @@ clean buffer we're an order of magnitude laxer about checking."
   "Return if HEADLINE is for a buffer created by
 `org-jira-get-issues'."
   (org-with-point-at
-      (get-text-property 1 'org-hd-marker headline)
-    (in-a-jira-buffer)))
+   (get-text-property 1 'org-hd-marker headline)
+   (in-a-jira-buffer)))
 
 (defun jira-priority-from-jira-headline (headline)
   "Return the Jira priority for HEADLINE, as a string, as
@@ -872,9 +885,9 @@ reported by Jira, e.g. \"Major\".  This is needed because of the
 conflict between the use of \"priority\" for `org-mode'
 properties and Jira properties."
   (org-with-point-at
-      (get-text-property 1 'org-hd-marker headline)
-    (let ((org-special-properties nil))
-      (cdr (assoc "PRIORITY" (org-entry-properties nil "priority"))))))
+   (get-text-property 1 'org-hd-marker headline)
+   (let ((org-special-properties nil))
+     (cdr (assoc "PRIORITY" (org-entry-properties nil "priority"))))))
 
 (defvar jira-priority-alist
   '(("Blocker"  . ?A)
@@ -928,97 +941,97 @@ according to `headline-is-for-jira'."
   (setq fill-column 90))
 
 (use-package org
-  :mode "\\.org'"
+	     :mode "\\.org'"
 
-  :init
-  (setq org-clock-persist t
-        org-clock-in-resume t
-        org-list-allow-alphabetical t
-        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
-                            ([(control shift left)]  . [(meta shift -)]))
-        org-replace-disputed-keys t)
-  (org-clock-persistence-insinuate)
-  :bind
-  (:map org-mode-map
-        ("<C-tab>"    . org-cycle-t)
-	("M-?"        . org-complete)
-	("<backtab>"  . org-show-contents-or-move-to-previous-table-field)
-	("<C-S-down>" . outline-next-visible-heading)
-	("<C-S-up>"   . outline-previous-visible-heading)
-	("C-c ?"      . outline-mark-subtree))
+	     :init
+	     (setq org-clock-persist t
+		   org-clock-in-resume t
+		   org-list-allow-alphabetical t
+		   org-disputed-keys '(([(control shift right)] . [(meta shift +)])
+				       ([(control shift left)]  . [(meta shift -)]))
+		   org-replace-disputed-keys t)
+	     (org-clock-persistence-insinuate)
+	     :bind
+	     (:map org-mode-map
+		   ("<C-tab>"    . org-cycle-t)
+		   ("M-?"        . org-complete)
+		   ("<backtab>"  . org-show-contents-or-move-to-previous-table-field)
+		   ("<C-S-down>" . outline-next-visible-heading)
+		   ("<C-S-up>"   . outline-previous-visible-heading)
+		   ("C-c ?"      . outline-mark-subtree))
 
-  :config
-  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-  (add-hook 'org-mode-hook 'my-org-mode-hook-fn)
-  (set-face-foreground 'org-hide (face-background 'default))    
-  (setq org-enforce-todo-dependencies t
+	     :config
+	     (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
+	     (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+	     (add-hook 'org-mode-hook 'my-org-mode-hook-fn)
+	     (set-face-foreground 'org-hide (face-background 'default))    
+	     (setq org-enforce-todo-dependencies t
 
-        org-fast-tag-selection-single-key nil
-        org-hide-leading-stars t
+		   org-fast-tag-selection-single-key nil
+		   org-hide-leading-stars t
 
-        org-log-done t
-        org-log-reschedule 'time
-        org-log-redeadline 'time
+		   org-log-done t
+		   org-log-reschedule 'time
+		   org-log-redeadline 'time
 
-        ;; org-mode should really be smart enough to get this automatically
-        org-not-done-heading-regexp
-        "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
-        org-odd-levels-only t
-        
-        org-tags-column -80
-        org-use-speed-commands t)
-  
-  (require 'ob-ipython)
-  (require 'org-agenda)
-  (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
-        org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
-        org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html")))
-        org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
-                                            (todo user-defined-up)
-                                            (tags category-keep priority-down)
-                                            (search category-keep)))
-        org-agenda-start-with-clockreport-mode nil
-        org-agenda-todo-keyword-format "%-4s")
-  
-  (require 'org-id)
-  (require 'org-jira)
-  ;; (require 'org-outlook) ;; disable for now
-  (require 'org-ref)
-  (require 'org-toc)
-  (setq org-toc-default-depth 3)
-  (require 'org-wp-link)
+		   ;; org-mode should really be smart enough to get this automatically
+		   org-not-done-heading-regexp
+		   "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
+		   org-odd-levels-only t
+		   
+		   org-tags-column -80
+		   org-use-speed-commands t)
+	     
+	     (require 'ob-ipython)
+	     (require 'org-agenda)
+	     (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
+		   org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
+		   org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html")))
+		   org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
+						       (todo user-defined-up)
+						       (tags category-keep priority-down)
+						       (search category-keep)))
+		   org-agenda-start-with-clockreport-mode nil
+		   org-agenda-todo-keyword-format "%-4s")
+	     
+	     (require 'org-id)
+	     (require 'org-jira)
+	     ;; (require 'org-outlook) ;; disable for now
+	     (require 'org-ref)
+	     (require 'org-toc)
+	     (setq org-toc-default-depth 3)
+	     (require 'org-wp-link)
 
-  (require 'ox)
-  (setq org-export-headline-levels       3
-        org-export-mark-todo-in-toc      t
-        org-export-with-creator          nil
-        org-export-with-email            nil
-        org-export-with-emphasize        t
-        org-export-with-fixed-width      t
-        org-export-with-priority         t
-        org-export-with-section-numbers  nil
-        org-export-with-special-strings  t
-        org-export-with-sub-superscripts t
-        org-export-with-tables           t
-        org-export-with-tags             'not-in-toc
-        org-export-with-timestamp        t
-        org-export-with-toc              t)
+	     (require 'ox)
+	     (setq org-export-headline-levels       3
+		   org-export-mark-todo-in-toc      t
+		   org-export-with-creator          nil
+		   org-export-with-email            nil
+		   org-export-with-emphasize        t
+		   org-export-with-fixed-width      t
+		   org-export-with-priority         t
+		   org-export-with-section-numbers  nil
+		   org-export-with-special-strings  t
+		   org-export-with-sub-superscripts t
+		   org-export-with-tables           t
+		   org-export-with-tags             'not-in-toc
+		   org-export-with-timestamp        t
+		   org-export-with-toc              t)
 
-  (require 'ox-html)
-  (setq org-html-inline-images           t
-        org-html-link-org-files-as-html  t
-        org-html-preamble                t
-        org-html-postamble               'auto
-        org-html-validation-link         nil)
+	     (require 'ox-html)
+	     (setq org-html-inline-images           t
+		   org-html-link-org-files-as-html  t
+		   org-html-preamble                t
+		   org-html-postamble               'auto
+		   org-html-validation-link         nil)
 
-  (require 'ox-mediawiki)
-  (require 'ox-publish)
-  (setq org-publish-use-timestamps-flag t)
+	     (require 'ox-mediawiki)
+	     (require 'ox-publish)
+	     (setq org-publish-use-timestamps-flag t)
 
-  (require 'ox-reveal)
-  (require 'pyvenv)
-  (require 'texmathp))
+	     (require 'ox-reveal)
+	     (require 'pyvenv)
+	     (require 'texmathp))
 
 (use-package ob-ipython)
 
@@ -1029,21 +1042,21 @@ according to `headline-is-for-jira'."
 (use-package org-plus-contrib)
 
 (use-package org-ref
-  :config
-  (when (bound-and-true-p bibliography-directory)
-    (setq reftex-default-bibliography
-	  (list (concat bibliography-directory "/jonmoore.bib")))
-    
-    (setq org-ref-bibliography-notes
-	  (concat bibliography-directory "/notes.org")
-          org-ref-default-bibliography reftex-default-bibliography
-          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
-          org-ref-insert-cite-key "C-c )")
-    
-    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
-    (setq helm-bibtex-library-path org-ref-pdf-directory)
-    (setq helm-bibtex-pdf-open-function 'org-open-file)
-    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
+	     :config
+	     (when (bound-and-true-p bibliography-directory)
+	       (setq reftex-default-bibliography
+		     (list (concat bibliography-directory "/jonmoore.bib")))
+	       
+	       (setq org-ref-bibliography-notes
+		     (concat bibliography-directory "/notes.org")
+		     org-ref-default-bibliography reftex-default-bibliography
+		     org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
+		     org-ref-insert-cite-key "C-c )")
+	       
+	       (setq helm-bibtex-bibliography (car reftex-default-bibliography))
+	       (setq helm-bibtex-library-path org-ref-pdf-directory)
+	       (setq helm-bibtex-pdf-open-function 'org-open-file)
+	       (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
 
 (use-package ox-mediawiki)
 
@@ -1052,85 +1065,72 @@ according to `headline-is-for-jira'."
 (use-package p4)
 
 (use-package paren
-  :init
-  (show-paren-mode))
+	     :init
+	     (show-paren-mode))
 
 (defun my-cperl-mode-hook-fn ()
   (abbrev-mode nil)
   (hs-minor-mode))
 
 (use-package cperl-mode
-  :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
-  :interpreter "perl"
-  :config
-  (setq cperl-indent-level 4
-        cperl-extra-newline-before-brace nil)
-  (add-hook 'cperl-mode-hook 'my-cperl-mode-hook-fn))
+	     :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
+	     :interpreter "perl"
+	     :config
+	     (setq cperl-indent-level 4
+		   cperl-extra-newline-before-brace nil)
+	     (add-hook 'cperl-mode-hook 'my-cperl-mode-hook-fn))
 
 (use-package point-undo)
 
 (use-package projectile)
 
-;; Not really needed since I use flycheck.  See
-;; pycoverage-define-flycheck-checker
+;; Not needed but a reminder of where to get the Python from
 (use-package pycoverage)
 
-;;; PRETTY COLUMN
-(setq pcol-str-separator " "
-      pcol-column-separator "[ \t]+")
+(use-package pretty-column
+	     :ensure nil
+	     :init
+	     (setq pcol-str-separator " "
+		   pcol-column-separator "[ \t]+"))
 
-;;; PRINTING
-(setq
- ps-bottom-margin       36
- ps-top-margin          36
- ps-right-margin        36
- ps-left-margin         36
- ps-header-offset       36
- ps-inter-column        18
- ps-n-up-margin         18
- ps-landscape-mode     nil
- ps-line-number          t
- ps-n-up-printing        1
- ps-number-of-columns    1
- ps-print-color-p       t)
-
-;;; PROJECTILE
 (use-package projectile
-  :disabled t)
+	     :disabled t)
 
-(defun my-jedi-mode-hook-fn ()
-  (setq-local jedi:environment-root pyvenv-virtual-env)
-  (activate-venv-if-python)
-  (jedi:install-server)
-  (jedi-direx:setup))
-
-(use-package jedi
-  :config
-  (add-hook  'jedi-mode-hook 'my-jedi-mode-hook-fn))
-(use-package jedi-direx)
-(use-package live-py-mode)
+(use-package ps-print
+	     :config
+	     (setq ps-bottom-margin       36
+		   ps-top-margin          36
+		   ps-right-margin        36
+		   ps-left-margin         36
+		   ps-header-offset       36
+		   ps-inter-column        18
+		   ps-n-up-margin         18
+		   ps-landscape-mode     nil
+		   ps-line-number          t
+		   ps-n-up-printing        1
+		   ps-number-of-columns    1
+		   ps-print-color-p       t))
 
 (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
+
+;; Suppress errors
+(defun my-ignore-errors (orig-fun &rest args)
+  "Ignore errors due to calling ORIG-FUN."
+  (condition-case nil
+      (orig-fun args)
+    (error nil)))
+;; advice-add with ignore-errors does not work. Because that is a macro?
+(advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors)
 
 ;; The reason for post-command-hook instead of when opening a file is
 ;; that some of the variables set are global.  May still want to have
 ;; a hook that lets us set up jedi correctly.
 (add-hook 'post-command-hook 'activate-venv-if-python)
 
-(advice-add  'pyvenv-run-virtualenvwrapper-hook
-             :filter-return 'ignore-errors)
-
-;; ;; Try to suppress errors
-;; (defun my-ignore-errors (orig-fun &rest args)
-;;   "Ignore errors due to calling ORIG-FUN."
-;;   (condition-case nil
-;;       (orig-fun args)
-;;     (error nil)))
-;; (advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors)
-
 (use-package restclient)
 
-(require 'scroll-in-place)
+(use-package scroll-in-place
+	     :ensure nil)
 
 (defun shell-cycle-backward-through-command-history ()
   (interactive)
@@ -1144,19 +1144,19 @@ according to `headline-is-for-jira'."
     (forward-line 1)))
 
 (use-package shell
-  :init
-  :bind
-  (:map
-   shell-mode-map
-   ("<home>" . comint-bol)
-   ("<up>"   . shell-cycle-backward-through-command-history)
-   ("<down>" . shell-cycle-forward-through-command-history)))
+	     :init
+	     :bind
+	     (:map
+	      shell-mode-map
+	      ("<home>" . comint-bol)
+	      ("<up>"   . shell-cycle-backward-through-command-history)
+	      ("<down>" . shell-cycle-forward-through-command-history)))
 
 (use-package shell-toggle
-  ;; shell-toggle tries to use term by default but this doesn't work on windows
-  :if system-win32-p
-  :config
-  (setq shell-toggle-launch-shell 'shell))
+	     ;; shell-toggle tries to use term by default but this doesn't work on windows
+	     :if system-win32-p
+	     :config
+	     (setq shell-toggle-launch-shell 'shell))
 
 ;; Beware: In a complete WTF, Windows intercepts Ctrl-shift-0,
 ;; bound to sp-forward-slurp-sexp. See
@@ -1178,69 +1178,69 @@ according to `headline-is-for-jira'."
   (auto-raise-mode 1))
 
 (use-package speedbar
-  :config
-  (add-hook 'speedbar-mode-hook 'my-speedbar-mode-hook-fn))
+	     :config
+	     (add-hook 'speedbar-mode-hook 'my-speedbar-mode-hook-fn))
 
 (use-package sr-speedbar)
 
 (use-package text-mode
-  :ensure nil
-  :bind
-  (:map text-mode-map
-        ([(shift return)] . newline-and-indent)))
+	     :ensure nil
+	     :bind
+	     (:map text-mode-map
+		   ([(shift return)] . newline-and-indent)))
 
 (use-package tramp
-  :if system-win32-p
-  :config
-  (setq tramp-default-method "plink"))
+	     :if system-win32-p
+	     :config
+	     (setq tramp-default-method "plink"))
 
 (use-package undo-tree
-  :diminish undo-tree-mode
-  :config
-  (global-undo-tree-mode))
+	     :diminish undo-tree-mode
+	     :config
+	     (global-undo-tree-mode))
 
 (use-package which-func
-  :init
-  (which-function-mode 1))
+	     :init
+	     (which-function-mode 1))
 
 (use-package yaml-mode)
 
 (use-package yasnippet
-  :config
-  (setq yas-verbosity 1))
+	     :config
+	     (setq yas-verbosity 1))
 
 (use-package ztree)
 
 (use-package desktop
-  :init
-  (let* ((computername (getenv "COMPUTERNAME"))
-         (local-desktop-dir (concat "~/.emacs.d/" computername )))
-    (unless (file-exists-p local-desktop-dir)
-      (mkdir local-desktop-dir))
-    (setq desktop-path (list local-desktop-dir)))
-  (desktop-save-mode 1))
+	     :init
+	     (let* ((computername (getenv "COMPUTERNAME"))
+		    (local-desktop-dir (concat "~/.emacs.d/" computername )))
+	       (unless (file-exists-p local-desktop-dir)
+		 (mkdir local-desktop-dir))
+	       (setq desktop-path (list local-desktop-dir)))
+	     (desktop-save-mode 1))
 
 (use-package savehist
-  :init
-  (savehist-mode 1))
+	     :init
+	     (savehist-mode 1))
 
 (use-package custom
-  :ensure nil
-  :init
-  (load-theme 'word-perfect t t)
-  (enable-theme 'word-perfect)
-  (setq
-   ;; set to avoid writing back to ~
-   custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
-  (load custom-file))
+	     :ensure nil
+	     :init
+	     (load-theme 'word-perfect t t)
+	     (enable-theme 'word-perfect)
+	     (setq
+	      ;; set to avoid writing back to ~
+	      custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
+	     (load custom-file))
 
 (use-package server
-  :init
-  (server-force-delete)  
-  (server-start)  
-  (setq kill-buffer-query-functions
-        (remq
-         'server-kill-buffer-query-function
-         kill-buffer-query-functions)))
+	     :init
+	     (server-force-delete)  
+	     (server-start)  
+	     (setq kill-buffer-query-functions
+		   (remq
+		    'server-kill-buffer-query-function
+		    kill-buffer-query-functions)))
 
 (message "Finished emacs.el")
