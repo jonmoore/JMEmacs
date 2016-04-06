@@ -341,28 +341,6 @@ that using the git code, as in
     :modes (python-mode)
     :next-checkers ((t . python-flake8))))
 
-(warn "Redefining functions in pydoc")
-
-;;;###autoload
-(defun pydoc-browse ()
-  "Open a browser to pydoc.
-Attempts to find an open port, and to reuse the process."
-  (interactive)
-  (unless *pydoc-browser-process*
-    ;; find an open port
-    (if (executable-find "lsof")
-	(loop for port from 1025
-	      if (string= "" (shell-command-to-string (format "lsof -i :%s" port)))
-	      return (setq *pydoc-browser-port* (number-to-string port)))
-      ;; Windows may not have an lsof command.
-      (setq *pydoc-browser-port* "1234"))
-    
-    (setq *pydoc-browser-process*
-          (apply
-           #'start-process
-           "pydoc-browser" "*pydoc-browser*"
-           (append (split-string pydoc-command)
-                   `("-p" ,*pydoc-browser-port*)))))
-  (browse-url (format "http://localhost:%s" *pydoc-browser-port*)))
+(provide 'python-helpers)
 
 
