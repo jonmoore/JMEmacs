@@ -11,6 +11,9 @@
   "*The root of my personal emacs workspace.")
 (message "Running emacs.el with personal-emacs-root %s" personal-emacs-root)
 
+(setq inhibit-default-init t)           ; don't load default.el
+(setq inhibit-splash-screen t)
+
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
   "Are we running on a Windows system?")
@@ -20,9 +23,34 @@
 (defconst system-osx-p (eq system-type 'darwin)
   "Are we running on a Darwin (Mac OS X) system?")
 
-(setq inhibit-default-init t)           ; don't load default.el
+;;; LOADING AND PACKAGE SYSTEM
+(require 'package)
 
-;;; Set exec-path and SHELL
+(setq load-prefer-newer t)
+(setq package-enable-at-startup nil)
+(setq package-archives
+      '(("melpa" . "http://melpa.milkbox.net/packages/")
+        ("gnu"   . "http://elpa.gnu.org/packages/")))
+(package-initialize)
+
+(mapc
+ (lambda (relpath)
+   (add-to-list 'load-path (concat personal-emacs-root relpath)))
+ '("/lisp"
+   "/lisp/doxymacs-1.8.0"))
+
+;;; PERSONAL LISP
+(require 'update-personal-autoloads)
+(update-personal-autoloads)
+(load "personal-autoloads")
+
+;;;
+;;; ENVIRONMENT, PATHS, ETC
+
+;; use setenv because some functions call getenv, not shell-file-name
+(setenv "SHELL" shell-file-name)
+
+(setq user-full-name "Jonathan Moore")
 
 ;; Set exec-path early to accommodate magit
 (when system-win32-p
@@ -39,78 +67,25 @@
 			   local-exec-paths)
 			  exec-path)))
 
-;; use setenv because some functions call getenv, not shell-file-name
-(setenv "SHELL" shell-file-name)
-(setq load-prefer-newer t)
-
-;;; Emacs package system
-(require 'package)
-
-(setq package-enable-at-startup nil)
-(setq package-archives
-      '(("melpa" . "http://melpa.milkbox.net/packages/")
-        ("gnu"   . "http://elpa.gnu.org/packages/")))
-(package-initialize)
-
-;; Bootstrap `use-package'
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-(eval-when-compile
-  (require 'use-package))
-(require 'bind-key)
-(require 'diminish)
-
-(setq use-package-verbose t
-      use-package-always-ensure t
-      use-package-always-defer t)
-
-;;; Personal lisp directory
-;; (mapcar (lambda (relpath)
-;;           (concat personal-emacs-root relpath))
-;;         '("lisp"
-;;           "lisp/doxymacs-1.8.0"))
-
-(mapc
- (lambda (relpath)
-   (add-to-list 'load-path (concat personal-emacs-root relpath)))
- '("/lisp"
-   "/lisp/doxymacs-1.8.0"))
-(require 'update-personal-autoloads)
-(update-personal-autoloads)
-(load "personal-autoloads")
-
-;;;
-;;; ENVIRONMENT
 (setq backup-directory-alist
       (list
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
 		       (system-osx-p   "~/backup")))))
 
-(setq user-full-name "Jonathan Moore")
-
-;;;
-;;;; MY FUNCTIONS
-;;;========================
-
 ;;; COLORS AND APPEARANCE
-;; see also color-theme
 (tool-bar-mode -1)
 (setq frame-title-format  '(:eval (buffer-file-names-in-selected-frame))
       query-replace-highlight t
       search-highlight t)
 
-(mapc (lambda (face)
-        (cond
-         (system-win32-p
-          (set-face-attribute face nil :family "Consolas"    :height 120))
-         ;; Inconsolata needs to be installed otherwise you can end up with Times New Roman
-         (system-osx-p
-          (set-face-attribute face nil :family "Inconsolata" :height 200))))
-      '(default tooltip)) 
+(cond
+ (system-win32-p
+  (set-face-attribute 'default nil :family "Consolas"    :height 120))
+ ;; Inconsolata needs to be installed otherwise you can end up with Times New Roman
+ (system-osx-p
+  (set-face-attribute 'default nil :family "Inconsolata" :height 200)))
 
-;;; GLOBAL EDITING SETTINGS
+;;; EDITING AND GLOBAL KEY SETTINGS
 (put 'upcase-region   'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'narrow-to-page  'disabled nil)
@@ -118,12 +93,6 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 (setq require-final-newline t)
 
-(setq kill-buffer-query-functions
-      (remq
-       'server-kill-buffer-query-function
-       kill-buffer-query-functions))
-
-;;; GLOBAL KEY SETTINGS
 (when system-osx-p
   (setq mac-command-modifier 'meta
         mac-option-modifier   nil
@@ -139,10 +108,10 @@
  ;; ("C-x C-b"      . (lambda () (interactive) (ibuffer nil "Ibuffer")))
  ("C-x C-o"      . delete-blank-lines-around-point-or-in-region)
  ("C-x LFD"      . dired-jump)
-
+ 
  ("C-n"          . (lambda () (interactive) (scroll-up-in-place 1)))
  ("C-p"          . (lambda () (interactive) (scroll-down-in-place 1)))
-
+ 
  ("C-r"          . isearch-backward-regexp)
  ("M-C-r"        . isearch-backward)
  ("C-s"          . isearch-forward-regexp)
@@ -170,12 +139,28 @@
  ("<S-f12>"      . windows-search-moccur-like)
  ("<C-f12>"      . windows-search-moccur-contains))
 
+
 ;;;
 ;;;; PACKAGES
 ;;;==========
 
-;; TODO tidy tex settings
-(defun jnm-config-auctex ()
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(eval-when-compile
+  (require 'use-package))
+(require 'bind-key)
+(require 'diminish)
+
+(setq use-package-verbose t
+      use-package-always-ensure t
+      use-package-always-defer t)
+
+(use-package tex-site
+  :ensure auctex
+  :config
   (setq TeX-source-correlate-method 'synctex
         TeX-source-correlate-mode t
         TeX-source-correlate-start-server t
@@ -184,12 +169,8 @@
         TeX-parse-self t)
   (setq reftex-plug-into-AUCTeX t)
   (setq-default TeX-master nil)
-  
   (cond
    (system-win32-p
-    (require 'tex-mik)
-    (require 'sumatra-forward)
-    
     (setq
      TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
      TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
@@ -200,12 +181,10 @@
      TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
      TeX-view-program-list '(("Skim PDF Viewer"
                               "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
-     TeX-command-default "latexmk"))))
-
-(use-package tex-site
-  :ensure auctex
-  :config
-  (jnm-config-auctex))
+     TeX-command-default "latexmk")))
+  (when system-win32-p
+    (require 'tex-mik)
+    (require 'sumatra-forward)))
 
 (defun latex-sumatra-scroll-down ()
   (scroll-down-in-place)
@@ -246,23 +225,8 @@
 
 (use-package cdlatex)
 
-(use-package color-moccur)
-(use-package color-theme-modern)
-
 ;;; CC MODE
-(autoload 'doxymacs-mode      "doxymacs" "doxymacs mode" t)
-(autoload 'doxymacs-font-lock "doxymacs" "doxymacs font lock" t)
 
-;; offset customizations not in my-c-style
-(setq c-offsets-alist '((member-init-intro . ++)))
-
-;;; C++ MODE
-
-(use-package cc-mode
-  :mode
-  ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode))
-
-;; Customizations for all modes in CC Mode.
 (defconst visual-studio-c-style
   '((c-tab-always-indent        . t)
     (c-comment-only-line-offset . 0)
@@ -276,13 +240,14 @@
     (c-cleanup-list             . (scope-operator
 				   empty-defun-braces
 				   defun-close-semi))
-    (c-offsets-alist            . ((arglist-close . c-lineup-arglist)
-				   (substatement-open . 0)
-		                   (case-label        . 4)
-                                   (innamespace       . 4)
-                                   (block-open        . 0)
+    (c-offsets-alist            . ((block-open        . 0)
+                                   (case-label        . 4)
                                    (inline-open        . 0)
-                                   (knr-argdecl-intro . -)))) "Visual C++ Programming Style")
+                                   (innamespace       . 4)
+                                   (knr-argdecl-intro . -)
+                                   (member-init-intro . ++)
+                                   (substatement-open . 0))))
+  "Visual C++ Programming Style")
 
 (defun jnm-toggle-hideshow-all ()
   "Toggle hideshow all."
@@ -291,101 +256,59 @@
       (setq jnm-hs-hide (not jnm-hs-hide))
     (set (make-local-variable 'jnm-hs-hide) t))
   (if jnm-hs-hide (hs-hide-all) (hs-show-all)))
-(defun jnm-customize-hide-show ()
-  (local-set-key (kbd "C-c l")       'hs-hide-level)
-  (local-set-key (kbd "C-c <right>") 'hs-show-block)
-  (local-set-key (kbd "C-c <left>")  'hs-hide-block))
 
-(setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
-                            ("\\.h\\'"     (".cpp" ".c"))
-                            ("\\.hpp\\'"   (".cpp"))
-                            ("\\.c\\'"     (".h"))))
+(use-package hideshow
+  :bind
+  (:map hs-minor-mode-map
+        ("C-c l" . hs-hide-level)
+        ("C-c <right>" . hs-show-block)
+        ("C-c <left> " . hs-hide-block)))
 
-(defun jnm-doxymacs-parm-tempo-element (parms)
-  "Inserts tempo elements like JavaDoc but without asterisks.
-See `doxymacs-parm-tempo-element'."
-  (if parms
-      (let ((prompt (concat "Parameter " (car parms) ": ")))
-        (list 'l " "
-              (doxymacs-doxygen-command-char) "param "
-              (car parms)
-              " " (list 'p prompt) '> 'n
-              (jnm-doxymacs-parm-tempo-element (cdr parms))))
-    nil))
+(defun my-c-mode-common-hook-fn ()
 
-(add-hook 'c-mode-common-hook
-          (lambda ()
-            (define-key c-mode-base-map   "\C-m"     'c-context-line-break)
-            ;; Load my templates for cc-mode
-            (require 'tempo-c-cpp)
-            (local-set-key (read-kbd-macro "C-<return>")   'tempo-complete-tag)
-            (local-set-key (read-kbd-macro "<f5>")   'tempo-complete-tag)
-            (tempo-use-tag-list 'c-tempo-tags)
-            (tempo-use-tag-list 'c++-tempo-tags)
+  (setq fill-column 100
+        indent-tabs-mode nil
+        tab-width 4)
 
-            ;; TODO: replace doxymacs, but with something which
-            ;; generates docs from function declarations, like
-            ;; doxymacs-find-next-func, without requiring semantic.
-            (doxymacs-mode t)
-            (defconst doxymacs-function-comment-template
-              '((let ((next-func (doxymacs-find-next-func)))
-                  (if next-func
-                      (list
-                       'l
-                       "/** " '> 'n
-                       " " 'p '> 'n
-                       " " '> 'n
-                       (jnm-parm-tempo-element (cdr (assoc 'args next-func)))
-                       (unless (string-match
-                                (regexp-quote (cdr (assoc 'return next-func)))
-                                doxymacs-void-types)
-                         '(l " * " > n " * " (doxymacs-doxygen-command-char)
-                             "return " (p "Returns: ") > n))
-                       " */" '>)
-                    (progn
-                      (error "Can't find next function declaration.")
-                      nil))))
-              "Custom JavaDoc-style template for function documentation without as many asterisks.")
+  (tempo-use-tag-list 'c-tempo-tags)
+  (tempo-use-tag-list 'c++-tempo-tags)
+  (c-toggle-auto-newline -1)
+  (c-toggle-electric-state -1)
+  (ooh-maybe-insert-cpp-guard)
+  (doxymacs-mode t)
+  (hs-minor-mode)
+  ;; Enable auto-fill on for comments but not code
+  (auto-fill-mode 0)
+  ;; call as a hook function since this affects the current buffer
+  (c-add-style "visual studio" visual-studio-c-style t)
+  (set (make-local-variable 'fill-nobreak-predicate)
+       (lambda ()
+         (not (eq (get-text-property (point) 'face)
+                  'font-lock-comment-face)))))
 
-            (setq c-auto-newline 1
-                  fill-column 100
-                  indent-tabs-mode nil
-                  tab-width 4
-                  c-default-style '((java-mode . "java")
-                                    (other . "stroustrup"))
-                  c-echo-syntactic-information-p nil)
-            (set (make-local-variable 'dabbrev-case-fold-search) nil)
+(use-package cc-mode
+  :mode
+  ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode)
+  :bind
+  (:map c-mode-base-map
+        ("<C-return>"	. tempo-complete-tag)
+        ("<C-tab>"	. tempo-forward-mark)
+        ("RET"		. c-context-line-break)
+        ("M-o"		. ff-find-other-file))
+  :init
+  (add-hook 'c-mode-common-hook 'my-c-mode-common-hook-fn)
+  :config
+  (require 'tempo-c-cpp)
+  (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
+                              ("\\.h\\'"     (".cpp" ".c"))
+                              ("\\.hpp\\'"   (".cpp"))
+                              ("\\.c\\'"     (".h")))
+        c-default-style '((java-mode . "java")
+                          (other . "stroustrup"))
+        c-echo-syntactic-information-p nil))
 
-            (c-add-style "visual studio" visual-studio-c-style t)
-            (c-toggle-auto-newline -1)
-            (c-toggle-electric-state -1)
-            (local-set-key [(control tab)] 'tempo-forward-mark)
-            ;; include guards
-            (ooh-maybe-insert-cpp-guard)
-            ;; hide-show mode
-            (hs-minor-mode)
-            (jnm-customize-hide-show)
-            ;;
-            (local-set-key (kbd "M-o") 'ff-find-other-file)
-            ;; Enable auto-fill on for comments but not code
-            (auto-fill-mode 0)
-            (set (make-local-variable 'fill-nobreak-predicate)
-                 (lambda ()
-                   (not (eq (get-text-property (point) 'face)
-                            'font-lock-comment-face))))))
-
-(add-hook 'font-lock-mode-hook ;; Fontify doxygen keywords
-          (function (lambda ()
-                      (when (or (eq major-mode 'c-mode)
-                                (eq major-mode 'c++-mode))
-                        (doxymacs-font-lock)
-                        (font-lock-add-keywords nil
-                                                '(("@\\(headerfile\|sourcefile\\|owner\\)"
-                                                   0 font-lock-keyword-face prepend)))))))
-
-;;; DOXYMACS MODE
-(autoload 'doxymacs-mode "doxymacs")
-(setq doxymacs-doxygen-style "JavaDoc")
+(use-package color-moccur)
+(use-package color-theme-modern)
 
 ;;; COMINT
 (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
@@ -393,9 +316,8 @@ See `doxymacs-parm-tempo-element'."
 (use-package company
   :config
   (add-hook 'prog-mode-hook 'company-mode)
-  :bind  (:map
-          company-active-map
-          ("C-o" . helm-company)))
+  :bind  (:map company-active-map
+               ("C-o" . helm-company)))
 
 (use-package company-auctex)
 
@@ -411,23 +333,21 @@ See `doxymacs-parm-tempo-element'."
 
 (use-package company-restclient)
 
-;;; CYGWIN SHELL
-(setq process-coding-system-alist '(("bash" . undecided-unix)))
+(use-package css-mode
+  :mode "\\.css\\'")
 
-;;; DIRED
 (use-package dired-subtree)
 
 (use-package dired
   :ensure nil ; actually part of the emacs package
-  :bind (:map
-	 dired-mode-map
-	 ("i" . dired-subtree-toggle)
-	 ("I" . dired-maybe-insert-subdir)
-	 ("j" . dired-execute-file)
-	 ("P" . dired-do-ps-print)
-	 ("O" . dired-do-moccur)
-	 ("<C-up>" . dired-prev-subdir)
-	 ("<C-down>" . dired-next-subdir))
+  :bind (:map dired-mode-map
+              ("i" . dired-subtree-toggle)
+              ("I" . dired-maybe-insert-subdir)
+              ("j" . dired-execute-file)
+              ("P" . dired-do-ps-print)
+              ("O" . dired-do-moccur)
+              ("<C-up>" . dired-prev-subdir)
+              ("<C-down>" . dired-next-subdir))
   :config
   (require 'dired-x)
   (require 'find-dired)
@@ -442,6 +362,45 @@ See `doxymacs-parm-tempo-element'."
 			       dired-omit-extensions
 			       '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
 			       :test 'string=)))
+
+(defun jnm-doxymacs-parm-tempo-element (parms)
+  "Inserts tempo elements like JavaDoc but without asterisks.
+See `doxymacs-parm-tempo-element'."
+  (if parms
+      (let ((prompt (concat "Parameter " (car parms) ": ")))
+        (list 'l " "
+              (doxymacs-doxygen-command-char) "param "
+              (car parms)
+              " " (list 'p prompt) '> 'n
+              (jnm-doxymacs-parm-tempo-element (cdr parms))))
+    nil))
+
+(defconst doxymacs-function-comment-template
+  '((let ((next-func (doxymacs-find-next-func)))
+      (if next-func
+          (list
+           'l
+           "/** " '> 'n
+           " " 'p '> 'n
+           " " '> 'n
+           (jnm-docymacs-parm-tempo-element (cdr (assoc 'args next-func)))
+           (unless (string-match
+                    (regexp-quote (cdr (assoc 'return next-func)))
+                    doxymacs-void-types)
+             '(l " * " > n " * " (doxymacs-doxygen-command-char)
+                 "return " (p "Returns: ") > n))
+           " */" '>)
+        (progn
+          (error "Can't find next function declaration.")
+          nil))))
+  "Custom JavaDoc-style template for function documentation
+  without as many asterisks.")
+
+(use-package doxymacs
+  :ensure nil
+  :commands  (doxymacs-mode doxymacs-font-lock)
+  :init
+  (setq doxymacs-doxygen-style "JavaDoc"))
 
 (use-package ediff
   :config
@@ -507,65 +466,83 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-to-list 'flycheck-checkers 'python-pycoverage))
 
 ;;; FONT LOCK MODE
-(global-font-lock-mode t)
-(setq font-lock-maximum-decoration t)
-(show-paren-mode)
-(setq jit-lock-context-time 5
-      jit-lock-chunk-size 32768
-      jit-lock-defer-time nil
-      jit-lock-stealth-nice nil
-      jit-lock-stealth-time 1)
+(defun my-font-lock-mode-hook-fn ()
+  (when (or (eq major-mode 'c-mode)
+            (eq major-mode 'c++-mode))
+    (doxymacs-font-lock)
+    (font-lock-add-keywords
+     nil
+     '(("@\\(headerfile\|sourcefile\\|owner\\)"
+        0 font-lock-keyword-face prepend)))))
+
+(use-package font-lock-mode
+  :ensure nil
+  :init
+  (global-font-lock-mode t)
+  :config
+  (add-hook 'font-lock-mode-hook 'my-font-lock-mode-hook-fn))
 
 (use-package ghc
   :config
   (setq ghc-debug t))
 
 ;;; GLOBAL AUTO REVERT MODE
-(defun looks-like-a-network-file (filename)
-  (and filename
-       (string-match "^//" filename)))
-(add-hook 'find-file-hook
-          (lambda ()
-            (when (looks-like-a-network-file buffer-file-name)
-              (message "Disabling global auto revert mode for %s"
-                       buffer-file-name)
-              (setq global-auto-revert-ignore-buffer t))))
+(defun disable-autorevert-for-network-files ()
+  (when (and buffer-file-name
+             (string-match "^//" buffer-file-name))
+    (message "Disabling global auto revert mode for %s"
+             buffer-file-name)
+    (setq global-auto-revert-ignore-buffer t)))
 
-(global-auto-revert-mode t)
+(use-package autorevert
+  :ensure nil
+  :init
+  (global-auto-revert-mode t)
+  (add-hook 'find-file-hook
+            'disable-autorevert-for-network-files))
 
 ;;; GRAPHVIZ-DOT-MODE
 (use-package graphviz-dot-mode
   :mode "\\.dot\\'")
 
 ;;; GUD MODE
-(eval-after-load 'gud
-  (quote (progn
-           (define-key gud-mode-map '[f5]   'gud-cont)
-           (define-key gud-mode-map '[S-f5] 'gud-break)
-           (define-key gud-mode-map '[f10]  'gud-next)
-           (define-key gud-mode-map '[f11]  'gud-step)
+(defvar gud-overlay
+  (let* ((ov (make-overlay (point-min) (point-min))))
+    (overlay-put ov 'face 'secondary-selection)
+    ov)
+  "Overlay variable for GUD highlighting.")  
 
-           (defvar gud-overlay
-             (let* ((ov (make-overlay (point-min) (point-min))))
-               (overlay-put ov 'face 'secondary-selection)
-               ov)
-             "Overlay variable for GUD highlighting.")
+(defun gud-kill-buffer ()
+  (if (derived-mode-p 'gud-mode)
+      (delete-overlay gud-overlay)))
 
-           (defadvice gud-display-line (after my-gud-highlight act)
-             "Highlight current line up to first non-whitespace character."
-             (let ((bf (gud-find-file true-file)))
-               (with-current-buffer bf
-                 (move-overlay
-                  gud-overlay
-                  (line-beginning-position)
-                  (save-excursion
-                    (search-forward-regexp "\\S-" (line-end-position) t )
-                    (match-beginning 0))
-                  (current-buffer)))))
-           (defun gud-kill-buffer ()
-             (if (derived-mode-p 'gud-mode)
-                 (delete-overlay gud-overlay)))
-           (add-hook 'kill-buffer-hook 'gud-kill-buffer))))
+(defun gud-display-line--my-gud-highlight (true-file line)
+  "Highlight current line up to first non-whitespace character."
+  (let ((bf (gud-find-file true-file)))
+    (with-current-buffer bf
+      (move-overlay
+       gud-overlay
+       (line-beginning-position)
+       (save-excursion
+         (search-forward-regexp "\\S-" (line-end-position) t )
+         (match-beginning 0))
+       (current-buffer)))))
+
+(use-package gud
+  :ensure nil
+  :bind (:map gud-mode-map
+              ("<f5>"   . gud-cont)
+              ("<S-f5>" . gud-break)
+              ("<f10>"  . gud-next)
+              ("<f11>"  . gud-step))
+  :config
+  (add-hook 'kill-buffer-hook 'gud-kill-buffer)
+  (advice-add 'gud-display-line :after #'gud-display-line--my-gud-highlight))
+
+(defun my-haskell-mode-hook ()
+  (turn-on-haskell-indentation)  
+  (when (buffer-file-name)
+    (ghc-init)))
 
 (use-package haskell-mode
   :init
@@ -573,6 +550,8 @@ clean buffer we're an order of magnitude laxer about checking."
         haskell-process-auto-import-loaded-modules t
         haskell-process-suggest-hoogle-imports t
         haskell-process-log t)
+  (add-hook 'haskell-mode-hook
+            'my-haskell-mode-hook)
   :bind
   (:map haskell-mode-map
         ("C-c C-l"  . haskell-process-load-or-reload)
@@ -580,13 +559,6 @@ clean buffer we're an order of magnitude laxer about checking."
         ("C-c C-i"  . haskell-process-do-info)
         ("SPC"      . haskell-mode-contextual-space)
         ("M-."      . haskell-mode-jump-to-def)))
-
-(add-hook 'haskell-mode-hook
-          (lambda ()
-            (turn-on-haskell-indentation)
-            (when (buffer-file-name)
-              (ghc-init))))
-
 
 (use-package helm-descbinds
   :bind
@@ -611,7 +583,7 @@ clean buffer we're an order of magnitude laxer about checking."
    :map helm-map
    ("<tab>"          . helm-execute-persistent-action)
    ("C-z"            . helm-select-action)
-
+   
    :map helm-command-map
    ("a"              . helm-apropos)
    ("M-:"            . helm-eval-expression-with-eldoc)
@@ -644,7 +616,6 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (helm-mode)
 
-
 (use-package help-fns+) ; for `describe-keymap'
 
 (use-package hexrgb)
@@ -662,21 +633,24 @@ clean buffer we're an order of magnitude laxer about checking."
                           (hexrgb-color-name-to-hex "blue4")))
                (hsv-match (hexrgb-hex-to-hsv
                            (hexrgb-color-name-to-hex "deep sky blue"))))
-          (progn
-            (mapcar
-             (lambda (step)
-               (apply 'hexrgb-hsv-to-hex
-                      (weight-lists hsv-match hsv-back step)))
-             (list 0.0 0.2 0.4 0.55 0.7 ))))))
+          (mapcar
+           (lambda (step)
+             (apply 'hexrgb-hsv-to-hex
+                    (weight-lists hsv-match hsv-back step)))
+           (list 0.0 0.2 0.4 0.55 0.7 )))))
 
+(defun my-ibuffer-hook ()
+  (ibuffer-switch-to-saved-filter-groups "default"))
 
-;;; HTML MODE
-(autoload 'css-mode "css-mode")
-(add-to-list 'auto-mode-alist '("\\.css\\'" . css-mode))
-
-;;; IBUFFER
-(use-package ibuffer)
-(setq ibuffer-saved-filter-groups
+(use-package ibuffer
+  :bind
+  (:map ibuffer-mode-map
+        ("P" . ibuffer-do-ps-print)
+        ("s p" . ibuffer-do-sort-by-filename-or-dired))
+  :init
+  (add-hook 'ibuffer-mode-hook 'my-ibuffer-hook)
+  :config
+  (setq ibuffer-saved-filter-groups
       (quote (("default"
                ("dired"   (mode . dired-mode))
                ("C/C++"   (mode . c++-mode))
@@ -686,18 +660,15 @@ clean buffer we're an order of magnitude laxer about checking."
                ("py"      (or (mode . python-mode)))
                ("emacs"   (or
                            (name . "^\\*"))))))
-      ;; ibuffer-expert t
-      ibuffer-never-show-predicates (list "\\*Completions\\*" "\\*vc\\*")
+      ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*" "\\*vc\\*")
       ibuffer-display-summary nil)
-(define-ibuffer-op ibuffer-do-ps-print ()
-  "Print marked buffers as with `ps-print-buffer-with-faces'."
-  (:opstring "printed"
-             :modifier-p nil)
-  (ps-print-buffer-with-faces))
+  
+  (define-ibuffer-op ibuffer-do-ps-print ()
+    "Print marked buffers as with `ps-print-buffer-with-faces'."
+    (:opstring "printed"
+               :modifier-p nil)
+    (ps-print-buffer-with-faces))
 
-(defun my-ibuffer-hook ()
-  ;; add another sorting method for ibuffer (allow the grouping of
-  ;; filenames and dired buffers
   (define-ibuffer-sorter filename-or-dired
     "Sort the buffers by their pathname."
     (:description "filenames plus dired")
@@ -713,14 +684,7 @@ clean buffer we're an order of magnitude laxer about checking."
            (if (eq major-mode 'dired-mode)
                (expand-file-name dired-directory))
            ;; so that all non pathnames are at the end
-           "~"))))
-  ;; add key binding
-  (define-key ibuffer-mode-map "P" 'ibuffer-do-ps-print)
-  (define-key ibuffer-mode-map (kbd "s p") 'ibuffer-do-sort-by-filename-or-dired))
-(add-hook 'ibuffer-mode-hook 'my-ibuffer-hook)
-(add-hook 'ibuffer-mode-hook (lambda ()
-                               (ibuffer-switch-to-saved-filter-groups
-                                "default")))
+           "~")))))
 
 ;;; INFO
 (use-package info
@@ -818,39 +782,33 @@ clean buffer we're an order of magnitude laxer about checking."
   :bind ("C-x g" . magit-status))
 
 ;;; MAN
-;; Man-getpage-in-background
-(defadvice man (around ad-man-uses-bash-shell )
+(defun man--man-around (orig-fun &rest args)
   "Advises `man' to use bash as the shell."
   (let ((shell-file-name "bash"))
-    ad-do-it))
-(ad-activate 'man)
+    (apply orig-fun args)))
 
-(use-package maxframe)
+(use-package man
+  :config
+  (advice-add 'man :around #'man--man-around))
 
-;;; MEDIAWIKI MODE
+
+(use-package maxframe
+  :init
+  (maximize-frame))
+
 (use-package mediawiki
   :mode "\\.wiki\\'"
-  )
+  :bind
+  (:map mediawiki-mode-map
+        ("RET"       . newline-and-indent)
+        ("<M-left>"  . mediawiki-simple-outline-promote)
+        ("<M-right>" . mediawiki-simple-outline-demote)
+        ("<M-up>"    . outline-move-subtree-up)
+        ("<M-down>"  . outline-move-subtree-down)))
 
-(defun use-my-mediawiki-outline-magic-keys ()
-  "Redefines mediawiki-outline-magic-keys to avoid clashing with
-control-arrow keys"
-  (defun mediawiki-outline-magic-keys ()
-    (interactive)
-
-    (local-set-key [(shift return)] 'newline-and-indent)
-
-    (local-set-key [(meta left)]  'mediawiki-simple-outline-promote)
-    (local-set-key [(meta right)] 'mediawiki-simple-outline-demote)
-    (local-set-key [(meta up)] 'outline-move-subtree-up)
-    (local-set-key [(meta down)] 'outline-move-subtree-down)))
-
-(add-hook 'outline-minor-mode-hook 'use-my-mediawiki-outline-magic-keys)
-
-;;; MMIX MODE
-(autoload 'mmix-mode "mmix-mode" "Major mode for editing MMIX files" t)
-(setq auto-mode-alist (cons '("\\.mms" . mmix-mode)
-                            auto-mode-alist))
+(use-package mmix-mode
+  :ensure nil
+  :mode "\\.mms\\'")
 
 (use-package multiple-cursors)
 
@@ -882,41 +840,18 @@ control-arrow keys"
   :config
   (require 'moccur-edit))
 
-;;; NXML MODE
-
 (use-package nexus)
 
 (require 'nexus-extensions)
 
-(add-hook 'nxml-mode-hook
-          (lambda ()
-            (local-set-key [f9]  'nexus-insert-gav-for-keyword)))
+(use-package nxml-mode
+  :ensure nil
+  :bind
+  (:map
+   nxml-mode-map
+   ("<f9>" . nexus-insert-gav-for-keyword)))
 
 ;;; ORG MODE
-
-(use-package ob-ipython)
-(use-package org-jira)
-(use-package org-plus-contrib)
-(use-package org-ref
-  :config
-  (when (bound-and-true-p bibliography-directory)
-    (setq reftex-default-bibliography
-	  (list (concat bibliography-directory "/jonmoore.bib")))
-    
-    (setq org-ref-bibliography-notes
-	  (concat bibliography-directory "/notes.org")
-          org-ref-default-bibliography reftex-default-bibliography
-          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
-          org-ref-insert-cite-key "C-c )")
-    
-    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
-    (setq helm-bibtex-library-path org-ref-pdf-directory)
-    (setq helm-bibtex-pdf-open-function 'org-open-file)
-    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
-
-(use-package ox-mediawiki)
-(use-package ox-reveal)
-;; http://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/moon.css
 
 (defun in-a-jira-buffer ()
   "Return if the current buffer is a Jira one, created with
@@ -984,72 +919,13 @@ according to `headline-is-for-jira'."
      ((< pa pb) -1)
      (t nil))))
 
-(defun my-org-config ()
-  "Configure org-mode for me, after it has been loaded.  For use
-by `:config' in `use-package'"
-
-  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-
-  (setq
-
-   org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
-   org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
-   org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html")))
-   org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
-                                       (todo user-defined-up)
-                                       (tags category-keep priority-down)
-                                       (search category-keep)))
-   org-agenda-start-with-clockreport-mode nil
-   org-agenda-todo-keyword-format "%-4s"
-   
-   org-clock-history-length 10
-   org-clock-in-resume t
-   org-clock-persist t
-
-   org-enforce-todo-dependencies t
-
-   org-export-headline-levels       3
-   org-export-mark-todo-in-toc      t
-   org-export-with-creator          nil
-   org-export-with-email            nil
-   org-export-with-emphasize        t
-   org-export-with-fixed-width      t
-   org-export-with-priority         t
-   org-export-with-section-numbers  nil
-   org-export-with-special-strings  t
-   org-export-with-sub-superscripts t
-   org-export-with-tables           t
-   org-export-with-tags             'not-in-toc
-   org-export-with-timestamp        t
-   org-export-with-toc              t
-   org-html-inline-images           t
-   org-html-link-org-files-as-html  t
-   org-html-preamble                t
-   org-html-postamble               'auto
-   org-html-validation-link         nil
-
-   org-fast-tag-selection-single-key nil
-   org-hide-leading-stars t
-
-   org-log-done t
-   org-log-reschedule 'time
-   org-log-redeadline 'time
-
-   ;; org-mode should really be smart enough to get this automatically
-   org-not-done-heading-regexp
-   "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
-   org-odd-levels-only t
-   org-publish-use-timestamps-flag t
-   org-show-siblings (quote ((default . t)
-                             (isearch t)))
-   org-tags-column -80
-   org-toc-default-depth 3
-   org-use-speed-commands t))
-
 (defun org-cycle-t ()
   (interactive)
   (org-cycle t))
+
+(defun my-org-mode-hook-fn ()
+  (turn-on-org-cdlatex)    
+  (setq fill-column 90))
 
 (use-package org
   :mode "\\.org'"
@@ -1061,7 +937,7 @@ by `:config' in `use-package'"
         org-disputed-keys '(([(control shift right)] . [(meta shift +)])
                             ([(control shift left)]  . [(meta shift -)]))
         org-replace-disputed-keys t)
-
+  (org-clock-persistence-insinuate)
   :bind
   (:map org-mode-map
         ("<C-tab>"    . org-cycle-t)
@@ -1072,42 +948,124 @@ by `:config' in `use-package'"
 	("C-c ?"      . outline-mark-subtree))
 
   :config
-  (require 'texmathp)
+  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  (add-hook 'org-mode-hook 'my-org-mode-hook-fn)
+  (set-face-foreground 'org-hide (face-background 'default))    
+  (setq org-enforce-todo-dependencies t
+
+        org-fast-tag-selection-single-key nil
+        org-hide-leading-stars t
+
+        org-log-done t
+        org-log-reschedule 'time
+        org-log-redeadline 'time
+
+        ;; org-mode should really be smart enough to get this automatically
+        org-not-done-heading-regexp
+        "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
+        org-odd-levels-only t
+        
+        org-tags-column -80
+        org-use-speed-commands t)
+  
+  (require 'ob-ipython)
   (require 'org-agenda)
+  (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
+        org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
+        org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html")))
+        org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
+                                            (todo user-defined-up)
+                                            (tags category-keep priority-down)
+                                            (search category-keep)))
+        org-agenda-start-with-clockreport-mode nil
+        org-agenda-todo-keyword-format "%-4s")
+  
   (require 'org-id)
+  (require 'org-jira)
+  ;; (require 'org-outlook) ;; disable for now
+  (require 'org-ref)
+  (require 'org-toc)
+  (setq org-toc-default-depth 3)
+  (require 'org-wp-link)
+
   (require 'ox)
+  (setq org-export-headline-levels       3
+        org-export-mark-todo-in-toc      t
+        org-export-with-creator          nil
+        org-export-with-email            nil
+        org-export-with-emphasize        t
+        org-export-with-fixed-width      t
+        org-export-with-priority         t
+        org-export-with-section-numbers  nil
+        org-export-with-special-strings  t
+        org-export-with-sub-superscripts t
+        org-export-with-tables           t
+        org-export-with-tags             'not-in-toc
+        org-export-with-timestamp        t
+        org-export-with-toc              t)
+
+  (require 'ox-html)
+  (setq org-html-inline-images           t
+        org-html-link-org-files-as-html  t
+        org-html-preamble                t
+        org-html-postamble               'auto
+        org-html-validation-link         nil)
+
+  (require 'ox-mediawiki)
+  (require 'ox-publish)
+  (setq org-publish-use-timestamps-flag t)
+
   (require 'ox-reveal)
   (require 'pyvenv)
-  (require 'org-wp-link)
-  (require 'ob-ipython)
-  (require 'org-jira)
-  (require 'org-ref)
-  ;; (require 'org-outlook) ;; disable for now
+  (require 'texmathp))
 
-  (org-clock-persistence-insinuate)
-  (my-org-config))
+(use-package ob-ipython)
 
-(defun my-org-mode-hook-fn ()
-  (turn-on-org-cdlatex)    
-  (set-face-foreground 'org-hide (face-background 'default))    
-  (setq fill-column 90))
-(add-hook 'org-mode-hook 'my-org-mode-hook-fn)
+(use-package org-dashboard)
+
+(use-package org-jira)
+
+(use-package org-plus-contrib)
+
+(use-package org-ref
+  :config
+  (when (bound-and-true-p bibliography-directory)
+    (setq reftex-default-bibliography
+	  (list (concat bibliography-directory "/jonmoore.bib")))
+    
+    (setq org-ref-bibliography-notes
+	  (concat bibliography-directory "/notes.org")
+          org-ref-default-bibliography reftex-default-bibliography
+          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
+          org-ref-insert-cite-key "C-c )")
+    
+    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
+    (setq helm-bibtex-library-path org-ref-pdf-directory)
+    (setq helm-bibtex-pdf-open-function 'org-open-file)
+    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
+
+(use-package ox-mediawiki)
+
+(use-package ox-reveal)
 
 (use-package p4)
 
-;;; (C)PERL MODE
-(defalias 'perl-mode 'cperl-mode)
-(add-to-list 'auto-mode-alist '("\\.\\([pP][Llm]\\|al\\|t\\)\\'" . cperl-mode))
-(add-to-list 'interpreter-mode-alist '("perl" . cperl-mode))
+(use-package paren
+  :init
+  (show-paren-mode))
 
 (defun my-cperl-mode-hook-fn ()
-  ;; restrain
-  (abbrev-mode nil) ;; restrain again
-  (setq cperl-indent-level 4)
-  (setq cperl-extra-newline-before-brace nil)
-  (local-set-key [mouse-3] `imenu)
+  (abbrev-mode nil)
   (hs-minor-mode))
-(add-hook 'cperl-mode-hook 'my-cperl-mode-hook-fn)
+
+(use-package cperl-mode
+  :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
+  :interpreter "perl"
+  :config
+  (setq cperl-indent-level 4
+        cperl-extra-newline-before-brace nil)
+  (add-hook 'cperl-mode-hook 'my-cperl-mode-hook-fn))
 
 (use-package point-undo)
 
@@ -1241,62 +1199,48 @@ by `:config' in `use-package'"
   :config
   (global-undo-tree-mode))
 
-;;; WHICH FUNCTION MODE
-(which-function-mode 1)
+(use-package which-func
+  :init
+  (which-function-mode 1))
 
 (use-package yaml-mode)
 
-;;; YASNIPPET MINOR MODE
 (use-package yasnippet
   :config
   (setq yas-verbosity 1))
 
 (use-package ztree)
 
-;;;
-;;;; DESKTOP
-;;;=========
+(use-package desktop
+  :init
+  (let* ((computername (getenv "COMPUTERNAME"))
+         (local-desktop-dir (concat "~/.emacs.d/" computername )))
+    (unless (file-exists-p local-desktop-dir)
+      (mkdir local-desktop-dir))
+    (setq desktop-path (list local-desktop-dir)))
+  (desktop-save-mode 1))
 
-(require 'desktop)
+(use-package savehist
+  :init
+  (savehist-mode 1))
 
-(let* ((computername (getenv "COMPUTERNAME"))
-       (local-desktop-dir (concat "~/.emacs.d/" computername )))
-  (if computername
-      (progn
-	(if (not (file-exists-p local-desktop-dir))
-	    (mkdir local-desktop-dir))
-	(setq desktop-path (list local-desktop-dir)))))
+(use-package custom
+  :ensure nil
+  :init
+  (load-theme 'word-perfect t t)
+  (enable-theme 'word-perfect)
+  (setq
+   ;; set to avoid writing back to ~
+   custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
+  (load custom-file))
 
-;;; SESSION SAVING
-(desktop-save-mode 1)
-(savehist-mode 1)
+(use-package server
+  :init
+  (server-force-delete)  
+  (server-start)  
+  (setq kill-buffer-query-functions
+        (remq
+         'server-kill-buffer-query-function
+         kill-buffer-query-functions)))
 
-;; Try to suppress ido errors.
-(defun my-savehist-autosave (orig-fun &rest args)
-  "Save the minibuffer history if it has been modified since the last save.
-Does nothing if Savehist mode is off."
-  (condition-case nil
-      (orig-fun args)
-    (error nil)))
-(advice-add 'savehist-autosave :around #'my-savehist-autosave)
-
-;;; COLOR-THEME
-(load-theme 'word-perfect t t)
-(enable-theme 'word-perfect)
-
-(setq inhibit-splash-screen t)
-
-;;; CUSTOMIZATION
-(setq
- ;; set these to avoid writing back to ~
- custom-file (expand-file-name "emacs-custom.el" personal-emacs-root)
- custom-theme-directory personal-emacs-root)
-
-(load custom-file)
-
-;;; STARTUP
-(server-force-delete)
-(server-start)
-(when system-win32-p
-  (maximize-frame))
 (message "Finished emacs.el")
