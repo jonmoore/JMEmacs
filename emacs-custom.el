@@ -25,7 +25,6 @@
  '(display-buffer-reuse-frames t)
  '(doxymacs-blank-multiline-comment-template (quote ("/**" > n "  " p > n "  " > n "*/" > n)))
  '(doxymacs-doxygen-style "JavaDoc")
- '(edebug-trace nil)
  '(elpy-company-hide-modeline nil)
  '(elpy-modules
    (quote
@@ -67,7 +66,6 @@
  '(ls-lisp-ignore-case t)
  '(ls-lisp-verbosity nil)
  '(mac-emulate-three-button-mouse t t)
- '(matlab-vers-on-startup nil)
  '(mediawiki-draft-data-file "~/draft.txt")
  '(minibuffer-prompt-properties
    (quote

@@ -1,5 +1,3 @@
-;;; Use occur "^;;;" to list sections
-
 ;; In the real .emacs.el, just load this, e.g.
 ;; (load "/Users/jon/src/git/JMEmacs/emacs.el")
 ;;
@@ -17,9 +15,11 @@
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
   "Are we running on a Windows system?")
+
 (defconst system-linux-p (or (eq system-type 'gnu/linux)
                              (eq system-type 'linux))
   "Are we running on a GNU/Linux system?")
+
 (defconst system-osx-p (eq system-type 'darwin)
   "Are we running on a Darwin (Mac OS X) system?")
 
@@ -46,7 +46,9 @@
 
 (eval-when-compile
   (require 'use-package))
+
 (require 'bind-key)
+
 (require 'diminish)
 
 ;;; PERSONAL LISP
@@ -99,9 +101,8 @@
 (put 'upcase-region   'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'narrow-to-page  'disabled nil)
-
-(fset 'yes-or-no-p 'y-or-n-p)
 (setq require-final-newline t)
+(fset 'yes-or-no-p 'y-or-n-p)
 
 (when system-osx-p
   (setq mac-command-modifier 'meta
@@ -125,7 +126,6 @@
            ("M-C-r"        . isearch-backward)
            ("C-s"          . isearch-forward-regexp)
            ("M-C-s"        . isearch-backward)
-
            
            ("M-."          . find-function)
            ("M-["          . undo)
@@ -223,8 +223,6 @@
 
 (use-package cdlatex)
 
-;;; CC MODE
-
 (defconst visual-studio-c-style
   '((c-tab-always-indent        . t)
     (c-comment-only-line-offset . 0)
@@ -306,10 +304,13 @@
         c-echo-syntactic-information-p nil))
 
 (use-package color-moccur)
+
 (use-package color-theme-modern)
 
-;;; COMINT
-(add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
+(use-package comint
+  :ensure nil
+  :config
+  (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
 
 (use-package company
   :config
@@ -500,10 +501,8 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-hook 'find-file-hook
             'disable-autorevert-for-network-files))
 
-
 (use-package graphviz-dot-mode
   :mode "\\.dot\\'")
-
 
 (defvar gud-overlay
   (let* ((ov (make-overlay (point-min) (point-min))))
@@ -559,12 +558,6 @@ clean buffer we're an order of magnitude laxer about checking."
         ("SPC"      . haskell-mode-contextual-space)
         ("M-."      . haskell-mode-jump-to-def)))
 
-(use-package helm-descbinds
-  :bind
-  ("C-h b" . helm-descbinds))
-
-;; See http://emacs.stackexchange.com/questions/2867/how-should-i-change-my-workflow-when-moving-from-ido-to-helm
-;; for incremental switching
 (use-package helm
   :bind
   (("C-c h"          . helm-command-prefix)
@@ -599,6 +592,10 @@ clean buffer we're an order of magnitude laxer about checking."
    ("C-h m"          . describe-mode)
    ("C-<backspace>"  . backward-kill-word))
 
+  :init
+  (let ((ad-redefinition-action 'accept)) ; silence warning from tramp-read-passwd
+    (helm-mode 1))
+  
   :config
   (require 'helm-config)
   (require 'helm-files)
@@ -608,12 +605,18 @@ clean buffer we're an order of magnitude laxer about checking."
         '(inferior-python-mode)))
 
 (use-package helm-company)
-(when system-osx-p
-  (use-package helm-cscope))
-(use-package helm-org-rifle)
-(use-package helm-swoop)
 
-(helm-mode)
+(use-package helm-cscope
+  :if system-win32-p
+  :disabled t)
+
+(use-package helm-descbinds
+  :bind
+  ("C-h b" . helm-descbinds))
+
+(use-package helm-org-rifle)
+
+(use-package helm-swoop)
 
 (use-package help-fns+) ; for `describe-keymap'
 
@@ -700,6 +703,7 @@ clean buffer we're an order of magnitude laxer about checking."
 (use-package jedi
   :config
   (add-hook  'jedi-mode-hook 'my-jedi-mode-hook-fn))
+
 (use-package jedi-direx)
 
 (use-package jira)
@@ -710,7 +714,6 @@ clean buffer we're an order of magnitude laxer about checking."
   (smartparens-mode t)
   (smartparens-strict-mode))
 
-;;; LISP MODE
 (use-package lisp-mode
   :ensure nil
 
@@ -805,7 +808,6 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   (advice-add 'man :around #'man--man-around))
 
-
 (use-package maxframe
   :init
   (maximize-frame))
@@ -854,8 +856,6 @@ clean buffer we're an order of magnitude laxer about checking."
   (require 'moccur-edit))
 
 (use-package nexus)
-
-(require 'nexus-extensions)
 
 (use-package nxml-mode
   :ensure nil
@@ -937,6 +937,7 @@ according to `headline-is-for-jira'."
   (org-cycle t))
 
 (defun my-org-mode-hook-fn ()
+  (require 'ob-ipython)
   (turn-on-org-cdlatex)    
   (setq fill-column 90))
 
@@ -961,19 +962,18 @@ according to `headline-is-for-jira'."
         ("C-c ?"      . outline-mark-subtree))
 
   :config
-  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
   (add-hook 'org-mode-hook 'my-org-mode-hook-fn)
   (set-face-foreground 'org-hide (face-background 'default))    
   (setq org-enforce-todo-dependencies t
-
+	
         org-fast-tag-selection-single-key nil
         org-hide-leading-stars t
-
+	
         org-log-done t
         org-log-reschedule 'time
         org-log-redeadline 'time
-
+	
         ;; org-mode should really be smart enough to get this automatically
         org-not-done-heading-regexp
         "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
@@ -982,7 +982,6 @@ according to `headline-is-for-jira'."
         org-tags-column -80
         org-use-speed-commands t)
   
-  (require 'ob-ipython)
   (require 'org-agenda)
   (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
         org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
@@ -1084,8 +1083,9 @@ according to `headline-is-for-jira'."
 
 (use-package projectile)
 
-;; Not needed but a reminder of where to get the Python from
-(use-package pycoverage)
+(use-package pycoverage
+  ;; Not needed but a reminder of where to get the Python from
+  )
 
 (use-package pretty-column
   :ensure nil
@@ -1111,21 +1111,23 @@ according to `headline-is-for-jira'."
         ps-number-of-columns    1
         ps-print-color-p       t))
 
-(advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
-
-;; Suppress errors
 (defun my-ignore-errors (orig-fun &rest args)
   "Ignore errors due to calling ORIG-FUN."
   (condition-case nil
       (orig-fun args)
     (error nil)))
-;; advice-add with ignore-errors does not work. Because that is a macro?
-(advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors)
 
-;; The reason for post-command-hook instead of when opening a file is
-;; that some of the variables set are global.  May still want to have
-;; a hook that lets us set up jedi correctly.
-(add-hook 'post-command-hook 'activate-venv-if-python)
+(use-package pyvenv
+  :config
+  (advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors))
+
+(use-package python
+  :config
+  (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
+  ;; The reason for post-command-hook instead of when opening a file is
+  ;; that some of the variables set are global.  May still want to have
+  ;; a hook that lets us set up jedi correctly.
+  (add-hook 'post-command-hook 'activate-venv-if-python))
 
 (use-package restclient)
 
@@ -1171,8 +1173,8 @@ according to `headline-is-for-jira'."
 
 ;; This problem reoccurs between logins. More info
 ;; http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
-(use-package smartparens)
 
+(use-package smartparens)
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")              
   (auto-raise-mode 1))
@@ -1206,8 +1208,8 @@ according to `headline-is-for-jira'."
 (use-package yaml-mode)
 
 (use-package yasnippet
-  :config
-  (setq yas-verbosity 1))
+  :init
+  (setq yas-verbosity 2))
 
 (use-package ztree)
 
@@ -1236,7 +1238,6 @@ according to `headline-is-for-jira'."
 
 (use-package server
   :init
-  (server-force-delete)  
   (server-start)  
   (setq kill-buffer-query-functions
         (remq
