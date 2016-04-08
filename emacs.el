@@ -254,6 +254,8 @@
   (if jnm-hs-hide (hs-hide-all) (hs-show-all)))
 
 (use-package hideshow
+  :init
+  (add-hook 'prog-mode-hook 'hs-minor-mode)
   :bind
   (:map hs-minor-mode-map
         ("C-c l" . hs-hide-level)
@@ -272,7 +274,6 @@
   (c-toggle-electric-state -1)
   (ooh-maybe-insert-cpp-guard)
   (doxymacs-mode t)
-  (hs-minor-mode)
   ;; Enable auto-fill on for comments but not code
   (auto-fill-mode 0)
   ;; call as a hook function since this affects the current buffer
