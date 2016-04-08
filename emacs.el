@@ -708,11 +708,19 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package jira)
 
+(use-package js2-mode
+  :mode "\\.js\\'"
+  )
+
+(use-package js2-refactor)
+
 (use-package kanban)
 
 (defun my-emacs-lisp-mode-hook ()
   (smartparens-mode t)
-  (smartparens-strict-mode))
+  (smartparens-strict-mode t)
+  ;;(highlight-sexps-mode t)
+  )
 
 (use-package lisp-mode
   :ensure nil
