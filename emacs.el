@@ -963,12 +963,14 @@ according to `headline-is-for-jira'."
   (org-clock-persistence-insinuate)
   :bind
   (:map org-mode-map
-        ("<C-tab>"    . org-cycle-t)
-        ("M-?"        . org-complete)
-        ("<backtab>"  . org-show-contents-or-move-to-previous-table-field)
-        ("<C-S-down>" . outline-next-visible-heading)
-        ("<C-S-up>"   . outline-previous-visible-heading)
-        ("C-c ?"      . outline-mark-subtree))
+        ("<C-tab>"     . org-cycle-t)
+        ("M-?"         . org-complete)
+        ("<backtab>"   . org-show-contents-or-move-to-previous-table-field)
+        ("<C-S-down>"  . outline-next-visible-heading)
+        ("<C-S-up>"    . outline-previous-visible-heading)
+        ("C-c ?"       . outline-mark-subtree)
+        ("<C-S-left>"  . nil)
+        ("<C-S-right>" . nil))
 
   :config
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
