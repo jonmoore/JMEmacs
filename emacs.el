@@ -1132,6 +1132,9 @@ according to `headline-is-for-jira'."
 
 (use-package rainbow-delimiters)
 
+(use-package restclient
+  :mode ("\\.rcl\\'" . restclient-mode))
+
 (use-package scroll-in-place
   :ensure nil)
 
