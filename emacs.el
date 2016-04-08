@@ -313,7 +313,7 @@
   (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
 
 (use-package company
-  :config
+  :init
   (add-hook 'prog-mode-hook 'company-mode)
   :bind  (:map company-active-map
                ("C-o" . helm-company)))
