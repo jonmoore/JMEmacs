@@ -631,15 +631,7 @@ clean buffer we're an order of magnitude laxer about checking."
   :ensure nil
   :config
   (setq hl-sexp-background-colors
-        (let* ((hsv-back (hexrgb-hex-to-hsv
-                          (hexrgb-color-name-to-hex "blue4")))
-               (hsv-match (hexrgb-hex-to-hsv
-                           (hexrgb-color-name-to-hex "deep sky blue"))))
-          (mapcar
-           (lambda (step)
-             (apply 'hexrgb-hsv-to-hex
-                    (weight-lists hsv-match hsv-back step)))
-           (list 0.0 0.2 0.4 0.55 0.7 )))))
+        (create-hl-sexp-background-colors)))
 
 (defun my-ibuffer-hook ()
   (ibuffer-switch-to-saved-filter-groups "default"))
