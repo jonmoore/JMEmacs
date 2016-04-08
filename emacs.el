@@ -619,9 +619,8 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package helm-swoop)
 
-(use-package help-fns+) ; for `describe-keymap'
-
-(use-package hexrgb)
+(use-package help-fns+
+  :commands (describe-keymap))
 
 (defun weight-lists (froms tos weight)
   (mapcar* (lambda (from to)
