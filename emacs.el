@@ -1080,7 +1080,9 @@ according to `headline-is-for-jira'."
   :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
   :interpreter "perl")
 
-(use-package point-undo)
+(use-package point-undo
+  :init
+  (require 'point-undo))
 
 (use-package projectile)
 
