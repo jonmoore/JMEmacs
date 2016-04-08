@@ -1075,17 +1075,9 @@ according to `headline-is-for-jira'."
   :init
   (show-paren-mode))
 
-(defun my-cperl-mode-hook-fn ()
-  (abbrev-mode nil)
-  (hs-minor-mode))
-
 (use-package cperl-mode
   :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
-  :interpreter "perl"
-  :config
-  (setq cperl-indent-level 4
-        cperl-extra-newline-before-brace nil)
-  (add-hook 'cperl-mode-hook 'my-cperl-mode-hook-fn))
+  :interpreter "perl")
 
 (use-package point-undo)
 

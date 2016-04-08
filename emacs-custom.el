@@ -18,6 +18,7 @@
  '(case-fold-search t)
  '(comment-column 50)
  '(completion-ignored-extensions (quote (".o" "~" ".obj" ".elc")))
+ '(cperl-indent-level 4)
  '(cperl-invalid-face nil)
  '(desktop-lazy-verbose nil)
  '(directory-abbrev-alist nil)
