@@ -1130,7 +1130,7 @@ according to `headline-is-for-jira'."
   ;; a hook that lets us set up jedi correctly.
   (add-hook 'post-command-hook 'activate-venv-if-python))
 
-(use-package restclient)
+(use-package rainbow-delimiters)
 
 (use-package scroll-in-place
   :ensure nil)
