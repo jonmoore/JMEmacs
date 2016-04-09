@@ -625,8 +625,6 @@ clean buffer we're an order of magnitude laxer about checking."
    ("C-x C-r"        . helm-recentf)
    ("C-x b"          . helm-mini)
    ("M-X"            . execute-extended-command) ;; old binding of M-x
-   ("M-s /"          . helm-multi-swoop)
-   ("M-s o"          . helm-swoop)
    ("M-x"            . helm-M-x)
    ("M-y"            . helm-show-kill-ring)
 
@@ -635,10 +633,13 @@ clean buffer we're an order of magnitude laxer about checking."
    ("C-z"            . helm-select-action)
    
    :map helm-command-map
-   ("a"              . helm-apropos)
-   ("M-:"            . helm-eval-expression-with-eldoc)
    ("<tab>"          . helm-lisp-completion-at-point)
+   ("M-:"            . helm-eval-expression-with-eldoc)
+   ("a"              . helm-apropos)
+   ("m"              . helm-multi-swoop)
    ("o"              . helm-occur)
+   ("s"              . helm-swoop)
+   ("w"              . helm-man-woman)
    
    :map helm-find-files-map
    ("C-x o"          . helm-ff-run-switch-other-window)
