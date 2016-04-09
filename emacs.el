@@ -759,9 +759,14 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package jira)
 
+(use-package json-mode)
+
+(use-package json-reformat
+  :bind
+  (("C-c x j" . json-reformat-region)))
+
 (use-package js2-mode
-  :mode "\\.js\\'"
-  )
+  :mode "\\.js\\'")
 
 (use-package js2-refactor)
 
