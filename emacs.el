@@ -219,6 +219,10 @@
   (("C-x o" . ace-window)
    ("C-c w w" . ace-window)))
 
+(use-package adaptive-wrap              ; Choose wrap prefix automatically
+  :init
+  (add-hook 'visual-line-mode-hook #'adaptive-wrap-prefix-mode))
+
 (use-package auctex-latexmk
   :ensure auctex-latexmk
   :config
