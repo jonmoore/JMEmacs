@@ -248,6 +248,13 @@
        :help "Run latexmk on file")))
    TeX-command-list))
 
+(use-package avy-jump
+  :ensure avy
+  :bind (("C-c j w" . avy-goto-word-1)
+         ("C-c j l" . avy-goto-line)
+         ("C-c j b" . avy-pop-mark)
+         ("C-c j j" . avy-goto-char-2)))
+
 (use-package browse-kill-ring
   :bind ("M-y" . browse-kill-ring))
 
