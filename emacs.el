@@ -854,7 +854,14 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package live-py-mode)
 
-(use-package macrostep)
+(use-package macrostep ; Interactively expand macros in code
+  :after elisp-mode
+  :bind
+  (:map
+   emacs-lisp-mode-map
+   ("C-c m x" . macrostep-expand)
+   :map lisp-interaction-mode-map
+   ("C-c m x" . macrostep-expand)))
 
 (use-package magit
   :config
