@@ -214,6 +214,11 @@
     (defvar help-mode-map)              ; Silence the byte compiler
     (bind-key "C-c m l" #'ace-link-help help-mode-map)))
 
+(use-package ace-window                 ; Fast window switching
+  :bind
+  (("C-x o" . ace-window)
+   ("C-c w w" . ace-window)))
+
 (use-package auctex-latexmk
   :ensure auctex-latexmk
   :config
