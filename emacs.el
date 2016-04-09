@@ -551,7 +551,13 @@ clean buffer we're an order of magnitude laxer about checking."
              buffer-file-name)
     (setq global-auto-revert-ignore-buffer t)))
 
+(use-package goto-addr
+  :bind
+  (("C-c t a" . goto-address-mode)
+   ("C-c t A" . goto-address-prog-mode))
   :init
+  (add-hook 'prog-mode-hook #'goto-address-prog-mode)
+  (add-hook 'text-mode-hook #'goto-address-mode))
 
 (use-package graphviz-dot-mode
   :mode "\\.dot\\'")
