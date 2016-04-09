@@ -103,6 +103,7 @@
 (put 'narrow-to-page  'disabled nil)
 (setq require-final-newline t)
 (fset 'yes-or-no-p 'y-or-n-p)
+(bind-key [remap just-one-space] #'cycle-spacing)
 
 (when system-osx-p
   (setq mac-command-modifier 'meta
