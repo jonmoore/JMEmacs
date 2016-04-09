@@ -926,6 +926,19 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   (require 'moccur-edit))
 
+(use-package neotree
+  :bind (("C-c f t" . neotree-toggle))
+  :config (setq neo-window-width 32
+                neo-create-file-auto-open t
+                neo-banner-message nil
+                neo-show-updir-line nil
+                neo-mode-line-type 'neotree
+                neo-smart-open t
+                neo-dont-be-alone t
+                neo-persist-show nil
+                neo-show-hidden-files t
+                neo-auto-indent-point t))
+
 (use-package nexus)
 
 (use-package nxml-mode
