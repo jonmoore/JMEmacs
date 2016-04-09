@@ -1319,6 +1319,9 @@ according to `headline-is-for-jira'."
          ("C-c w <up>"    . windmove-up)
          ("C-c w <down>"  . windmove-down)))
 
+(use-package winner                     ; Undo and redo window configurations
+  :init (winner-mode))
+
 (use-package yasnippet
   :init
   (setq yas-verbosity 2))
