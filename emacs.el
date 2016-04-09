@@ -205,6 +205,15 @@
               ("<prior>" . latex-sumatra-scroll-down)
               ("<next>"  .  latex-sumatra-scroll-up)))
 
+(use-package ace-link                   ; Fast link jumping
+  :init
+  (with-eval-after-load 'info
+    (bind-key "C-c m l" #'ace-link-info Info-mode-map))
+
+  (with-eval-after-load 'help-mode
+    (defvar help-mode-map)              ; Silence the byte compiler
+    (bind-key "C-c m l" #'ace-link-help help-mode-map)))
+
 (use-package auctex-latexmk
   :ensure auctex-latexmk
   :config
