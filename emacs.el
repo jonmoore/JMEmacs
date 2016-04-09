@@ -1322,6 +1322,8 @@ according to `headline-is-for-jira'."
 (use-package winner                     ; Undo and redo window configurations
   :init (winner-mode))
 
+(use-package writeroom-mode)
+
 (use-package yasnippet
   :init
   (setq yas-verbosity 2))
