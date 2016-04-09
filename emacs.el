@@ -248,6 +248,13 @@
        :help "Run latexmk on file")))
    TeX-command-list))
 
+(defun disable-autorevert-for-network-files ()
+  (when (and buffer-file-name
+             (string-match "^//" buffer-file-name))
+    (message "Disabling global auto revert mode for %s"
+             buffer-file-name)
+    (setq global-auto-revert-ignore-buffer t)))
+
 (use-package autorevert
   :ensure nil
   :init
@@ -542,14 +549,6 @@ clean buffer we're an order of magnitude laxer about checking."
 (use-package ghc
   :config
   (setq ghc-debug t))
-
-
-(defun disable-autorevert-for-network-files ()
-  (when (and buffer-file-name
-             (string-match "^//" buffer-file-name))
-    (message "Disabling global auto revert mode for %s"
-             buffer-file-name)
-    (setq global-auto-revert-ignore-buffer t)))
 
 (use-package goto-addr
   :bind
