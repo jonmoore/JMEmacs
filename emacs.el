@@ -1361,8 +1361,8 @@ according to `headline-is-for-jira'."
   (setq yas-verbosity 2))
 
 (use-package zop-to-char                ; Better zapping
-  :bind (("M-z" . zop-to-char)
-         ("M-Z" . zop-up-to-char)))
+  :bind (("M-Z" . zop-to-char)
+         ("M-z" . zop-up-to-char)))
 
 (use-package ztree)
 
