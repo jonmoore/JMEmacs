@@ -1230,6 +1230,11 @@ according to `headline-is-for-jira'."
 (use-package restclient
   :mode ("\\.rcl\\'" . restclient-mode))
 
+(use-package rst                        ; ReStructuredText
+  :config
+  (bind-key "C-=" nil rst-mode-map)
+  (bind-key "M-RET" #'rst-insert-list rst-mode-map))
+
 (use-package scroll-in-place
   :ensure nil)
 
