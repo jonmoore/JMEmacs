@@ -690,6 +690,8 @@ clean buffer we're an order of magnitude laxer about checking."
   (setq hl-sexp-background-colors
         (create-hl-sexp-background-colors)))
 
+(use-package hydra)
+
 (defun my-ibuffer-hook ()
   (ibuffer-switch-to-saved-filter-groups "default"))
 
