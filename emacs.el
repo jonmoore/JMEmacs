@@ -483,6 +483,13 @@ See `doxymacs-parm-tempo-element'."
   :bind
   (("C-c v" . er/expand-region)))
 
+(use-package find-func
+  :bind
+  (("C-c h F"   . find-function)
+   ("C-c h 4 F" . find-function-other-window)
+   ("C-c h K"   . find-function-on-key)
+   ("C-c h V"   . find-variable)
+   ("C-c h 4 V" . find-variable-other-window)))
 
 (use-package ffap
   :config (setq ffap-machine-p-known 'reject))
