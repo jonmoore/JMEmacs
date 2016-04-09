@@ -248,6 +248,13 @@
        :help "Run latexmk on file")))
    TeX-command-list))
 
+(use-package autorevert
+  :ensure nil
+  :init
+  (global-auto-revert-mode t)
+  (add-hook 'find-file-hook
+            'disable-autorevert-for-network-files))
+
 (use-package avy-jump
   :ensure avy
   :bind (("C-c j w" . avy-goto-word-1)
@@ -544,12 +551,7 @@ clean buffer we're an order of magnitude laxer about checking."
              buffer-file-name)
     (setq global-auto-revert-ignore-buffer t)))
 
-(use-package autorevert
-  :ensure nil
   :init
-  (global-auto-revert-mode t)
-  (add-hook 'find-file-hook
-            'disable-autorevert-for-network-files))
 
 (use-package graphviz-dot-mode
   :mode "\\.dot\\'")
