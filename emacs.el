@@ -1312,7 +1312,6 @@ according to `headline-is-for-jira'."
   :init
   (which-function-mode 1))
 
-(use-package yaml-mode)
 (use-package which-key
   :init
   (which-key-mode)
@@ -1351,6 +1350,11 @@ according to `headline-is-for-jira'."
   :init (winner-mode))
 
 (use-package writeroom-mode)
+
+(use-package yaml-mode
+  :config
+  (add-hook 'yaml-mode-hook
+            (lambda () (run-hooks 'prog-mode-hook))))
 
 (use-package yasnippet
   :init
