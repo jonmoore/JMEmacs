@@ -1379,6 +1379,10 @@ according to `headline-is-for-jira'."
   :init
   (savehist-mode 1))
 
+(use-package saveplace                  ; Save point position in files
+  :init
+  (setq-default save-place t))
+
 (use-package custom
   :ensure nil
   :init
