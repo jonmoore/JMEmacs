@@ -1305,6 +1305,9 @@ according to `headline-is-for-jira'."
   :config
   (global-undo-tree-mode))
 
+(use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
+  :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))
+
 (use-package which-func
   :init
   (which-function-mode 1))
