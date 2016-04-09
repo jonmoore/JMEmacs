@@ -669,8 +669,8 @@ clean buffer we're an order of magnitude laxer about checking."
   :disabled t)
 
 (use-package helm-descbinds
-  :bind
-  ("C-h b" . helm-descbinds))
+  :init
+  (helm-descbinds-mode))
 
 (use-package helm-org-rifle)
 
