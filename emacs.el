@@ -258,6 +258,8 @@
 (use-package browse-kill-ring
   :bind ("M-y" . browse-kill-ring))
 
+(use-package bug-hunter)
+
 (use-package cdlatex)
 
 (defconst visual-studio-c-style
