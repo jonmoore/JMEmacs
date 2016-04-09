@@ -1,3 +1,4 @@
+
 ;; In the real .emacs.el, just load this, e.g.
 ;; (load "/Users/jon/src/git/JMEmacs/emacs.el")
 ;;
@@ -205,6 +206,8 @@
   :bind (:map LaTeX-mode-map
               ("<prior>" . latex-sumatra-scroll-down)
               ("<next>"  .  latex-sumatra-scroll-up)))
+
+(use-package ace-jump-helm-line)
 
 (use-package ace-link                   ; Fast link jumping
   :init
@@ -629,8 +632,9 @@ clean buffer we're an order of magnitude laxer about checking."
 
    :map helm-map
    ("<tab>"          . helm-execute-persistent-action)
-   ("C-z"            . helm-select-action)
-   
+   ("M-RET"          . helm-select-action)       ; more sane than C-z
+   ("C-'"            . ace-jump-helm-line)
+
    :map helm-command-map
    ("<tab>"          . helm-lisp-completion-at-point)
    ("M-:"            . helm-eval-expression-with-eldoc)
@@ -1402,3 +1406,7 @@ according to `headline-is-for-jira'."
          kill-buffer-query-functions)))
 
 (message "Finished emacs.el")
+
+;; Local Variables:
+;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
+;; End:
