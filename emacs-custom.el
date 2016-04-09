@@ -116,6 +116,7 @@
      ("screen" . shell-script)
      ("shell" . sh)
      ("bash" . sh))))
+ '(paradox-automatically-star nil)
  '(perlnow-perl-module-template (concat emacs-root "/site-lisp/templates"))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
