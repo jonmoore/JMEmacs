@@ -1313,6 +1313,22 @@ according to `headline-is-for-jira'."
   (which-function-mode 1))
 
 (use-package yaml-mode)
+(use-package whitespace                 ; Highlight bad whitespace
+  :bind (("C-c t w" . whitespace-mode))
+  :init
+  :config
+  (setq whitespace-style '(face
+                           indentation
+                           space-after-tab
+                           space-before-tab
+                           tab-mark
+                           empty
+                           trailing
+                           lines-tail)
+        whitespace-line-column nil)
+  :diminish (whitespace-mode . " ⓦ"))
+
+
 (use-package windmove                   ; Move between windows with Shift+Arrow
   :bind (("C-c w <left>"  . windmove-left)
          ("C-c w <right>" . windmove-right)
