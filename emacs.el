@@ -479,7 +479,10 @@ See `doxymacs-parm-tempo-element'."
   ;; I'll assume we don't need _latest
   (setq elpy-config--get-config my-elpy-config--get-config))
 
-(use-package expand-region)
+(use-package expand-region
+  :bind
+  (("C-c v" . er/expand-region)))
+
 
 (use-package ffap
   :config (setq ffap-machine-p-known 'reject))
