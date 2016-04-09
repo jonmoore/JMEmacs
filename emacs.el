@@ -1036,6 +1036,8 @@ according to `headline-is-for-jira'."
                             ([(control shift left)]  . [(meta shift -)]))
         org-replace-disputed-keys t)
   (org-clock-persistence-insinuate)
+  (defalias 'ob-temp-file 'org-babel-temp-file)
+  
   :bind
   (:map org-mode-map
         ("<C-tab>"     . org-cycle-t)
@@ -1049,6 +1051,8 @@ according to `headline-is-for-jira'."
 
   :config
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
+  
   (add-hook 'org-mode-hook 'my-org-mode-hook-fn)
   (set-face-foreground 'org-hide (face-background 'default))    
   (setq org-enforce-todo-dependencies t
