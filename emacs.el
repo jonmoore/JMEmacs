@@ -1313,6 +1313,11 @@ according to `headline-is-for-jira'."
   (which-function-mode 1))
 
 (use-package yaml-mode)
+(use-package windmove                   ; Move between windows with Shift+Arrow
+  :bind (("C-c w <left>"  . windmove-left)
+         ("C-c w <right>" . windmove-right)
+         ("C-c w <up>"    . windmove-up)
+         ("C-c w <down>"  . windmove-down)))
 
 (use-package yasnippet
   :init
