@@ -1313,6 +1313,18 @@ according to `headline-is-for-jira'."
   (which-function-mode 1))
 
 (use-package yaml-mode)
+(use-package which-key
+  :init
+  (which-key-mode)
+  (setq which-key-idle-delay 0.4
+        which-key-sort-order 'which-key-prefix-then-key-order
+        ;;        which-key-key-replacement-alist
+        ;;        which-key-description-replacement-alist
+        )
+  ;;  (which-key-declare-prefixes )
+  ;;  (which-key-declare-prefixes-for-mode 'emacs-lisp-mode)
+  :diminish which-key-mode)
+
 (use-package whitespace                 ; Highlight bad whitespace
   :bind (("C-c t w" . whitespace-mode))
   :init
