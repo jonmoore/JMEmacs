@@ -1153,6 +1153,18 @@ according to `headline-is-for-jira'."
 
 (use-package p4)
 
+(use-package paradox
+  :bind (("C-c p p" . paradox-list-packages)
+         ("C-c p P" . package-list-packages-no-fetch))
+  :config
+  (setq paradox-execute-asynchronously nil ; No async update, please
+        ;; Show all possible counts
+        paradox-display-download-count t
+        paradox-display-star-count t
+        ;; Hide download button, and wiki packages
+        paradox-use-homepage-buttons nil ; Can type v instead
+        paradox-hide-wiki-packages t))
+
 (use-package paren
   :init
   (show-paren-mode))
