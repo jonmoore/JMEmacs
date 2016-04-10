@@ -47,10 +47,18 @@
   (package-install 'use-package))
 
 (require 'use-package)
-
+(setq use-package-verbose t
+      use-package-always-ensure t
+      use-package-always-defer t)
 (require 'bind-key)
-
 (require 'diminish)
+
+;; Require quelpa (experimental)
+(when system-osx-p
+  (use-package quelpa
+    :demand t)
+  (use-package quelpa-use-package
+    :demand t))
 
 ;;; PERSONAL LISP
 (require 'update-personal-autoloads)
@@ -152,10 +160,6 @@
 ;;;
 ;;;; PACKAGES
 ;;;==========
-
-(setq use-package-verbose t
-      use-package-always-ensure t
-      use-package-always-defer t)
 
 (use-package tex-site
   :ensure auctex
