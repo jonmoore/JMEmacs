@@ -95,7 +95,7 @@
  '(org-confirm-babel-evaluate nil)
  '(org-default-priority 68)
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
- '(org-enforce-todo-checkbox-dependencies nil)
+ '(org-enforce-todo-checkbox-dependencies t)
  '(org-hierarchical-todo-statistics nil)
  '(org-ref-show-citation-on-enter nil)
  '(org-reveal-hlevel 2)

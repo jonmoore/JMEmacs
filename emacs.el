@@ -1044,14 +1044,17 @@ according to `headline-is-for-jira'."
   
   :bind
   (:map org-mode-map
-        ("<C-tab>"     . org-cycle-t)
-        ("M-?"         . org-complete)
-        ("<backtab>"   . org-show-contents-or-move-to-previous-table-field)
-        ("<C-S-down>"  . outline-next-visible-heading)
-        ("<C-S-up>"    . outline-previous-visible-heading)
-        ("C-c ?"       . outline-mark-subtree)
-        ("<C-S-left>"  . nil)
-        ("<C-S-right>" . nil))
+        ("<C-tab>"        . org-cycle-t)
+        ("M-?"            . org-complete)
+        ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
+        ("<C-S-down>"     . outline-next-visible-heading)
+        ("<C-S-up>"       . outline-previous-visible-heading)
+        ("C-c ?"          . outline-mark-subtree)
+        ("<C-S-left>"     . nil)
+        ("<C-S-right>"    . nil)
+        ("C-c j k"        . ace-link-org)
+        ("C-c C-x RET f"  . org-mobile-pull)
+        ("C-c C-x RET g"  . nil))
 
   :config
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
