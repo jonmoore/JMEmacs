@@ -207,19 +207,12 @@
 
 (use-package ace-jump-helm-line)
 
-(use-package ace-link                   ; Fast link jumping
-  :init
-  (with-eval-after-load 'info
-    (bind-key "C-c m l" #'ace-link-info Info-mode-map))
-
-  (with-eval-after-load 'help-mode
-    (defvar help-mode-map)              ; Silence the byte compiler
-    (bind-key "C-c m l" #'ace-link-help help-mode-map)))
+(use-package ace-link)
 
 (use-package ace-window                 ; Fast window switching
   :bind
-  (("C-x o" . ace-window)
-   ("C-c w w" . ace-window)))
+  (;; ("C-x o"   . ace-window)
+   ("C-c j i" . ace-window)))
 
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
   :init
@@ -681,6 +674,11 @@ clean buffer we're an order of magnitude laxer about checking."
 (use-package help-fns+
   :commands (describe-keymap))
 
+(use-package help-mode
+  :ensure nil
+  :bind (:map help-mode-map
+              ("C-c j k" . ace-link-help)))
+
 (defun weight-lists (froms tos weight)
   (mapcar* (lambda (from to)
              (+ from (* (- to from) weight)))
@@ -742,10 +740,12 @@ clean buffer we're an order of magnitude laxer about checking."
            "~")))))
 
 (use-package info
-  :init
-  (bind-key ";"           'Info-search-next     Info-mode-map)
-  (bind-key ":"           'Info-search-backward Info-mode-map)
-  (bind-key [(shift tab)] 'Info-prev-reference  Info-mode-map))
+  :bind (:map
+         Info-mode-map
+         ("C-c j k"     . ace-link-info)
+         (";"           . Info-search-next)
+         (":"           . Info-search-backward)
+         ([(shift tab)] . Info-prev-reference)))
 
 (defun my-jedi-mode-hook-fn ()
   (setq-local jedi:environment-root pyvenv-virtual-env)
