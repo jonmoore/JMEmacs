@@ -129,7 +129,7 @@
            ("M-C-s"        . isearch-backward)
            
            ("M-."          . find-function)
-           ("M-["          . undo)
+           ("M-["          . undo-tree-visualize)
            ("M-]"          . repeat)
            ("<C-S-left>"   . select-last-buffer)
            ("<C-S-right>"  . select-next-buffer)
