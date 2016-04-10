@@ -53,12 +53,14 @@
 (require 'bind-key)
 (require 'diminish)
 
-;; Require quelpa (experimental)
+;; Require quelpa so we can work with/on experimental versions of some
+;; package (experimental)
 (when system-osx-p
   (use-package quelpa
     :demand t)
   (use-package quelpa-use-package
-    :demand t))
+    :demand t)
+  (quelpa-use-package-activate-advice))
 
 ;;; PERSONAL LISP
 (require 'update-personal-autoloads)
@@ -1039,9 +1041,9 @@ according to `headline-is-for-jira'."
 (use-package org-plus-contrib)
 
 (use-package org
-  ;; Make extra sure not to download both org and org-plus-contrib,
-  ;; which both contain the core org package - WTF?
-  :ensure nil
+  ;; Try not to download/use both org and org-plus-contrib, which both
+  ;; contain the core org package.
+  :ensure org-plus-contrib
   :mode "\\.org'"
 
   :init
