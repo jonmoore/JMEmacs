@@ -1165,14 +1165,22 @@ according to `headline-is-for-jira'."
 
 (use-package p4)
 
+(defun paradox-list-packages-quietly (no-fetch)
+  (interactive "P")
+  (message "Calling paradox-list-packages ...")
+  (shut-up
+    (paradox-list-packages no-fetch)))
+
 (use-package paradox
-  :bind (("C-c p p" . paradox-list-packages)
+  :bind (("C-c p p" . paradox-list-packages-quietly)
          ("C-c p P" . package-list-packages-no-fetch))
   :config
   (setq paradox-execute-asynchronously nil ; No async update, please
         ;; Show all possible counts
         paradox-display-download-count t
-        paradox-display-star-count t
+        paradox-display-star-count nil ; slow
+        paradox-automatically-star nil
+
         ;; Hide download button, and wiki packages
         paradox-use-homepage-buttons nil ; Can type v instead
         paradox-hide-wiki-packages t))
@@ -1275,6 +1283,8 @@ according to `headline-is-for-jira'."
   :if system-win32-p
   :config
   (setq shell-toggle-launch-shell 'shell))
+
+(use-package shut-up)
 
 ;; Beware: In a complete WTF, Windows intercepts Ctrl-shift-0,
 ;; bound to sp-forward-slurp-sexp. See
