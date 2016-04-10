@@ -227,10 +227,10 @@
 
 (use-package anzu                       ; Match info in mode-line in search modes
   :bind
-  (([remap query-replace] . anzu-query-replace)
-   ([remap query-replace-regexp] . anzu-query-replace-regexp)
+  (([remap query-replace]                . anzu-query-replace)
+   ([remap query-replace-regexp]         . anzu-query-replace-regexp)
    :map isearch-mode-map
-   ([remap isearch-query-replace] . anzu-isearch-query-replace)
+   ([remap isearch-query-replace]        . anzu-isearch-query-replace)
    ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
   :init (global-anzu-mode)
   :diminish anzu-mode)
@@ -313,7 +313,8 @@
   (:map hs-minor-mode-map
         ("C-c l" . hs-hide-level)
         ("C-c <right>" . hs-show-block)
-        ("C-c <left> " . hs-hide-block)))
+        ("C-c <left>"  . hs-hide-block))
+  :diminish hs-minor-mode)
 
 (defun my-c-mode-common-hook-fn ()
 
@@ -518,11 +519,11 @@ clean buffer we're an order of magnitude laxer about checking."
         (if flycheck-current-errors 0.3 3.0)))
 
 (use-package flycheck
+  :diminish flycheck-mode
   :config
   ;; Each buffer gets its own idle-change-delay because of the
   ;; buffer-sensitive adjustment above.
 
-  
   (make-variable-buffer-local 'flycheck-idle-change-delay)
   (add-hook 'flycheck-after-syntax-check-hook
             'adjust-flycheck-automatic-syntax-eagerness)
@@ -656,7 +657,9 @@ clean buffer we're an order of magnitude laxer about checking."
   :init
   (let ((ad-redefinition-action 'accept)) ; silence warning from tramp-read-passwd
     (helm-mode 1))
-  
+
+  :diminish helm-mode
+
   :config
   (require 'helm-config)
   (require 'helm-files)
@@ -786,6 +789,7 @@ clean buffer we're an order of magnitude laxer about checking."
   (smartparens-mode t)
   (smartparens-strict-mode t)
   ;;(highlight-sexps-mode t)
+
   )
 
 (use-package lisp-mode
@@ -1310,7 +1314,9 @@ according to `headline-is-for-jira'."
 ;; This problem reoccurs between logins. More info
 ;; http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
 
-(use-package smartparens)
+(use-package smartparens
+  :diminish smartparens-mode)
+
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")              
   (auto-raise-mode 1))
@@ -1392,7 +1398,8 @@ according to `headline-is-for-jira'."
 
 (use-package yasnippet
   :init
-  (setq yas-verbosity 2))
+  (setq yas-verbosity 2)
+  :diminish yas-minor-mode)
 
 (use-package zop-to-char                ; Better zapping
   :bind (("M-Z" . zop-to-char)
