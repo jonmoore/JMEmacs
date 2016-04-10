@@ -1029,7 +1029,12 @@ according to `headline-is-for-jira'."
   (turn-on-org-cdlatex)    
   (setq fill-column 90))
 
+(use-package org-plus-contrib)
+
 (use-package org
+  ;; Make extra sure not to download both org and org-plus-contrib,
+  ;; which both contain the core org package - WTF?
+  :ensure nil
   :mode "\\.org'"
 
   :init
