@@ -45,8 +45,7 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-(eval-when-compile
-  (require 'use-package))
+(require 'use-package)
 
 (require 'bind-key)
 
@@ -73,9 +72,8 @@
 			   (bound-and-true-p
 			    local-exec-paths))
 		   exec-path)))
+
 (when system-osx-p
-  (setq mac-command-modifier 'meta
-	mac-option-modifier nil)
   (setq exec-path (append (bound-and-true-p
 			   local-exec-paths)
 			  exec-path)))
@@ -1423,7 +1421,7 @@ according to `headline-is-for-jira'."
 
 (use-package server
   :init
-  (server-start)  
+  (server-start)
   (setq kill-buffer-query-functions
         (remq
          'server-kill-buffer-query-function
@@ -1432,5 +1430,5 @@ according to `headline-is-for-jira'."
 (message "Finished emacs.el")
 
 ;; Local Variables:
-;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
+;; flycheck-disabled-checkers: (emacs-lisp emacs-lisp-checkdoc)
 ;; End:
