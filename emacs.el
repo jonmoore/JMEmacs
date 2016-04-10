@@ -1323,9 +1323,11 @@ according to `headline-is-for-jira'."
   (setq tramp-default-method "plink"))
 
 (use-package undo-tree
-  :diminish undo-tree-mode
+  :bind (:map undo-tree-visualizer-mode-map
+              ("RET" . undo-tree-visualizer-quit))
   :config
-  (global-undo-tree-mode))
+  (global-undo-tree-mode)
+  :diminish undo-tree-mode)
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))
