@@ -858,6 +858,10 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package live-py-mode)
 
+(use-package lorem-ipsum
+  :config
+  (setq-default lorem-ipsum-list-bullet "- "))
+
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
   :bind
