@@ -225,7 +225,7 @@
   :init
   (add-hook 'visual-line-mode-hook #'adaptive-wrap-prefix-mode))
 
-(use-package anzu
+(use-package anzu                       ; Match info in mode-line in search modes
   :bind
   (([remap query-replace] . anzu-query-replace)
    ([remap query-replace-regexp] . anzu-query-replace-regexp)
@@ -233,7 +233,6 @@
    ([remap isearch-query-replace] . anzu-isearch-query-replace)
    ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
   :init (global-anzu-mode)
-  :config (setq anzu-cons-mode-line-p nil)
   :diminish anzu-mode)
 
 (use-package auctex-latexmk
@@ -493,6 +492,8 @@ See `doxymacs-parm-tempo-element'."
   ;; The default version goes off to the web when reporting errors!!
   ;; I'll assume we don't need _latest
   (setq elpy-config--get-config my-elpy-config--get-config))
+
+(use-package esup)
 
 (use-package expand-region
   :bind
