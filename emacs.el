@@ -465,8 +465,10 @@ See `doxymacs-parm-tempo-element'."
 
 (use-package elpy
   ;; elpy recommended packages
-  ;; echo n | enpkg jedi flake8 nose pylint
+  ;; echo n | enpkg jedi flake8 nose pylint yapf
   ;; pip install importmagic autopep8 flake8-pep257
+  ;; osx enpkg gnureadline (for ob-ipython)
+  ;; win enpkg pyreadline
 
   :init
   (setq elpy-rpc-backend "jedi")
@@ -1172,6 +1174,8 @@ according to `headline-is-for-jira'."
     (setq helm-bibtex-library-path org-ref-pdf-directory)
     (setq helm-bibtex-pdf-open-function 'org-open-file)
     (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
+
+(use-package ox-jira)
 
 (use-package ox-mediawiki)
 

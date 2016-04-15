@@ -116,6 +116,7 @@
      ("screen" . shell-script)
      ("shell" . sh)
      ("bash" . sh))))
+ '(org-src-window-setup (quote current-window))
  '(paradox-github-token t)
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
