@@ -141,6 +141,7 @@
  '(which-func-modes
    (quote
     (c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode)))
+ '(winner-dont-bind-my-keys t)
  '(woman-imenu t)
  '(woman-use-own-frame nil)
  '(woman-use-topic-at-point t)
