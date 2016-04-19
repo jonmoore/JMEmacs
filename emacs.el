@@ -1342,7 +1342,7 @@ according to `headline-is-for-jira'."
 (use-package undo-tree
   :bind (:map undo-tree-visualizer-mode-map
               ("RET" . undo-tree-visualizer-quit))
-  :config
+  :init
   (global-undo-tree-mode)
   :diminish undo-tree-mode)
 
