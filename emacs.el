@@ -1036,6 +1036,7 @@ according to `headline-is-for-jira'."
 
 (defun my-org-mode-hook-fn ()
   (require 'ob-ipython)
+  (require 'ob-restclient)
   (turn-on-org-cdlatex)    
   (setq fill-column 90))
 
@@ -1073,7 +1074,11 @@ according to `headline-is-for-jira'."
 
   :config
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t) (python . t) (R . t)))
+  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t)
+                                                           (python . t)
+                                                           (R . t)
+                                                           (restclient . t)
+                                                           (emacs-lisp . t)))
   
   (add-hook 'org-mode-hook 'my-org-mode-hook-fn)
   (set-face-foreground 'org-hide (face-background 'default))    
@@ -1145,6 +1150,8 @@ according to `headline-is-for-jira'."
   (require 'texmathp))
 
 (use-package ob-ipython)
+
+(use-package ob-restclient)
 
 (use-package org-dashboard)
 
