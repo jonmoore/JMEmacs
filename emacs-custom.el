@@ -116,6 +116,7 @@
      ("screen" . shell-script)
      ("shell" . sh)
      ("bash" . sh))))
+ '(org-src-window-setup (quote current-window))
  '(paradox-github-token t)
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
@@ -140,6 +141,7 @@
  '(which-func-modes
    (quote
     (c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode)))
+ '(winner-dont-bind-my-keys t)
  '(woman-imenu t)
  '(woman-use-own-frame nil)
  '(woman-use-topic-at-point t)
