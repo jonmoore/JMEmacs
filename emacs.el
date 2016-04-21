@@ -680,7 +680,9 @@ clean buffer we're an order of magnitude laxer about checking."
   :init
   (helm-descbinds-mode))
 
-(use-package helm-org-rifle)
+(use-package helm-org-rifle
+  :bind (:map helm-command-map
+              ("R" . helm-org-rifle)))
 
 (use-package helm-swoop)
 
