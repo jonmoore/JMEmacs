@@ -904,7 +904,9 @@ clean buffer we're an order of magnitude laxer about checking."
   (maximize-frame))
 
 (use-package mediawiki
-  :mode "\\.wiki\\'"
+  ;; I use a tweaked version to avoid excessive keybindings
+  :ensure nil
+  :mode ("\\.wiki\\'" . mediawiki-mode)
   :bind
   (:map mediawiki-mode-map
         ("RET"       . newline-and-indent)
