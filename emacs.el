@@ -192,10 +192,12 @@
     (require 'sumatra-forward)))
 
 (defun latex-sumatra-scroll-down ()
+  (interactive)
   (scroll-down-in-place)
   (sumatra-jump-to-line))
 
 (defun latex-sumatra-scroll-up ()
+  (interactive)
   (scroll-up-in-place)
   (sumatra-jump-to-line))
 
