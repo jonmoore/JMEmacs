@@ -952,6 +952,12 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   (require 'moccur-edit))
 
+(use-package narrow-indirect
+  :bind 
+  (:map
+   ctl-x-4-map
+   ("nn" . ni-narrow-to-region-indirect-other-window)))
+
 (use-package neotree
   :bind (("C-c f t" . neotree-toggle))
   :config (setq neo-window-width 32
@@ -1224,6 +1230,8 @@ according to `headline-is-for-jira'."
   :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
   :interpreter "perl")
 
+(use-package peep-dired)
+
 (use-package point-undo
   :init
   (require 'point-undo))
@@ -1277,6 +1285,8 @@ according to `headline-is-for-jira'."
   (add-hook 'post-command-hook 'activate-venv-if-python))
 
 (use-package rainbow-delimiters)
+
+(use-package ranger)
 
 (use-package restclient
   :mode ("\\.rcl\\'" . restclient-mode))
@@ -1341,6 +1351,8 @@ according to `headline-is-for-jira'."
 (use-package speedbar
   :config
   (add-hook 'speedbar-mode-hook 'my-speedbar-mode-hook-fn))
+
+(use-package sphinx-doc)
 
 (use-package sr-speedbar)
 
