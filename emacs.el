@@ -890,7 +890,6 @@ clean buffer we're an order of magnitude laxer about checking."
 (use-package magit
   :config
   (setq magit-popup-use-prefix-argument 'default
-        magit-revert-buffers t
         magit-completing-read-function 'magit-ido-completing-read)
   :bind ("C-x g" . magit-status))
 
