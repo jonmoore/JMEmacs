@@ -98,6 +98,7 @@
  '(org-enforce-todo-checkbox-dependencies t)
  '(org-hierarchical-todo-statistics nil)
  '(org-ref-show-citation-on-enter nil)
+ '(org-refile-targets (quote ((org-agenda-files :maxlevel . 5))))
  '(org-reveal-hlevel 2)
  '(org-reveal-root "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/")
  '(org-src-lang-modes
