@@ -523,7 +523,6 @@ clean buffer we're an order of magnitude laxer about checking."
         (if flycheck-current-errors 0.3 3.0)))
 
 (use-package flycheck
-  :diminish flycheck-mode
   :config
   ;; Each buffer gets its own idle-change-delay because of the
   ;; buffer-sensitive adjustment above.
@@ -667,10 +666,17 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   (require 'helm-config)
   (require 'helm-files)
+  (require 'helm-projectile)
+  (require 'helm-ag)
+
   (global-unset-key (kbd "C-x c"))
   ;; Disable helm completion in some modes
   (setq helm-mode-no-completion-in-region-in-modes
         '(inferior-python-mode)))
+
+(use-package helm-ag
+  :config
+  (setq helm-ag-base-command "pt --nocolor --nogroup"))
 
 (use-package helm-company)
 
@@ -685,6 +691,8 @@ clean buffer we're an order of magnitude laxer about checking."
 (use-package helm-org-rifle
   :bind (:map helm-command-map
               ("R" . helm-org-rifle)))
+
+(use-package helm-projectile)
 
 (use-package helm-swoop)
 
@@ -1287,6 +1295,8 @@ according to `headline-is-for-jira'."
 
 (use-package ranger)
 
+(use-package realgud)
+
 (use-package restclient
   :mode ("\\.rcl\\'" . restclient-mode))
 
@@ -1427,6 +1437,9 @@ according to `headline-is-for-jira'."
 (use-package yasnippet
   :init
   (setq yas-verbosity 2)
+  :config
+  ;; yas only calls this when the global mode is enabled.  WTF?
+  (yas-reload-all)
   :diminish yas-minor-mode)
 
 (use-package zop-to-char                ; Better zapping
