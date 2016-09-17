@@ -621,6 +621,12 @@ clean buffer we're an order of magnitude laxer about checking."
         ("SPC"      . haskell-mode-contextual-space)
         ("M-."      . haskell-mode-jump-to-def)))
 
+(use-package helm-projectile)
+
+(use-package helm-ag
+  :config
+  (setq helm-ag-base-command "pt --nocolor --nogroup"))
+
 (use-package helm
   :bind
   (("C-c h"          . helm-command-prefix)
@@ -674,10 +680,6 @@ clean buffer we're an order of magnitude laxer about checking."
   (setq helm-mode-no-completion-in-region-in-modes
         '(inferior-python-mode)))
 
-(use-package helm-ag
-  :config
-  (setq helm-ag-base-command "pt --nocolor --nogroup"))
-
 (use-package helm-company)
 
 (use-package helm-cscope
@@ -691,8 +693,6 @@ clean buffer we're an order of magnitude laxer about checking."
 (use-package helm-org-rifle
   :bind (:map helm-command-map
               ("R" . helm-org-rifle)))
-
-(use-package helm-projectile)
 
 (use-package helm-swoop)
 
