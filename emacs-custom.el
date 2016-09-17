@@ -131,7 +131,8 @@
  '(reftex-toc-split-windows-horizontally t)
  '(safe-local-variable-values
    (quote
-    ((flycheck-disabled-checkers emacs-lisp emacs-lisp-checkdoc)
+    ((checkdoc-minor-mode . 1)
+     (flycheck-disabled-checkers emacs-lisp emacs-lisp-checkdoc)
      (activate-venv-disabled . t))))
  '(save-abbrevs nil)
  '(set-mark-command-repeat-pop t)

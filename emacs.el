@@ -1209,26 +1209,6 @@ according to `headline-is-for-jira'."
 
 (use-package p4)
 
-(defun paradox-list-packages-quietly (no-fetch)
-  (interactive "P")
-  (message "Calling paradox-list-packages ...")
-  (shut-up
-    (paradox-list-packages no-fetch)))
-
-(use-package paradox
-  :bind (("C-c p p" . paradox-list-packages-quietly)
-         ("C-c p P" . package-list-packages-no-fetch))
-  :config
-  (setq paradox-execute-asynchronously nil ; No async update, please
-        ;; Show all possible counts
-        paradox-display-download-count t
-        paradox-display-star-count nil ; slow
-        paradox-automatically-star nil
-
-        ;; Hide download button, and wiki packages
-        paradox-use-homepage-buttons nil ; Can type v instead
-        paradox-hide-wiki-packages t))
-
 (use-package paren
   :init
   (show-paren-mode))
