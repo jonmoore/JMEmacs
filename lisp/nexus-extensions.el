@@ -1,4 +1,4 @@
-;; Support Nexus GAV insertion with ido
+;; Support Nexus GAV insertion with helm
 
 (require 'nexus)
 (require 'helm)
@@ -204,6 +204,12 @@ distro of GAVs, e.g. from `nexus-choose-gav-alist-for-keyword'."
      (nexus-get-pom-dependencies
       (nexus-fetch-pom
        gav-alist))))))
+
+;;;###autoload
+(defun nexus-insert-gav-from-scope ()
+  (interactive)
+  (nexus-insert-gav-from-pom
+   (nexus-choose-gav-alist-for-keyword nexus-scope-keyword)))
 
 ;;;###autoload
 (defun nexus-insert-gav-for-keyword (keyword)

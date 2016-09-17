@@ -40,6 +40,14 @@
  '(ff-quiet-mode t)
  '(find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
  '(flycheck-check-syntax-automatically (quote (save idle-change mode-enabled)))
+ '(flycheck-flake8-error-level-alist
+   (quote
+    (("^E501$" . info)
+     ("^E9.*$" . error)
+     ("^F82.*$" . error)
+     ("^F83.*$" . error)
+     ("^D.*$" . info)
+     ("^N.*$" . info))))
  '(flycheck-flake8rc "setup.cfg")
  '(flycheck-idle-change-delay 2.0)
  '(flycheck-keymap-prefix "f")
@@ -47,6 +55,7 @@
  '(globalff-regexp-search t)
  '(graphviz-dot-dot-program "dotforme")
  '(haskell-process-use-presentation-mode t)
+ '(helm-ag-use-grep-ignore-list t)
  '(helm-ff-lynx-style-map nil nil nil "Disabling any helm keybinding is a sensible default")
  '(helm-follow-mode-persistent t)
  '(helm-org-rifle-re-end-part nil)

@@ -43,7 +43,7 @@ such directories."
   "Return a list of descendants of TCPDIR that may be python virtual
   environments for TCP projects rooted at TCPDIR"
   (let ((default-directory tcpdir))
-    (file-expand-wildcards "_tcp/work/*/py2/venv*" t)))
+    (file-expand-wildcards "_tcp/work/*/py2/*venv*" t)))
 
 (defun tcp-venvs (tcpdir)
   "Return a list of descendants of TCPDIR that are python virtual
@@ -122,6 +122,14 @@ rooted at TCPDIR."
         (setq-local tcp-activate-disabled t)))))
 
 ;;;###autoload
+(defun ph-reset-venv ()
+  "Reset Python variables related to virtual envs. "
+  (interactive)
+  (pyvenv-deactivate)
+  (setq-local pyvenv-activate nil)
+  (setq-local activate-venv-disabled t))
+
+;;;###autoload
 (defun activate-venv-if-visiting-file ()
   "If the `buffer-file-name' is set, activate the virtual
 environment for it as defined by `venv-for'"
@@ -140,10 +148,7 @@ environment for it as defined by `venv-for'"
           (progn
             (setq-local pyvenv-activate venv)
             (pyvenv-track-virtualenv))
-        
-        (pyvenv-deactivate)
-        (setq-local pyvenv-activate nil)
-        (setq-local activate-venv-disabled t)))))
+        (ph-reset-venv)))))
 
 (defvar activate-venv-modes
   '(python-mode org-mode)
