@@ -799,6 +799,10 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package kanban)
 
+;; todo: check how to supply dependencies for use-package
+(use-package smartparens
+  :diminish smartparens-mode)
+
 (defun my-emacs-lisp-mode-hook ()
   (smartparens-mode t)
   (smartparens-strict-mode t)
@@ -989,6 +993,8 @@ clean buffer we're an order of magnitude laxer about checking."
 
 ;;; ORG MODE
 
+(use-package org-jira)
+
 (defun in-a-jira-buffer ()
   "Return if the current buffer is a Jira one, created with
 `org-jira-get-issues'."
@@ -1059,11 +1065,34 @@ according to `headline-is-for-jira'."
   (interactive)
   (org-cycle t))
 
+(use-package ob-restclient)
+
 (defun my-org-mode-hook-fn ()
   (require 'ob-ipython)
   (require 'ob-restclient)
   (turn-on-org-cdlatex)    
   (setq fill-column 90))
+
+(use-package org-ref
+  :config
+  (when (bound-and-true-p bibliography-directory)
+    (setq reftex-default-bibliography
+          (list (concat bibliography-directory "/jonmoore.bib")))
+    
+    (setq org-ref-bibliography-notes
+          (concat bibliography-directory "/notes.org")
+          org-ref-default-bibliography reftex-default-bibliography
+          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
+          org-ref-insert-cite-key "C-c )")
+    
+    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
+    (setq helm-bibtex-library-path org-ref-pdf-directory)
+    (setq helm-bibtex-pdf-open-function 'org-open-file)
+    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
+
+(use-package ox-mediawiki)
+
+(use-package ox-reveal)
 
 (use-package org-plus-contrib)
 
@@ -1101,7 +1130,6 @@ according to `headline-is-for-jira'."
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
   (org-babel-do-load-languages 'org-babel-load-languages '((dot . t)
                                                            (python . t)
-                                                           (R . t)
                                                            (restclient . t)
                                                            (emacs-lisp . t)))
   
@@ -1176,36 +1204,11 @@ according to `headline-is-for-jira'."
 
 (use-package ob-ipython)
 
-(use-package ob-restclient)
-
 (use-package org-dashboard)
-
-(use-package org-jira)
 
 (use-package org-plus-contrib)
 
-(use-package org-ref
-  :config
-  (when (bound-and-true-p bibliography-directory)
-    (setq reftex-default-bibliography
-          (list (concat bibliography-directory "/jonmoore.bib")))
-    
-    (setq org-ref-bibliography-notes
-          (concat bibliography-directory "/notes.org")
-          org-ref-default-bibliography reftex-default-bibliography
-          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
-          org-ref-insert-cite-key "C-c )")
-    
-    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
-    (setq helm-bibtex-library-path org-ref-pdf-directory)
-    (setq helm-bibtex-pdf-open-function 'org-open-file)
-    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
-
 (use-package ox-jira)
-
-(use-package ox-mediawiki)
-
-(use-package ox-reveal)
 
 (use-package p4)
 
@@ -1329,9 +1332,6 @@ according to `headline-is-for-jira'."
 
 ;; This problem reoccurs between logins. More info
 ;; http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
-
-(use-package smartparens
-  :diminish smartparens-mode)
 
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")              
