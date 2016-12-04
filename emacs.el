@@ -472,9 +472,14 @@ See `doxymacs-parm-tempo-element'."
   ;; osx enpkg gnureadline (for ob-ipython)
   ;; win enpkg pyreadline
 
+  (when system-osx-p ;; while working on elpy
+    (progn
+      :ensure nil
+      :load-path "~/src/elpy"
+      :demand t))
+
   :init
   (setq elpy-rpc-backend "jedi")
-  (eval-after-load 'python '(elpy-enable))
   
   :bind
   (:map
@@ -493,6 +498,7 @@ See `doxymacs-parm-tempo-element'."
    ("M-TAB" . python-shell-completion-complete-or-indent))
   :config
   (add-hook 'inferior-python-mode-hook 'inferior-python-mode-buffer-init)
+  (elpy-enable)
   
   ;; The default version goes off to the web when reporting errors!!
   ;; I'll assume we don't need _latest
