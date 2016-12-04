@@ -57,7 +57,7 @@
  '(haskell-process-use-presentation-mode t)
  '(helm-ag-use-grep-ignore-list t)
  '(helm-ff-lynx-style-map nil nil nil "Disabling any helm keybinding is a sensible default")
- '(helm-follow-mode-persistent t)
+ '(helm-follow-mode-persistent nil)
  '(helm-org-rifle-re-end-part nil)
  '(hide-ifdef-lines t)
  '(history-delete-duplicates t)
