@@ -1,4 +1,5 @@
 
+
 ;; In the real .emacs.el, just load this, e.g.
 ;; (load "/Users/jon/src/git/JMEmacs/emacs.el")
 ;;
@@ -204,7 +205,6 @@
 (use-package latex
   :ensure auctex
   :init
-  (add-hook 'LaTeX-mode-hook 'visual-line-mode)
   (add-hook 'LaTeX-mode-hook 'flyspell-mode)
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
   (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
@@ -243,10 +243,12 @@
   (push
    (cond
     (system-win32-p
-     '("Latexmk" "latexmk -pdflatex=\"pdflatex -synctex=1 -file-line-error\" -pdf %s" TeX-run-TeX nil t
+     '("Latexmk" "latexmk -pdflatex=\"pdflatex --shell-escape -synctex=1 -file-line-error\" -pdf %s"
+       TeX-run-TeX nil t
        :help "Run Latexmk on file"))
     (system-osx-p
-     '("latexmk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t
+     '("latexmk" "latexmk -pdf -synctex=1 %s"
+       TeX-run-TeX nil t
        :help "Run latexmk on file")))
    TeX-command-list))
 
@@ -472,11 +474,11 @@ See `doxymacs-parm-tempo-element'."
   ;; osx enpkg gnureadline (for ob-ipython)
   ;; win enpkg pyreadline
 
-  (when system-osx-p ;; while working on elpy
-    (progn
-      :ensure nil
-      :load-path "~/src/elpy"
-      :demand t))
+  ;; (when system-osx-p ;; while working on elpy
+  ;;   (progn
+  ;;     :ensure nil
+  ;;     :load-path "~/src/elpy"
+  ;;     :demand t))
 
   :init
   (setq elpy-rpc-backend "jedi")
@@ -526,20 +528,19 @@ See `doxymacs-parm-tempo-element'."
 This lets us fix any errors as quickly as possible, but in a
 clean buffer we're an order of magnitude laxer about checking."
   (setq flycheck-idle-change-delay
-        (if flycheck-current-errors 0.3 3.0)))
+        (if flycheck-current-errors 3.0 15.0)))
 
 (use-package flycheck
   :config
   ;; Each buffer gets its own idle-change-delay because of the
   ;; buffer-sensitive adjustment above.
-
   (make-variable-buffer-local 'flycheck-idle-change-delay)
   (add-hook 'flycheck-after-syntax-check-hook
             'adjust-flycheck-automatic-syntax-eagerness)
-  (flycheck-add-next-checker 'python-flake8 'python-pylint)
-  
+
   (pycoverage-define-flycheck-checker)
-  (add-to-list 'flycheck-checkers 'python-pycoverage))
+  (add-to-list 'flycheck-checkers 'python-pycoverage)
+  (flycheck-add-next-checker 'python-pycoverage 'python-pylint))
 
 
 (defun my-font-lock-mode-hook-fn ()
@@ -792,7 +793,7 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package jira)
 
-(use-package jq)
+(use-package jq-mode)
 
 (use-package json-mode)
 
@@ -1001,8 +1002,6 @@ clean buffer we're an order of magnitude laxer about checking."
 
 ;;; ORG MODE
 
-(use-package org-jira)
-
 (defun in-a-jira-buffer ()
   "Return if the current buffer is a Jira one, created with
 `org-jira-get-issues'."
@@ -1081,32 +1080,9 @@ according to `headline-is-for-jira'."
   (turn-on-org-cdlatex)    
   (setq fill-column 90))
 
-(use-package org-ref
-  :config
-  (when (bound-and-true-p bibliography-directory)
-    (setq reftex-default-bibliography
-          (list (concat bibliography-directory "/jonmoore.bib")))
-    
-    (setq org-ref-bibliography-notes
-          (concat bibliography-directory "/notes.org")
-          org-ref-default-bibliography reftex-default-bibliography
-          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
-          org-ref-insert-cite-key "C-c )")
-    
-    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
-    (setq helm-bibtex-library-path org-ref-pdf-directory)
-    (setq helm-bibtex-pdf-open-function 'org-open-file)
-    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
-
-(use-package ox-mediawiki)
-
-(use-package ox-reveal)
-
-(use-package org-plus-contrib)
-
+;; Try not to download/use both org and org-plus-contrib, which both
+;; contain the core org package.
 (use-package org
-  ;; Try not to download/use both org and org-plus-contrib, which both
-  ;; contain the core org package.
   :ensure org-plus-contrib
   :mode "\\.org'"
 
@@ -1172,12 +1148,8 @@ according to `headline-is-for-jira'."
         org-agenda-todo-keyword-format "%-4s")
   
   (require 'org-id)
-  (require 'org-jira)
-  ;; (require 'org-outlook) ;; disable for now
-  (require 'org-ref)
   (require 'org-toc)
   (setq org-toc-default-depth 3)
-  (require 'org-wp-link)
 
   (require 'ox)
   (setq org-export-headline-levels       3
@@ -1202,19 +1174,41 @@ according to `headline-is-for-jira'."
         org-html-postamble               'auto
         org-html-validation-link         nil)
 
-  (require 'ox-mediawiki)
   (require 'ox-publish)
   (setq org-publish-use-timestamps-flag t)
 
+  (require 'org-ref)
   (require 'ox-reveal)
+  (require 'org-wp-link)
+  (require 'org-jira)
+
   (require 'pyvenv)
   (require 'texmathp))
 
+(use-package org-jira)
+
+(use-package ob-restclient)
+
+(use-package org-ref
+  :config
+  (when (bound-and-true-p bibliography-directory)
+    (setq reftex-default-bibliography
+          (list (concat bibliography-directory "/jonmoore.bib")))
+    
+    (setq org-ref-bibliography-notes
+          (concat bibliography-directory "/notes.org")
+          org-ref-default-bibliography reftex-default-bibliography
+          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
+          org-ref-insert-cite-key "C-c )")
+    
+    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
+    (setq helm-bibtex-library-path org-ref-pdf-directory)
+    (setq helm-bibtex-pdf-open-function 'org-open-file)
+    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
+
+(use-package ox-reveal)
+
 (use-package ob-ipython)
-
-(use-package org-dashboard)
-
-(use-package org-plus-contrib)
 
 (use-package ox-jira)
 

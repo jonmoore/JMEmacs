@@ -40,6 +40,7 @@
  '(ff-quiet-mode t)
  '(find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
  '(flycheck-check-syntax-automatically (quote (save idle-change mode-enabled)))
+ '(flycheck-disabled-checkers (quote (python-flake8)))
  '(flycheck-flake8-error-level-alist
    (quote
     (("^E501$" . info)
@@ -49,7 +50,7 @@
      ("^D.*$" . info)
      ("^N.*$" . info))))
  '(flycheck-flake8rc "setup.cfg")
- '(flycheck-idle-change-delay 2.0)
+ '(flycheck-idle-change-delay 5.0)
  '(flycheck-keymap-prefix "f")
  '(flycheck-pylintrc "pylintrc")
  '(globalff-regexp-search t)
@@ -59,6 +60,7 @@
  '(helm-ff-lynx-style-map nil nil nil "Disabling any helm keybinding is a sensible default")
  '(helm-follow-mode-persistent nil)
  '(helm-org-rifle-re-end-part nil)
+ '(helm-source-names-using-follow (quote ("Imenu" "Search Buffers" "Occur")))
  '(hide-ifdef-lines t)
  '(history-delete-duplicates t)
  '(history-length 100)
@@ -169,6 +171,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(cursor ((t (:background "yellow"))))
+ '(font-latex-verbatim-face ((t (:inherit nil :foreground "burlywood"))))
  '(font-lock-builtin-face ((((class color) (background light)) (:foreground "blue"))))
  '(font-lock-comment-face ((t (:foreground "sky blue"))))
  '(font-lock-constant-face ((((class color) (background light)) (:foreground "dark green"))))
