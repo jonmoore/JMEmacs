@@ -1,8 +1,16 @@
-
-
 ;; In the real .emacs.el, just load this, e.g.
 ;; (load "/Users/jon/src/git/JMEmacs/emacs.el")
 ;;
+;; For Windows install the version of GNUTLS specified by
+;; dynamic-library-alist.
+;;
+;; This used to be a nuisance to get hold of, especially for 64-bit,
+;; but the deps are now stored in the gnu ftp emacs mirrors for
+;; Windows as e.g. emacs-25-x86_64-deps.zip
+;;
+;; Install by unzipping to the emacs bin directory.  Test by calling
+;; gnutls-available-p
+
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
 (defvar personal-emacs-root
@@ -33,7 +41,7 @@
 (setq package-archives
       '(("melpa" . "http://melpa.milkbox.net/packages/")
         ("gnu"   . "http://elpa.gnu.org/packages/")
-        ("org" . "http://orgmode.org/elpa/")))
+        ("org" . "https://orgmode.org/elpa/")))
 (package-initialize)
 
 (mapc
@@ -52,6 +60,9 @@
       use-package-always-ensure t
       use-package-always-defer t)
 (require 'bind-key)
+
+;; https://emacs.stackexchange.com/questions/37468/how-do-i-use-use-package-with-diminish-in-my-init-el
+(use-package diminish)
 (require 'diminish)
 
 ;; Require quelpa so we can work with/on experimental versions of some
