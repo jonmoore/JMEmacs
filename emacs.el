@@ -574,6 +574,10 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   (add-hook 'font-lock-mode-hook 'my-font-lock-mode-hook-fn))
 
+(use-package geiser
+  :config
+  (setq geiser-active-implementations '(racket)))
+
 (use-package ghc
   :config
   (setq ghc-debug t))
@@ -1288,6 +1292,8 @@ according to `headline-is-for-jira'."
   ;; that some of the variables set are global.  May still want to have
   ;; a hook that lets us set up jedi correctly.
   (add-hook 'post-command-hook 'activate-venv-if-python))
+
+(use-package quack)
 
 (use-package rainbow-delimiters)
 
