@@ -1,15 +1,17 @@
-;; In the real .emacs.el, just load this, e.g.
-;; (load "/Users/jon/src/git/JMEmacs/emacs.el")
+;; For Windows install the deps in the gnu ftp emacs mirrors for
+;; Windows, e.g. emacs-25-x86_64-deps.zip by unzipping to the emacs
+;; bin directory.  Test by calling gnutls-available-p.  This is needed
+;; to access https repos on at least Emacs 25 for 64-bit Windows.  May
+;; not be needed in Emacs 26.
 ;;
-;; For Windows install the version of GNUTLS specified by
-;; dynamic-library-alist.
+;; Then in the real .emacs.el
 ;;
-;; This used to be a nuisance to get hold of, especially for 64-bit,
-;; but the deps are now stored in the gnu ftp emacs mirrors for
-;; Windows as e.g. emacs-25-x86_64-deps.zip
+;; * load this, e.g. (load "/Users/jon/src/git/JMEmacs/emacs.el")
 ;;
-;; Install by unzipping to the emacs bin directory.  Test by calling
-;; gnutls-available-p
+;; * For git/magit, as I have a note that exec-path should be set
+;; * early, set local-exec-paths to include paths to git.exe and
+;; * sh.exe.  For speed, don't use the wrappers in the cmd directory
+;; * of the official git Windows client.
 
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
