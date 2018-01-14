@@ -132,6 +132,7 @@
      ("shell" . sh)
      ("bash" . sh))))
  '(org-src-window-setup (quote current-window))
+ '(org-use-fast-tag-selection t)
  '(p4-auto-refresh nil)
  '(package-selected-packages
    (quote
@@ -140,12 +141,14 @@
  '(projectile-globally-ignored-file-suffixes (quote ("pyc")))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
+ '(python-indent-guess-indent-offset nil)
  '(read-buffer-completion-ignore-case t)
  '(reftex-bibpath-environment-variables (quote ("BIBINPUTS" "TEXBIB")))
  '(reftex-toc-split-windows-horizontally t)
  '(safe-local-variable-values
    (quote
-    ((checkdoc-minor-mode . 1)
+    ((TeX-command-extra-options . "-shell-escape")
+     (checkdoc-minor-mode . 1)
      (flycheck-disabled-checkers emacs-lisp emacs-lisp-checkdoc)
      (activate-venv-disabled . t))))
  '(save-abbrevs nil)

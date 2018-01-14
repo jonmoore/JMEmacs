@@ -506,6 +506,8 @@ See `doxymacs-parm-tempo-element'."
    ("C-c C-y s" . yas-insert-snippet)
    ("C-c C-y v" . yas-visit-snippet-file)
    ("C-c x"     . jedi-direx:pop-to-buffer)
+   ("<M-S-left>" . python-indent-shift-left)
+   ("<M-S-right>" . python-indent-shift-right)
    :map inferior-python-mode-map
    ("<tab> " . yas-or-company-or-indent-for-tab)
    ("M-TAB" . python-shell-completion-complete-or-indent))
