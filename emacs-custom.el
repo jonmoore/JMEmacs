@@ -81,6 +81,9 @@
  '(ls-lisp-ignore-case t)
  '(ls-lisp-verbosity nil)
  '(mac-emulate-three-button-mouse t t)
+ '(magit-wip-after-apply-mode nil)
+ '(magit-wip-after-save-mode nil)
+ '(magit-wip-before-change-mode nil)
  '(mediawiki-draft-data-file "~/draft.txt")
  '(minibuffer-prompt-properties
    (quote
