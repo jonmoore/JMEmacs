@@ -1189,10 +1189,8 @@ according to `headline-is-for-jira'."
   (setq org-publish-use-timestamps-flag t)
 
   (require 'org-ref)
-  (require 'ox-reveal)
   (require 'org-wp-link)
-  (require 'org-jira)
-
+  
   (require 'pyvenv)
   (require 'texmathp))
 
