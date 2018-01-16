@@ -13,6 +13,22 @@
 ;; * sh.exe.  For speed, don't use the wrappers in the cmd directory
 ;; * of the official git Windows client.
 
+;; Beware: In a complete WTF, Windows intercepts Ctrl-shift by
+;; default, including Ctrl-shift-0, which we want available for
+;; sp-forward-slurp-sexp. This problem reoccurs between logins. See
+;; * https://support.microsoft.com/en-us/kb/967893
+;; * http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
+;;
+;; To remove the unwanted shortcut:
+;; 
+;; For Windows 7,  Start ->Region and Language ->Keyboards and
+;; Languages->Change keyboards ->Advanced Key Settings->Between input
+;; languages->Change Key Sequence Set Switch Keyboard Layout to Not
+;; Assigned.  Click OK...
+;;
+;; For Windows 10, https://superuser.com/a/706636
+
+
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
 (defvar personal-emacs-root
@@ -718,9 +734,9 @@ clean buffer we're an order of magnitude laxer about checking."
 
 ;; disable because helm-org-rifle's autoloads trigger a (require 'org).
 ;;
-;; The definitions in helm-org-rifle.el using
-;; helm-org-rifle-define-command use a plain "###autoload" rather than
-;; the extra "(autoload ...) mentioned near the bottom of
+;; That's because the definitions in helm-org-rifle.el using
+;; helm-org-rifle-define-command use a plain "###autoload" line rather
+;; than a line with the extra "(autoload ...) mentioned near the bottom of
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Autoload.html
 ;; for macros that define functions.
 ;; 
@@ -1348,20 +1364,6 @@ according to `headline-is-for-jira'."
   (setq shell-toggle-launch-shell 'shell))
 
 (use-package shut-up)
-
-;; Beware: In a complete WTF, Windows intercepts Ctrl-shift-0,
-;; bound to sp-forward-slurp-sexp. See
-;; https://support.microsoft.com/en-us/kb/967893 for how to fix this.
-;; Remove the shortcut assignment to make the application work as
-;; expected. To do this:
-;; Start
-;; ->Region and Language ->Keyboards and Languages->Change keyboards
-;; ->Advanced Key Settings->Between input languages->Change Key Sequence
-;; Set Switch Keyboard Layout to Not Assigned.
-;; Click OK...
-
-;; This problem reoccurs between logins. More info
-;; http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
 
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")              
