@@ -716,9 +716,17 @@ clean buffer we're an order of magnitude laxer about checking."
   :init
   (helm-descbinds-mode))
 
-(use-package helm-org-rifle
-  :bind (:map helm-command-map
-              ("R" . helm-org-rifle)))
+;; disable because helm-org-rifle's autoloads trigger a (require 'org).
+;;
+;; The definitions in helm-org-rifle.el using
+;; helm-org-rifle-define-command use a plain "###autoload" rather than
+;; the extra "(autoload ...) mentioned near the bottom of
+;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Autoload.html
+;; for macros that define functions.
+;; 
+;; (use-package helm-org-rifle
+;;   :bind (:map helm-command-map
+;;               ("R" . helm-org-rifle)))
 
 (use-package helm-swoop)
 
@@ -1112,7 +1120,6 @@ according to `headline-is-for-jira'."
         org-disputed-keys '(([(control shift right)] . [(meta shift +)])
                             ([(control shift left)]  . [(meta shift -)]))
         org-replace-disputed-keys t)
-  (org-clock-persistence-insinuate)
   (defalias 'ob-temp-file 'org-babel-temp-file)
   
   :bind
@@ -1130,6 +1137,8 @@ according to `headline-is-for-jira'."
         ("C-c C-x RET g"  . nil))
 
   :config
+  (org-clock-persistence-insinuate)
+
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
   (org-babel-do-load-languages 'org-babel-load-languages '((dot . t)
                                                            (python . t)
