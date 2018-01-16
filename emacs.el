@@ -20,7 +20,7 @@
 ;; * http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
 ;;
 ;; To remove the unwanted shortcut:
-;; 
+;;
 ;; For Windows 7,  Start ->Region and Language ->Keyboards and
 ;; Languages->Change keyboards ->Advanced Key Settings->Between input
 ;; languages->Change Key Sequence Set Switch Keyboard Layout to Not
@@ -159,15 +159,15 @@
            ;; ("C-x C-b"      . (lambda () (interactive) (ibuffer nil "Ibuffer")))
            ("C-x C-o"      . delete-blank-lines-around-point-or-in-region)
            ("C-x LFD"      . dired-jump)
-           
+
            ("C-n"          . (lambda () (interactive) (scroll-up-in-place 1)))
            ("C-p"          . (lambda () (interactive) (scroll-down-in-place 1)))
-           
+
            ("C-r"          . isearch-backward-regexp)
            ("M-C-r"        . isearch-backward)
            ("C-s"          . isearch-forward-regexp)
            ("M-C-s"        . isearch-backward)
-           
+
            ("M-."          . find-function)
            ("M-["          . undo-tree-visualize)
            ("M-]"          . repeat)
@@ -511,7 +511,7 @@ See `doxymacs-parm-tempo-element'."
 
   :init
   (setq elpy-rpc-backend "jedi")
-  
+
   :bind
   (:map
    elpy-mode-map
@@ -532,7 +532,7 @@ See `doxymacs-parm-tempo-element'."
   :config
   (add-hook 'inferior-python-mode-hook 'inferior-python-mode-buffer-init)
   (elpy-enable)
-  
+
   ;; The default version goes off to the web when reporting errors!!
   ;; I'll assume we don't need _latest
   (setq elpy-config--get-config my-elpy-config--get-config))
@@ -613,7 +613,7 @@ clean buffer we're an order of magnitude laxer about checking."
   (let* ((ov (make-overlay (point-min) (point-min))))
     (overlay-put ov 'face 'secondary-selection)
     ov)
-  "Overlay variable for GUD highlighting.")  
+  "Overlay variable for GUD highlighting.")
 
 (defun gud-kill-buffer ()
   (if (derived-mode-p 'gud-mode)
@@ -643,7 +643,7 @@ clean buffer we're an order of magnitude laxer about checking."
   (advice-add 'gud-display-line :after #'gud-display-line--my-gud-highlight))
 
 (defun my-haskell-mode-hook ()
-  (turn-on-haskell-indentation)  
+  (turn-on-haskell-indentation)
   (when (buffer-file-name)
     (ghc-init)))
 
@@ -694,13 +694,13 @@ clean buffer we're an order of magnitude laxer about checking."
    ("o"              . helm-occur)
    ("s"              . helm-swoop)
    ("w"              . helm-man-woman)
-   
+
    :map helm-find-files-map
    ("C-x o"          . helm-ff-run-switch-other-window)
    ("C-x 5 o"        . helm-ff-run-switch-other-frame)
    ("C-h m"          . describe-mode)
    ("C-<backspace>"  . backward-kill-word)
-   
+
    :map helm-read-file-map
    ("C-h m"          . describe-mode)
    ("C-<backspace>"  . backward-kill-word))
@@ -739,7 +739,7 @@ clean buffer we're an order of magnitude laxer about checking."
 ;; than a line with the extra "(autoload ...) mentioned near the bottom of
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Autoload.html
 ;; for macros that define functions.
-;; 
+;;
 ;; (use-package helm-org-rifle
 ;;   :bind (:map helm-command-map
 ;;               ("R" . helm-org-rifle)))
@@ -790,7 +790,7 @@ clean buffer we're an order of magnitude laxer about checking."
                              (name . "^\\*"))))))
         ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*" "\\*vc\\*")
         ibuffer-display-summary nil)
-  
+
   (define-ibuffer-op ibuffer-do-ps-print ()
     "Print marked buffers as with `ps-print-buffer-with-faces'."
     (:opstring "printed"
@@ -872,7 +872,7 @@ clean buffer we're an order of magnitude laxer about checking."
   :bind
   (:map
    smartparens-mode-map
-   
+
    ("C-M-b" . sp-backward-sexp)
    ("C-M-f" . sp-forward-sexp)
 
@@ -932,7 +932,7 @@ clean buffer we're an order of magnitude laxer about checking."
    ("M-S" . sp-split-sexp)
    ("M-J" . sp-join-sexp)
    ("C-M-t" . sp-transpose-sexp)
-   
+
    :map smartparens-strict-mode-map
    ("M-q" . sp-indent-defun)))
 
@@ -1016,7 +1016,7 @@ clean buffer we're an order of magnitude laxer about checking."
   (require 'moccur-edit))
 
 (use-package narrow-indirect
-  :bind 
+  :bind
   (:map
    ctl-x-4-map
    ("nn" . ni-narrow-to-region-indirect-other-window)))
@@ -1120,7 +1120,7 @@ according to `headline-is-for-jira'."
 (defun my-org-mode-hook-fn ()
   (require 'ob-ipython)
   (require 'ob-restclient)
-  (turn-on-org-cdlatex)    
+  (turn-on-org-cdlatex)
   (setq fill-column 90))
 
 ;; Try not to download/use both org and org-plus-contrib, which both
@@ -1137,7 +1137,7 @@ according to `headline-is-for-jira'."
                             ([(control shift left)]  . [(meta shift -)]))
         org-replace-disputed-keys t)
   (defalias 'ob-temp-file 'org-babel-temp-file)
-  
+
   :bind
   (:map org-mode-map
         ("<C-tab>"        . org-cycle-t)
@@ -1160,26 +1160,26 @@ according to `headline-is-for-jira'."
                                                            (python . t)
                                                            (restclient . t)
                                                            (emacs-lisp . t)))
-  
+
   (add-hook 'org-mode-hook 'my-org-mode-hook-fn)
-  (set-face-foreground 'org-hide (face-background 'default))    
+  (set-face-foreground 'org-hide (face-background 'default))
   (setq org-enforce-todo-dependencies t
-	
+
         org-fast-tag-selection-single-key nil
         org-hide-leading-stars t
-	
+
         org-log-done t
         org-log-reschedule 'time
         org-log-redeadline 'time
-	
+
         ;; org-mode should really be smart enough to get this automatically
         org-not-done-heading-regexp
         "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
         org-odd-levels-only t
-        
+
         org-tags-column -80
         org-use-speed-commands t)
-  
+
   (require 'org-agenda)
   (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
         org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
@@ -1190,7 +1190,7 @@ according to `headline-is-for-jira'."
                                             (search category-keep)))
         org-agenda-start-with-clockreport-mode nil
         org-agenda-todo-keyword-format "%-4s")
-  
+
   (require 'org-id)
   (require 'org-toc)
   (setq org-toc-default-depth 3)
@@ -1221,9 +1221,11 @@ according to `headline-is-for-jira'."
   (require 'ox-publish)
   (setq org-publish-use-timestamps-flag t)
 
+  ;; org-ref is pretty slow to load.  The messages about creating
+  ;; links are from org-ref-link-set-parameters.
   (require 'org-ref)
   (require 'org-wp-link)
-  
+
   (require 'pyvenv)
   (require 'texmathp))
 
@@ -1236,13 +1238,13 @@ according to `headline-is-for-jira'."
   (when (bound-and-true-p bibliography-directory)
     (setq reftex-default-bibliography
           (list (concat bibliography-directory "/jonmoore.bib")))
-    
+
     (setq org-ref-bibliography-notes
           (concat bibliography-directory "/notes.org")
           org-ref-default-bibliography reftex-default-bibliography
           org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
           org-ref-insert-cite-key "C-c )")
-    
+
     (setq helm-bibtex-bibliography (car reftex-default-bibliography))
     (setq helm-bibtex-library-path org-ref-pdf-directory)
     (setq helm-bibtex-pdf-open-function 'org-open-file)
@@ -1366,7 +1368,7 @@ according to `headline-is-for-jira'."
 (use-package shut-up)
 
 (defun my-speedbar-mode-hook-fn ()
-  (speedbar-add-supported-extension ".org")              
+  (speedbar-add-supported-extension ".org")
   (auto-raise-mode 1))
 
 (use-package speedbar
