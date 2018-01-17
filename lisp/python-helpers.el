@@ -21,16 +21,19 @@ directories . and ... FULL is passed to
     'file-attribute-directory
     (directory-files-and-attributes dir full directory-files-no-dot-files-regexp))))
 
+(defun path-contains-venv (filepath)
+  "Return if FILEPATH contains a python virtual environment"
+  (or (file-exists-p (format "%s/bin/activate" filepath))
+      (file-exists-p (format "%s/Scripts/activate.bat" filepath))))
+
 (defun dir-has-venv (dir)
   "Returns if DIR contains a python virtual environment"
   (or (file-exists-p (format "%s/bin/activate" dir))
       (file-exists-p (format "%s/Scripts/activate.bat" dir))))
 
-(defun venvs-from-candidates (candidate-dirs)
+(defun venvs-from-candidates (candidate-paths)
   ""
-  (mapcar  
-   'file-name-as-directory
-   (remove-if-not 'dir-has-venv candidate-dirs)))
+  (remove-if-not 'path-contains-venv candidate-paths))
 
 (defun direct-child-venvs (dir)
   "Return a list of children of DIR that are python virtual
@@ -56,22 +59,15 @@ such directories."
    (direct-child-venvs dir)
    (tcp-venvs dir)))
 
-(defun venv-for-with-func (file direct-venvs-func)
+(defun venv-for (file)
   "Returns the venv to use for FILE, defined as the first venv in
 the nearest ancestor directory of FILE that contains a venv, or
 nil if there is no such ancestor."
   (let ((parent-of-venv (locate-dominating-file
                          (file-name-directory file)
-                         direct-venvs-func)))
+                         'direct-venvs)))
     (when parent-of-venv
-      (car (funcall direct-venvs-func parent-of-venv)))))
-
-(defun venv-for (file)
-  "Returns the venv to use for FILE, defined as the first venv in
-the nearest ancestor directory of FILE that contains a venv, or
-nil if there is no such ancestor."
-  (or
-   (venv-for-with-func file 'direct-venvs)))
+      (car (direct-venvs parent-of-venv)))))
 
 (defun tcpdir-for (file)
   "Return the TCP directory for FILE."
@@ -92,7 +88,8 @@ nil if there is no such ancestor."
 ;; albeit using hack-local-variables-hook
 (defun tcp-python-activate (tcpdir)
   "Do Python-related setup, other than venvs, for the TCP project
-rooted at TCPDIR."
+rooted at TCPDIR.  Currently adds src directory under TCP to the
+PYTHONPATH as this is conventional."
   (make-local-variable 'process-environment)
   (setq-local
    process-environment (append
@@ -139,9 +136,15 @@ environment for it as defined by `venv-for'"
   ;; cases there is no useful work to do.
   (unless (or (not buffer-file-name)
               (and pyvenv-activate
-                   (string-equal pyvenv-activate  ;; local
-                                 pyvenv-virtual-env ;; global
-                                 ))
+                   (string-equal
+                    ;; test with file-name-as-directory because
+                    ;; pyvenv-activate ends up without a trailing
+                    ;; slash while pyvenv-virtual-env has one.  See
+                    ;; comment in venvs-from-candidates above, which
+                    ;; pyvenv-activate is determined by.
+                    (file-name-as-directory pyvenv-activate)  ;; local
+                    (file-name-as-directory pyvenv-virtual-env) ;; global
+                    ))
               activate-venv-disabled)
     (let ((venv (venv-for buffer-file-name)))
       (if venv
@@ -186,10 +189,10 @@ venvs?
           (error "Can't find a workon home directory, set $WORKON_HOME"))
       (dolist (child (directory-files-children workon))
         (let ((workon-child (format "%s/%s" workon child)))
-          (when (dir-has-venv workon-child)
+          (when (path-contains-venv workon-child)
             (setq result (cons child result)))
           (dolist (grandchild (directory-files-children workon-child))
-            (when (dir-has-venv (format "%s/%s" workon-child grandchild))
+            (when (path-contains-venv (format "%s/%s" workon-child grandchild))
               (setq result (cons (format "%s/%s" child grandchild)
                                  result))))))
       (sort result (lambda (a b)
@@ -255,6 +258,10 @@ based on this and `python-shell-buffer-name', otherwise call
 (defvar my-elpy-config--get-config
   "import json
 import sys
+
+def latest(package, version=None):
+  # This is a hack
+  return version
 
 config = {}
 config['python_version'] = ('{major}.{minor}.{micro}'
