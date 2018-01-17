@@ -821,8 +821,6 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package jira)
 
-(use-package jq-mode)
-
 (use-package json-mode)
 
 (use-package json-reformat
