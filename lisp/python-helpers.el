@@ -1,3 +1,26 @@
+;; Effect of running activate.bat for conda.  
+;; CONDA_DEFAULT_ENV=c1
+;; CONDA_PREFIX=C:\Users\jonat\Miniconda3\envs\c1
+;; CONDA_PROMPT_MODIFIER=(c1)
+;; Path=C:\Users\jonat\Miniconda3\envs\c1
+;;  C:\Users\jonat\Miniconda3\envs\c1\Library\mingw-w64\bin
+;;  C:\Users\jonat\Miniconda3\envs\c1\Library\usr\bin
+;;  C:\Users\jonat\Miniconda3\envs\c1\Library\bin
+;;  C:\Users\jonat\Miniconda3\envs\c1\Scripts
+;;  C:\Users\jonat\Miniconda3\envs\c1\bin
+;;  ...%PATH%
+;; PROMPT=(c1) ... old prompt
+;;
+;;
+;; Suggestion
+;;
+;; https://www.reddit.com/r/emacs/comments/680qv1/do_you_have_emacs_conda_and_conda_environments/
+;; Second, you need to tell pyvenv where to find your
+;; environments. For me, this is: (setenv "WORKON_HOME"
+;; "c:/Users/xxxxx/AppData/Local/Continuum/Anaconda3/envs")
+;;
+;;
+
 (defun file-attribute-name (file-attribute-list)
   "Return the file name from a file attribute list, as from
 `file-attributes'"
@@ -26,11 +49,6 @@ directories . and ... FULL is passed to
   (or (file-exists-p (format "%s/bin/activate" filepath))
       (file-exists-p (format "%s/Scripts/activate.bat" filepath))))
 
-(defun dir-has-venv (dir)
-  "Returns if DIR contains a python virtual environment"
-  (or (file-exists-p (format "%s/bin/activate" dir))
-      (file-exists-p (format "%s/Scripts/activate.bat" dir))))
-
 (defun venvs-from-candidates (candidate-paths)
   ""
   (remove-if-not 'path-contains-venv candidate-paths))
@@ -42,22 +60,46 @@ such directories."
   (venvs-from-candidates
    (directory-files-children dir t)))
 
-(defun tcp-venv-candidates (tcpdir)
-  "Return a list of descendants of TCPDIR that may be python virtual
-  environments for TCP projects rooted at TCPDIR"
-  (let ((default-directory tcpdir))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun tcp-venv-candidates (project-dir)
+  "Return a list of descendants of PROJECT-DIR that may be python virtual
+  environments for projects rooted at PROJECT-DIR"
+  (let ((default-directory project-dir))
     (file-expand-wildcards "_tcp/work/*/py2/*venv*" t)))
 
-(defun tcp-venvs (tcpdir)
-  "Return a list of descendants of TCPDIR that are python virtual
-  environments for TCP projects rooted at TCPDIR."
+(defun tcp-dir-for (file)
+  "Return the project directory for FILE."
+  (locate-dominating-file
+   (file-name-directory file)
+   "_tcp"))
+
+(defvar project-venv-candidates-fn
+  (lambda (project-dir) nil)
+  "Function taking a single argument PROJECT-DIR,
+  returning a list of descendants of PROJECT-DIR that may be
+  python virtual environments for projects rooted at
+  PROJECT-DIR.")
+
+(defvar project-dir-fn
+  (lambda (project-dir) nil)
+  "Function taking a single argument FILE, returning the
+  project-directory for FILE.")
+
+(setq project-venv-candidates-fn 'tcp-venv-candidates)
+(setq project-dir-fn 'tcp-dir-for)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun project-venvs (project-dir)
+  "Return a list of descendants of PROJECT-DIR that are python virtual
+  environments for projects rooted at PROJECT-DIR."
   (venvs-from-candidates
-   (tcp-venv-candidates tcpdir)))
+   (funcall project-venv-candidates-fn project-dir)))
 
 (defun direct-venvs (dir)
   (append
    (direct-child-venvs dir)
-   (tcp-venvs dir)))
+   (project-venvs dir)))
 
 (defun venv-for (file)
   "Returns the venv to use for FILE, defined as the first venv in
@@ -69,54 +111,46 @@ nil if there is no such ancestor."
     (when parent-of-venv
       (car (direct-venvs parent-of-venv)))))
 
-(defun tcpdir-for (file)
-  "Return the TCP directory for FILE."
-  (locate-dominating-file
-   (file-name-directory file)
-   "_tcp"))
-
-(defvar tcp-active-directory
+(defvar project-active-directory
   nil
-  "The currently active TCP directory")
+  "The currently active project directory")
 
-(defvar tcp-activate-disabled
+(defvar project-activate-disabled
   nil
-  "Set to disable activating TCP automatically.")
+  "Set to disable automatic project activation.")
 
 ;; possibly a cleaner way to do this
 ;; https://github.com/lunaryorn/.emacs.d/blob/master/lisp/flycheck-virtualenv.el
 ;; albeit using hack-local-variables-hook
-(defun tcp-python-activate (tcpdir)
-  "Do Python-related setup, other than venvs, for the TCP project
-rooted at TCPDIR.  Currently adds src directory under TCP to the
-PYTHONPATH as this is conventional."
+(defun project-python-activate (project-dir)
+  "Do Python-related setup, other than venvs, for the project
+rooted at PROJECT-DIR.  Currently adds the \"src\" directory to
+PYTHONPATH."
   (make-local-variable 'process-environment)
   (setq-local
    process-environment (append
                         (list
-                         (format
-                          "PYTHONPATH=%s"
-                          (concat (file-name-as-directory tcpdir)
-                                  "src")))
+                         (format "PYTHONPATH=%s%s"
+                                 (file-name-as-directory project-dir)
+                                 "src"))
                         process-environment)))
 
-(defun tcp-python-deactivate ()
-  "Deactivate any Python-related settings for TCP."
+(defun project-python-deactivate ()
+  "Deactivate any Python-related project settings."
   )
 
-(defun tcp-python-sync ()
-  "Set Python-related variables for TCP."
+(defun project-python-sync ()
+  "Set Python-related variables for the project."
   (interactive)
   (unless (or (not buffer-file-name)
-              tcp-activate-disabled)
-    (let ((tcpdir (tcpdir-for buffer-file-name)))
-      (if tcpdir
+              project-activate-disabled)
+    (let ((project-dir (funcall project-dir-fn buffer-file-name)))
+      (if project-dir
           (progn
-            (setq-local tcp-active-directory tcpdir)
-            (tcp-python-activate tcpdir)
-            (setq-local tcp-activate-disabled t))
-        (tcp-python-deactivate)
-        (setq-local tcp-activate-disabled t)))))
+            (setq-local project-active-directory project-dir)
+            (project-python-activate project-dir))
+        (project-python-deactivate))
+      (setq-local project-activate-disabled t))))
 
 ;;;###autoload
 (defun ph-reset-venv ()
@@ -139,9 +173,7 @@ environment for it as defined by `venv-for'"
                    (string-equal
                     ;; test with file-name-as-directory because
                     ;; pyvenv-activate ends up without a trailing
-                    ;; slash while pyvenv-virtual-env has one.  See
-                    ;; comment in venvs-from-candidates above, which
-                    ;; pyvenv-activate is determined by.
+                    ;; slash while pyvenv-virtual-env has one.
                     (file-name-as-directory pyvenv-activate)  ;; local
                     (file-name-as-directory pyvenv-virtual-env) ;; global
                     ))
@@ -154,7 +186,7 @@ environment for it as defined by `venv-for'"
         (ph-reset-venv)))))
 
 (defvar activate-venv-modes
-  '(python-mode org-mode)
+  '(python-mode)
   "List of modes which `activate-venv-if-python' will try to set
   the venv for")
 
@@ -170,18 +202,18 @@ on shared drives.")
   (when (and (memq major-mode activate-venv-modes)
              (not (bound-and-true-p activate-venv-disabled)))
     (activate-venv-if-visiting-file)
-    (tcp-python-sync)
+    (project-python-sync)
     (when pyvenv-virtual-env
       (elpy-use-ipython))))
 
 ;;;###autoload
 (defun pyvenv-virtualenv-list-with-second-level (&optional noerror)
-  "If NOERROR is set, do not raise an error if WORKON_HOME is not
-configured.
+  "Return a sorted listing of virtualenv directories that are
+children and grand-children of the workon home directory given
+by (pyvenv-workon-home).
 
-TODO: Can this be simplified with my other functions for handling
-venvs?
-"
+If NOERROR is set, do not raise an error if WORKON_HOME is not
+configured, and return nil."
   (let ((workon (pyvenv-workon-home))
         (result nil))
     (if (not (file-directory-p workon))
@@ -225,14 +257,11 @@ based on this and `python-shell-buffer-name', otherwise call
 `elpy-module-company'"
 
   ;; We want immediate completions from company.
-  (set (make-local-variable 'company-idle-delay)
-       0)
+  (set (make-local-variable 'company-idle-delay) 0)
   ;; And annotations should be right-aligned.
-  (set (make-local-variable 'company-tooltip-align-annotations)
-       t)
+  (set (make-local-variable 'company-tooltip-align-annotations) t)
   ;; Also, dabbrev in comments and strings is nice.
-  (set (make-local-variable 'company-dabbrev-code-everywhere)
-       t)
+  (set (make-local-variable 'company-dabbrev-code-everywhere) t)
   ;; Add our own backend and remove a bunch of backends that
   ;; interfere in Python mode.
   (set (make-local-variable 'company-backends)
@@ -240,7 +269,7 @@ based on this and `python-shell-buffer-name', otherwise call
              (delq 'company-semantic
                    (delq 'company-ropemacs
                          (delq 'company-capf
-                                  (mapcar #'identity company-backends))))))
+                               (mapcar #'identity company-backends))))))
   (company-mode 1))
 
 ;;;###autoload
