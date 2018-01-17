@@ -83,15 +83,6 @@
 (use-package diminish)
 (require 'diminish)
 
-;; Require quelpa so we can work with/on experimental versions of some
-;; package (experimental)
-(when system-osx-p
-  (use-package quelpa
-    :demand t)
-  (use-package quelpa-use-package
-    :demand t)
-  (quelpa-use-package-activate-advice))
-
 ;;; PERSONAL LISP
 (require 'update-personal-autoloads)
 (update-personal-autoloads)
@@ -502,12 +493,6 @@ See `doxymacs-parm-tempo-element'."
   ;; pip install importmagic autopep8 flake8-pep257
   ;; osx enpkg gnureadline (for ob-ipython)
   ;; win enpkg pyreadline
-
-  ;; (when system-osx-p ;; while working on elpy
-  ;;   (progn
-  ;;     :ensure nil
-  ;;     :load-path "~/src/elpy"
-  ;;     :demand t))
 
   :init
   (setq elpy-rpc-backend "jedi")
@@ -952,10 +937,9 @@ clean buffer we're an order of magnitude laxer about checking."
    ("C-c m x" . macrostep-expand)))
 
 (use-package magit
+  :bind ("C-x g" . magit-status)
   :config
-  (setq magit-popup-use-prefix-argument 'default
-        magit-completing-read-function 'magit-ido-completing-read)
-  :bind ("C-x g" . magit-status))
+  (setq magit-popup-use-prefix-argument 'default))
 
 (defun man--man-around (orig-fun &rest args)
   "Advises `man' to use bash as the shell."
