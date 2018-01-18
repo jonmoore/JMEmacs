@@ -21,6 +21,8 @@
 ;;
 ;;
 
+(require 'pyvenv)
+
 (defun file-attribute-name (file-attribute-list)
   "Return the file name from a file attribute list, as from
 `file-attributes'"
@@ -61,32 +63,20 @@ such directories."
    (directory-files-children dir t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun tcp-venv-candidates (project-dir)
-  "Return a list of descendants of PROJECT-DIR that may be python virtual
-  environments for projects rooted at PROJECT-DIR"
-  (let ((default-directory project-dir))
-    (file-expand-wildcards "_tcp/work/*/py2/*venv*" t)))
+;; Customization point
 
-(defun tcp-dir-for (file)
-  "Return the project directory for FILE."
-  (locate-dominating-file
-   (file-name-directory file)
-   "_tcp"))
-
+;;;###autoload
 (defvar project-venv-candidates-fn
   (lambda (project-dir) nil)
-  "Function taking a single argument PROJECT-DIR,
-  returning a list of descendants of PROJECT-DIR that may be
-  python virtual environments for projects rooted at
-  PROJECT-DIR.")
+  "Function taking a single argument PROJECT-DIR, returning a
+list of descendants of PROJECT-DIR that may be python virtual
+environments for projects rooted at PROJECT-DIR.")
 
+;;;###autoload
 (defvar project-dir-fn
   (lambda (project-dir) nil)
   "Function taking a single argument FILE, returning the
   project-directory for FILE.")
-
-(setq project-venv-candidates-fn 'tcp-venv-candidates)
-(setq project-dir-fn 'tcp-dir-for)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -148,7 +138,7 @@ PYTHONPATH."
       (if project-dir
           (progn
             (setq-local project-active-directory project-dir)
-            (project-python-activate project-dir))
+            (project-python-activate project-dir)) 
         (project-python-deactivate))
       (setq-local project-activate-disabled t))))
 
@@ -169,7 +159,7 @@ environment for it as defined by `venv-for'"
   ;; already-active venvs, or with venv activation disabled.  In these
   ;; cases there is no useful work to do.
   (unless (or (not buffer-file-name)
-              (and pyvenv-activate
+              (and (bound-and-true-p pyvenv-activate)
                    (string-equal
                     ;; test with file-name-as-directory because
                     ;; pyvenv-activate ends up without a trailing
@@ -204,7 +194,8 @@ on shared drives.")
     (activate-venv-if-visiting-file)
     (project-python-sync)
     (when pyvenv-virtual-env
-      (elpy-use-ipython))))
+      (setq python-shell-interpreter "ipython"
+            python-shell-interpreter-args "-i --simple-prompt"))))
 
 ;;;###autoload
 (defun pyvenv-virtualenv-list-with-second-level (&optional noerror)

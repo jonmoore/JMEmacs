@@ -18,7 +18,7 @@
     (and (bound-and-true-p yas-minor-mode) ;; remove this?
          (looking-at "\\>")                ;; at the end of a word
          (not (nth 4 (syntax-ppss)))       ;; not in a comment
-         (yas-expand))))
+         (yas-expand-from-trigger-key))))
 
 ;;;###autoload
 (defun yas-or-company-or-indent-for-tab ()

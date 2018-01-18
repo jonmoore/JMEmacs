@@ -494,9 +494,6 @@ See `doxymacs-parm-tempo-element'."
   ;; osx enpkg gnureadline (for ob-ipython)
   ;; win enpkg pyreadline
 
-  :init
-  (setq elpy-rpc-backend "jedi")
-
   :bind
   (:map
    elpy-mode-map
@@ -519,6 +516,8 @@ See `doxymacs-parm-tempo-element'."
   (elpy-enable)
 
   ;; The default version goes off to the web when reporting errors!!
+  ;; Also it uses https which probably won't work behind a proxy until
+  ;; emacs 26
   ;; I'll assume we don't need _latest
   (setq elpy-config--get-config my-elpy-config--get-config))
 
@@ -648,8 +647,6 @@ clean buffer we're an order of magnitude laxer about checking."
         ("SPC"      . haskell-mode-contextual-space)
         ("M-."      . haskell-mode-jump-to-def)))
 
-(use-package helm-projectile)
-
 (use-package helm-ag
   :config
   (setq helm-ag-base-command "pt --nocolor --nogroup"))
@@ -728,6 +725,8 @@ clean buffer we're an order of magnitude laxer about checking."
 ;; (use-package helm-org-rifle
 ;;   :bind (:map helm-command-map
 ;;               ("R" . helm-org-rifle)))
+
+(use-package helm-projectile)
 
 (use-package helm-swoop)
 
