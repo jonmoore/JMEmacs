@@ -1,5 +1,8 @@
 ;; http://www.emacswiki.org/emacs/CompanyMode
 
+(require 'yasnippet)
+(require 'company)
+
 ;;;###autoload
 (defun check-company-expansion ()
   (if (looking-at "\\_>") t
@@ -12,9 +15,9 @@
 (defun try-yas-expand ()
   "Return t iff we successfully expand with `yasnippet'"
   (let ((yas-fallback-behavior 'return-nil))
-    (and yas-minor-mode              ;; remove this?
-         (looking-at "\\>")          ;; at the end of a word
-         (not (nth 4 (syntax-ppss))) ;; not in a comment
+    (and (bound-and-true-p yas-minor-mode) ;; remove this?
+         (looking-at "\\>")                ;; at the end of a word
+         (not (nth 4 (syntax-ppss)))       ;; not in a comment
          (yas-expand))))
 
 ;;;###autoload
