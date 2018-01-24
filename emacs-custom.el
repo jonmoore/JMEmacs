@@ -150,7 +150,8 @@
  '(reftex-toc-split-windows-horizontally t)
  '(safe-local-variable-values
    (quote
-    ((TeX-command-extra-options . "-shell-escape")
+    ((org-odd-levels-only)
+     (TeX-command-extra-options . "-shell-escape")
      (checkdoc-minor-mode . 1)
      (flycheck-disabled-checkers emacs-lisp emacs-lisp-checkdoc)
      (activate-venv-disabled . t))))

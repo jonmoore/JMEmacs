@@ -1099,9 +1099,7 @@ according to `headline-is-for-jira'."
 (use-package ob-restclient)
 
 (defun my-org-mode-hook-fn ()
-  (require 'ob-ipython)
   (require 'ob-restclient)
-  (turn-on-org-cdlatex)
   (setq fill-column 90))
 
 ;; Try not to download/use both org and org-plus-contrib, which both
