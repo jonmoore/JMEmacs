@@ -1200,8 +1200,9 @@ according to `headline-is-for-jira'."
   (require 'ox-publish)
   (setq org-publish-use-timestamps-flag t)
 
-  ;; org-ref is pretty slow to load.  The messages about creating
+  ;; org-ref can be slow to load.  The messages about creating
   ;; links are from org-ref-link-set-parameters.
+  (setq org-ref-show-broken-links nil) ; reported as a speedup
   (require 'org-ref)
   (require 'org-wp-link)
 
