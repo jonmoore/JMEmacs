@@ -16,18 +16,35 @@
 ;; Beware: In a complete WTF, Windows intercepts Ctrl-shift by
 ;; default, including Ctrl-shift-0, which we want available for
 ;; sp-forward-slurp-sexp. This problem reoccurs between logins. See
-;; * https://support.microsoft.com/en-us/kb/967893
-;; * http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
+;; * https://blog.henrypoon.com/blog/2012/01/03/removing-the-annoying-windows-language-hotkeys-ctrlspace-shiftspace-etc-that-toggles-the-full-widthhalf-width-characters-on-the-chinese-ime/
+;; * https://superuser.com/questions/327479/ctrl-space-always-toggles-chinese-ime-windows-7/480723
+;; * https://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
+;; * https://msdn.microsoft.com/en-us/library/ms904353.aspx
+;; * https://msdn.microsoft.com/en-us/library/ms904366.aspx
+;; * https://msdn.microsoft.com/en-us/library/ms904626.aspx
+;; * https://support.microsoft.com/en-us/kb/967893 
 ;;
 ;; To remove the unwanted shortcut:
 ;;
-;; For Windows 7,  Start ->Region and Language ->Keyboards and
+;; For Windows 7,  Start->Region and Language->Keyboards and
 ;; Languages->Change keyboards ->Advanced Key Settings->Between input
 ;; languages->Change Key Sequence Set Switch Keyboard Layout to Not
 ;; Assigned.  Click OK...
 ;;
 ;; For Windows 10, https://superuser.com/a/706636
-
+;;
+;; Windows Registry Editor Version 5.00
+;;
+;; [HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000010]
+;; "Virtual Key"=hex:ff,00,00,00
+;; "Key Modifiers"=hex:00,c0,00,00
+;; "Target IME"=hex:00,00,00,00
+;;
+;; [HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000070]
+;; "Virtual Key"=hex:ff,00,00,00
+;; "Key Modifiers"=hex:00,c0,00,00
+;; "Target IME"=hex:00,00,00,00
+;;
 
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
@@ -278,6 +295,8 @@
     (message "Disabling global auto revert mode for %s"
              buffer-file-name)
     (setq global-auto-revert-ignore-buffer t)))
+
+(use-package auto-highlight-symbol)
 
 (use-package autorevert
   :ensure nil
