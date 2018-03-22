@@ -1251,8 +1251,6 @@ according to `headline-is-for-jira'."
 
 (use-package ox-reveal)
 
-(use-package ob-ipython)
-
 (use-package ox-jira)
 
 (use-package p4)
