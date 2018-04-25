@@ -17,6 +17,7 @@
  '(browse-kill-ring-highlight-inserted-item t)
  '(case-fold-search t)
  '(comment-column 50)
+ '(company-show-numbers t)
  '(completion-ignored-extensions (quote (".o" "~" ".obj" ".elc" ".pyc")))
  '(cperl-indent-level 4)
  '(cperl-invalid-face nil)
@@ -139,7 +140,7 @@
  '(p4-auto-refresh nil)
  '(package-selected-packages
    (quote
-    (quack geiser ztree zop-to-char yaml-mode writeroom-mode which-key visual-fill-column undo-tree sr-speedbar sphinx-doc shut-up shell-toggle realgud ranger rainbow-delimiters pycoverage point-undo peep-dired p4 use-package smartparens org-ref ob-restclient ob-ipython nexus neotree narrow-indirect maxframe magit macrostep lorem-ipsum live-py-mode kanban json-mode js2-refactor jira jedi-direx help-fns+ helm-swoop helm-projectile helm-org-rifle helm-descbinds helm-company helm-ag graphviz-dot-mode flycheck expand-region esup elpy ein dired-subtree diminish company-restclient company-quickhelp company-ghc company-auctex color-theme-modern color-moccur cdlatex bug-hunter browse-kill-ring auctex-latexmk anzu adaptive-wrap ace-window ace-link ace-jump-helm-line)))
+    (htmlize auto-highlight-symbol quack geiser ztree zop-to-char yaml-mode writeroom-mode which-key visual-fill-column undo-tree sr-speedbar sphinx-doc shut-up shell-toggle realgud ranger rainbow-delimiters pycoverage point-undo peep-dired p4 use-package smartparens org-ref ob-restclient ob-ipython nexus neotree narrow-indirect maxframe magit macrostep lorem-ipsum live-py-mode kanban json-mode js2-refactor jira jedi-direx help-fns+ helm-swoop helm-projectile helm-org-rifle helm-descbinds helm-company helm-ag graphviz-dot-mode flycheck expand-region esup elpy ein dired-subtree diminish company-restclient company-quickhelp company-ghc company-auctex color-theme-modern color-moccur cdlatex bug-hunter browse-kill-ring auctex-latexmk anzu adaptive-wrap ace-window ace-link ace-jump-helm-line)))
  '(paradox-github-token t)
  '(projectile-globally-ignored-file-suffixes (quote ("pyc")))
  '(ps-font-size (quote (8 . 8.5)))
