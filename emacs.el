@@ -13,38 +13,31 @@
 ;; * sh.exe.  For speed, don't use the wrappers in the cmd directory
 ;; * of the official git Windows client.
 
-;; Beware: In a complete WTF, Windows intercepts Ctrl-shift by
-;; default, including Ctrl-shift-0, which we want available for
-;; sp-forward-slurp-sexp. This problem reoccurs between logins. See
-;; * https://blog.henrypoon.com/blog/2012/01/03/removing-the-annoying-windows-language-hotkeys-ctrlspace-shiftspace-etc-that-toggles-the-full-widthhalf-width-characters-on-the-chinese-ime/
-;; * https://superuser.com/questions/327479/ctrl-space-always-toggles-chinese-ime-windows-7/480723
-;; * https://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
-;; * https://msdn.microsoft.com/en-us/library/ms904353.aspx
-;; * https://msdn.microsoft.com/en-us/library/ms904366.aspx
-;; * https://msdn.microsoft.com/en-us/library/ms904626.aspx
-;; * https://support.microsoft.com/en-us/kb/967893 
+;; Beware: In a complete WTF, Windows intercepts both Ctrl-shift-0 and
+;; Ctrl-space.  Ctrl-shift-0 is the default binding for
+;; sp-forward-slurp-sexp - think "Ctrl-)". This problem reoccurs
+;; between logins.
 ;;
-;; To remove the unwanted shortcut:
+;; In Windows 10 Microsoft appear to have broken Ctrl-shift-0
+;; irreparably.  Ctrl-space can still be bound.
+;; 
+;; For Windows 7 the file etc/fix-ctrl-shift-0.reg can be used to
+;; perform the two steps below and make both Ctrl-shift-0 and
+;; Ctrl-space available for binding.  You will need to log out and log
+;; in again for this to take effect.
 ;;
-;; For Windows 7,  Start->Region and Language->Keyboards and
-;; Languages->Change keyboards ->Advanced Key Settings->Between input
-;; languages->Change Key Sequence Set Switch Keyboard Layout to Not
-;; Assigned.  Click OK...
+;; 1) disable bindings for keyboard layout shortcuts.
 ;;
-;; For Windows 10, https://superuser.com/a/706636
+;; 2) disable bindings for Chinese IME settings
 ;;
-;; Windows Registry Editor Version 5.00
+;; References:
 ;;
-;; [HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000010]
-;; "Virtual Key"=hex:ff,00,00,00
-;; "Key Modifiers"=hex:00,c0,00,00
-;; "Target IME"=hex:00,00,00,00
-;;
-;; [HKEY_CURRENT_USER\Control Panel\Input Method\Hot Keys\00000070]
-;; "Virtual Key"=hex:ff,00,00,00
-;; "Key Modifiers"=hex:00,c0,00,00
-;; "Target IME"=hex:00,00,00,00
-;;
+;; https://support.microsoft.com/en-us/kb/967893
+;; http://superuser.com/questions/109066/how-to-disable-ctrlshift-keyboard-layout-switch-for-the-same-input-language-i
+;; https://superuser.com/questions/327479/ctrl-space-always-toggles-chinese-ime-windows-7
+;; https://stackoverflow.com/questions/179119/how-to-prevent-windows-xp-from-stealing-my-input-ctrl-space-which-is-meant-for-e
+;; https://www.emacswiki.org/emacs/DisableImeForEmacs
+;; https://superuser.com/a/706636
 
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
@@ -287,6 +280,8 @@
        TeX-run-TeX nil t
        :help "Run latexmk on file")))
    TeX-command-list))
+
+(use-package auto-highlight-symbol)
 
 (defun disable-autorevert-for-network-files ()
   (when (and buffer-file-name
@@ -540,7 +535,7 @@ See `doxymacs-parm-tempo-element'."
   ;; I'll assume we don't need _latest
   (setq elpy-config--get-config my-elpy-config--get-config))
 
-(use-package esup)
+(use-package esup) ; profile the startup time of Emacs
 
 (use-package expand-region
   :bind
@@ -593,9 +588,42 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   (add-hook 'font-lock-mode-hook 'my-font-lock-mode-hook-fn))
 
+(defun jm-geiser-company--doc-buffer (id)
+  "Replacement for geiser-company--doc-buffer to return nil when
+no docs are found."
+  (let* ((impl geiser-impl--implementation)
+         (module (geiser-eval--get-module))
+         (symbol (make-symbol id))
+         (docstring (geiser-doc--get-docstring symbol module)))
+    (if (or (not docstring) (not (listp docstring)))
+        ;; JM: return nil when no documentation is found, in line
+        ;; with other company backends, e.g. company-elisp, which
+        ;; comes with company and is presumably canonical.  The
+        ;; original version called message, returning the message
+        ;; string, which broke company-quickhelp, which notes for
+        ;; non-nil returns that "The company backend can either
+        ;; return a buffer with the doc or a cons containing the
+        ;; doc buffer and a position at which to start reading."
+        nil
+      (message "docstring %S" docstring)
+      (with-current-buffer
+          (get-buffer-create "*geiser-company-documentation*")
+        (erase-buffer)
+        (geiser-doc--insert-title
+         (geiser-autodoc--str* (cdr (assoc "signature" docstring))))
+        (newline)
+        (insert (or (cdr (assoc "docstring" docstring)) ""))
+        (current-buffer)))))
+
 (use-package geiser
+  :init
+  (eval-after-load "geiser-company"
+    '(defun geiser-company--doc-buffer (id)
+       "Redefinition of geiser-company--doc-buffer to return nil when no docs are found."
+       (jm-geiser-company--doc-buffer id)))
   :config
-  (setq geiser-active-implementations '(racket)))
+  (setq geiser-active-implementations '(racket)
+        geiser-eval--geiser-procedure-function 'geiser-racket--geiser-procedure))
 
 (use-package ghc
   :config
@@ -695,7 +723,21 @@ clean buffer we're an order of magnitude laxer about checking."
   (setq helm-mode-no-completion-in-region-in-modes
         '(inferior-python-mode)))
 
-(use-package helm-company)
+(defun jm-helm-company-display-document-buffer (orig-fun buffer)
+  "Temporarily show the documentation BUFFER.  JM: fixed to call
+display-buffer correctly."
+  (with-current-buffer buffer
+    (goto-char (point-min)))
+  (display-buffer buffer
+                  '((display-buffer-below-selected
+                     display-buffer-in-side-window
+                     display-buffer-reuse-window)
+                    . ())))
+
+(use-package helm-company
+  :config
+  (advice-add 'helm-company-display-document-buffer
+              :around #'jm-helm-company-display-document-buffer))
 
 (use-package helm-cscope
   :if system-win32-p
@@ -736,6 +778,8 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   (setq hl-sexp-background-colors
         (create-hl-sexp-background-colors)))
+
+(use-package htmlize)
 
 (use-package hydra)
 
@@ -890,9 +934,11 @@ clean buffer we're an order of magnitude laxer about checking."
 
    ;; http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking
    ;; for the first setting
-   ("C-)" . sp-forward-slurp-sexp)
+   ;; Not using "C-)" because Microsoft have broken this.
+   ;; Search for "WTF" in this file.
+   ("C-M-0" . sp-forward-slurp-sexp)
    ("C-}" . sp-forward-barf-sexp)
-   ("C-(" . sp-backward-slurp-sexp)
+   ("C-M-9" . sp-backward-slurp-sexp)
    ("C-{" . sp-backward-barf-sexp)
 
    ;; Miscellaneous commands
