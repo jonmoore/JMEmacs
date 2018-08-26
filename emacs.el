@@ -87,6 +87,13 @@
 (setq use-package-verbose t
       use-package-always-ensure t
       use-package-always-defer t)
+
+(use-package benchmark-init
+  :demand ;; uncomment to enable benchmarking
+  :config
+  ;; To disable collection of benchmark data after init is done.
+  (add-hook 'after-init-hook 'benchmark-init/deactivate))
+
 (require 'bind-key)
 
 ;; https://emacs.stackexchange.com/questions/37468/how-do-i-use-use-package-with-diminish-in-my-init-el
@@ -869,10 +876,7 @@ display-buffer correctly."
 
 (defun my-emacs-lisp-mode-hook ()
   (smartparens-mode t)
-  (smartparens-strict-mode t)
-  ;;(highlight-sexps-mode t)
-
-  )
+  (smartparens-strict-mode t))
 
 (use-package lisp-mode
   :ensure nil
@@ -968,7 +972,14 @@ display-buffer correctly."
 (use-package magit
   :bind ("C-x g" . magit-status)
   :config
-  (setq magit-popup-use-prefix-argument 'default))
+
+  (setq magit-log-show-refname-after-summary t
+        magit-wip-after-apply-mode nil
+        magit-wip-after-save-mode nil
+        magit-wip-before-change-mode nil
+        magit-popup-use-prefix-argument 'default
+        magit-log-margin '(t "%Y-%m-%d %H:%M" magit-log-margin-width t 18)
+        ))
 
 (defun man--man-around (orig-fun &rest args)
   "Advises `man' to use bash as the shell."
@@ -1487,27 +1498,6 @@ according to `headline-is-for-jira'."
 (use-package ocp-indent)
 (use-package utop)
 
-(setq
- ;; '(indent-tabs-mode nil)
-
- compilation-context-lines 2
- compilation-error-screen-columns nil
- compilation-scroll-output t
- compilation-search-path '(nil "src")
- electric-indent-mode nil
- sentence-end-double-space nil
- ;; '(next-line-add-newlines nil)
- ;; '(require-final-newline t)
- ;; '(show-trailing-whitespace t)
- ;; '(visible-bell t)
- ;; '(show-paren-mode t)
- ;; '(next-error-highlight t)
- ;; '(next-error-highlight-no-select t)
- ;; '(backup-directory-alist '(("." . "~/.local/share/emacs/backups")))
- ;;  '(ac-use-fuzzy nil)
- ;;'(line-move-visual t)
- )
-
 ;; ANSI color in compilation buffer
 (require 'ansi-color)
 (defun colorize-compilation-buffer ()
@@ -1517,9 +1507,6 @@ according to `headline-is-for-jira'."
 (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
 (progn
-  ;; silence warning from tramp-read-passwd
-  ;; (let ((ad-redefinition-action 'accept)) 
-
   (helm-mode 1)
   ;; helm workarounds below  - define keys after it's fully active as
   ;; otherwise we get an error that helm-command-map is void.
