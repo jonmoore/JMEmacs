@@ -848,6 +848,8 @@ display-buffer correctly."
 
 (use-package jedi-direx)
 
+(use-package jq-mode)
+
 (use-package json-mode)
 
 (use-package json-reformat
