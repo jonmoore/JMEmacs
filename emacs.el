@@ -236,7 +236,6 @@
   :ensure auctex
   :init
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-  ;; (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 
   :if system-win32-p
   :bind (:map LaTeX-mode-map
@@ -978,6 +977,8 @@ display-buffer correctly."
   :config
   (advice-add 'man :around #'man--man-around))
 
+(use-package markdown-mode)
+
 (use-package maxframe
   :init
   (maximize-frame))
@@ -1194,6 +1195,8 @@ according to `headline-is-for-jira'."
         org-html-postamble               'auto
         org-html-validation-link         nil)
 
+  (require 'ox-md)
+
   (require 'ox-publish)
   (setq org-publish-use-timestamps-flag t)
 
@@ -1264,6 +1267,10 @@ according to `headline-is-for-jira'."
 (use-package ox-reveal)
 
 (use-package ox-jira)
+
+(use-package ox-mediawiki)
+
+(use-package ox-rst)
 
 (use-package p4)
 
