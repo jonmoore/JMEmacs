@@ -111,7 +111,9 @@
  '(org-default-priority 68)
  '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
  '(org-enforce-todo-checkbox-dependencies t)
+ '(org-export-backends (quote (ascii html latex)))
  '(org-hierarchical-todo-statistics nil)
+ '(org-modules (quote (org-bibtex org-toc)))
  '(org-ref-show-citation-on-enter nil)
  '(org-refile-targets (quote ((org-agenda-files :maxlevel . 5))))
  '(org-reveal-hlevel 2)
@@ -122,7 +124,6 @@
      ("ocaml" . tuareg)
      ("elisp" . emacs-lisp)
      ("ditaa" . artist)
-     ("asymptote" . asy)
      ("dot" . graphviz-dot)
      ("sqlite" . sql)
      ("calc" . fundamental)
@@ -137,7 +138,7 @@
  '(p4-auto-refresh nil)
  '(package-selected-packages
    (quote
-    (jq-mode ox-mediawiki ox-rst markdown-mode htmlize auto-highlight-symbol quack geiser ztree zop-to-char yaml-mode writeroom-mode which-key visual-fill-column undo-tree sr-speedbar sphinx-doc shut-up shell-toggle realgud ranger rainbow-delimiters pycoverage point-undo peep-dired p4 use-package smartparens org-ref ob-restclient ob-ipython nexus neotree narrow-indirect maxframe magit macrostep lorem-ipsum live-py-mode kanban json-mode js2-refactor jira jedi-direx help-fns+ helm-swoop helm-projectile helm-org-rifle helm-descbinds helm-company helm-ag graphviz-dot-mode flycheck expand-region esup elpy ein dired-subtree diminish company-restclient company-quickhelp company-ghc company-auctex color-theme-modern color-moccur cdlatex bug-hunter browse-kill-ring auctex-latexmk anzu adaptive-wrap ace-window ace-link ace-jump-helm-line)))
+    (ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree)))
  '(paradox-github-token t)
  '(pdf-view-use-unicode-ligther nil)
  '(projectile-globally-ignored-file-suffixes (quote ("pyc")))

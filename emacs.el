@@ -20,7 +20,7 @@
 ;;
 ;; In Windows 10 Microsoft appear to have broken Ctrl-shift-0
 ;; irreparably.  Ctrl-space can still be bound.
-;; 
+;;
 ;; For Windows 7 the file etc/fix-ctrl-shift-0.reg can be used to
 ;; perform the two steps below and make both Ctrl-shift-0 and
 ;; Ctrl-space available for binding.  You will need to log out and log
@@ -88,7 +88,7 @@
       use-package-always-ensure t
       use-package-always-defer t)
 
-(use-package benchmark-init
+(use-package benchmark-init        ; profile the startup time of Emacs
   :demand ;; uncomment to enable benchmarking
   :config
   ;; To disable collection of benchmark data after init is done.
@@ -262,6 +262,15 @@
   :init
   (add-hook 'visual-line-mode-hook #'adaptive-wrap-prefix-mode))
 
+(use-package ansi-color                 ; ANSI color in compilation buffer
+  )
+
+(defun colorize-compilation-buffer ()
+  (toggle-read-only)
+  (ansi-color-apply-on-region (point-min) (point-max))
+  (toggle-read-only))
+(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
+
 (use-package anzu                       ; Match info in mode-line in search modes
   :bind
   (([remap query-replace]                . anzu-query-replace)
@@ -286,8 +295,6 @@
        TeX-run-TeX nil t
        :help "Run latexmk on file")))
    TeX-command-list))
-
-(use-package auto-highlight-symbol)
 
 (defun disable-autorevert-for-network-files ()
   (when (and buffer-file-name
@@ -316,6 +323,17 @@
   :bind ("M-y" . browse-kill-ring))
 
 (use-package bug-hunter)
+
+(defun set-ocaml-error-regexp ()
+  (set
+   'compilation-error-regexp-alist
+   (list '("[Ff]ile \\(\"\\(.*?\\)\", line \\(-?[0-9]+\\)\\(, characters \\(-?[0-9]+\\)-\\([0-9]+\\)\\)?\\)\\(:\n\\(\\(Warning .*?\\)\\|\\(Error\\)\\):\\)?"
+           2 3 (5 . 6) (9 . 11) 1 (8 compilation-message-face)))))
+
+(use-package caml                       ; OCaml code editing commands for Emacs
+  :config
+  (add-hook 'caml-mode-hook 'set-ocaml-error-regexp)
+  )
 
 (use-package cdlatex)
 
@@ -541,8 +559,6 @@ See `doxymacs-parm-tempo-element'."
   ;; I'll assume we don't need _latest
   (setq elpy-config--get-config my-elpy-config--get-config))
 
-(use-package esup) ; profile the startup time of Emacs
-
 (use-package expand-region
   :bind
   (("C-c v" . er/expand-region)))
@@ -577,6 +593,7 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-to-list 'flycheck-checkers 'python-pycoverage)
   (flycheck-add-next-checker 'python-pycoverage 'python-pylint))
 
+(use-package flycheck-ocaml) ; Flycheck: OCaml support
 
 (defun my-font-lock-mode-hook-fn ()
   (when (or (eq major-mode 'c-mode)
@@ -960,6 +977,8 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
+(use-package lsp-ocaml) ; OCaml support for lsp-mode
+
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
   :bind
@@ -1007,6 +1026,8 @@ display-buffer correctly."
         ("<M-right>" . mediawiki-simple-outline-demote)
         ("<M-up>"    . outline-move-subtree-up)
         ("<M-down>"  . outline-move-subtree-down)))
+
+(use-package merlin) ; An assistant for OCaml.
 
 (use-package mmix-mode
   :ensure nil
@@ -1062,6 +1083,8 @@ display-buffer correctly."
   (:map
    nxml-mode-map
    ("<f9>" . nexus-insert-gav-for-keyword)))
+
+(use-package ocp-indent) ; Automatic indentation for OCaml
 
 ;;; ORG MODE
 
@@ -1216,10 +1239,10 @@ according to `headline-is-for-jira'."
   ;; org-ref can be slow to load.  The messages about creating
   ;; links are from org-ref-link-set-parameters.
   (setq org-ref-show-broken-links nil) ; reported as a speedup
-  (require 'org-ref)
-  (require 'org-wp-link)
+  ;; (require 'org-ref)
+  ;; (require 'org-wp-link)
 
-  (require 'pyvenv)
+  ;; (require 'pyvenv)
   (require 'texmathp)
   )
 
@@ -1413,12 +1436,20 @@ according to `headline-is-for-jira'."
   :config
   (setq tramp-default-method "plink"))
 
+(use-package tuareg ; OCaml mode.
+  :config
+  (add-hook 'tuareg-mode-hook 'set-ocaml-error-regexp)
+  )
+
 (use-package undo-tree
   :bind (:map undo-tree-visualizer-mode-map
               ("RET" . undo-tree-visualizer-quit))
   :init
   (global-undo-tree-mode)
   :diminish undo-tree-mode)
+
+(use-package utop  ;  Universal toplevel for OCaml
+)
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))
@@ -1486,25 +1517,6 @@ according to `headline-is-for-jira'."
 (use-package ztree)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; New OCaml stuff - needs to be properly worked in
-
-(use-package caml)
-
-(use-package flycheck-ocaml)
-
-(use-package tuareg)
-(use-package merlin)
-(use-package lsp-ocaml)
-(use-package ocp-indent)
-(use-package utop)
-
-;; ANSI color in compilation buffer
-(require 'ansi-color)
-(defun colorize-compilation-buffer ()
-  (toggle-read-only)
-  (ansi-color-apply-on-region (point-min) (point-max))
-  (toggle-read-only))
-(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
 (progn
   (helm-mode 1)
@@ -1551,22 +1563,6 @@ started from a shell."
 
 (set-exec-path-from-shell-PATH)
 
-;; OCaml configuration
-;;  - better error and backtrace matching
-
-(defun set-ocaml-error-regexp ()
-  (set
-   'compilation-error-regexp-alist
-   (list '("[Ff]ile \\(\"\\(.*?\\)\", line \\(-?[0-9]+\\)\\(, characters \\(-?[0-9]+\\)-\\([0-9]+\\)\\)?\\)\\(:\n\\(\\(Warning .*?\\)\\|\\(Error\\)\\):\\)?"
-           2 3 (5 . 6) (9 . 11) 1 (8 compilation-message-face)))))
-
-(add-hook 'tuareg-mode-hook 'set-ocaml-error-regexp)
-(add-hook 'caml-mode-hook 'set-ocaml-error-regexp)
-
-;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
-;; (require 'opam-user-setup "~/.emacs.d/opam-user-setup.el")
-;; ## end of OPAM user-setup addition for emacs / base ## keep this line
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package desktop
   :init
@@ -1606,4 +1602,3 @@ started from a shell."
          kill-buffer-query-functions)))
 
 (message "Finished emacs.el")
-
