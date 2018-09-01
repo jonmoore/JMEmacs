@@ -1537,11 +1537,6 @@ according to `headline-is-for-jira'."
   (define-key helm-read-file-map (kbd "C-<backspace>") 'backward-kill-word)
   )
 
-;; Some key bindings
-(defun prev-match () (interactive nil) (next-match -1))
-(global-set-key [f3] 'next-match)
-(global-set-key [(shift f3)] 'prev-match)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package desktop
   :init
