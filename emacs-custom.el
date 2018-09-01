@@ -22,6 +22,7 @@
  '(cperl-indent-level 4)
  '(cperl-invalid-face nil)
  '(desktop-lazy-verbose nil)
+ '(desktop-load-locked-desktop t)
  '(directory-abbrev-alist nil)
  '(dired-omit-files "^\\.?#\\|^\\.")
  '(display-buffer-reuse-frames t)
