@@ -20,7 +20,7 @@
 ;;
 ;; In Windows 10 Microsoft appear to have broken Ctrl-shift-0
 ;; irreparably.  Ctrl-space can still be bound.
-;; 
+;;
 ;; For Windows 7 the file etc/fix-ctrl-shift-0.reg can be used to
 ;; perform the two steps below and make both Ctrl-shift-0 and
 ;; Ctrl-space available for binding.  You will need to log out and log
@@ -87,6 +87,13 @@
 (setq use-package-verbose t
       use-package-always-ensure t
       use-package-always-defer t)
+
+(use-package benchmark-init        ; profile the startup time of Emacs
+  :demand ;; uncomment to enable benchmarking
+  :config
+  ;; To disable collection of benchmark data after init is done.
+  (add-hook 'after-init-hook 'benchmark-init/deactivate))
+
 (require 'bind-key)
 
 ;; https://emacs.stackexchange.com/questions/37468/how-do-i-use-use-package-with-diminish-in-my-init-el
@@ -235,9 +242,7 @@
 (use-package latex
   :ensure auctex
   :init
-  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 
   :if system-win32-p
   :bind (:map LaTeX-mode-map
@@ -256,6 +261,15 @@
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
   :init
   (add-hook 'visual-line-mode-hook #'adaptive-wrap-prefix-mode))
+
+(use-package ansi-color                 ; ANSI color in compilation buffer
+  )
+
+(defun colorize-compilation-buffer ()
+  (toggle-read-only)
+  (ansi-color-apply-on-region (point-min) (point-max))
+  (toggle-read-only))
+(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
 (use-package anzu                       ; Match info in mode-line in search modes
   :bind
@@ -281,8 +295,6 @@
        TeX-run-TeX nil t
        :help "Run latexmk on file")))
    TeX-command-list))
-
-(use-package auto-highlight-symbol)
 
 (defun disable-autorevert-for-network-files ()
   (when (and buffer-file-name
@@ -311,6 +323,17 @@
   :bind ("M-y" . browse-kill-ring))
 
 (use-package bug-hunter)
+
+(defun set-ocaml-error-regexp ()
+  (set
+   'compilation-error-regexp-alist
+   (list '("[Ff]ile \\(\"\\(.*?\\)\", line \\(-?[0-9]+\\)\\(, characters \\(-?[0-9]+\\)-\\([0-9]+\\)\\)?\\)\\(:\n\\(\\(Warning .*?\\)\\|\\(Error\\)\\):\\)?"
+           2 3 (5 . 6) (9 . 11) 1 (8 compilation-message-face)))))
+
+(use-package caml                       ; OCaml code editing commands for Emacs
+  :config
+  (add-hook 'caml-mode-hook 'set-ocaml-error-regexp)
+  )
 
 (use-package cdlatex)
 
@@ -408,7 +431,8 @@
 (use-package company
   :init
   (add-hook 'prog-mode-hook 'company-mode)
-  :bind  (:map company-active-map
+  :bind
+  (:map company-active-map
                ("C-o" . helm-company)))
 
 (use-package company-auctex)
@@ -505,8 +529,6 @@ See `doxymacs-parm-tempo-element'."
   ;; elpy recommended packages
   ;; echo n | enpkg jedi flake8 nose pylint yapf
   ;; pip install importmagic autopep8 flake8-pep257
-  ;; osx enpkg gnureadline (for ob-ipython)
-  ;; win enpkg pyreadline
 
   :bind
   (:map
@@ -533,9 +555,10 @@ See `doxymacs-parm-tempo-element'."
   ;; Also it uses https which probably won't work behind a proxy until
   ;; emacs 26
   ;; I'll assume we don't need _latest
-  (setq elpy-config--get-config my-elpy-config--get-config))
-
-(use-package esup) ; profile the startup time of Emacs
+  ;; TODO: check this
+  (setq elpy-config--get-config my-elpy-config--get-config)
+  :hook ((python-mode . elpy-mode))
+  )
 
 (use-package expand-region
   :bind
@@ -571,6 +594,7 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-to-list 'flycheck-checkers 'python-pycoverage)
   (flycheck-add-next-checker 'python-pycoverage 'python-pylint))
 
+(use-package flycheck-ocaml) ; Flycheck: OCaml support
 
 (defun my-font-lock-mode-hook-fn ()
   (when (or (eq major-mode 'c-mode)
@@ -714,38 +738,10 @@ no docs are found."
    ("<tab>"          . helm-execute-persistent-action)
    ("M-RET"          . helm-select-action)       ; more sane than C-z
    ("C-'"            . ace-jump-helm-line)
-
-   :map helm-command-map
-   ("<tab>"          . helm-lisp-completion-at-point)
-   ("M-:"            . helm-eval-expression-with-eldoc)
-   ("a"              . helm-apropos)
-   ("m"              . helm-multi-swoop)
-   ("o"              . helm-occur)
-   ("s"              . helm-swoop)
-   ("w"              . helm-man-woman)
-
-   :map helm-find-files-map
-   ("C-x o"          . helm-ff-run-switch-other-window)
-   ("C-x 5 o"        . helm-ff-run-switch-other-frame)
-   ("C-h m"          . describe-mode)
-   ("C-<backspace>"  . backward-kill-word)
-
-   :map helm-read-file-map
-   ("C-h m"          . describe-mode)
-   ("C-<backspace>"  . backward-kill-word))
-
-  :init
-  (let ((ad-redefinition-action 'accept)) ; silence warning from tramp-read-passwd
-    (helm-mode 1))
-
+   )
   :diminish helm-mode
 
   :config
-  (require 'helm-config)
-  (require 'helm-files)
-  (require 'helm-projectile)
-  (require 'helm-ag)
-
   (global-unset-key (kbd "C-x c"))
   ;; Disable helm completion in some modes
   (setq helm-mode-no-completion-in-region-in-modes
@@ -791,9 +787,6 @@ display-buffer correctly."
 
 (use-package helm-swoop)
 
-(use-package help-fns+
-  :commands (describe-keymap))
-
 (use-package help-mode
   :ensure nil
   :bind (:map help-mode-map
@@ -831,10 +824,9 @@ display-buffer correctly."
                  ("C/C++"   (mode . c++-mode))
                  ("org"     (mode . org-mode))
                  ("script"  (mode . sh-mode))
-                 ("pl"      (or (mode . perl-mode) (mode . cperl-mode)))
-                 ("py"      (or (mode . python-mode)))
-                 ("emacs"   (or
-                             (name . "^\\*"))))))
+                 ("py"      (mode . python-mode))
+                 ("ml"      (or (mode . caml-mode) (mode . tuareg-mode)))
+                 ("emacs"   (name . "^\\*")))))
         ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*" "\\*vc\\*")
         ibuffer-display-summary nil)
 
@@ -881,7 +873,7 @@ display-buffer correctly."
 
 (use-package jedi-direx)
 
-(use-package jira)
+(use-package jq-mode)
 
 (use-package json-mode)
 
@@ -902,10 +894,7 @@ display-buffer correctly."
 
 (defun my-emacs-lisp-mode-hook ()
   (smartparens-mode t)
-  (smartparens-strict-mode t)
-  ;;(highlight-sexps-mode t)
-
-  )
+  (smartparens-strict-mode t))
 
 (use-package lisp-mode
   :ensure nil
@@ -989,6 +978,8 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
+(use-package lsp-ocaml) ; OCaml support for lsp-mode
+
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
   :bind
@@ -1001,7 +992,16 @@ display-buffer correctly."
 (use-package magit
   :bind ("C-x g" . magit-status)
   :config
-  (setq magit-popup-use-prefix-argument 'default))
+
+  (setq magit-auto-revert-mode nil
+        magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
+        magit-log-margin '(t "%Y-%m-%d %H:%M" magit-log-margin-width t 18)
+        magit-log-show-refname-after-summary t
+        magit-popup-use-prefix-argument 'default
+        magit-wip-after-apply-mode nil
+        magit-wip-after-save-mode nil
+        magit-wip-before-change-mode nil
+        ))
 
 (defun man--man-around (orig-fun &rest args)
   "Advises `man' to use bash as the shell."
@@ -1011,6 +1011,8 @@ display-buffer correctly."
 (use-package man
   :config
   (advice-add 'man :around #'man--man-around))
+
+(use-package markdown-mode)
 
 (use-package maxframe
   :init
@@ -1027,6 +1029,8 @@ display-buffer correctly."
         ("<M-right>" . mediawiki-simple-outline-demote)
         ("<M-up>"    . outline-move-subtree-up)
         ("<M-down>"  . outline-move-subtree-down)))
+
+(use-package merlin) ; An assistant for OCaml.
 
 (use-package mmix-mode
   :ensure nil
@@ -1061,12 +1065,6 @@ display-buffer correctly."
   :config
   (require 'moccur-edit))
 
-(use-package narrow-indirect
-  :bind
-  (:map
-   ctl-x-4-map
-   ("nn" . ni-narrow-to-region-indirect-other-window)))
-
 (use-package neotree
   :bind (("C-c f t" . neotree-toggle))
   :config (setq neo-window-width 32
@@ -1088,6 +1086,8 @@ display-buffer correctly."
   (:map
    nxml-mode-map
    ("<f9>" . nexus-insert-gav-for-keyword)))
+
+(use-package ocp-indent) ; Automatic indentation for OCaml
 
 ;;; ORG MODE
 
@@ -1165,38 +1165,10 @@ according to `headline-is-for-jira'."
 
 (defun my-org-mode-hook-fn ()
   (require 'ob-restclient)
-  (setq fill-column 90))
+  (setq fill-column 90)
+  )
 
-;; Try not to download/use both org and org-plus-contrib, which both
-;; contain the core org package.
-(use-package org
-  :ensure org-plus-contrib
-  :mode "\\.org'"
-
-  :init
-  (setq org-clock-persist t
-        org-clock-in-resume t
-        org-list-allow-alphabetical t
-        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
-                            ([(control shift left)]  . [(meta shift -)]))
-        org-replace-disputed-keys t)
-  (defalias 'ob-temp-file 'org-babel-temp-file)
-
-  :bind
-  (:map org-mode-map
-        ("<C-tab>"        . org-cycle-t)
-        ("M-?"            . org-complete)
-        ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
-        ("<C-S-down>"     . outline-next-visible-heading)
-        ("<C-S-up>"       . outline-previous-visible-heading)
-        ("C-c ?"          . outline-mark-subtree)
-        ("<C-S-left>"     . nil)
-        ("<C-S-right>"    . nil)
-        ("C-c j k"        . ace-link-org)
-        ("C-c C-x RET f"  . org-mobile-pull)
-        ("C-c C-x RET g"  . nil))
-
-  :config
+(defun my-org-load-hook-fn ()
   (org-clock-persistence-insinuate)
 
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
@@ -1262,17 +1234,53 @@ according to `headline-is-for-jira'."
         org-html-postamble               'auto
         org-html-validation-link         nil)
 
+  (require 'ox-md)
+
   (require 'ox-publish)
   (setq org-publish-use-timestamps-flag t)
 
   ;; org-ref can be slow to load.  The messages about creating
   ;; links are from org-ref-link-set-parameters.
   (setq org-ref-show-broken-links nil) ; reported as a speedup
-  (require 'org-ref)
-  (require 'org-wp-link)
+  ;; (require 'org-ref)
+  ;; (require 'org-wp-link)
 
-  (require 'pyvenv)
-  (require 'texmathp))
+  ;; (require 'pyvenv)
+  (require 'texmathp)
+  )
+
+;; Try not to download/use both org and org-plus-contrib, which both
+;; contain the core org package.
+(use-package org
+  :ensure org-plus-contrib
+  :mode "\\.org'"
+
+  :init
+  (setq org-clock-persist t
+        org-clock-in-resume t
+        org-list-allow-alphabetical t
+        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
+                            ([(control shift left)]  . [(meta shift -)]))
+        org-replace-disputed-keys t)
+  (defalias 'ob-temp-file 'org-babel-temp-file)
+  (add-hook 'org-load-hook 'my-org-load-hook-fn)
+
+  :bind
+  (:map org-mode-map
+        ("<C-tab>"        . org-cycle-t)
+        ("M-?"            . org-complete)
+        ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
+        ("<C-S-down>"     . outline-next-visible-heading)
+        ("<C-S-up>"       . outline-previous-visible-heading)
+        ("C-c ?"          . outline-mark-subtree)
+        ("<C-S-left>"     . nil)
+        ("<C-S-right>"    . nil)
+        ("C-c j k"        . ace-link-org)
+        ("C-c C-x RET f"  . org-mobile-pull)
+        ("C-c C-x RET g"  . nil))
+
+  :config
+  )
 
 (use-package org-jira)
 
@@ -1299,6 +1307,10 @@ according to `headline-is-for-jira'."
 
 (use-package ox-jira)
 
+(use-package ox-mediawiki)
+
+(use-package ox-rst)
+
 (use-package p4)
 
 (use-package paren
@@ -1310,10 +1322,6 @@ according to `headline-is-for-jira'."
   :interpreter "perl")
 
 (use-package peep-dired)
-
-(use-package point-undo
-  :init
-  (require 'point-undo))
 
 (use-package projectile)
 
@@ -1363,8 +1371,6 @@ according to `headline-is-for-jira'."
   ;; a hook that lets us set up jedi correctly.
   (add-hook 'post-command-hook 'activate-venv-if-python))
 
-(use-package quack)
-
 (use-package rainbow-delimiters)
 
 (use-package ranger)
@@ -1410,6 +1416,8 @@ according to `headline-is-for-jira'."
 
 (use-package shut-up)
 
+(use-package sicp)
+
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")
   (auto-raise-mode 1))
@@ -1433,12 +1441,20 @@ according to `headline-is-for-jira'."
   :config
   (setq tramp-default-method "plink"))
 
+(use-package tuareg ; OCaml mode.
+  :config
+  (add-hook 'tuareg-mode-hook 'set-ocaml-error-regexp)
+  )
+
 (use-package undo-tree
   :bind (:map undo-tree-visualizer-mode-map
               ("RET" . undo-tree-visualizer-quit))
   :init
   (global-undo-tree-mode)
   :diminish undo-tree-mode)
+
+(use-package utop  ;  Universal toplevel for OCaml
+)
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))
@@ -1505,6 +1521,27 @@ according to `headline-is-for-jira'."
 
 (use-package ztree)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(progn
+  (helm-mode 1)
+  ;; helm workarounds below  - define keys after it's fully active as
+  ;; otherwise we get an error that helm-command-map is void.
+
+  ;; defines helm-command-map, apparently /not/ defined by enabling
+  ;; helm-mode
+  (require 'helm-config)
+  (define-key helm-command-map (kbd "<tab>") 'helm-lisp-completion-at-point)
+  (define-key helm-command-map (kbd "M-:") 'helm-eval-expression-with-eldoc)
+  (define-key helm-command-map (kbd "a") 'helm-apropos)
+  (define-key helm-command-map (kbd "m") 'helm-multi-swoop)
+  (define-key helm-command-map (kbd "o") 'helm-occur)
+  (define-key helm-command-map (kbd "s") 'helm-swoop)
+  (define-key helm-read-file-map (kbd "C-h m") 'describe-mode)
+  (define-key helm-read-file-map (kbd "C-<backspace>") 'backward-kill-word)
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package desktop
   :init
   (let* ((computername (getenv "COMPUTERNAME"))
@@ -1531,6 +1568,8 @@ according to `headline-is-for-jira'."
    ;; set to avoid writing back to ~
    custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
   (load custom-file))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (use-package server
   :init
@@ -1541,7 +1580,3 @@ according to `headline-is-for-jira'."
          kill-buffer-query-functions)))
 
 (message "Finished emacs.el")
-
-;; Local Variables:
-;; flycheck-disabled-checkers: (emacs-lisp emacs-lisp-checkdoc)
-;; End:
