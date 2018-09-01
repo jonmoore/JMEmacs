@@ -993,12 +993,14 @@ display-buffer correctly."
   :bind ("C-x g" . magit-status)
   :config
 
-  (setq magit-log-show-refname-after-summary t
+  (setq magit-auto-revert-mode nil
+        magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
+        magit-log-margin '(t "%Y-%m-%d %H:%M" magit-log-margin-width t 18)
+        magit-log-show-refname-after-summary t
+        magit-popup-use-prefix-argument 'default
         magit-wip-after-apply-mode nil
         magit-wip-after-save-mode nil
         magit-wip-before-change-mode nil
-        magit-popup-use-prefix-argument 'default
-        magit-log-margin '(t "%Y-%m-%d %H:%M" magit-log-margin-width t 18)
         ))
 
 (defun man--man-around (orig-fun &rest args)
