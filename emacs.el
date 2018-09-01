@@ -529,8 +529,6 @@ See `doxymacs-parm-tempo-element'."
   ;; elpy recommended packages
   ;; echo n | enpkg jedi flake8 nose pylint yapf
   ;; pip install importmagic autopep8 flake8-pep257
-  ;; osx enpkg gnureadline (for ob-ipython)
-  ;; win enpkg pyreadline
 
   :bind
   (:map
@@ -557,7 +555,10 @@ See `doxymacs-parm-tempo-element'."
   ;; Also it uses https which probably won't work behind a proxy until
   ;; emacs 26
   ;; I'll assume we don't need _latest
-  (setq elpy-config--get-config my-elpy-config--get-config))
+  ;; TODO: check this
+  (setq elpy-config--get-config my-elpy-config--get-config)
+  :hook ((python-mode . elpy-mode))
+  )
 
 (use-package expand-region
   :bind
