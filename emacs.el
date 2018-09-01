@@ -1416,6 +1416,8 @@ according to `headline-is-for-jira'."
 
 (use-package shut-up)
 
+(use-package sicp)
+
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")
   (auto-raise-mode 1))
