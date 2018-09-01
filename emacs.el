@@ -1537,31 +1537,9 @@ according to `headline-is-for-jira'."
   )
 
 ;; Some key bindings
-
 (defun prev-match () (interactive nil) (next-match -1))
 (global-set-key [f3] 'next-match)
 (global-set-key [(shift f3)] 'prev-match)
-;; (global-set-key [backtab] 'auto-complete)
-
-;; -- Tweaks for OS X -------------------------------------
-;; Tweak for problem on OS X where Emacs.app doesn't run the right
-;; init scripts when invoking a sub-shell
-(defun set-exec-path-from-shell-PATH ()
-  "Set up Emacs' `exec-path' and PATH environment variable to
-  match that used by the user's shell.
-
-This is particularly useful under Mac OSX, where GUI apps are not
-started from a shell."
-  (interactive)
-  (let ((path-from-shell
-         (replace-regexp-in-string
-          "[ \t\n]*$" ""
-          (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))
-         ))
-    (setenv "PATH" path-from-shell)
-    (setq exec-path (split-string path-from-shell path-separator))))
-
-(set-exec-path-from-shell-PATH)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package desktop
