@@ -443,6 +443,11 @@
   :config
   (add-to-list 'company-backends 'company-ghc))
 
+(use-package company-lsp
+  :disabled t
+  :config
+  (push 'company-lsp company-backends))
+
 (use-package company-quickhelp
   :init
   (company-quickhelp-mode t))
@@ -524,6 +529,12 @@ See `doxymacs-parm-tempo-element'."
         ediff-diff-options "-w"))
 
 (use-package ein)
+
+(use-package eglot
+  :config
+  (add-to-list 'eglot-server-programs
+               `(python-mode
+                 . ("pyls" "-v" "--tcp" "--host" "localhost" "--port" "2087"))))
 
 (use-package elpy
   ;; elpy recommended packages
@@ -978,7 +989,29 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
+(defun config-lsp-mode ()
+  (require 'lsp-imenu)
+  (require 'projectile)
+  (lsp-define-stdio-client lsp-python "python"
+                           #'projectile-project-root
+                           '("pyls"))
+  ;; disabled as lsp-python-enable crashes Emacs immediately on Windows
+  ;; (add-hook 'python-mode-hook
+  ;;           (lambda ()
+  ;;             (lsp-python-enable)))
+  ;; (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
+  )
+
+(use-package lsp-mode
+  :config
+  (config-lsp-mode))
+
 (use-package lsp-ocaml) ; OCaml support for lsp-mode
+
+(use-package lsp-ui
+  :config
+  (setq lsp-ui-sideline-ignore-duplicate t)
+   :hook ((lsp-mode . lsp-ui-mode)))
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
