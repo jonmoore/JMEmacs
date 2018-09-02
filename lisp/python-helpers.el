@@ -160,6 +160,7 @@ environment for it as defined by `venv-for'"
   ;; cases there is no useful work to do.
   (unless (or (not buffer-file-name)
               (and (bound-and-true-p pyvenv-activate)
+                   (bound-and-true-p pyvenv-virtual-env)
                    (string-equal
                     ;; test with file-name-as-directory because
                     ;; pyvenv-activate ends up without a trailing
@@ -188,12 +189,15 @@ on shared drives.")
 
 ;;;###autoload
 (defun activate-venv-if-python ()
-  "Activate a Python venv if appropriate."
+  "Activate a Python venv if appropriate.  Also sets
+`python-shell-interpreter' and `python-shell-interpreter-args' to
+use IPython if that is found."
   (when (and (memq major-mode activate-venv-modes)
              (not (bound-and-true-p activate-venv-disabled)))
     (activate-venv-if-visiting-file)
     (project-python-sync)
-    (when pyvenv-virtual-env
+    (when (and pyvenv-virtual-env
+               (executable-find "ipython"))
       (setq python-shell-interpreter "ipython"
             python-shell-interpreter-args "-i --simple-prompt"))))
 
@@ -247,9 +251,7 @@ based on this and `python-shell-buffer-name', otherwise call
   "Initialisation for `inferior-python-mode' copied from
 `elpy-module-company'"
 
-  ;; We want immediate completions from company.
-  (set (make-local-variable 'company-idle-delay) 0)
-  ;; And annotations should be right-aligned.
+  ;; Annotations should be right-aligned.
   (set (make-local-variable 'company-tooltip-align-annotations) t)
   ;; Also, dabbrev in comments and strings is nice.
   (set (make-local-variable 'company-dabbrev-code-everywhere) t)
