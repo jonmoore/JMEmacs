@@ -568,6 +568,8 @@ See `doxymacs-parm-tempo-element'."
   ;; I'll assume we don't need _latest
   ;; TODO: check this
   (setq elpy-config--get-config my-elpy-config--get-config)
+  (when system-win32-p
+    (setq elpy-rpc-python-command "pythonw"))
   :hook ((python-mode . elpy-mode))
   )
 
