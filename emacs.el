@@ -1356,12 +1356,6 @@ according to `headline-is-for-jira'."
 
 (use-package peep-dired)
 
-(use-package projectile)
-
-(use-package pycoverage
-  ;; Not needed but a reminder of where to get the Python from
-  )
-
 (use-package pretty-column
   :ensure nil
   :init
@@ -1385,6 +1379,10 @@ according to `headline-is-for-jira'."
         ps-n-up-printing        1
         ps-number-of-columns    1
         ps-print-color-p       t))
+
+(use-package pycoverage
+  ;; Not needed but a reminder of where to get the Python from
+  )
 
 (defun my-ignore-errors (orig-fun &rest args)
   "Ignore errors due to calling ORIG-FUN."
