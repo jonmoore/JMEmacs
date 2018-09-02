@@ -11,7 +11,6 @@
 ;;  ...%PATH%
 ;; PROMPT=(c1) ... old prompt
 ;;
-;;
 ;; Suggestion
 ;;
 ;; https://www.reddit.com/r/emacs/comments/680qv1/do_you_have_emacs_conda_and_conda_environments/
@@ -19,9 +18,9 @@
 ;; environments. For me, this is: (setenv "WORKON_HOME"
 ;; "c:/Users/xxxxx/AppData/Local/Continuum/Anaconda3/envs")
 ;;
-;;
 
 (require 'pyvenv)
+(require 'cl-seq)
 
 (defun file-attribute-name (file-attribute-list)
   "Return the file name from a file attribute list, as from
@@ -42,18 +41,19 @@ directories . and ... FULL is passed to
   ;; file-directory-p
   (mapcar
    'file-attribute-name
-   (remove-if-not
+   (cl-remove-if-not
     'file-attribute-directory
     (directory-files-and-attributes dir full directory-files-no-dot-files-regexp))))
 
 (defun path-contains-venv (filepath)
   "Return if FILEPATH contains a python virtual environment"
-  (or (file-exists-p (format "%s/bin/activate" filepath))
+  (or (file-exists-p (format "%s/LICENSE_PYTHON.TXT" filepath)) ;; for conda
+      (file-exists-p (format "%s/bin/activate" filepath))
       (file-exists-p (format "%s/Scripts/activate.bat" filepath))))
 
 (defun venvs-from-candidates (candidate-paths)
   ""
-  (remove-if-not 'path-contains-venv candidate-paths))
+  (cl-remove-if-not 'path-contains-venv candidate-paths))
 
 (defun direct-child-venvs (dir)
   "Return a list of children of DIR that are python virtual
