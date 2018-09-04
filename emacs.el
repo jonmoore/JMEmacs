@@ -161,10 +161,9 @@
 
 (bind-keys ("C-c a"        . org-agenda)
            ("C-c b"        . browse-url-at-point)
-           ("C-c l"        . org-store-link)
            ("C-c m"        . move-file-and-buffer)
            ("C-c r"        . rename-file-and-buffer)
-           ;; ("C-x C-b"      . (lambda () (interactive) (ibuffer nil "Ibuffer")))
+
            ("C-x C-o"      . delete-blank-lines-around-point-or-in-region)
            ("C-x LFD"      . dired-jump)
 
@@ -255,8 +254,7 @@
 
 (use-package ace-window                 ; Fast window switching
   :bind
-  (;; ("C-x o"   . ace-window)
-   ("C-c j i" . ace-window)))
+  (("C-c j i" . ace-window)))
 
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
   :init
@@ -534,7 +532,7 @@ See `doxymacs-parm-tempo-element'."
   :config
   (add-to-list 'eglot-server-programs
                `(python-mode
-                 . ("pyls" "-v" "--tcp" "--host" "localhost" "--port" "2087"))))
+                 . ("pyls" "--tcp" "--host" "localhost" "--port" "2087"))))
 
 (use-package elpy
   ;; elpy recommended packages
@@ -548,11 +546,9 @@ See `doxymacs-parm-tempo-element'."
    ("C-c C-p" . nil)
    :map python-mode-map
    ("<tab> "    . yas-or-company-or-indent-for-tab)
-   ("C-c C-u"   . pyvenv-use-venv)
-   ("C-c C-y n" . yas-new-snippet)
-   ("C-c C-y s" . yas-insert-snippet)
-   ("C-c C-y v" . yas-visit-snippet-file)
-   ("C-c x"     . jedi-direx:pop-to-buffer)
+   ("C-c u"   . pyvenv-use-venv)
+   ("C-c y n" . yas-new-snippet)
+   ("C-c y s" . yas-insert-snippet)
    ("<M-S-left>" . python-indent-shift-left)
    ("<M-S-right>" . python-indent-shift-right)
    :map inferior-python-mode-map
@@ -570,12 +566,13 @@ See `doxymacs-parm-tempo-element'."
   (setq elpy-config--get-config my-elpy-config--get-config)
   (when system-win32-p
     (setq elpy-rpc-python-command "pythonw"))
-  :hook ((python-mode . elpy-mode))
+  ;; TODO re-enable
+  ;; :hook ((python-mode . elpy-mode))
   )
 
 (use-package expand-region
   :bind
-  (("C-c v" . er/expand-region)))
+  (("C-c x r" . er/expand-region)))
 
 (use-package find-func
   :bind
@@ -667,9 +664,6 @@ no docs are found."
   (setq ghc-debug t))
 
 (use-package goto-addr
-  :bind
-  (("C-c t a" . goto-address-mode)
-   ("C-c t A" . goto-address-prog-mode))
   :init
   (add-hook 'prog-mode-hook #'goto-address-prog-mode)
   (add-hook 'text-mode-hook #'goto-address-mode))
@@ -890,9 +884,7 @@ display-buffer correctly."
 
 (use-package json-mode)
 
-(use-package json-reformat
-  :bind
-  (("C-c x j" . json-reformat-region)))
+(use-package json-reformat)
 
 (use-package js2-mode
   :mode "\\.js\\'")
@@ -992,28 +984,40 @@ display-buffer correctly."
   (setq-default lorem-ipsum-list-bullet "- "))
 
 (defun config-lsp-mode ()
-  (require 'lsp-imenu)
+  (interactive)
+  (require 'lsp-mode)
   (require 'projectile)
-  (lsp-define-stdio-client lsp-python "python"
-                           #'projectile-project-root
-                           '("pyls"))
-  ;; disabled as lsp-python-enable crashes Emacs immediately on Windows
-  ;; (add-hook 'python-mode-hook
-  ;;           (lambda ()
-  ;;             (lsp-python-enable)))
+  ;; defines function lsp-python-tcp-enable
+  (lsp-define-tcp-client lsp-python-tcp "python"
+                         #'projectile-project-root
+                         '("pyls" --"tcp""--host" "localhost" "--port" "2087")
+                         "localhost" 2087)
+  (message "Version 0.21.0 of python-language-server has a bug that kills Emacs immediately on Windows")
+  ;; Due to use of os.kill in https://github.com/palantir/python-language-server/commit/4fc34c
+  
   ;; (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
+  ;; (require 'lsp-imenu)
   )
 
 (use-package lsp-mode
   :config
-  (config-lsp-mode))
+  (config-lsp-mode)
+  ;; (add-hook 'python-mode-hook
+  ;;           (lambda ()
+  ;;             (lsp-python-stdio-enable)))
+  )
 
 (use-package lsp-ocaml) ; OCaml support for lsp-mode
 
-(use-package lsp-ui
-  :config
-  (setq lsp-ui-sideline-ignore-duplicate t)
-   :hook ((lsp-mode . lsp-ui-mode)))
+;; (use-package lsp-python
+;;   :init
+;;   (add-hook 'python-mode-hook #'lsp-python-stdio-enable)
+;;   )
+
+;; (use-package lsp-ui
+;;   :config
+;;   (setq lsp-ui-sideline-ignore-duplicate t)
+;;    :hook ((lsp-mode . lsp-ui-mode)))
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
@@ -1026,10 +1030,10 @@ display-buffer correctly."
 
 (use-package magit
   :bind ("C-x g" . magit-status)
+  :init
+  (setq magit-auto-revert-mode nil)
   :config
-
-  (setq magit-auto-revert-mode nil
-        magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
+  (setq magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
         magit-log-margin '(t "%Y-%m-%d %H:%M" magit-log-margin-width t 18)
         magit-log-show-refname-after-summary t
         magit-popup-use-prefix-argument 'default
@@ -1402,7 +1406,9 @@ according to `headline-is-for-jira'."
   ;; The reason for post-command-hook instead of when opening a file is
   ;; that some of the variables set are global.  May still want to have
   ;; a hook that lets us set up jedi correctly.
-  (add-hook 'post-command-hook 'activate-venv-if-python))
+  ;; TODO: re-enable when we get conda envs running
+  ;;(add-hook 'post-command-hook 'activate-venv-if-python)
+  )
 
 (use-package rainbow-delimiters)
 
