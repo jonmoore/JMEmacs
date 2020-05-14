@@ -442,9 +442,9 @@
   (add-to-list 'company-backends 'company-ghc))
 
 (use-package company-lsp
-  :disabled t
   :config
-  (push 'company-lsp company-backends))
+  ;; (push 'company-lsp company-backends)
+  )
 
 (use-package company-quickhelp
   :init
@@ -990,7 +990,7 @@ display-buffer correctly."
   ;; defines function lsp-python-tcp-enable
   (lsp-define-tcp-client lsp-python-tcp "python"
                          #'projectile-project-root
-                         '("pyls" --"tcp""--host" "localhost" "--port" "2087")
+                         '("pyls" "--tcp""--host" "localhost" "--port" "2087")
                          "localhost" 2087)
   (message "Version 0.21.0 of python-language-server has a bug that kills Emacs immediately on Windows")
   ;; Due to use of os.kill in https://github.com/palantir/python-language-server/commit/4fc34c
@@ -1198,7 +1198,7 @@ according to `headline-is-for-jira'."
 
 (defun org-cycle-t ()
   (interactive)
-  (org-cycle t))
+  (org-cycle '(4)))
 
 (use-package ob-restclient)
 
@@ -1238,7 +1238,19 @@ according to `headline-is-for-jira'."
   (require 'org-agenda)
   (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
         org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
-        org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html")))
+        org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html"))
+                                     ("L" "timeline"
+                                      ((todo
+                                        "TODO"
+                                        ((org-agenda-overriding-header "=== TODO tasks without scheduled date ===")
+                                         (org-agenda-skip-function '(org-agenda-skip-entry-if 'scheduled))
+                                         (org-agenda-prefix-format '((todo . " %1c ")))))
+                                       (agenda
+                                        ""
+                                        ((org-agenda-overriding-header "=== Scheduled tasks ===")
+                                         (org-agenda-span 22)
+                                         (org-agenda-prefix-format '((agenda . " %1c %?-12t% s"))))))))
+        
         org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
                                             (todo user-defined-up)
                                             (tags category-keep priority-down)
