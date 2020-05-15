@@ -428,3 +428,12 @@ The value is actually the first element of list whose car equals key."
   (insert-file-contents filename)
   (goto-char (point-max)))
 
+
+;;;###autoload
+(defun org-sort-buffer ()
+  "Sort all entries in the current buffer, recursively."
+  (interactive)
+  (org-map-entries (lambda ()
+                     (condition-case x
+                         (org-sort-entries nil ?a)
+                       (user-error)))))
