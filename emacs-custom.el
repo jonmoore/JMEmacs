@@ -164,11 +164,11 @@
  '(projectile-globally-ignored-directories
    (quote
     (".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__" )))
+ '(projectile-globally-ignored-file-suffixes (quote (".pyc")))
  '(projectile-project-root-files (quote ("requirements.txt" "setup.py" "tox.ini")))
  '(projectile-project-root-files-functions
    (quote
     (projectile-root-local projectile-root-top-down projectile-root-bottom-up)))
- '(projectile-globally-ignored-file-suffixes (quote (".pyc")))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
  '(python-indent-guess-indent-offset nil)
