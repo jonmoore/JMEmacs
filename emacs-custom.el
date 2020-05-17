@@ -65,7 +65,7 @@
  '(helm-follow-mode-persistent nil)
  '(helm-org-rifle-re-end-part nil)
  '(helm-source-names-using-follow (quote ("Imenu" "Search Buffers" "Occur")))
- '(helm-source-projectile-project-actions
+ '(helm-source-projectile-projects-actions
    (quote
     (("Switch to project" .
       #[257 "\301\302!)\207"
@@ -168,6 +168,7 @@
  '(projectile-project-root-files-functions
    (quote
     (projectile-root-local projectile-root-top-down projectile-root-bottom-up)))
+ '(projectile-globally-ignored-file-suffixes (quote (".pyc")))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
  '(python-indent-guess-indent-offset nil)
