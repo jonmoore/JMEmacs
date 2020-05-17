@@ -10,6 +10,7 @@
  '(Buffer-menu-mode-width 10)
  '(ac-candidate-limit 20)
  '(align-to-tab-stop nil)
+ '(archive-zip-extract (quote ("7z" "x" "-so")))
  '(auto-revert-interval 60)
  '(auto-save-timeout 120)
  '(bibtex-maintain-sorted-entries (quote entry-class))
@@ -55,6 +56,7 @@
  '(flycheck-idle-change-delay 5.0)
  '(flycheck-keymap-prefix "f")
  '(flycheck-pylintrc "pylintrc")
+ '(gc-cons-threshold 80000000)
  '(globalff-regexp-search t)
  '(graphviz-dot-dot-program "dotforme")
  '(haskell-process-use-presentation-mode t)
@@ -63,6 +65,18 @@
  '(helm-follow-mode-persistent nil)
  '(helm-org-rifle-re-end-part nil)
  '(helm-source-names-using-follow (quote ("Imenu" "Search Buffers" "Occur")))
+ '(helm-source-projectile-project-actions
+   (quote
+    (("Switch to project" .
+      #[257 "\301\302!)\207"
+            [projectile-completion-system helm projectile-switch-project-by-name]
+            3 "
+
+(fn PROJECT)"])
+     ("Open Dired in project's directory `C-d'" . dired)
+     ("Open project root in vc-dir or magit `M-g'" . helm-projectile-vc)
+     ("Grep in projects `C-s'" . helm-projectile-grep)
+     ("Remove project(s) from project list `M-D'" . helm-projectile-remove-known-project))))
  '(hide-ifdef-lines t)
  '(history-delete-duplicates t)
  '(history-length 100)
@@ -76,6 +90,7 @@
  '(jit-lock-stealth-time 1)
  '(js-auto-indent-flag nil)
  '(kill-whole-line t)
+ '(line-move-visual nil)
  '(line-number-display-limit-width 400)
  '(locate-command "locate_windows")
  '(ls-lisp-dirs-first t)
@@ -88,6 +103,7 @@
    (quote
     (read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt)))
  '(next-line-add-newlines nil)
+ '(nxml-child-indent 4)
  '(org-agenda-files (quote ("~/org")))
  '(org-agenda-start-with-clockreport-mode nil)
  '(org-agenda-todo-ignore-scheduled 5)
@@ -114,6 +130,7 @@
  '(org-enforce-todo-checkbox-dependencies t)
  '(org-export-backends (quote (ascii html latex)))
  '(org-hierarchical-todo-statistics nil)
+ '(org-log-into-drawer t)
  '(org-modules (quote (org-bibtex org-toc)))
  '(org-ref-show-citation-on-enter nil)
  '(org-refile-targets (quote ((org-agenda-files :maxlevel . 5))))
@@ -139,10 +156,18 @@
  '(p4-auto-refresh nil)
  '(package-selected-packages
    (quote
-    (lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree)))
+    (vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree)))
  '(paradox-github-token t)
  '(pdf-view-use-unicode-ligther nil)
  '(projectile-globally-ignored-file-suffixes (quote ("pyc")))
+ '(projectile-completion-system (quote helm))
+ '(projectile-globally-ignored-directories
+   (quote
+    (".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__" )))
+ '(projectile-project-root-files (quote ("requirements.txt" "setup.py" "tox.ini")))
+ '(projectile-project-root-files-functions
+   (quote
+    (projectile-root-local projectile-root-top-down projectile-root-bottom-up)))
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
  '(python-indent-guess-indent-offset nil)

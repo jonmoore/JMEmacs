@@ -442,8 +442,8 @@
   (add-to-list 'company-backends 'company-ghc))
 
 (use-package company-lsp
+  :disabled t
   :config
-  ;; (push 'company-lsp company-backends)
   )
 
 (use-package company-quickhelp
