@@ -109,7 +109,14 @@
     (read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt)))
  '(next-line-add-newlines nil)
  '(nxml-child-indent 4)
+ '(org-agenda-dim-blocked-tasks (quote invisible))
  '(org-agenda-files (quote ("~/org")))
+ '(org-agenda-prefix-format
+   (quote
+    ((agenda . " %i %-15:c?-12t% s")
+     (todo . " %i %-15c")
+     (tags . " %i %-15c")
+     (search . " %i %-15c"))))
  '(org-agenda-start-with-clockreport-mode nil)
  '(org-agenda-todo-ignore-scheduled 5)
  '(org-capture-templates
@@ -127,7 +134,7 @@
 :  Subject: %:title
 
 %?
-  -----------" :jump-to-captured t :empty-lines-before 1))))
+  -----------" :jump-to-captured t :empty-lines-before 1))) t)
  '(org-checkbox-hierarchical-statistics nil)
  '(org-confirm-babel-evaluate nil)
  '(org-default-priority 68)
@@ -138,7 +145,9 @@
  '(org-log-into-drawer t)
  '(org-modules (quote (org-bibtex org-toc)))
  '(org-ref-show-citation-on-enter nil)
+ '(org-refile-allow-creating-parent-nodes (quote confirm))
  '(org-refile-targets (quote ((org-agenda-files :maxlevel . 5))))
+ '(org-refile-use-outline-path (quote file))
  '(org-reveal-hlevel 2)
  '(org-reveal-root "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/")
  '(org-src-lang-modes
@@ -161,7 +170,7 @@
  '(p4-auto-refresh nil)
  '(package-selected-packages
    (quote
-    (transpose-frame yasnippet-snippets helm-rg org-chef vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree)))
+    (csv-mode transpose-frame yasnippet-snippets helm-rg org-chef vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree)))
  '(paradox-github-token t)
  '(pdf-view-use-unicode-ligther nil)
  '(projectile-completion-system (quote helm))
@@ -176,6 +185,9 @@
  '(ps-font-size (quote (8 . 8.5)))
  '(ps-print-color-p (quote black-white))
  '(python-indent-guess-indent-offset nil)
+ '(ranger-hide-cursor nil)
+ '(ranger-modify-header nil)
+ '(ranger-show-literal t)
  '(read-buffer-completion-ignore-case t)
  '(reftex-bibpath-environment-variables (quote ("BIBINPUTS" "TEXBIB")))
  '(reftex-toc-split-windows-horizontally t)

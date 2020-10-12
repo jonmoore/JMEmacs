@@ -455,6 +455,9 @@
 (use-package css-mode
   :mode "\\.css\\'")
 
+(use-package csv-mode
+    :mode "\\.csv\\'")
+
 (use-package dired-subtree)
 
 (use-package dired
@@ -530,8 +533,6 @@ See `doxymacs-parm-tempo-element'."
 (use-package ein)
 
 (use-package eglot
-  ;; requires emacs 26.3 or later
-  :disabled t
   :config
   (add-to-list 'eglot-server-programs
                `(python-mode
@@ -730,7 +731,7 @@ no docs are found."
 
 (use-package helm-ag
   :config
-  (setq helm-ag-base-command "pt --nocolor --nogroup"))
+  (setq helm-ag-base-command "rg"))
 
 (use-package helm
   :bind
@@ -1450,7 +1451,11 @@ according to `headline-is-for-jira'."
   (advice-add 'ranger-open-file-other-window
               :after
               (lambda (&rest _)
-                (ranger-revert-appearance (current-buffer)))))
+                (ranger-revert-appearance (current-buffer))))
+  (advice-add 'ranger-revert-appearance
+              :after
+              (lambda (&rest _)
+                (kill-local-variable 'cursor-type))))
 
 (use-package realgud)
 
