@@ -63,6 +63,11 @@
  '(helm-ag-use-grep-ignore-list t)
  '(helm-ff-lynx-style-map nil nil nil "Disabling any helm keybinding is a sensible default")
  '(helm-follow-mode-persistent nil)
+ '(helm-grep-ag-command
+   "rg --color=always --colors 'match:fg:yellow' --colors 'match:style:nobold' --smart-case --no-heading --line-number %s %s %s")
+ '(helm-grep-ag-pipe-cmd-switches
+   (quote
+    ("--colors 'match:fg:yellow' --colors 'match:style:nobold'")))
  '(helm-org-rifle-re-end-part nil)
  '(helm-source-names-using-follow (quote ("Imenu" "Search Buffers" "Occur")))
  '(helm-source-projectile-projects-actions
@@ -156,14 +161,13 @@
  '(p4-auto-refresh nil)
  '(package-selected-packages
    (quote
-    (vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree)))
+    (transpose-frame yasnippet-snippets helm-rg org-chef vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree)))
  '(paradox-github-token t)
  '(pdf-view-use-unicode-ligther nil)
- '(projectile-globally-ignored-file-suffixes (quote ("pyc")))
  '(projectile-completion-system (quote helm))
  '(projectile-globally-ignored-directories
    (quote
-    (".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__" )))
+    (".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__")))
  '(projectile-globally-ignored-file-suffixes (quote (".pyc")))
  '(projectile-project-root-files (quote ("requirements.txt" "setup.py" "tox.ini")))
  '(projectile-project-root-files-functions

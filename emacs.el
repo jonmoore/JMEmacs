@@ -67,7 +67,7 @@
 (setq load-prefer-newer t)
 (setq package-enable-at-startup nil)
 (setq package-archives
-      '(("melpa" . "http://melpa.milkbox.net/packages/")
+      '(("melpa" . "http://melpa.org/packages/")
         ("gnu"   . "http://elpa.gnu.org/packages/")
         ("org" . "https://orgmode.org/elpa/")))
 (package-initialize)
@@ -474,6 +474,7 @@
   (require 'dired-subtree)
 
   (set-face-foreground 'dired-directory "yellow")
+
   (setq dired-omit-mode t
         dired-dnd-protocol-alist nil
         find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))
@@ -529,6 +530,8 @@ See `doxymacs-parm-tempo-element'."
 (use-package ein)
 
 (use-package eglot
+  ;; requires emacs 26.3 or later
+  :disabled t
   :config
   (add-to-list 'eglot-server-programs
                `(python-mode
@@ -732,7 +735,6 @@ no docs are found."
 (use-package helm
   :bind
   (("C-c h"          . helm-command-prefix)
-   ("C-h SPC"        . helm-all-mark-rings)
    ("C-x C-b"        . helm-buffers-list)
    ("C-x C-f"        . helm-find-files)
    ("C-x C-r"        . helm-recentf)
@@ -750,6 +752,8 @@ no docs are found."
 
   :config
   (global-unset-key (kbd "C-x c"))
+  ;; workaround for void definition for helm-call-interactively
+  (require 'helm-misc)
   ;; Disable helm completion in some modes
   (setq helm-mode-no-completion-in-region-in-modes
         '(inferior-python-mode)))
@@ -791,6 +795,8 @@ display-buffer correctly."
 ;;               ("R" . helm-org-rifle)))
 
 (use-package helm-projectile)
+
+(use-package helm-rg)
 
 (use-package helm-swoop)
 
@@ -983,31 +989,7 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
-(defun config-lsp-mode ()
-  (interactive)
-  (require 'lsp-mode)
-  (require 'projectile)
-  ;; defines function lsp-python-tcp-enable
-  (lsp-define-tcp-client lsp-python-tcp "python"
-                         #'projectile-project-root
-                         '("pyls" "--tcp""--host" "localhost" "--port" "2087")
-                         "localhost" 2087)
-  (message "Version 0.21.0 of python-language-server has a bug that kills Emacs immediately on Windows")
-  ;; Due to use of os.kill in https://github.com/palantir/python-language-server/commit/4fc34c
-  
-  ;; (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
-  ;; (require 'lsp-imenu)
-  )
-
-(use-package lsp-mode
-  :config
-  (config-lsp-mode)
-  ;; (add-hook 'python-mode-hook
-  ;;           (lambda ()
-  ;;             (lsp-python-stdio-enable)))
-  )
-
-(use-package lsp-ocaml) ; OCaml support for lsp-mode
+(use-package lsp-mode)
 
 ;; (use-package lsp-python
 ;;   :init
@@ -1250,7 +1232,7 @@ according to `headline-is-for-jira'."
                                         ((org-agenda-overriding-header "=== Scheduled tasks ===")
                                          (org-agenda-span 22)
                                          (org-agenda-prefix-format '((agenda . " %1c %?-12t% s"))))))))
-        
+
         org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
                                             (todo user-defined-up)
                                             (tags category-keep priority-down)
@@ -1304,6 +1286,7 @@ according to `headline-is-for-jira'."
 ;; contain the core org package.
 (use-package org
   :ensure org-plus-contrib
+  :ensure org-chef
   :mode "\\.org'"
 
   :init
@@ -1331,7 +1314,16 @@ according to `headline-is-for-jira'."
         ("C-c C-x RET g"  . nil))
 
   :config
+  (setq org-capture-templates
+      '(("c" "Cookbook" entry (file "~/org/cookbook.org")
+         "%(org-chef-get-recipe-from-url)"
+         :empty-lines 1)
+        ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
+         "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))
+  (require 'org-tempo)
   )
+
+(use-package org-chef)
 
 (use-package org-jira)
 
@@ -1424,7 +1416,41 @@ according to `headline-is-for-jira'."
 
 (use-package rainbow-delimiters)
 
-(use-package ranger)
+(defun jm-ranger-revert ()
+  "Revert all ranger settings"
+  (interactive)
+  (ranger-revert)
+  (remove-hook 'dired-mode-hook 'ranger-override-dired-fn)
+  (remove-hook 'window-configuration-change-hook 'ranger-window-check)
+  (mapcar 'ranger-revert-appearance ; workaround issue #171
+          (buffer-list)))
+
+(use-package ranger
+  ;; ranger has a number of issues that may affect standard operation
+  ;;
+  ;; 1) https://github.com/ralesi/ranger.el/issues/171, when ranger-show-literal
+  ;; is nil and using ranger to preview files that were previously open. This
+  ;; concerns configuring appearance, including header-line-format, enabling
+  ;; hl-line-mode, etc.  ranger-revert should remove most ranger global
+  ;; settings, but it's unclear if this works outside a ranger session as
+  ;; removing hooks is conditional. We could also set ranger-modify-header to
+  ;; nil, but this sacrifices tabs functionality.
+  ;;
+  ;; 2) Taking over window management, including adding ranger-window-check to
+  ;; window-configuration-change-hook, creating new frames to open buffers from
+  ;; ranger-still-dired, etc.  This can cause problems when not quitting ranger
+  ;; explicitly, and possibly in other cases too.
+  ;;
+  ;; 3) Aggresive takeover of key bindings, including C-h [??].  May be
+  ;; avoidable using ranger-emacs-mode-map.
+  :bind
+  (:map ranger-normal-mode-map
+        ("<C-h>" . nil))
+  :config
+  (advice-add 'ranger-open-file-other-window
+              :after
+              (lambda (&rest _)
+                (ranger-revert-appearance (current-buffer)))))
 
 (use-package realgud)
 
@@ -1491,6 +1517,8 @@ according to `headline-is-for-jira'."
   :if system-win32-p
   :config
   (setq tramp-default-method "plink"))
+
+(use-package transpose-frame)           ; Switch between horizontal and vertically split frames
 
 (use-package tuareg ; OCaml mode.
   :config
@@ -1566,6 +1594,8 @@ according to `headline-is-for-jira'."
   (yas-reload-all)
   :diminish yas-minor-mode)
 
+(use-package yasnippet-snippets)        ; Official snippets
+
 (use-package zop-to-char                ; Better zapping
   :bind (("M-Z" . zop-to-char)
          ("M-z" . zop-up-to-char)))
@@ -1574,7 +1604,57 @@ according to `headline-is-for-jira'."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun jm-reset-helm-bindings ()
+  "Reset the bindings for major functionality to use non-helm functions"
+  (global-set-key (kbd "C-x C-b" ) 'list-buffers)
+  (global-set-key (kbd "C-x C-f" ) 'find-file)
+  (global-set-key (kbd "C-x b" ) 'switch-to-buffer)
+  (global-set-key (kbd "M-x" ) 'execute-extended-command))
+
+(defun jm-helm-debug-init ()
+
+  ;; enables helm-log
+  (setq helm-debug t)
+
+  ;; to disable its takeover of many interaction elements, otherwise it will
+  ;; get in the way incessantly.
+  (helm-mode -1)
+
+  ;; prevent errors when using the minibuffer when helm is using the minibuffer
+  (setq enable-recursive-minibuffers t)
+
+  (jm-reset-helm-bindings)
+  )
+
 (progn
+  ;; helm notes
+
+  ;; Debugging helm in the regular Emacs way with helm enabled basically doesn't
+  ;; work.  For effective debugging, see "Debugging helm" in the online help.
+
+  ;; 1) call (jm-helm-debug-init)
+  ;;
+  ;; 2) call (helm-suspend-update t)
+  ;; https://emacs.stackexchange.com/questions/468/how-to-debug-helm. Typically
+  ;; bound as C-!
+  ;;
+  ;; 3) try to run the minimal code needed to show the issue
+  ;;
+  ;; BUT ....
+  ;;
+  ;; 4) calling helm-functions outside their regular contexts can create strange
+  ;; errors, e.g. ended up with default-directory set to nil which broke
+  ;; make-process (wrong argument type stringp), even though we don't pass
+  ;; default-directory.  It is mentioned in the docs of start-process though
+  ;;
+  ;; Notable issues
+  ;;
+  ;; breakage of helm-rg:
+  ;; https://github.com/emacs-helm/helm/issues/2320,
+  ;; https://github.com/cosmicexplorer/helm-rg/pull/25
+  ;;
+
+
   (helm-mode 1)
   ;; helm workarounds below  - define keys after it's fully active as
   ;; otherwise we get an error that helm-command-map is void.
