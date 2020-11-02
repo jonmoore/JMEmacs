@@ -106,7 +106,7 @@
  '(org-agenda-dim-blocked-tasks 'invisible)
  '(org-agenda-files '("~/org"))
  '(org-agenda-prefix-format
-   '((agenda . " %i %-15:c?-12t% s")
+   '((agenda . " %i %-18:c%-12,t%-13s")
      (todo . " %i %-15c")
      (tags . " %i %-15c")
      (search . " %i %-15c")))
@@ -160,7 +160,7 @@
  '(org-use-fast-tag-selection t)
  '(p4-auto-refresh nil)
  '(package-selected-packages
-   '(csv-mode transpose-frame yasnippet-snippets helm-rg org-chef vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree))
+   '(lsp-python-ms csv-mode transpose-frame yasnippet-snippets helm-rg org-chef vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree))
  '(paradox-github-token t)
  '(pdf-view-use-unicode-ligther nil)
  '(projectile-completion-system 'helm)
@@ -180,7 +180,8 @@
  '(reftex-bibpath-environment-variables '("BIBINPUTS" "TEXBIB"))
  '(reftex-toc-split-windows-horizontally t)
  '(safe-local-variable-values
-   '((org-odd-levels-only)
+   '((dired-omit-extensions ".html" ".org_archive")
+     (org-odd-levels-only)
      (TeX-command-extra-options . "-shell-escape")
      (checkdoc-minor-mode . 1)
      (flycheck-disabled-checkers emacs-lisp emacs-lisp-checkdoc)
