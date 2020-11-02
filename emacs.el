@@ -160,8 +160,8 @@
         ns-pop-up-frames nil))
 
 (when system-win32-p
-  (setq win32-pass-rwindow-to-system nil
-        win32-rwindow-modifier 'super))
+  (setq w32-pass-rwindow-to-system nil
+        w32-rwindow-modifier 'super))
 
 (bind-keys ("C-c a"        . org-agenda)
            ("C-c b"        . browse-url-at-point)
@@ -918,14 +918,14 @@ display-buffer correctly."
 
 (setq lsp-keymap-prefix "s-s")
 (use-package lsp-mode
-  :hook (lsp-mode . lsp-enable-which-key-integration)
+  :hook ((lsp-mode . lsp-enable-which-key-integration))
   :commands lsp
   )
 
 (use-package lsp-ui
   :config
   (setq lsp-ui-sideline-ignore-duplicate t)
-   :hook ((lsp-mode . lsp-ui-mode)))
+  :hook ((lsp-mode . lsp-ui-mode)))
 
 (use-package lsp-python-ms
   :ensure t
