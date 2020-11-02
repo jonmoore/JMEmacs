@@ -10,16 +10,16 @@
  '(Buffer-menu-mode-width 10)
  '(ac-candidate-limit 20)
  '(align-to-tab-stop nil)
- '(archive-zip-extract (quote ("7z" "x" "-so")))
+ '(archive-zip-extract '("7z" "x" "-so"))
  '(auto-revert-interval 60)
  '(auto-save-timeout 120)
- '(bibtex-maintain-sorted-entries (quote entry-class))
+ '(bibtex-maintain-sorted-entries 'entry-class)
  '(browse-kill-ring-highlight-current-entry t)
  '(browse-kill-ring-highlight-inserted-item t)
  '(case-fold-search t)
  '(comment-column 50)
  '(company-show-numbers t)
- '(completion-ignored-extensions (quote (".o" "~" ".obj" ".elc" ".pyc")))
+ '(completion-ignored-extensions '(".o" "~" ".obj" ".elc" ".pyc"))
  '(cperl-indent-level 4)
  '(cperl-invalid-face nil)
  '(desktop-lazy-verbose nil)
@@ -27,31 +27,28 @@
  '(directory-abbrev-alist nil)
  '(dired-omit-files "^\\.?#\\|^\\.")
  '(display-buffer-reuse-frames t)
- '(doxymacs-blank-multiline-comment-template (quote ("/**" > n "  " p > n "  " > n "*/" > n)))
+ '(doxymacs-blank-multiline-comment-template '("/**" > n "  " p > n "  " > n "*/" > n))
  '(doxymacs-doxygen-style "JavaDoc" t)
  '(elpy-company-hide-modeline nil)
  '(elpy-modules
-   (quote
-    (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-sane-defaults)))
+   '(elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-sane-defaults))
  '(elpy-project-ignored-directories
-   (quote
-    (".git" ".tox" "build" "dist" ".cask" "cover" "docs" ".projectile" "_tcp" "*_venv")))
+   '(".git" ".tox" "build" "dist" ".cask" "cover" "docs" ".projectile" "_tcp" "*_venv"))
  '(elpy-rpc-error-timeout 300 nil nil "This is a workround for https://github.com/jorgenschaefer/elpy/issues/597, due to a bug in jedi. Alternatively could try an earlier version of jedi.")
  '(elpy-rpc-timeout 5)
- '(elpy-test-runner (quote elpy-test-nose-runner))
+ '(elpy-test-runner 'elpy-test-nose-runner)
  '(enable-local-eval t)
  '(ff-quiet-mode t)
- '(find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
- '(flycheck-check-syntax-automatically (quote (save idle-change mode-enabled)))
- '(flycheck-disabled-checkers (quote (python-flake8)))
+ '(find-ls-option '("-exec ls -ld {} ';'" . "-ld"))
+ '(flycheck-check-syntax-automatically '(save idle-change mode-enabled))
+ '(flycheck-disabled-checkers '(python-flake8))
  '(flycheck-flake8-error-level-alist
-   (quote
-    (("^E501$" . info)
+   '(("^E501$" . info)
      ("^E9.*$" . error)
      ("^F82.*$" . error)
      ("^F83.*$" . error)
      ("^D.*$" . info)
-     ("^N.*$" . info))))
+     ("^N.*$" . info)))
  '(flycheck-flake8rc "setup.cfg")
  '(flycheck-idle-change-delay 5.0)
  '(flycheck-keymap-prefix "f")
@@ -66,13 +63,11 @@
  '(helm-grep-ag-command
    "rg --color=always --colors 'match:fg:yellow' --colors 'match:style:nobold' --smart-case --no-heading --line-number %s %s %s")
  '(helm-grep-ag-pipe-cmd-switches
-   (quote
-    ("--colors 'match:fg:yellow' --colors 'match:style:nobold'")))
+   '("--colors 'match:fg:yellow' --colors 'match:style:nobold'"))
  '(helm-org-rifle-re-end-part nil)
- '(helm-source-names-using-follow (quote ("Imenu" "Search Buffers" "Occur")))
+ '(helm-source-names-using-follow '("Imenu" "Search Buffers" "Occur"))
  '(helm-source-projectile-projects-actions
-   (quote
-    (("Switch to project" .
+   '(("Switch to project" .
       #[257 "\301\302!)\207"
             [projectile-completion-system helm projectile-switch-project-by-name]
             3 "
@@ -81,7 +76,7 @@
      ("Open Dired in project's directory `C-d'" . dired)
      ("Open project root in vc-dir or magit `M-g'" . helm-projectile-vc)
      ("Grep in projects `C-s'" . helm-projectile-grep)
-     ("Remove project(s) from project list `M-D'" . helm-projectile-remove-known-project))))
+     ("Remove project(s) from project list `M-D'" . helm-projectile-remove-known-project)))
  '(hide-ifdef-lines t)
  '(history-delete-duplicates t)
  '(history-length 100)
@@ -99,29 +94,26 @@
  '(line-number-display-limit-width 400)
  '(locate-command "locate_windows")
  '(ls-lisp-dirs-first t)
- '(ls-lisp-emulation (quote MS-Windows))
+ '(ls-lisp-emulation 'MS-Windows)
  '(ls-lisp-ignore-case t)
  '(ls-lisp-verbosity nil)
  '(mac-emulate-three-button-mouse t t)
  '(mediawiki-draft-data-file "~/draft.txt")
  '(minibuffer-prompt-properties
-   (quote
-    (read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt)))
+   '(read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt))
  '(next-line-add-newlines nil)
  '(nxml-child-indent 4)
- '(org-agenda-dim-blocked-tasks (quote invisible))
- '(org-agenda-files (quote ("~/org")))
+ '(org-agenda-dim-blocked-tasks 'invisible)
+ '(org-agenda-files '("~/org"))
  '(org-agenda-prefix-format
-   (quote
-    ((agenda . " %i %-15:c?-12t% s")
+   '((agenda . " %i %-15:c?-12t% s")
      (todo . " %i %-15c")
      (tags . " %i %-15c")
-     (search . " %i %-15c"))))
+     (search . " %i %-15c")))
  '(org-agenda-start-with-clockreport-mode nil)
  '(org-agenda-todo-ignore-scheduled 5)
  '(org-capture-templates
-   (quote
-    (("t" "Task" entry
+   '(("t" "Task" entry
       (file+headline "" "Tasks")
       "* TODO %?
   %u
@@ -134,25 +126,24 @@
 :  Subject: %:title
 
 %?
-  -----------" :jump-to-captured t :empty-lines-before 1))) t)
+  -----------" :jump-to-captured t :empty-lines-before 1)) t)
  '(org-checkbox-hierarchical-statistics nil)
  '(org-confirm-babel-evaluate nil)
  '(org-default-priority 68)
- '(org-drawers (quote ("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")))
+ '(org-drawers '("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL"))
  '(org-enforce-todo-checkbox-dependencies t)
- '(org-export-backends (quote (ascii html latex)))
+ '(org-export-backends '(ascii html latex))
  '(org-hierarchical-todo-statistics nil)
  '(org-log-into-drawer t)
- '(org-modules (quote (org-bibtex org-toc)))
+ '(org-modules '(org-bibtex org-toc))
  '(org-ref-show-citation-on-enter nil)
- '(org-refile-allow-creating-parent-nodes (quote confirm))
- '(org-refile-targets (quote ((org-agenda-files :maxlevel . 5))))
- '(org-refile-use-outline-path (quote file))
+ '(org-refile-allow-creating-parent-nodes 'confirm)
+ '(org-refile-targets '((org-agenda-files :maxlevel . 5)))
+ '(org-refile-use-outline-path 'file)
  '(org-reveal-hlevel 2)
  '(org-reveal-root "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/")
  '(org-src-lang-modes
-   (quote
-    (("ipython" . python)
+   '(("ipython" . python)
      ("ocaml" . tuareg)
      ("elisp" . emacs-lisp)
      ("ditaa" . artist)
@@ -164,55 +155,50 @@
      ("C++" . c++)
      ("screen" . shell-script)
      ("shell" . sh)
-     ("bash" . sh))))
- '(org-src-window-setup (quote current-window))
+     ("bash" . sh)))
+ '(org-src-window-setup 'current-window)
  '(org-use-fast-tag-selection t)
  '(p4-auto-refresh nil)
  '(package-selected-packages
-   (quote
-    (csv-mode transpose-frame yasnippet-snippets helm-rg org-chef vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree)))
+   '(csv-mode transpose-frame yasnippet-snippets helm-rg org-chef vlf request helm-jira lsp-python eglot company-lsp lsp-ui sicp ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol avy-jump benchmark-init browse-kill-ring bug-hunter caml cdlatex color-moccur color-theme-modern company-auctex company-ghc company-quickhelp company-restclient diminish dired-subtree ein elpy expand-region flycheck flycheck-ocaml geiser graphviz-dot-mode helm-ag helm-company helm-descbinds helm-projectile helm-swoop highlight-sexps htmlize jedi-direx jq-mode js2-refactor json-mode json-reformat kanban live-py-mode lorem-ipsum lsp-mode lsp-ocaml macrostep magit markdown-mode maxframe mediawiki merlin neotree nexus ob-restclient ocp-indent org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired pycoverage rainbow-delimiters ranger realgud shell-toggle shut-up smartparens sphinx-doc sr-speedbar tuareg undo-tree use-package utop visual-fill-column which-key writeroom-mode yaml-mode zop-to-char ztree))
  '(paradox-github-token t)
  '(pdf-view-use-unicode-ligther nil)
- '(projectile-completion-system (quote helm))
+ '(projectile-completion-system 'helm)
  '(projectile-globally-ignored-directories
-   (quote
-    (".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__")))
- '(projectile-globally-ignored-file-suffixes (quote (".pyc")))
- '(projectile-project-root-files (quote ("requirements.txt" "setup.py" "tox.ini")))
+   '(".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__"))
+ '(projectile-globally-ignored-file-suffixes '(".pyc"))
+ '(projectile-project-root-files '("requirements.txt" "setup.py" "tox.ini"))
  '(projectile-project-root-files-functions
-   (quote
-    (projectile-root-local projectile-root-top-down projectile-root-bottom-up)))
- '(ps-font-size (quote (8 . 8.5)))
- '(ps-print-color-p (quote black-white))
+   '(projectile-root-local projectile-root-top-down projectile-root-bottom-up))
+ '(ps-font-size '(8 . 8.5))
+ '(ps-print-color-p 'black-white)
  '(python-indent-guess-indent-offset nil)
  '(ranger-hide-cursor nil)
  '(ranger-modify-header nil)
  '(ranger-show-literal t)
  '(read-buffer-completion-ignore-case t)
- '(reftex-bibpath-environment-variables (quote ("BIBINPUTS" "TEXBIB")))
+ '(reftex-bibpath-environment-variables '("BIBINPUTS" "TEXBIB"))
  '(reftex-toc-split-windows-horizontally t)
  '(safe-local-variable-values
-   (quote
-    ((org-odd-levels-only)
+   '((org-odd-levels-only)
      (TeX-command-extra-options . "-shell-escape")
      (checkdoc-minor-mode . 1)
      (flycheck-disabled-checkers emacs-lisp emacs-lisp-checkdoc)
-     (activate-venv-disabled . t))))
+     (activate-venv-disabled . t)))
  '(save-abbrevs nil)
  '(set-mark-command-repeat-pop t)
  '(sgml-basic-offset 8)
- '(show-paren-style (quote expression))
+ '(show-paren-style 'expression)
  '(show-trailing-whitespace nil)
  '(speedbar-vc-do-check nil)
  '(transient-mark-mode t)
  '(truncate-partial-width-windows nil)
- '(vc-annotate-display-mode (quote fullscale))
- '(vc-handled-backends (quote (SVN Bzr)))
+ '(vc-annotate-display-mode 'fullscale)
+ '(vc-handled-backends '(SVN Bzr))
  '(w32-list-proportional-fonts t t)
- '(warning-suppress-types (quote ((undo discard-info))))
+ '(warning-suppress-types '((undo discard-info)))
  '(which-func-modes
-   (quote
-    (c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode)))
+   '(c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode))
  '(winner-dont-bind-my-keys t)
  '(woman-imenu t)
  '(woman-use-own-frame nil)
@@ -236,4 +222,5 @@
  '(longlines-visible-face ((t (:foreground "red"))))
  '(p4-diff-del-face ((t (:foreground "DodgerBlue"))) t)
  '(p4-diff-head-face ((t (:background "black"))) t)
- '(p4-diff-ins-face ((t (:foreground "white"))) t))
+ '(p4-diff-ins-face ((t (:foreground "white"))) t)
+ '(which-func ((t (:foreground "Yellow")))))

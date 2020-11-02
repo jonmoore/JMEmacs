@@ -65,18 +65,15 @@
 (require 'package)
 
 (setq load-prefer-newer t)
-(setq package-enable-at-startup nil)
 (setq package-archives
       '(("melpa" . "http://melpa.org/packages/")
         ("gnu"   . "http://elpa.gnu.org/packages/")
         ("org" . "https://orgmode.org/elpa/")))
-(package-initialize)
 
 (mapc
  (lambda (relpath)
    (add-to-list 'load-path (concat personal-emacs-root relpath)))
- '("/lisp"
-   "/lisp/doxymacs-1.8.0"))
+ '("/lisp"))
 
 ;; Bootstrap `use-package'
 (unless (package-installed-p 'use-package)
@@ -146,18 +143,25 @@
   (set-face-attribute 'default nil :family "Inconsolata" :height 200)))
 
 ;;; EDITING AND GLOBAL KEY SETTINGS
+(prefer-coding-system 'utf-8)
+(setq require-final-newline t)
+
 (put 'upcase-region   'disabled nil)
 (put 'downcase-region 'disabled nil)
 (put 'narrow-to-page  'disabled nil)
-(setq require-final-newline t)
 (fset 'yes-or-no-p 'y-or-n-p)
 (bind-key [remap just-one-space] #'cycle-spacing)
 
 (when system-osx-p
-  (setq mac-command-modifier 'meta
-        mac-option-modifier   nil
+  (setq mac-option-modifier   nil
+        mac-command-modifier 'meta
+        mac-right-command-modifier 'super
         mac-emulate-three-button-mouse t
         ns-pop-up-frames nil))
+
+(when system-win32-p
+  (setq win32-pass-rwindow-to-system nil
+        win32-rwindow-modifier 'super))
 
 (bind-keys ("C-c a"        . org-agenda)
            ("C-c b"        . browse-url-at-point)
@@ -294,14 +298,14 @@
        :help "Run latexmk on file")))
    TeX-command-list))
 
+(use-package auto-highlight-symbol)
+
 (defun disable-autorevert-for-network-files ()
   (when (and buffer-file-name
              (string-match "^//" buffer-file-name))
     (message "Disabling global auto revert mode for %s"
              buffer-file-name)
     (setq global-auto-revert-ignore-buffer t)))
-
-(use-package auto-highlight-symbol)
 
 (use-package autorevert
   :ensure nil
@@ -310,28 +314,8 @@
   (add-hook 'find-file-hook
             'disable-autorevert-for-network-files))
 
-(use-package avy-jump
-  :ensure avy
-  :bind (("C-c j w" . avy-goto-word-1)
-         ("C-c j l" . avy-goto-line)
-         ("C-c j b" . avy-pop-mark)
-         ("C-c j j" . avy-goto-char-2)))
-
 (use-package browse-kill-ring
   :bind ("M-y" . browse-kill-ring))
-
-(use-package bug-hunter)
-
-(defun set-ocaml-error-regexp ()
-  (set
-   'compilation-error-regexp-alist
-   (list '("[Ff]ile \\(\"\\(.*?\\)\", line \\(-?[0-9]+\\)\\(, characters \\(-?[0-9]+\\)-\\([0-9]+\\)\\)?\\)\\(:\n\\(\\(Warning .*?\\)\\|\\(Error\\)\\):\\)?"
-           2 3 (5 . 6) (9 . 11) 1 (8 compilation-message-face)))))
-
-(use-package caml                       ; OCaml code editing commands for Emacs
-  :config
-  (add-hook 'caml-mode-hook 'set-ocaml-error-regexp)
-  )
 
 (use-package cdlatex)
 
@@ -435,17 +419,6 @@
 
 (use-package company-auctex)
 
-(use-package company-ghc
-  :init
-  (setq company-ghc-show-info t)
-  :config
-  (add-to-list 'company-backends 'company-ghc))
-
-(use-package company-lsp
-  :disabled t
-  :config
-  )
-
 (use-package company-quickhelp
   :init
   (company-quickhelp-mode t))
@@ -486,57 +459,12 @@
                                '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
                                :test 'string=)))
 
-(defun jnm-doxymacs-parm-tempo-element (parms)
-  "Inserts tempo elements like JavaDoc but without asterisks.
-See `doxymacs-parm-tempo-element'."
-  (if parms
-      (let ((prompt (concat "Parameter " (car parms) ": ")))
-        (list 'l " "
-              (doxymacs-doxygen-command-char) "param "
-              (car parms)
-              " " (list 'p prompt) '> 'n
-              (jnm-doxymacs-parm-tempo-element (cdr parms))))
-    nil))
-
-(defconst doxymacs-function-comment-template
-  '((let ((next-func (doxymacs-find-next-func)))
-      (if next-func
-          (list
-           'l
-           "/** " '> 'n
-           " " 'p '> 'n
-           " " '> 'n
-           (jnm-docymacs-parm-tempo-element (cdr (assoc 'args next-func)))
-           (unless (string-match
-                    (regexp-quote (cdr (assoc 'return next-func)))
-                    doxymacs-void-types)
-             '(l " * " > n " * " (doxymacs-doxygen-command-char)
-                 "return " (p "Returns: ") > n))
-           " */" '>)
-        (progn
-          (error "Can't find next function declaration.")
-          nil))))
-  "Custom JavaDoc-style template for function documentation
-  without as many asterisks.")
-
-(use-package doxymacs
-  :ensure nil
-  :commands  (doxymacs-mode doxymacs-font-lock)
-  :init
-  (setq doxymacs-doxygen-style "JavaDoc"))
-
 (use-package ediff
   :config
   (setq ediff-custom-diff-options "-c -w"
         ediff-diff-options "-w"))
 
 (use-package ein)
-
-(use-package eglot
-  :config
-  (add-to-list 'eglot-server-programs
-               `(python-mode
-                 . ("pyls" "--tcp" "--host" "localhost" "--port" "2087"))))
 
 (use-package elpy
   ;; elpy recommended packages
@@ -607,8 +535,6 @@ clean buffer we're an order of magnitude laxer about checking."
   (pycoverage-define-flycheck-checker)
   (add-to-list 'flycheck-checkers 'python-pycoverage)
   (flycheck-add-next-checker 'python-pycoverage 'python-pylint))
-
-(use-package flycheck-ocaml) ; Flycheck: OCaml support
 
 (defun my-font-lock-mode-hook-fn ()
   (when (or (eq major-mode 'c-mode)
@@ -990,17 +916,23 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
-(use-package lsp-mode)
+(setq lsp-keymap-prefix "s-s")
+(use-package lsp-mode
+  :hook (lsp-mode . lsp-enable-which-key-integration)
+  :commands lsp
+  )
 
-;; (use-package lsp-python
-;;   :init
-;;   (add-hook 'python-mode-hook #'lsp-python-stdio-enable)
-;;   )
+(use-package lsp-ui
+  :config
+  (setq lsp-ui-sideline-ignore-duplicate t)
+   :hook ((lsp-mode . lsp-ui-mode)))
 
-;; (use-package lsp-ui
-;;   :config
-;;   (setq lsp-ui-sideline-ignore-duplicate t)
-;;    :hook ((lsp-mode . lsp-ui-mode)))
+(use-package lsp-python-ms
+  :ensure t
+  :init (setq lsp-python-ms-auto-install-server t)
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-python-ms)
+                         (lsp-deferred))))
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
@@ -1052,12 +984,6 @@ display-buffer correctly."
         ("<M-up>"    . outline-move-subtree-up)
         ("<M-down>"  . outline-move-subtree-down)))
 
-(use-package merlin) ; An assistant for OCaml.
-
-(use-package mmix-mode
-  :ensure nil
-  :mode "\\.mms\\'")
-
 (use-package multiple-cursors)
 
 (use-package color-moccur
@@ -1108,8 +1034,6 @@ display-buffer correctly."
   (:map
    nxml-mode-map
    ("<f9>" . nexus-insert-gav-for-keyword)))
-
-(use-package ocp-indent) ; Automatic indentation for OCaml
 
 ;;; ORG MODE
 
@@ -1232,7 +1156,7 @@ according to `headline-is-for-jira'."
                                         ""
                                         ((org-agenda-overriding-header "=== Scheduled tasks ===")
                                          (org-agenda-span 22)
-                                         (org-agenda-prefix-format '((agenda . " %1c %?-12t% s"))))))))
+                                         (org-agenda-prefix-format '((agenda . " %1c %?-12t %s"))))))))
 
         org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
                                             (todo user-defined-up)
@@ -1525,20 +1449,12 @@ according to `headline-is-for-jira'."
 
 (use-package transpose-frame)           ; Switch between horizontal and vertically split frames
 
-(use-package tuareg ; OCaml mode.
-  :config
-  (add-hook 'tuareg-mode-hook 'set-ocaml-error-regexp)
-  )
-
 (use-package undo-tree
   :bind (:map undo-tree-visualizer-mode-map
               ("RET" . undo-tree-visualizer-quit))
   :init
   (global-undo-tree-mode)
   :diminish undo-tree-mode)
-
-(use-package utop  ;  Universal toplevel for OCaml
-)
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))
