@@ -75,6 +75,15 @@
    (add-to-list 'load-path (concat personal-emacs-root relpath)))
  '("/lisp"))
 
+;; The call to package-initialize is needed to stop Emacs trying to
+;; install built-in packages from an external repository.  According
+;; to the documentation of package-initialize, this call should not be
+;; needed, as startup.el should do so before loading the user init
+;; file, which loads this file.  However that is not happening
+;; successfully, as evidenced by package--initialized not getting set
+;; before this point.
+(package-initialize)
+
 ;; Bootstrap `use-package'
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
