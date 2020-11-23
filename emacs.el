@@ -80,9 +80,10 @@
 ;; to the documentation of package-initialize, this call should not be
 ;; needed, as startup.el should do so before loading the user init
 ;; file, which loads this file.  However that is not happening
-;; successfully, as evidenced by package--initialized not getting set
-;; before this point.
-(package-initialize)
+;; successfully on Windows, as evidenced by package--initialized not
+;; getting set before this point.
+(unless (bound-and-true-p package--initialized)
+  (package-initialize))
 
 ;; Bootstrap `use-package'
 (unless (package-installed-p 'use-package)
@@ -474,6 +475,8 @@
         ediff-diff-options "-w"))
 
 (use-package ein)
+
+(use-package elmacro)
 
 (use-package elpy
   ;; elpy recommended packages
