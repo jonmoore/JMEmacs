@@ -474,6 +474,8 @@
   (setq ediff-custom-diff-options "-c -w"
         ediff-diff-options "-w"))
 
+(use-package ebib)
+
 (use-package ein)
 
 (use-package elmacro)
