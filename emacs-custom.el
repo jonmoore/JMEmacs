@@ -13,6 +13,7 @@
  '(archive-zip-extract '("7z" "x" "-so"))
  '(auto-revert-interval 60)
  '(auto-save-timeout 120)
+ '(backup-by-copying t)
  '(bibtex-maintain-sorted-entries 'entry-class)
  '(browse-kill-ring-highlight-current-entry t)
  '(browse-kill-ring-highlight-inserted-item t)
