@@ -15,6 +15,7 @@
  '(auto-save-timeout 120)
  '(backup-by-copying t)
  '(bibtex-maintain-sorted-entries 'entry-class)
+ '(bidi-paragraph-direction 'left-to-right)
  '(browse-kill-ring-highlight-current-entry t)
  '(browse-kill-ring-highlight-inserted-item t)
  '(case-fold-search t)
