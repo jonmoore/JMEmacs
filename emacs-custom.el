@@ -140,6 +140,8 @@
  '(org-hierarchical-todo-statistics nil)
  '(org-log-into-drawer t)
  '(org-modules '(org-bibtex org-toc))
+ '(org-ref-clean-bibtex-entry-hook
+   '(org-ref-bibtex-format-url-if-doi orcb-key-comma org-ref-replace-nonascii orcb-& orcb-% org-ref-title-case-article orcb-clean-year orcb-clean-doi orcb-clean-pages orcb-check-journal org-ref-sort-bibtex-entry orcb-fix-spacing))
  '(org-ref-show-citation-on-enter nil)
  '(org-refile-allow-creating-parent-nodes 'confirm)
  '(org-refile-targets '((org-agenda-files :maxlevel . 5)))
