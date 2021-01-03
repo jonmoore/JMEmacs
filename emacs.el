@@ -139,10 +139,31 @@
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
 		       (system-osx-p   "~/backup")))))
 
-(setq dropbox-directory
+(setq dropbox-directory (cond
+                         ((eq system-type 'darwin) "~/Dropbox")
+                         ((eq system-type 'windows-nt) (concat (getenv "USERPROFILE") "\\Dropbox"))))
+
+(defun jm-sub-directory-if-present (parent-path sub-dir-path)
+  "Return the path to SUB-DIR-PATH within PARENT-PATH if it is a
+directory, otherwise return nil."
+  (when parent-path
+    (let ((candidate (concat parent-path sub-dir-path)))
+      (when (file-directory-p candidate)
+        candidate))))
+
+(setq bibliography-directory
+      (jm-sub-directory-if-present dropbox-directory "/bibliography"))
+
+(setq org-directory
       (cond
-       ((eq system-type 'darwin) "~/Dropbox")
-       ((eq system-type 'windows-nt) (concat (getenv "USERPROFILE") "\\Dropbox"))))
+       ((jm-sub-directory-if-present dropbox-directory "/org"))
+       "~/org")
+      org-agenda-files (list org-directory)
+      )
+
+(setq org-mobile-directory
+      (cond ((jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg"))
+            org-mobile-directory))
 
 ;;; COLORS AND APPEARANCE
 (tool-bar-mode -1)
@@ -1268,6 +1289,12 @@ according to `headline-is-for-jira'."
         ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
          "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))
   (require 'org-tempo)
+
+  (when org-mobile-directory
+    (require 'org-mobile)
+    (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
+    (add-hook 'after-init-hook 'org-mobile-pull)
+    (add-hook 'kill-emacs-hook 'org-mobile-push))
   )
 
 (use-package org-chef)
@@ -1278,12 +1305,12 @@ according to `headline-is-for-jira'."
 
 (use-package org-ref
   :config
+
   (when (bound-and-true-p bibliography-directory)
     (setq reftex-default-bibliography
           (list (concat bibliography-directory "/jonmoore.bib")))
 
-    (setq org-ref-bibliography-notes
-          (concat bibliography-directory "/notes.org")
+    (setq org-ref-bibliography-notes (concat bibliography-directory "/notes.org")
           org-ref-default-bibliography reftex-default-bibliography
           org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
           org-ref-insert-cite-key "C-c )")
@@ -1291,7 +1318,11 @@ according to `headline-is-for-jira'."
     (setq helm-bibtex-bibliography (car reftex-default-bibliography))
     (setq helm-bibtex-library-path org-ref-pdf-directory)
     (setq helm-bibtex-pdf-open-function 'org-open-file)
-    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes"))))
+    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes")))
+  (when (eq system-type 'darwin)
+    (setq helm-bibtex-pdf-open-function
+          (lambda (fpath)
+            (start-process "open" "*open*" "open" fpath)))))
 
 (use-package ox-reveal)
 

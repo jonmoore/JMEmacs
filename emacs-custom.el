@@ -108,7 +108,6 @@
  '(next-line-add-newlines nil)
  '(nxml-child-indent 4)
  '(org-agenda-dim-blocked-tasks 'invisible)
- '(org-agenda-files '("~/org"))
  '(org-agenda-prefix-format
    '((agenda . " %i %-18:c%-12,t%-13s")
      (todo . " %i %-15c")
@@ -150,7 +149,6 @@
  '(org-reveal-root "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/")
  '(org-src-lang-modes
    '(("ipython" . python)
-     ("ocaml" . tuareg)
      ("elisp" . emacs-lisp)
      ("ditaa" . artist)
      ("dot" . graphviz-dot)
