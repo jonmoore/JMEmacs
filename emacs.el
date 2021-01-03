@@ -712,8 +712,9 @@ display-buffer correctly."
 
 (use-package helm-company
   :config
-  (advice-add 'helm-company-display-document-buffer
-              :around #'jm-helm-company-display-document-buffer))
+  ;; (advice-add 'helm-company-display-document-buffer
+  ;;             :around #'jm-helm-company-display-document-buffer)
+  )
 
 (use-package helm-cscope
   :if system-win32-p
@@ -777,11 +778,9 @@ display-buffer correctly."
   (setq ibuffer-saved-filter-groups
         (quote (("default"
                  ("dired"   (mode . dired-mode))
-                 ("C/C++"   (mode . c++-mode))
                  ("org"     (mode . org-mode))
                  ("script"  (mode . sh-mode))
                  ("py"      (mode . python-mode))
-                 ("ml"      (or (mode . caml-mode) (mode . tuareg-mode)))
                  ("emacs"   (name . "^\\*")))))
         ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*" "\\*vc\\*")
         ibuffer-display-summary nil)
