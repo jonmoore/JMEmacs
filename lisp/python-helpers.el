@@ -52,154 +52,9 @@ directories . and ... FULL is passed to
       (file-exists-p (format "%s/Scripts/activate.bat" filepath))))
 
 (defun venvs-from-candidates (candidate-paths)
-  ""
+  "Filter CANDIDATE-PATHS, a list of directories, to leave only
+those that contain Python virtual environments."
   (cl-remove-if-not 'path-contains-venv candidate-paths))
-
-(defun direct-child-venvs (dir)
-  "Return a list of children of DIR that are python virtual
-environments, formatted as directories, or nil if there are no
-such directories."
-  (venvs-from-candidates
-   (directory-files-children dir t)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Customization point
-
-;;;###autoload
-(defvar project-venv-candidates-fn
-  (lambda (project-dir) nil)
-  "Function taking a single argument PROJECT-DIR, returning a
-list of descendants of PROJECT-DIR that may be python virtual
-environments for projects rooted at PROJECT-DIR.")
-
-;;;###autoload
-(defvar project-dir-fn
-  (lambda (project-dir) nil)
-  "Function taking a single argument FILE, returning the
-  project-directory for FILE.")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun project-venvs (project-dir)
-  "Return a list of descendants of PROJECT-DIR that are python virtual
-  environments for projects rooted at PROJECT-DIR."
-  (venvs-from-candidates
-   (funcall project-venv-candidates-fn project-dir)))
-
-(defun direct-venvs (dir)
-  (append
-   (direct-child-venvs dir)
-   (project-venvs dir)))
-
-(defun venv-for (file)
-  "Returns the venv to use for FILE, defined as the first venv in
-the nearest ancestor directory of FILE that contains a venv, or
-nil if there is no such ancestor."
-  (let ((parent-of-venv (locate-dominating-file
-                         (file-name-directory file)
-                         'direct-venvs)))
-    (when parent-of-venv
-      (car (direct-venvs parent-of-venv)))))
-
-(defvar project-active-directory
-  nil
-  "The currently active project directory")
-
-(defvar project-activate-disabled
-  nil
-  "Set to disable automatic project activation.")
-
-;; possibly a cleaner way to do this
-;; https://github.com/lunaryorn/.emacs.d/blob/master/lisp/flycheck-virtualenv.el
-;; albeit using hack-local-variables-hook
-(defun project-python-activate (project-dir)
-  "Do Python-related setup, other than venvs, for the project
-rooted at PROJECT-DIR.  Currently adds the \"src\" directory to
-PYTHONPATH."
-  (make-local-variable 'process-environment)
-  (setq-local
-   process-environment (append
-                        (list
-                         (format "PYTHONPATH=%s%s"
-                                 (file-name-as-directory project-dir)
-                                 "src"))
-                        process-environment)))
-
-(defun project-python-deactivate ()
-  "Deactivate any Python-related project settings."
-  )
-
-(defun project-python-sync ()
-  "Set Python-related variables for the project."
-  (interactive)
-  (unless (or (not buffer-file-name)
-              project-activate-disabled)
-    (let ((project-dir (funcall project-dir-fn buffer-file-name)))
-      (if project-dir
-          (progn
-            (setq-local project-active-directory project-dir)
-            (project-python-activate project-dir)) 
-        (project-python-deactivate))
-      (setq-local project-activate-disabled t))))
-
-;;;###autoload
-(defun ph-reset-venv ()
-  "Reset Python variables related to virtual envs. "
-  (interactive)
-  (pyvenv-deactivate)
-  (setq-local pyvenv-activate nil)
-  (setq-local activate-venv-disabled t))
-
-;;;###autoload
-(defun activate-venv-if-visiting-file ()
-  "If the `buffer-file-name' is set, activate the virtual
-environment for it as defined by `venv-for'"
-
-  ;; Avoid wasting time when visiting files without buffers, with
-  ;; already-active venvs, or with venv activation disabled.  In these
-  ;; cases there is no useful work to do.
-  (unless (or (not buffer-file-name)
-              (and (bound-and-true-p pyvenv-activate)
-                   (bound-and-true-p pyvenv-virtual-env)
-                   (string-equal
-                    ;; test with file-name-as-directory because
-                    ;; pyvenv-activate ends up without a trailing
-                    ;; slash while pyvenv-virtual-env has one.
-                    (file-name-as-directory pyvenv-activate)  ;; local
-                    (file-name-as-directory pyvenv-virtual-env) ;; global
-                    ))
-              activate-venv-disabled)
-    (let ((venv (venv-for buffer-file-name)))
-      (if venv
-          (progn
-            (setq-local pyvenv-activate venv)
-            (pyvenv-track-virtualenv))
-        (ph-reset-venv)))))
-
-(defvar activate-venv-modes
-  '(python-mode)
-  "List of modes which `activate-venv-if-python' will try to set
-  the venv for")
-
-(defvar activate-venv-disabled
-  nil
-  "Set to disable activating venvs automatically.  Most useful to
-set as a file or directory variable to prevent scanning files
-on shared drives.")
-
-;;;###autoload
-(defun activate-venv-if-python ()
-  "Activate a Python venv if appropriate.  Also sets
-`python-shell-interpreter' and `python-shell-interpreter-args' to
-use IPython if that is found."
-  (when (and (memq major-mode activate-venv-modes)
-             (not (bound-and-true-p activate-venv-disabled)))
-    (activate-venv-if-visiting-file)
-    (project-python-sync)
-    (when (and pyvenv-virtual-env
-               (executable-find "ipython"))
-      (setq python-shell-interpreter "ipython"
-            python-shell-interpreter-args "-i --simple-prompt"))))
 
 ;;;###autoload
 (defun pyvenv-virtualenv-list-with-second-level (&optional noerror)
@@ -236,15 +91,159 @@ up to two directories down."
     (call-interactively 'pyvenv-workon))
   (elpy-rpc-restart))
 
-;; https://github.com/jorgenschaefer/elpy/issues/690
+(defun direct-child-venvs (dir)
+  "Return a list of children of DIR that are python virtual
+environments, formatted as directories, or nil if there are no
+such directories."
+  (venvs-from-candidates
+   (directory-files-children dir t)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Customization point
+
 ;;;###autoload
-(defun my-python-shell-get-process-name (orig-fun &rest args)
-  "If `pyvenv-virtual-env-name' is set then return a buffer name
-based on this and `python-shell-buffer-name', otherwise call
-`python-shell-get-process-name'"
-  (if pyvenv-virtual-env-name
-      (format "%s[%s]" python-shell-buffer-name pyvenv-virtual-env-name)
-    (apply orig-fun args)))
+(defvar project-venv-candidates-fn
+  (lambda (project-dir) nil)
+  "Function taking a single argument PROJECT-DIR, returning a
+list of descendants of PROJECT-DIR that may be python virtual
+environments for projects rooted at PROJECT-DIR.")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun project-venvs (project-dir)
+  "Return a list of descendants of PROJECT-DIR that are python virtual
+  environments for projects rooted at PROJECT-DIR."
+  (venvs-from-candidates
+   (funcall project-venv-candidates-fn project-dir)))
+
+(defun direct-venvs (dir)
+  (append
+   (direct-child-venvs dir)
+   (project-venvs dir)))
+
+(defun venv-for (file)
+  "Returns the venv to use for FILE, defined as the first venv in
+the nearest ancestor directory of FILE that contains a venv, or
+nil if there is no such ancestor."
+  (let ((parent-of-venv (locate-dominating-file
+                         (file-name-directory file)
+                         'direct-venvs)))
+    (when parent-of-venv
+      (car (direct-venvs parent-of-venv)))))
+
+(defvar activate-venv-disabled
+  nil
+  "Set to disable activating venvs automatically.  Most useful to
+set as a file or directory variable to prevent scanning files
+on shared drives.")
+
+;;;###autoload
+(defun ph-reset-venv ()
+  "Reset Python variables related to virtual envs. "
+  (interactive)
+  (pyvenv-deactivate)
+  (setq-local pyvenv-activate nil)
+  (setq-local activate-venv-disabled t))
+
+;;;###autoload
+(defun activate-venv-if-visiting-file ()
+  "If the `buffer-file-name' is set, activate the virtual
+environment for it as defined by `venv-for'"
+
+  ;; Avoid wasting time when visiting files without buffers, with
+  ;; already-active venvs, or with venv activation disabled.  In these
+  ;; cases there is no useful work to do.
+  (unless (or (not buffer-file-name)
+              (and (bound-and-true-p pyvenv-activate)
+                   (bound-and-true-p pyvenv-virtual-env)
+                   (string-equal
+                    ;; test with file-name-as-directory because
+                    ;; pyvenv-activate ends up without a trailing
+                    ;; slash while pyvenv-virtual-env has one.
+                    (file-name-as-directory pyvenv-activate)  ;; local
+                    (file-name-as-directory pyvenv-virtual-env) ;; global
+                    ))
+              activate-venv-disabled)
+    (let ((venv (venv-for buffer-file-name)))
+      (if venv
+          (progn
+            (setq-local pyvenv-activate venv)
+            (pyvenv-track-virtualenv))
+        (ph-reset-venv)))))
+
+(defvar project-activate-disabled
+  nil
+  "Set to disable automatic project activation.")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Customization point
+;;;###autoload
+;; TODO - align to projectile or the built-in project package?
+(defvar project-dir-fn
+  (lambda (project-dir) nil)
+  "Function taking a single argument FILE, returning the
+  project-directory for FILE.")
+
+;; possibly a cleaner way to do this
+;; https://github.com/lunaryorn/.emacs.d/blob/master/lisp/flycheck-virtualenv.el
+;; albeit using hack-local-variables-hook
+(defun project-python-activate (project-dir)
+  "Do Python-related setup, other than venvs, for the project
+rooted at PROJECT-DIR.  Currently adds the \"src\" directory to
+PYTHONPATH."
+  (make-local-variable 'process-environment)
+  (setq-local
+   process-environment (append
+                        (list
+                         (format "PYTHONPATH=%s%s"
+                                 (file-name-as-directory project-dir)
+                                 "src"))
+                        process-environment)))
+
+(defun project-python-deactivate ()
+  "Deactivate any Python-related project settings."
+  )
+
+(defun project-python-sync ()
+  "Set Python-related variables for the project."
+  (interactive)
+  (unless (or (not buffer-file-name)
+              project-activate-disabled)
+    (let ((project-dir (funcall project-dir-fn buffer-file-name)))
+      (if project-dir
+          (project-python-activate project-dir)
+        (project-python-deactivate))
+      (setq-local project-activate-disabled t))))
+
+(defvar activate-venv-modes
+  '(python-mode)
+  "List of modes which `activate-venv-if-python' will try to set
+  the venv for")
+
+;;;###autoload
+(defun activate-venv-if-python ()
+  "Activate a Python venv if appropriate.  Also sets
+`python-shell-interpreter' and `python-shell-interpreter-args' to
+use IPython if that is found."
+  (when (and (memq major-mode activate-venv-modes)
+             (not (bound-and-true-p activate-venv-disabled)))
+    (activate-venv-if-visiting-file)
+    (project-python-sync)
+    (when (and pyvenv-virtual-env
+               (executable-find "ipython"))
+      (setq python-shell-interpreter "ipython"
+            python-shell-interpreter-args "-i --simple-prompt"))))
+
+;;;###autoload
+(defun inferior-python-mode-company-backend (command &optional arg &rest ignored)
+  "A company-mode backend for `inferior-python-mode' using Elpy."
+  (interactive (list 'interactive))
+  (pcase command
+    (`prefix
+     (when (and (eq major-mode 'inferior-python-mode)
+                (not (company-in-string-or-comment)))
+       (company-grab-symbol-cons "\\." 1)))
+    (_ (elpy-company-backend command arg ignored))))
 
 ;;;###autoload
 (defun inferior-python-mode-buffer-init ()
@@ -264,17 +263,6 @@ based on this and `python-shell-buffer-name', otherwise call
                          (delq 'company-capf
                                (mapcar #'identity company-backends))))))
   (company-mode 1))
-
-;;;###autoload
-(defun inferior-python-mode-company-backend (command &optional arg &rest ignored)
-  "A company-mode backend for `inferior-python-mode' using Elpy."
-  (interactive (list 'interactive))
-  (pcase command
-    (`prefix
-     (when (and (eq major-mode 'inferior-python-mode)
-                (not (company-in-string-or-comment)))
-       (company-grab-symbol-cons "\\." 1)))
-    (_ (elpy-company-backend command arg ignored))))
 
 ;;;###autoload
 (defvar my-elpy-config--get-config
@@ -339,9 +327,17 @@ cause hangs because it triggers going off to the web, even when
 reporting errors!!  I'll assume we don't need _latest
 information")
 
-(require 'flycheck)
+;; https://github.com/jorgenschaefer/elpy/issues/690
+;;;###autoload
+(defun my-python-shell-get-process-name (orig-fun &rest args)
+  "If `pyvenv-virtual-env-name' is set then return a buffer name
+based on this and `python-shell-buffer-name', otherwise call
+`python-shell-get-process-name'"
+  (if pyvenv-virtual-env-name
+      (format "%s[%s]" python-shell-buffer-name pyvenv-virtual-env-name)
+    (apply orig-fun args)))
 
-;; Redefine some pydoc functions that don't work on Windows
+(require 'flycheck)
 
 ;;;###autoload
 (defun pycoverage-define-flycheck-checker ()
@@ -376,5 +372,3 @@ that using the git code, as in
     :next-checkers ((t . python-flake8))))
 
 (provide 'python-helpers)
-
-
