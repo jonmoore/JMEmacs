@@ -139,6 +139,11 @@
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
 		       (system-osx-p   "~/backup")))))
 
+(setq dropbox-directory
+      (cond
+       ((eq system-type 'darwin) "~/Dropbox")
+       ((eq system-type 'windows-nt) (concat (getenv "USERPROFILE") "\\Dropbox"))))
+
 ;;; COLORS AND APPEARANCE
 (tool-bar-mode -1)
 (setq frame-title-format  '(:eval (buffer-file-names-in-selected-frame))
