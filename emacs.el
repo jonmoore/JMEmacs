@@ -735,6 +735,8 @@ display-buffer correctly."
 ;;   :bind (:map helm-command-map
 ;;               ("R" . helm-org-rifle)))
 
+(use-package helm-lsp)
+
 (use-package helm-projectile)
 
 (use-package helm-rg)
@@ -944,6 +946,8 @@ display-buffer correctly."
 (use-package lsp-python-ms
   :ensure t
   :init (setq lsp-python-ms-auto-install-server t)
+  :config
+  (put 'lsp-python-ms-extra-paths 'safe-local-variable #'vectorp)
   :hook (python-mode . (lambda ()
                          (require 'lsp-python-ms)
                          (lsp-deferred))))
