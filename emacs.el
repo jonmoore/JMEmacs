@@ -139,9 +139,13 @@
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
 		       (system-osx-p   "~/backup")))))
 
-(setq dropbox-directory (cond
-                         ((eq system-type 'darwin) "~/Dropbox")
-                         ((eq system-type 'windows-nt) (concat (getenv "USERPROFILE") "\\Dropbox"))))
+(setq dropbox-directory
+      (let ((candidate
+             (cond
+              ((eq system-type 'darwin) "~/Dropbox")
+              ((eq system-type 'windows-nt) (concat (getenv "USERPROFILE") "\\Dropbox")))))
+        ;; nil if there's no such directory
+        (when (file-directory-p candidate) candidate)))
 
 (defun jm-sub-directory-if-present (parent-path sub-dir-path)
   "Return the path to SUB-DIR-PATH within PARENT-PATH if it is a
@@ -155,11 +159,10 @@ directory, otherwise return nil."
       (jm-sub-directory-if-present dropbox-directory "/bibliography"))
 
 (setq org-directory
-      (cond
-       ((jm-sub-directory-if-present dropbox-directory "/org"))
-       "~/org")
-      org-agenda-files (list org-directory)
-      )
+      (if dropbox-directory (concat dropbox-directory "/org")
+        "~/org"))
+
+(setq org-agenda-files (list org-directory))
 
 (setq org-mobile-directory
       (cond ((jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg"))
