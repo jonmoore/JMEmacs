@@ -164,10 +164,6 @@ directory, otherwise return nil."
 
 (setq org-agenda-files (list org-directory))
 
-(setq org-mobile-directory
-      (cond ((jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg"))
-            (org-mobile-directory)))
-
 ;;; COLORS AND APPEARANCE
 (tool-bar-mode -1)
 (setq frame-title-format  '(:eval (buffer-file-names-in-selected-frame))
@@ -1294,12 +1290,16 @@ according to `headline-is-for-jira'."
         ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
          "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))
   (require 'org-tempo)
-
-  (when org-mobile-directory
-    (require 'org-mobile)
-    (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
-    (add-hook 'after-init-hook 'org-mobile-pull)
-    (add-hook 'kill-emacs-hook 'org-mobile-push))
+  
+  (let ((org-mobile-directory-candidate
+         (cond ((jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg"))
+               (""))))
+    (when (file-directory-p org-mobile-directory-candidate)
+      (require 'org-mobile)
+      (setq org-mobile-directory org-mobile-directory-candidate)
+      (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
+      (add-hook 'after-init-hook 'org-mobile-pull)
+      (add-hook 'kill-emacs-hook 'org-mobile-push)))
   )
 
 (use-package org-chef)
