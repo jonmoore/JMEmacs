@@ -158,9 +158,10 @@ directory, otherwise return nil."
 (setq bibliography-directory
       (jm-sub-directory-if-present dropbox-directory "/bibliography"))
 
-(setq org-directory
-      (if dropbox-directory (concat dropbox-directory "/org")
-        "~/org"))
+(if (not (boundp 'org-directory))
+    (setq org-directory
+          (if dropbox-directory (concat dropbox-directory "/org")
+            "~/org")))
 
 (setq org-agenda-files (list org-directory))
 
