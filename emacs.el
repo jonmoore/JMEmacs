@@ -166,7 +166,7 @@ directory, otherwise return nil."
 
 (setq org-mobile-directory
       (cond ((jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg"))
-            org-mobile-directory))
+            (org-mobile-directory)))
 
 ;;; COLORS AND APPEARANCE
 (tool-bar-mode -1)
@@ -463,6 +463,8 @@ directory, otherwise return nil."
   (company-quickhelp-mode t))
 
 (use-package company-restclient)
+
+(use-package conda)
 
 (use-package css-mode
   :mode "\\.css\\'")
