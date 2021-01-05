@@ -1293,9 +1293,8 @@ according to `headline-is-for-jira'."
   (require 'org-tempo)
   
   (let ((org-mobile-directory-candidate
-         (cond ((jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg"))
-               (""))))
-    (when (file-directory-p org-mobile-directory-candidate)
+         (jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg")))
+    (when org-mobile-directory-candidate
       (require 'org-mobile)
       (setq org-mobile-directory org-mobile-directory-candidate)
       (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
