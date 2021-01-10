@@ -1482,6 +1482,10 @@ according to `headline-is-for-jira'."
 
 (use-package sicp)
 
+(use-package simple-call-tree
+  :init
+  (require 'cl))
+
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")
   (auto-raise-mode 1))
