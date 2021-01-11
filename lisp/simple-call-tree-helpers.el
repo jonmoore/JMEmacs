@@ -1,25 +1,40 @@
-(defun jmgv-string-to-node-name (s)
+;;; simple-call-tree-helpers.el - extensions to simple-call-tree
+
+;; The main entry point is jm-simple-call-tree-dot-graph, which produces
+;; a dot graph for a given buffer (if none is given, one is prompted for)
+
+;; The resulting graph may be displayed in an org-mode file as below.
+;; Use (C-c C-c) to evaluate the block and display the graph.
+;;
+;; #+begin_src dot :file demo.png :var dot_text=(jm-simple-call-tree-dot-graph)
+;; $dot_text
+;; #+end_src
+
+(require 'helm)
+(require 'simple-call-tree)
+
+(defun jm-graphviz-string-to-node-name (s)
   (replace-regexp-in-string "[^a-zA-Z_]" "_" s))
 
-(defun jmgv-edge-pair-to-edge (edge-pair)
-  (apply 'format "%s->%s" (mapcar 'jmgv-string-to-node-name edge-pair)))
+(defun jm-graphviz-edge-pair-to-edge (edge-pair)
+  (apply 'format "%s->%s" (mapcar 'jm-graphviz-string-to-node-name edge-pair)))
 
-(defun jmgv-edge-pairs-to-edges (edge-pairs)
+(defun jm-graphviz-edge-pairs-to-edges (edge-pairs)
   (mapconcat
-   'jmgv-edge-pair-to-edge
+   'jm-graphviz-edge-pair-to-edge
    edge-pairs
    "\n"))
 
-(defun jmgv-edge-pairs-to-digraph (edge-pairs)
+(defun jm-graphviz-edge-pairs-to-digraph (edge-pairs)
   (mapconcat
    #'identity
    (list "strict digraph {"
          "rankdir=LR"
-         (jmgv-edge-pairs-to-edges edge-pairs)
+         (jm-graphviz-edge-pairs-to-edges edge-pairs)
          "}")
    "\n"))
 
-(defun jms-caller-info-to-call-pairs (caller-info)
+(defun jm-simple-call-tree-caller-info-to-call-pairs (caller-info)
   "Return a list of caller-callee pairs for a single caller from
 a call-tree alist like `simple-call-tree-alist'"
   (let* ((getname (lambda (x) (substring-no-properties (car x))))
@@ -30,15 +45,28 @@ a call-tree alist like `simple-call-tree-alist'"
        (list caller-name (funcall getname callee-info)))
      (cdr caller-info))))
 
-(defun jms-call-tree-alist-to-call-pairs (alist)
+(defun jm-simple-call-tree-alist-to-call-pairs (alist)
   "Return a list of caller-callee pairs from a call-tree alist
 like `simple-call-tree-alist'"
   (apply 'append
-         (mapcar 'jms-caller-info-to-call-pairs alist)))
+         (mapcar 'jm-simple-call-tree-caller-info-to-call-pairs alist)))
 
-(defun jms-call-tree-alist-to-digraph (alist)
-  (jmgv-edge-pairs-to-digraph
-   (jms-call-tree-alist-to-call-pairs alist)))
+;;;###autoload
+(defun jm-simple-call-tree-alist-to-digraph (alist)
+  (jm-graphviz-edge-pairs-to-digraph
+   (jm-simple-call-tree-alist-to-call-pairs alist)))
 
-;; (jms-call-tree-alist-to-digraph simple-call-tree-alist)
+;;;###autoload
+(defun jm-simple-call-tree-dot-graph ( &optional buffer)
+  "Return a dot representation of the call graph of a buffer,
+created by `simple-call-tree-analyze'.  If BUFFER is nil, the
+buffer to analyze is prompted for."
+  (let ((buffer-to-analyze
+         (or buffer
+             (helm :sources (helm-build-sync-source "Create call tree for"
+                              :candidates (helm-buffer-list)))
+             (error "No buffer provided to analyze"))))
+    (simple-call-tree-analyze (list buffer-to-analyze))
+    (jm-simple-call-tree-alist-to-digraph simple-call-tree-alist)))
 
+(provide 'simple-call-tree-helpers)
