@@ -416,7 +416,7 @@ to use that env and that lsp is active."
       (when project-root
         (cond
          ((not saved-project-env)
-          (let ((env-path (let ((use-dialog-box t))
+          (let ((env-path (let ((use-dialog-box nil))
                             ;; First try selecting from known envs with helm source;
                             ;; C-g here returns nil and invokes general file
                             ;; selection, where C-g => do not use an env
@@ -431,7 +431,7 @@ to use that env and that lsp is active."
                      ;; or else decline to select and save that result as 'do-not-use-an-env
                      (or env-path 'do-not-use-an-env))
             (when env-path
-              (jm-conda-lsp--activate-and-enable-lsp))))
+              (jm-conda-lsp--activate-and-enable-lsp env-path))))
          ((and saved-project-env
                (not (equal saved-project-env 'do-not-use-an-env))          
                (not (equal saved-project-env conda-env-current-path)))
@@ -446,6 +446,52 @@ to be enabled if needed using `window-configuration-change-hook'"
      (with-current-buffer buf
        (jm-conda-lsp--init-if-visible)))
    (buffer-list))
-  (add-hook 'window-configuration-change-hook 'jm-conda-lsp--init-if-visible))
+  (add-hook 'window-configuration-change-hook #'jm-conda-lsp--init-if-visible))
+
+;; lsp-mode workspace and session management
+;; =========================================
+
+;; There is a single LSP session (a CL struct) stored as `lsp-session'.  This
+;; describes multiple workspaces, each with a root directory.  When LSP is
+;; launched in a file not already contained within a root, it will prompt for a
+;; root and add a workspace to the session.
+;;
+;; `lsp--try-project-root-workspaces' tries to open a file as a
+;; project/workspace file, prompting for a workspace root if needed, and adding
+;; it as a known workspace if it is new.
+;;
+;; LSP sessions are stored in `lsp-session-file',
+;; e.g. "~/.emacs.d/.lsp-session-v1".  Workspace
+;; folders can be removed from the session interactively with
+;; `lsp-workspace-folders-remove'
+;;
+;; `lsp-workspace-root' reads `lsp-session-folders' to determine the workspace
+;; root for a given file.
+
+;; lsp-python-ms initialization
+;; ============================
+
+;; `lsp-python-ms--extra-init-params' calls `lsp-python-ms--workspace-root' to
+;; get a workspace root and `lsp-python-ms--get-python-ver-and-syspath' to set
+;; up a suitably initialized Python process.
+
+;; `lsp-python-ms--workspace-root' will (when available, as we expect) use
+;; `lsp--workspace-root'
+
+;; `lsp-python-ms--get-python-ver-and-syspath' calls
+;; `lsp-python-ms-locate-python', launches an associated process and adds the
+;; workspace root to the front of its sys.path.  TODO: does this matter in setups
+;; where we register the package being developed under site-packages?  TODO: can
+;; we add src, test, etc. as Python paths?
+
+;; `lsp-python-ms-locate-python' returns a conda env by calling
+;; `lsp-python-ms--dominating-conda-python' (assuming
+;; `lsp-python-ms-python-executable' has not been set)
+
+;; `lsp-python-ms--dominating-conda-python' will
+;; 1. Find a conda env name, preference going first to
+;; `conda-env-current-name'.  This may be a path, but that's ok
+;; 2. Use conda.el's `conda-env-name-to-dir' to find the venv base directory
+;; and hence the Python executable.
 
 (provide 'python-helpers)
