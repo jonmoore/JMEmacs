@@ -184,7 +184,8 @@
  '(reftex-bibpath-environment-variables '("BIBINPUTS" "TEXBIB"))
  '(reftex-toc-split-windows-horizontally t)
  '(safe-local-variable-values
-   '((dired-omit-extensions ".html" ".org_archive")
+   '((mangle-whitespace . t)
+     (dired-omit-extensions ".html" ".org_archive")
      (org-odd-levels-only)
      (TeX-command-extra-options . "-shell-escape")
      (checkdoc-minor-mode . 1)
@@ -204,6 +205,8 @@
  '(warning-suppress-types '((undo discard-info)))
  '(which-func-modes
    '(c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode))
+ '(whitespace-style
+   '(face trailing tabs spaces lines newline empty indentation space-after-tab space-before-tab space-mark tab-mark newline-mark))
  '(winner-dont-bind-my-keys t)
  '(woman-imenu t)
  '(woman-use-own-frame nil)
