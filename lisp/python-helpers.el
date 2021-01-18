@@ -371,8 +371,6 @@ that using the git code, as in
     :modes (python-mode)
     :next-checkers ((t . python-flake8))))
 
-(provide 'python-helpers)
-
 ;;; conda.el
 
 (require 'conda)
@@ -410,4 +408,44 @@ buffer is in python-mode, is visible, is in a projectile
 project, and the user has selected a conda env for the
 project (prompted for if needed) then ensure that conda is synced
 to use that env and that lsp is active."
-  )
+  (when (and
+         (equal major-mode 'python-mode)
+         (or (buffer-modified-p) (get-buffer-window nil t)))
+    (let* ((project-root (projectile-project-root))
+           (saved-project-env (ht-get jm-conda-lsp--ht-project-env project-root)))
+      (when project-root
+        (cond
+         ((not saved-project-env)
+          (let ((env-path (let ((use-dialog-box t))
+                            ;; First try selecting from known envs with helm source;
+                            ;; C-g here returns nil and invokes general file
+                            ;; selection, where C-g => do not use an env
+                            (or
+                             (helm :sources (jm-conda-lsp--build-envs-source))
+                             (condition-case nil
+                                 (read-directory-name "Conda environment directory: ")
+                               (quit nil))))))
+            (ht-set! jm-conda-lsp--ht-project-env
+                     project-root
+                     ;; Either select and activate an env, saving the result,
+                     ;; or else decline to select and save that result as 'do-not-use-an-env
+                     (or env-path 'do-not-use-an-env))
+            (when env-path
+              (jm-conda-lsp--activate-and-enable-lsp))))
+         ((and saved-project-env
+               (not (equal saved-project-env 'do-not-use-an-env))          
+               (not (equal saved-project-env conda-env-current-path)))
+          (jm-conda-lsp--activate-and-enable-lsp saved-project-env)))))))
+
+;;;###autoload
+(defun jm-conda-lsp-enable-lsp-everywhere ()
+  "Initialise LSP in currently visible buffers and configure it
+to be enabled if needed using `window-configuration-change-hook'"
+  (mapcar
+   (lambda (buf)
+     (with-current-buffer buf
+       (jm-conda-lsp--init-if-visible)))
+   (buffer-list))
+  (add-hook 'window-configuration-change-hook 'jm-conda-lsp--init-if-visible))
+
+(provide 'python-helpers)
