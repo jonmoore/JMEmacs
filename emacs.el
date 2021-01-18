@@ -124,9 +124,9 @@
 (when system-win32-p
   (require 'dos-w32)
   (setq exec-path (append
-		   (mapcar 'directory-file-name
-			   (bound-and-true-p local-exec-paths))
-		   exec-path))
+                   (mapcar 'directory-file-name
+                           (bound-and-true-p local-exec-paths))
+                   exec-path))
   (setenv "PATH" (mapconcat
                   'identity
                   (append
@@ -138,12 +138,12 @@
 
 (when system-osx-p
   (setq exec-path (append (bound-and-true-p local-exec-paths)
-			  exec-path)))
+                          exec-path)))
 
 (setq backup-directory-alist
       (list
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
-		       (system-osx-p   "~/backup")))))
+                       (system-osx-p   "~/backup")))))
 
 (setq dropbox-directory
       (let ((candidate
@@ -365,15 +365,15 @@ directory, otherwise return nil."
   '((c-tab-always-indent        . t)
     (c-comment-only-line-offset . 0)
     (c-hanging-braces-alist     . ((substatement-open after)
-				   (brace-list-open)))
+                                   (brace-list-open)))
     (c-hanging-colons-alist     . ((member-init-intro before)
-				   (inher-intro)
-				   (case-label after)
-				   (label after)
-				   (access-label after)))
+                                   (inher-intro)
+                                   (case-label after)
+                                   (label after)
+                                   (access-label after)))
     (c-cleanup-list             . (scope-operator
-				   empty-defun-braces
-				   defun-close-semi))
+                                   empty-defun-braces
+                                   defun-close-semi))
     (c-offsets-alist            . ((block-open        . 0)
                                    (case-label        . 4)
                                    (inline-open        . 0)
@@ -968,6 +968,9 @@ display-buffer correctly."
 (setq lsp-keymap-prefix "s-s")
 (use-package lsp-mode
   :hook ((lsp-mode . lsp-enable-which-key-integration))
+  :ensure conda
+  :init
+  (add-hook 'desktop-after-read-hook 'jm-conda-lsp-enable-lsp-everywhere)
   :commands lsp
   )
 
@@ -1297,7 +1300,7 @@ according to `headline-is-for-jira'."
         ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
          "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))
   (require 'org-tempo)
-  
+
   (let ((org-mobile-directory-candidate
          (jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg")))
     (when org-mobile-directory-candidate
