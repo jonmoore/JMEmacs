@@ -172,8 +172,6 @@
    '(".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__"))
  '(projectile-globally-ignored-file-suffixes '(".pyc"))
  '(projectile-project-root-files '("requirements.txt" "setup.py" "tox.ini"))
- '(projectile-project-root-files-functions
-   '(projectile-root-local projectile-root-top-down projectile-root-bottom-up))
  '(ps-font-size '(8 . 8.5))
  '(ps-print-color-p 'black-white)
  '(python-indent-guess-indent-offset nil)

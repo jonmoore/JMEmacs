@@ -451,7 +451,7 @@ to be enabled if needed using `window-configuration-change-hook'"
 ;; lsp-mode workspace and session management
 ;; =========================================
 
-;; There is a single LSP session (a CL struct) stored as `lsp-session'.  This
+;; There is a single LSP session (a CL struct) stored as `lsp--session'.  This
 ;; describes multiple workspaces, each with a root directory.  When LSP is
 ;; launched in a file not already contained within a root, it will prompt for a
 ;; root and add a workspace to the session.
@@ -476,7 +476,7 @@ to be enabled if needed using `window-configuration-change-hook'"
 ;; up a suitably initialized Python process.
 
 ;; `lsp-python-ms--workspace-root' will (when available, as we expect) use
-;; `lsp--workspace-root'
+;; `lsp-workspace-root'
 
 ;; `lsp-python-ms--get-python-ver-and-syspath' calls
 ;; `lsp-python-ms-locate-python', launches an associated process and adds the

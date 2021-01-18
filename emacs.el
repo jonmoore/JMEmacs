@@ -124,14 +124,20 @@
 (when system-win32-p
   (require 'dos-w32)
   (setq exec-path (append
-		   (mapcar (lambda (path) (replace-regexp-in-string  "\\\\"  "/" path))
-			   (bound-and-true-p
-			    local-exec-paths))
-		   exec-path)))
+		   (mapcar 'directory-file-name
+			   (bound-and-true-p local-exec-paths))
+		   exec-path))
+  (setenv "PATH" (mapconcat
+                  'identity
+                  (append
+                   (mapcar (lambda (path) (replace-regexp-in-string "/" "\\" path nil t))
+                           (bound-and-true-p local-exec-paths))
+                   (list (getenv "PATH")))
+                  path-separator)))
+
 
 (when system-osx-p
-  (setq exec-path (append (bound-and-true-p
-			   local-exec-paths)
+  (setq exec-path (append (bound-and-true-p local-exec-paths)
 			  exec-path)))
 
 (setq backup-directory-alist
