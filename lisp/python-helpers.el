@@ -372,3 +372,42 @@ that using the git code, as in
     :next-checkers ((t . python-flake8))))
 
 (provide 'python-helpers)
+
+;;; conda.el
+
+(require 'conda)
+(require 'ht)
+
+;; `conda-env-activate-path' sets `conda-env-current-name' to the full path of
+;; the active env, after which `conda-env-name-to-dir' returns this.
+
+(defvar jm-conda-lsp--ht-project-env
+  (ht-create)
+  "Hash table used to map projectile projects to conda envs")
+
+(defvar jm-conda-lsp--environments-file
+  (concat (file-name-as-directory
+           (getenv
+            (if (eq system-type 'windows-nt) "USERPROFILE" "HOME")))
+          ".conda/environments.txt")
+  "conda's file used to manage its list of conda env directories")
+
+(defun jm-conda-lsp--build-envs-source ()
+  (helm-build-in-file-source
+      "Helm source for conda environments"
+      jm-conda-lsp--environments-file))
+
+(defun jm-conda-lsp--activate-and-enable-lsp (env-path)
+  (conda-env-activate-path env-path)
+  (when (not (bound-and-true-p lsp-mode))
+    (lsp)))
+
+;; We don't need to save projectile project roots as `projectile-project-root'
+;; recalculates these automatically
+(defun jm-conda-lsp--init-if-visible ()
+  "Handle conda and lsp-mode initialisation.  When the current
+buffer is in python-mode, is visible, is in a projectile
+project, and the user has selected a conda env for the
+project (prompted for if needed) then ensure that conda is synced
+to use that env and that lsp is active."
+  )
