@@ -85,10 +85,16 @@
 (unless (bound-and-true-p package--initialized)
   (package-initialize))
 
-;; Bootstrap `use-package'
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+;; Bootstrap `use-package' and `bind-key', which it depends on.
+(let* ((pkgs  '(bind-key use-package))
+       (all-installed (seq-every-p 'package-installed-p pkgs)))
+  (unless all-installed
+    (package-refresh-contents)
+    (mapc
+     (lambda (pkg)
+       (unless (package-installed-p pkg)
+         (package-install pkg)))
+     pkgs)))
 
 (require 'use-package)
 (setq use-package-verbose t
@@ -100,8 +106,6 @@
   :config
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'after-init-hook 'benchmark-init/deactivate))
-
-(require 'bind-key)
 
 ;; https://emacs.stackexchange.com/questions/37468/how-do-i-use-use-package-with-diminish-in-my-init-el
 (use-package diminish)
@@ -863,6 +867,8 @@ display-buffer correctly."
   :config
   (put 'lsp-python-ms-extra-paths 'safe-local-variable #'vectorp))
 
+(use-package lsp-treemacs) ; lsp-mode/treemacs integration with treeview controls
+
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
   :bind
@@ -1229,10 +1235,7 @@ according to `headline-is-for-jira'."
 
    :map inferior-python-mode-map
    ;; ("<tab> " . yas-or-company-or-indent-for-tab)
-   ("M-TAB" . python-shell-completion-complete-or-indent))
-  :config
-  (add-hook 'inferior-python-mode-hook 'inferior-python-mode-buffer-init)
-  (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name))
+   ("M-TAB" . python-shell-completion-complete-or-indent)))
 
 (use-package rainbow-delimiters)
 
@@ -1533,6 +1536,12 @@ according to `headline-is-for-jira'."
   (when system-win32-p
     (require 'tex-mik)
     (require 'sumatra-forward)))
+
+(use-package treemacs ; A tree style file explorer package
+  :config
+  (setq treemacs-width 24))
+
+(use-package treemacs-projectile) ; projectile integration for treemacs
 
 (use-package custom
   :ensure nil
