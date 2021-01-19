@@ -867,6 +867,7 @@ display-buffer correctly."
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
   (defun advice-to-shut-up (orig-fun &rest args)
     "Call the ORIG-FUN in a `shut-up' context"
+    (require 'shut-up)
     (shut-up
       (apply orig-fun args)))
   (advice-add 'lsp--info :around #'advice-to-shut-up))
