@@ -249,9 +249,9 @@ directory, otherwise return nil."
 ;;;; PACKAGES
 ;;;==========
 
-(use-package ace-jump-helm-line)
+(use-package ace-jump-helm-line) ; Ace-jump to a candidate in helm window
 
-(use-package ace-link)
+(use-package ace-link) ; Quickly follow links
 
 (use-package ace-window                 ; Fast window switching
   :bind
@@ -280,7 +280,7 @@ directory, otherwise return nil."
   :init (global-anzu-mode)
   :diminish anzu-mode)
 
-(use-package auctex-latexmk
+(use-package auctex-latexmk ; Add LatexMk support to AUCTeX
   :ensure auctex-latexmk
   :config
   (push
@@ -384,16 +384,15 @@ directory, otherwise return nil."
   :config
   (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
 
-(use-package company
+(use-package company ; completion framework
   :init
-  (add-hook 'prog-mode-hook 'company-mode)
-  :bind
-  (:map company-active-map
-        ("C-o" . helm-company)))
+  (add-hook 'prog-mode-hook 'company-mode))
 
 (use-package company-auctex)
 
-(use-package company-quickhelp
+;; (use-package company-lsp) ; obsolete - its features are now in lsp-mode.
+
+(use-package company-quickhelp ; popup docs for company completion candidates
   :init
   (company-quickhelp-mode t))
 
@@ -613,7 +612,7 @@ no docs are found."
   :config
   (global-unset-key (kbd "C-x c"))
   ;; workaround for void definition for helm-call-interactively
-  (require 'helm-misc)
+  ;; (require 'helm-misc)
   ;; Disable helm completion in some modes
   (setq helm-mode-no-completion-in-region-in-modes
         '(inferior-python-mode)))
@@ -629,10 +628,16 @@ display-buffer correctly."
                      display-buffer-reuse-window)
                     . ())))
 
-(use-package helm-company
-  :config
-  (advice-add 'helm-company-display-document-buffer
-              :around #'jm-helm-company-display-document-buffer))
+(use-package helm-company ; helm interface for company completion selection
+  ;; separate from company backends
+  :after company
+  :bind
+  (:map company-active-map
+        ("C-o" . helm-company))
+  ;; :config
+  ;; (advice-add 'helm-company-display-document-buffer
+  ;;             :around #'jm-helm-company-display-document-buffer)
+  )
 
 (use-package helm-descbinds
   :init
@@ -642,7 +647,11 @@ display-buffer correctly."
   :bind (:map helm-command-map
               ("R" . helm-org-rifle)))
 
-(use-package helm-lsp)
+(use-package helm-lsp ; helm for LSP symbols, actions, switching projects
+  ;; separate from company
+  :after lsp
+  :bind (:map lsp-mode-map
+              ([remap xref-find-apropos] . helm-lsp-workspace-symbol)))
 
 (use-package helm-projectile)
 
