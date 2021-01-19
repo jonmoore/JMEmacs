@@ -862,7 +862,14 @@ display-buffer correctly."
   (setq lsp-keymap-prefix "s-s")
   (add-hook 'desktop-after-read-hook 'jm-conda-lsp-enable-lsp-everywhere)
   :commands lsp
-  )
+  :config
+  ;; suppress info-level messages from lsp.
+  ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
+  (defun advice-to-shut-up (orig-fun &rest args)
+    "Call the ORIG-FUN in a `shut-up' context"
+    (shut-up
+      (apply orig-fun args)))
+  (advice-add 'lsp--info :around #'advice-to-shut-up))
 
 (use-package lsp-ui
   :config
