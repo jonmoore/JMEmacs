@@ -245,54 +245,6 @@ directory, otherwise return nil."
 ;;;; PACKAGES
 ;;;==========
 
-(use-package tex-site
-  :ensure auctex
-  :config
-  (setq TeX-source-correlate-method 'synctex
-        TeX-source-correlate-mode t
-        TeX-source-correlate-start-server t
-        TeX-PDF-mode t
-        TeX-auto-save t
-        TeX-parse-self t)
-  (setq reftex-plug-into-AUCTeX t)
-  (setq-default TeX-master nil)
-  (cond
-   (system-win32-p
-    (setq
-     TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
-     TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
-   (system-osx-p
-    ;; use Skim as default pdf viewer. Skim's displayline is used for
-    ;; forward search from .tex to .pdf
-    (setq
-     TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
-     TeX-view-program-list '(("Skim PDF Viewer"
-                              "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
-     TeX-command-default "latexmk")))
-  (when system-win32-p
-    (require 'tex-mik)
-    (require 'sumatra-forward)))
-
-(defun latex-sumatra-scroll-down ()
-  (interactive)
-  (scroll-down-in-place)
-  (sumatra-jump-to-line))
-
-(defun latex-sumatra-scroll-up ()
-  (interactive)
-  (scroll-up-in-place)
-  (sumatra-jump-to-line))
-
-(use-package latex
-  :ensure auctex
-  :init
-  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-
-  :if system-win32-p
-  :bind (:map LaTeX-mode-map
-              ("<prior>" . latex-sumatra-scroll-down)
-              ("<next>"  .  latex-sumatra-scroll-up)))
-
 (use-package ace-jump-helm-line)
 
 (use-package ace-link)
@@ -394,7 +346,32 @@ directory, otherwise return nil."
                           (other . "stroustrup"))
         c-echo-syntactic-information-p nil))
 
-(use-package color-moccur)
+(use-package color-moccur
+  :bind (("M-s O" . moccur)
+         :map isearch-mode-map
+         ("M-o" . isearch-moccur )
+         ("M-O" . isearch-moccur-all))
+  :init
+  (setq moccur-split-word t
+        dmoccur-use-list t
+        dmoccur-use-project t
+        dmoccur-list '(("dir" default-directory (".*") dir)))
+  (setq *moccur-buffer-name-exclusion-list*
+        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
+          ".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
+          "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
+          "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
+          "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
+  (setq dmoccur-exclusion-mask
+        '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
+          "\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
+          "\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
+          "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
+          "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
+          "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
+          "\\.pch$" "\\.pdb$" "\\.res$"))
+  :config
+  (require 'moccur-edit))
 
 (use-package color-theme-modern)
 
@@ -418,7 +395,8 @@ directory, otherwise return nil."
 
 (use-package company-restclient)
 
-(use-package conda)
+(use-package conda
+  :ensure t)
 
 (use-package css-mode
   :mode "\\.css\\'")
@@ -758,8 +736,25 @@ display-buffer correctly."
 
 (use-package kanban) ; create Kanban boards from org TODOs
 
-(use-package smartparens
-  :diminish smartparens-mode)
+(defun latex-sumatra-scroll-down ()
+  (interactive)
+  (scroll-down-in-place)
+  (sumatra-jump-to-line))
+
+(defun latex-sumatra-scroll-up ()
+  (interactive)
+  (scroll-up-in-place)
+  (sumatra-jump-to-line))
+
+(use-package latex
+  :ensure auctex
+  :init
+  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+
+  :if system-win32-p
+  :bind (:map LaTeX-mode-map
+              ("<prior>" . latex-sumatra-scroll-down)
+              ("<next>"  .  latex-sumatra-scroll-up)))
 
 (defun my-emacs-lisp-mode-hook ()
   (smartparens-mode t)
@@ -918,33 +913,6 @@ display-buffer correctly."
         ("<M-down>"  . outline-move-subtree-down)))
 
 (use-package multiple-cursors)
-
-(use-package color-moccur
-  :bind (("M-s O" . moccur)
-         :map isearch-mode-map
-         ("M-o" . isearch-moccur )
-         ("M-O" . isearch-moccur-all))
-  :init
-  (setq moccur-split-word t
-        dmoccur-use-list t
-        dmoccur-use-project t
-        dmoccur-list '(("dir" default-directory (".*") dir)))
-  (setq *moccur-buffer-name-exclusion-list*
-        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
-          ".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
-          "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
-          "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
-          "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
-  (setq dmoccur-exclusion-mask
-        '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
-          "\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
-          "\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
-          "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
-          "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
-          "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
-          "\\.pch$" "\\.pdb$" "\\.res$"))
-  :config
-  (require 'moccur-edit))
 
 (use-package nexus)
 
@@ -1353,6 +1321,9 @@ according to `headline-is-for-jira'."
   :init
   (require 'cl))
 
+(use-package smartparens
+  :diminish smartparens-mode)
+
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")
   (auto-raise-mode 1))
@@ -1534,6 +1505,34 @@ according to `headline-is-for-jira'."
 (use-package saveplace                  ; Save point position in files
   :init
   (setq-default save-place t))
+
+(use-package tex-site
+  :ensure auctex
+  :config
+  (setq TeX-source-correlate-method 'synctex
+        TeX-source-correlate-mode t
+        TeX-source-correlate-start-server t
+        TeX-PDF-mode t
+        TeX-auto-save t
+        TeX-parse-self t)
+  (setq reftex-plug-into-AUCTeX t)
+  (setq-default TeX-master nil)
+  (cond
+   (system-win32-p
+    (setq
+     TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
+     TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
+   (system-osx-p
+    ;; use Skim as default pdf viewer. Skim's displayline is used for
+    ;; forward search from .tex to .pdf
+    (setq
+     TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
+     TeX-view-program-list '(("Skim PDF Viewer"
+                              "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
+     TeX-command-default "latexmk")))
+  (when system-win32-p
+    (require 'tex-mik)
+    (require 'sumatra-forward)))
 
 (use-package custom
   :ensure nil
