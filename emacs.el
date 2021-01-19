@@ -238,7 +238,6 @@ directory, otherwise return nil."
            ("<f8>"         . cycle-frame-maximized)
            ("<f11>"        . org-clock-in-and-goto)
            ("<S-f11>"      . org-clock-goto)
-           ("<f12>"        . p4-grep-moccur)
            ("<S-f12>"      . windows-search-moccur-like)
            ("<C-f12>"      . windows-search-moccur-contains))
 
@@ -361,62 +360,17 @@ directory, otherwise return nil."
 
 (use-package cdlatex)
 
-(defconst visual-studio-c-style
-  '((c-tab-always-indent        . t)
-    (c-comment-only-line-offset . 0)
-    (c-hanging-braces-alist     . ((substatement-open after)
-                                   (brace-list-open)))
-    (c-hanging-colons-alist     . ((member-init-intro before)
-                                   (inher-intro)
-                                   (case-label after)
-                                   (label after)
-                                   (access-label after)))
-    (c-cleanup-list             . (scope-operator
-                                   empty-defun-braces
-                                   defun-close-semi))
-    (c-offsets-alist            . ((block-open        . 0)
-                                   (case-label        . 4)
-                                   (inline-open        . 0)
-                                   (innamespace       . 4)
-                                   (knr-argdecl-intro . -)
-                                   (member-init-intro . ++)
-                                   (substatement-open . 0))))
-  "Visual C++ Programming Style")
-
-(defun jnm-toggle-hideshow-all ()
-  "Toggle hideshow all."
-  (interactive)
-  (if (boundp 'jnm-hs-hide)
-      (setq jnm-hs-hide (not jnm-hs-hide))
-    (set (make-local-variable 'jnm-hs-hide) t))
-  (if jnm-hs-hide (hs-hide-all) (hs-show-all)))
-
-(use-package hideshow
-  :init
-  (add-hook 'prog-mode-hook 'hs-minor-mode)
-  :bind
-  (:map hs-minor-mode-map
-        ("C-c l" . hs-hide-level)
-        ("C-c <right>" . hs-show-block)
-        ("C-c <left>"  . hs-hide-block))
-  :diminish hs-minor-mode)
-
 (defun my-c-mode-common-hook-fn ()
 
   (setq fill-column 100
         indent-tabs-mode nil
         tab-width 4)
 
-  (tempo-use-tag-list 'c-tempo-tags)
-  (tempo-use-tag-list 'c++-tempo-tags)
   (c-toggle-auto-newline -1)
   (c-toggle-electric-state -1)
-  (ooh-maybe-insert-cpp-guard)
-  (doxymacs-mode t)
   ;; Enable auto-fill on for comments but not code
   (auto-fill-mode 0)
   ;; call as a hook function since this affects the current buffer
-  (c-add-style "visual studio" visual-studio-c-style t)
   (set (make-local-variable 'fill-nobreak-predicate)
        (lambda ()
          (not (eq (get-text-property (point) 'face)
@@ -427,14 +381,11 @@ directory, otherwise return nil."
   ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode)
   :bind
   (:map c-mode-base-map
-        ("<C-return>"	. tempo-complete-tag)
-        ("<C-tab>"	. tempo-forward-mark)
         ("RET"		. c-context-line-break)
         ("M-o"		. ff-find-other-file))
   :init
   (add-hook 'c-mode-common-hook 'my-c-mode-common-hook-fn)
   :config
-  (require 'tempo-c-cpp)
   (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
                               ("\\.h\\'"     (".cpp" ".c"))
                               ("\\.hpp\\'"   (".cpp"))
@@ -457,7 +408,7 @@ directory, otherwise return nil."
   (add-hook 'prog-mode-hook 'company-mode)
   :bind
   (:map company-active-map
-               ("C-o" . helm-company)))
+        ("C-o" . helm-company)))
 
 (use-package company-auctex)
 
@@ -478,7 +429,7 @@ directory, otherwise return nil."
 (use-package dired-subtree)
 
 (use-package dired
-  :ensure nil ; actually part of the emacs package
+  :ensure nil
   :bind (:map dired-mode-map
               ("i" . dired-subtree-toggle)
               ("I" . dired-maybe-insert-subdir)
@@ -488,17 +439,16 @@ directory, otherwise return nil."
               ("<C-up>" . dired-prev-subdir)
               ("<C-down>" . dired-next-subdir))
   :config
-  (require 'dired-x)
-  (require 'find-dired)
   (require 'dired-column-widths)
-  (require 'dired-subtree)
-
   (set-face-foreground 'dired-directory "yellow")
+  (setq dired-dnd-protocol-alist nil
+        find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))))
 
-  (setq dired-omit-mode t
-        dired-dnd-protocol-alist nil
-        find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))
-        dired-omit-extensions (set-difference
+(use-package dired-x
+  :ensure nil
+  :hook (dired-mode . dired-omit-mode)
+  :config
+  (setq dired-omit-extensions (set-difference
                                dired-omit-extensions
                                '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
                                :test 'string=)))
@@ -513,42 +463,6 @@ directory, otherwise return nil."
 (use-package ein)
 
 (use-package elmacro)
-
-(use-package elpy
-  ;; elpy recommended packages
-  ;; echo n | enpkg jedi flake8 nose pylint yapf
-  ;; pip install importmagic autopep8 flake8-pep257
-
-  :bind
-  (:map
-   elpy-mode-map
-   ("C-c C-n" . nil)
-   ("C-c C-p" . nil)
-   :map python-mode-map
-   ("<tab> "    . yas-or-company-or-indent-for-tab)
-   ("C-c u"   . pyvenv-use-venv)
-   ("C-c y n" . yas-new-snippet)
-   ("C-c y s" . yas-insert-snippet)
-   ("<M-S-left>" . python-indent-shift-left)
-   ("<M-S-right>" . python-indent-shift-right)
-   :map inferior-python-mode-map
-   ("<tab> " . yas-or-company-or-indent-for-tab)
-   ("M-TAB" . python-shell-completion-complete-or-indent))
-  :config
-  (add-hook 'inferior-python-mode-hook 'inferior-python-mode-buffer-init)
-  (elpy-enable)
-
-  ;; The default version goes off to the web when reporting errors!!
-  ;; Also it uses https which probably won't work behind a proxy until
-  ;; emacs 26
-  ;; I'll assume we don't need _latest
-  ;; TODO: check this
-  (setq elpy-config--get-config my-elpy-config--get-config)
-  (when system-win32-p
-    (setq elpy-rpc-python-command "pythonw"))
-  ;; TODO re-enable
-  ;; :hook ((python-mode . elpy-mode))
-  )
 
 (use-package expand-region
   :bind
@@ -584,21 +498,10 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-to-list 'flycheck-checkers 'python-pycoverage)
   (flycheck-add-next-checker 'python-pycoverage 'python-pylint))
 
-(defun my-font-lock-mode-hook-fn ()
-  (when (or (eq major-mode 'c-mode)
-            (eq major-mode 'c++-mode))
-    (doxymacs-font-lock)
-    (font-lock-add-keywords
-     nil
-     '(("@\\(headerfile\|sourcefile\\|owner\\)"
-        0 font-lock-keyword-face prepend)))))
-
 (use-package font-lock-mode
   :ensure nil
   :init
-  (global-font-lock-mode t)
-  :config
-  (add-hook 'font-lock-mode-hook 'my-font-lock-mode-hook-fn))
+  (global-font-lock-mode t))
 
 (defun jm-geiser-company--doc-buffer (id)
   "Replacement for geiser-company--doc-buffer to return nil when
@@ -746,29 +649,16 @@ display-buffer correctly."
 
 (use-package helm-company
   :config
-  ;; (advice-add 'helm-company-display-document-buffer
-  ;;             :around #'jm-helm-company-display-document-buffer)
-  )
-
-(use-package helm-cscope
-  :if system-win32-p
-  :disabled t)
+  (advice-add 'helm-company-display-document-buffer
+              :around #'jm-helm-company-display-document-buffer))
 
 (use-package helm-descbinds
   :init
   (helm-descbinds-mode))
 
-;; disable because helm-org-rifle's autoloads trigger a (require 'org).
-;;
-;; That's because the definitions in helm-org-rifle.el using
-;; helm-org-rifle-define-command use a plain "###autoload" line rather
-;; than a line with the extra "(autoload ...) mentioned near the bottom of
-;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Autoload.html
-;; for macros that define functions.
-;;
-;; (use-package helm-org-rifle
-;;   :bind (:map helm-command-map
-;;               ("R" . helm-org-rifle)))
+(use-package helm-org-rifle
+  :bind (:map helm-command-map
+              ("R" . helm-org-rifle)))
 
 (use-package helm-lsp)
 
@@ -783,10 +673,15 @@ display-buffer correctly."
   :bind (:map help-mode-map
               ("C-c j k" . ace-link-help)))
 
-(defun weight-lists (froms tos weight)
-  (mapcar* (lambda (from to)
-             (+ from (* (- to from) weight)))
-           froms tos))
+(use-package hideshow
+  :init
+  (add-hook 'prog-mode-hook 'hs-minor-mode)
+  :bind
+  (:map hs-minor-mode-map
+        ("C-c l" . hs-hide-level)
+        ("C-c <right>" . hs-show-block)
+        ("C-c <left>"  . hs-hide-block))
+  :diminish hs-minor-mode)
 
 (use-package highlight-sexps
   :ensure nil
@@ -816,7 +711,7 @@ display-buffer correctly."
                  ("script"  (mode . sh-mode))
                  ("py"      (mode . python-mode))
                  ("emacs"   (name . "^\\*")))))
-        ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*" "\\*vc\\*")
+        ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*")
         ibuffer-display-summary nil)
 
   (define-ibuffer-op ibuffer-do-ps-print ()
@@ -845,22 +740,10 @@ display-buffer correctly."
 (use-package info
   :bind (:map
          Info-mode-map
-         ("C-c j k"     . ace-link-info)
+         ("j"           . ace-link-info)
          (";"           . Info-search-next)
          (":"           . Info-search-backward)
          ([(shift tab)] . Info-prev-reference)))
-
-(defun my-jedi-mode-hook-fn ()
-  (setq-local jedi:environment-root pyvenv-virtual-env)
-  (activate-venv-if-python)
-  (jedi:install-server)
-  (jedi-direx:setup))
-
-(use-package jedi
-  :config
-  (add-hook  'jedi-mode-hook 'my-jedi-mode-hook-fn))
-
-(use-package jedi-direx)
 
 (use-package jq-mode)
 
@@ -873,9 +756,8 @@ display-buffer correctly."
 
 (use-package js2-refactor)
 
-(use-package kanban)
+(use-package kanban) ; create Kanban boards from org TODOs
 
-;; todo: check how to supply dependencies for use-package
 (use-package smartparens
   :diminish smartparens-mode)
 
@@ -884,7 +766,7 @@ display-buffer correctly."
   (smartparens-strict-mode t))
 
 (use-package lisp-mode
-  :ensure nil
+  :ensure smartparens
 
   :init
   (require 'smartparens-config)
@@ -965,28 +847,26 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
-(setq lsp-keymap-prefix "s-s")
 (use-package lsp-mode
   :hook ((lsp-mode . lsp-enable-which-key-integration))
   :ensure conda
   :init
+  (setq lsp-keymap-prefix "s-s")
   (add-hook 'desktop-after-read-hook 'jm-conda-lsp-enable-lsp-everywhere)
   :commands lsp
   )
 
 (use-package lsp-ui
   :config
-  (setq lsp-ui-sideline-ignore-duplicate t)
+  (setq lsp-ui-sideline-ignore-duplicate t
+        lsp-ui-doc-delay 2)
   :hook ((lsp-mode . lsp-ui-mode)))
 
 (use-package lsp-python-ms
   :ensure t
   :init (setq lsp-python-ms-auto-install-server t)
   :config
-  (put 'lsp-python-ms-extra-paths 'safe-local-variable #'vectorp)
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-python-ms)
-                         (lsp-deferred))))
+  (put 'lsp-python-ms-extra-paths 'safe-local-variable #'vectorp))
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
@@ -1027,7 +907,6 @@ display-buffer correctly."
   (maximize-frame))
 
 (use-package mediawiki
-  ;; I use a tweaked version to avoid excessive keybindings
   :ensure nil
   :mode ("\\.wiki\\'" . mediawiki-mode)
   :bind
@@ -1066,19 +945,6 @@ display-buffer correctly."
           "\\.pch$" "\\.pdb$" "\\.res$"))
   :config
   (require 'moccur-edit))
-
-(use-package neotree
-  :bind (("C-c f t" . neotree-toggle))
-  :config (setq neo-window-width 32
-                neo-create-file-auto-open t
-                neo-banner-message nil
-                neo-show-updir-line nil
-                neo-mode-line-type 'neotree
-                neo-smart-open t
-                neo-dont-be-alone t
-                neo-persist-show nil
-                neo-show-hidden-files t
-                neo-auto-indent-point t))
 
 (use-package nexus)
 
@@ -1165,8 +1031,7 @@ according to `headline-is-for-jira'."
 
 (defun my-org-mode-hook-fn ()
   (require 'ob-restclient)
-  (setq fill-column 90)
-  )
+  (setq fill-column 90))
 
 (defun my-org-load-hook-fn ()
   (org-clock-persistence-insinuate)
@@ -1254,11 +1119,6 @@ according to `headline-is-for-jira'."
   ;; org-ref can be slow to load.  The messages about creating
   ;; links are from org-ref-link-set-parameters.
   (setq org-ref-show-broken-links nil) ; reported as a speedup
-  ;; (require 'org-ref)
-  ;; (require 'org-wp-link)
-
-  ;; (require 'pyvenv)
-  (require 'texmathp)
   )
 
 ;; Try not to download/use both org and org-plus-contrib, which both
@@ -1340,7 +1200,7 @@ according to `headline-is-for-jira'."
 
 (use-package ox-reveal)
 
-(use-package ox-jira)
+(use-package ox-jira) ;; transforms org files to JIRA markup 
 
 (use-package ox-mediawiki)
 
@@ -1356,7 +1216,7 @@ according to `headline-is-for-jira'."
   :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
   :interpreter "perl")
 
-(use-package peep-dired)
+(use-package peep-dired) ; in dired, show the file at point in the other window
 
 (use-package pretty-column
   :ensure nil
@@ -1383,28 +1243,28 @@ according to `headline-is-for-jira'."
         ps-print-color-p       t))
 
 (use-package pycoverage
-  ;; Not needed but a reminder of where to get the Python from
+  ;; may need to vendor this - there's a github issue reporting installation
+  ;; from MELPA is broken
   )
-
-(defun my-ignore-errors (orig-fun &rest args)
-  "Ignore errors due to calling ORIG-FUN."
-  (condition-case nil
-      (orig-fun args)
-    (error nil)))
-
-(use-package pyvenv
-  :config
-  (advice-add 'pyvenv-run-virtualenvwrapper-hook :around #'my-ignore-errors))
 
 (use-package python
+  :ensure nil
+  :bind
+  (
+   :map python-mode-map
+   ;; Check if applicable with LSP
+   ;; ("<tab> "    . yas-or-company-or-indent-for-tab)
+   ("C-c y n" . yas-new-snippet)
+   ("C-c y s" . yas-insert-snippet)
+   ("<M-S-left>" . python-indent-shift-left)
+   ("<M-S-right>" . python-indent-shift-right)
+
+   :map inferior-python-mode-map
+   ;; ("<tab> " . yas-or-company-or-indent-for-tab)
+   ("M-TAB" . python-shell-completion-complete-or-indent))
   :config
-  (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name)
-  ;; The reason for post-command-hook instead of when opening a file is
-  ;; that some of the variables set are global.  May still want to have
-  ;; a hook that lets us set up jedi correctly.
-  ;; TODO: re-enable when we get conda envs running
-  ;;(add-hook 'post-command-hook 'activate-venv-if-python)
-  )
+  (add-hook 'inferior-python-mode-hook 'inferior-python-mode-buffer-init)
+  (advice-add 'python-shell-get-process-name :around #'my-python-shell-get-process-name))
 
 (use-package rainbow-delimiters)
 
@@ -1487,8 +1347,6 @@ according to `headline-is-for-jira'."
   :config
   (setq shell-toggle-launch-shell 'shell))
 
-(use-package shut-up)
-
 (use-package sicp)
 
 (use-package simple-call-tree
@@ -1504,8 +1362,6 @@ according to `headline-is-for-jira'."
   (add-hook 'speedbar-mode-hook 'my-speedbar-mode-hook-fn))
 
 (use-package sphinx-doc)
-
-(use-package sr-speedbar)
 
 (use-package text-mode
   :ensure nil
@@ -1538,12 +1394,7 @@ according to `headline-is-for-jira'."
   :init
   (which-key-mode)
   (setq which-key-idle-delay 0.4
-        which-key-sort-order 'which-key-prefix-then-key-order
-        ;;        which-key-key-replacement-alist
-        ;;        which-key-description-replacement-alist
-        )
-  ;;  (which-key-declare-prefixes )
-  ;;  (which-key-declare-prefixes-for-mode 'emacs-lisp-mode)
+        which-key-sort-order 'which-key-prefix-then-key-order)
   :diminish which-key-mode)
 
 (use-package whitespace                 ; Highlight bad whitespace
@@ -1569,7 +1420,9 @@ according to `headline-is-for-jira'."
          ("C-c w <down>"  . windmove-down)))
 
 (use-package winner                     ; Undo and redo window configurations
-  :init (winner-mode))
+  :init
+  (setq winner-dont-bind-my-keys t)
+  (winner-mode))
 
 (use-package writeroom-mode)
 
@@ -1592,7 +1445,7 @@ according to `headline-is-for-jira'."
   :bind (("M-Z" . zop-to-char)
          ("M-z" . zop-up-to-char)))
 
-(use-package ztree)
+(use-package ztree)                     ; directory-diff'ing
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

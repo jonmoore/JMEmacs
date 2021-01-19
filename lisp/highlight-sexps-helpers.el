@@ -1,5 +1,10 @@
 (require 'hexrgb)
 
+(defun weight-lists (froms tos weight)
+  (mapcar* (lambda (from to)
+             (+ from (* (- to from) weight)))
+           froms tos))
+
 ;;;###autoload
 (defun create-hl-sexp-background-colors ()
   "Return a set of background colors for highlight-sexps."

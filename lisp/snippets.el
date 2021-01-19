@@ -437,3 +437,10 @@ The value is actually the first element of list whose car equals key."
                      (condition-case x
                          (org-sort-entries nil ?a)
                        (user-error)))))
+
+;;;###autoload
+(defmacro measure-time (&rest body)
+  "Measure the time it takes to evaluate BODY."
+  `(let ((time (current-time)))
+     ,@body
+     (message "%.06f" (float-time (time-since time)))))
