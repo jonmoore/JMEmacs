@@ -468,6 +468,9 @@ clean buffer we're an order of magnitude laxer about checking."
         (if flycheck-current-errors 3.0 15.0)))
 
 (use-package flycheck
+  ;; TODO: Check if pycoverage and pylint can be sensibly linked to flycheck
+  ;; when a conda env is active.  See code in python-helpers.el
+
   :config
   ;; Each buffer gets its own idle-change-delay because of the
   ;; buffer-sensitive adjustment above.
@@ -475,9 +478,10 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-hook 'flycheck-after-syntax-check-hook
             'adjust-flycheck-automatic-syntax-eagerness)
 
-  (pycoverage-define-flycheck-checker)
-  (add-to-list 'flycheck-checkers 'python-pycoverage)
-  (flycheck-add-next-checker 'python-pycoverage 'python-pylint))
+  ;; (pycoverage-define-flycheck-checker)
+  ;; (add-to-list 'flycheck-checkers 'python-pycoverage)
+  ;; (flycheck-add-next-checker 'python-pycoverage 'python-pylint)
+  )
 
 (use-package font-lock-mode
   :ensure nil
@@ -855,11 +859,21 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
-(use-package lsp-mode
+(use-package lsp-mode     ; Language Server Protocol support
+  ;; https://emacs-lsp.github.io/lsp-mode/page/settings/
+  ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+
+  ;; TODO: check how to use lsp-enable-snippet
+
   :hook ((lsp-mode . lsp-enable-which-key-integration))
   :ensure conda
   :init
-  (setq lsp-keymap-prefix "s-s")
+  (setq lsp-before-save-edits nil
+        lsp-enable-indentation nil
+        lsp-imenu-sort-methods '(kind position)
+        lsp-lens-enable t
+        lsp-keymap-prefix "s-s"
+        )
   (add-hook 'desktop-after-read-hook 'jm-conda-lsp-enable-lsp-everywhere)
   :commands lsp
   :config
@@ -874,8 +888,8 @@ display-buffer correctly."
 
 (use-package lsp-ui
   :config
-  (setq lsp-ui-sideline-ignore-duplicate t
-        lsp-ui-doc-delay 2)
+  (setq lsp-ui-doc-show-with-cursor nil
+        )
   :hook ((lsp-mode . lsp-ui-mode)))
 
 (use-package lsp-python-ms
@@ -1334,6 +1348,8 @@ according to `headline-is-for-jira'."
   :if system-win32-p
   :config
   (setq shell-toggle-launch-shell 'shell))
+
+(use-package shut-up)
 
 (use-package sicp)
 
