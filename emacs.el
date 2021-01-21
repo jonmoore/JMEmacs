@@ -107,10 +107,6 @@
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'after-init-hook 'benchmark-init/deactivate))
 
-;; https://emacs.stackexchange.com/questions/37468/how-do-i-use-use-package-with-diminish-in-my-init-el
-(use-package diminish)
-(require 'diminish)
-
 ;;; PERSONAL LISP
 (require 'update-personal-autoloads)
 (update-personal-autoloads)
@@ -401,11 +397,24 @@ directory, otherwise return nil."
 (use-package conda
   :ensure t)
 
+(use-package cperl-mode
+  :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
+  :interpreter "perl")
+
 (use-package css-mode
   :mode "\\.css\\'")
 
 (use-package csv-mode
     :mode "\\.csv\\'")
+
+(use-package dap-mode ; client for Debug Adapter Protocol
+  :after lsp-mode
+  :config
+  (dap-auto-configure-mode))
+
+(use-package delight)
+
+(use-package diminish)
 
 (use-package dired-subtree)
 
@@ -442,6 +451,9 @@ directory, otherwise return nil."
 (use-package ebib)
 
 (use-package ein)
+
+(use-package eldoc
+  :delight eldoc-mode)
 
 (use-package elmacro)
 
@@ -591,35 +603,48 @@ no docs are found."
         ("SPC"      . haskell-mode-contextual-space)
         ("M-."      . haskell-mode-jump-to-def)))
 
-(use-package helm-ag
-  :config
-  (setq helm-ag-base-command "rg"))
-
 (use-package helm
+  :demand
+  ;; https://www.reddit.com/r/emacs/comments/e9acvu/usepackage_and_helmmode/
+  :preface (require 'helm-config)
   :bind
-  (("C-c h"          . helm-command-prefix)
-   ("C-x C-b"        . helm-buffers-list)
-   ("C-x C-f"        . helm-find-files)
-   ("C-x C-r"        . helm-recentf)
-   ("C-x b"          . helm-mini)
-   ("M-X"            . execute-extended-command) ;; old binding of M-x
-   ("M-x"            . helm-M-x)
-   ("M-y"            . helm-show-kill-ring)
+  (("C-c h"         . helm-command-prefix)
+  ("C-x C-b"        . helm-buffers-list)
+  ("C-x C-f"        . helm-find-files)
+  ("C-x C-r"        . helm-recentf)
+  ("C-x b"          . helm-mini)
+  ("M-X"            . execute-extended-command) ;; old binding of M-x
+  ("M-x"            . helm-M-x)
+  ("M-y"            . helm-show-kill-ring)
 
-   :map helm-map
-   ("<tab>"          . helm-execute-persistent-action)
-   ("M-RET"          . helm-select-action)       ; more sane than C-z
-   ("C-'"            . ace-jump-helm-line)
-   )
+  :map helm-map
+  ("<tab>"          . helm-execute-persistent-action)
+  ("M-RET"          . helm-select-action)       ; more sane than C-z
+  ("C-'"            . ace-jump-helm-line)
+
+  :map helm-command-map
+  ("<tab>"          . helm-lisp-completion-at-point)
+  ("M-:"            . helm-eval-expression-with-eldoc)
+  ("a"              . helm-apropos)
+  ("m"              . helm-multi-swoop)
+  ("o"              . helm-occur)
+  ("s"              . helm-swoop)
+
+  :map helm-read-file-map
+  ("C-h m"          . describe-mode)
+  ("C-<backspace>"  . backward-kill-word)
+  )
   :diminish helm-mode
 
   :config
   (global-unset-key (kbd "C-x c"))
-  ;; workaround for void definition for helm-call-interactively
-  ;; (require 'helm-misc)
-  ;; Disable helm completion in some modes
   (setq helm-mode-no-completion-in-region-in-modes
-        '(inferior-python-mode)))
+        '(inferior-python-mode))
+  (helm-mode 1))
+
+(use-package helm-ag
+  :config
+  (setq helm-ag-base-command "rg"))
 
 (defun jm-helm-company-display-document-buffer (orig-fun buffer)
   "Temporarily show the documentation BUFFER.  JM: fixed to call
@@ -647,19 +672,25 @@ display-buffer correctly."
   :init
   (helm-descbinds-mode))
 
-(use-package helm-org-rifle
-  :bind (:map helm-command-map
-              ("R" . helm-org-rifle)))
-
 (use-package helm-lsp ; helm for LSP symbols, actions, switching projects
   ;; separate from company
   :after lsp
   :bind (:map lsp-mode-map
               ([remap xref-find-apropos] . helm-lsp-workspace-symbol)))
 
+(use-package helm-org-rifle
+  :bind (:map helm-command-map
+              ("R" . helm-org-rifle)))
+
 (use-package helm-projectile)
 
-(use-package helm-rg)
+(use-package helm-rg
+  ;; to check
+  ;;
+  ;; breakage of helm-rg:
+  ;; https://github.com/emacs-helm/helm/issues/2320,
+  ;; https://github.com/cosmicexplorer/helm-rg/pull/25
+  )
 
 (use-package helm-swoop)
 
@@ -886,12 +917,6 @@ display-buffer correctly."
       (apply orig-fun args)))
   (advice-add 'lsp--info :around #'advice-to-shut-up))
 
-(use-package lsp-ui
-  :config
-  (setq lsp-ui-doc-show-with-cursor nil
-        )
-  :hook ((lsp-mode . lsp-ui-mode)))
-
 (use-package lsp-python-ms
   :ensure t
   :init (setq lsp-python-ms-auto-install-server t)
@@ -899,6 +924,12 @@ display-buffer correctly."
   (put 'lsp-python-ms-extra-paths 'safe-local-variable #'vectorp))
 
 (use-package lsp-treemacs) ; lsp-mode/treemacs integration with treeview controls
+
+(use-package lsp-ui
+  :config
+  (setq lsp-ui-doc-show-with-cursor nil
+        )
+  :hook ((lsp-mode . lsp-ui-mode)))
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
@@ -1203,11 +1234,11 @@ according to `headline-is-for-jira'."
           (lambda (fpath)
             (start-process "open" "*open*" "open" fpath)))))
 
-(use-package ox-reveal)
-
 (use-package ox-jira) ;; transforms org files to JIRA markup 
 
 (use-package ox-mediawiki)
+
+(use-package ox-reveal)
 
 (use-package ox-rst)
 
@@ -1216,10 +1247,6 @@ according to `headline-is-for-jira'."
 (use-package paren
   :init
   (show-paren-mode))
-
-(use-package cperl-mode
-  :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
-  :interpreter "perl")
 
 (use-package peep-dired) ; in dired, show the file at point in the other window
 
@@ -1230,7 +1257,9 @@ according to `headline-is-for-jira'."
         pcol-column-separator "[ \t]+"))
 
 (use-package projectile
-  :disabled t)
+  :delight '(:eval (concat " " (projectile-project-name)))
+  :config
+  (setq projectile-mode-line-prefix "/"))
 
 (use-package ps-print
   :config
@@ -1370,6 +1399,34 @@ according to `headline-is-for-jira'."
 
 (use-package sphinx-doc)
 
+(use-package tex-site
+  :ensure auctex
+  :config
+  (setq TeX-source-correlate-method 'synctex
+        TeX-source-correlate-mode t
+        TeX-source-correlate-start-server t
+        TeX-PDF-mode t
+        TeX-auto-save t
+        TeX-parse-self t)
+  (setq reftex-plug-into-AUCTeX t)
+  (setq-default TeX-master nil)
+  (cond
+   (system-win32-p
+    (setq
+     TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
+     TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
+   (system-osx-p
+    ;; use Skim as default pdf viewer. Skim's displayline is used for
+    ;; forward search from .tex to .pdf
+    (setq
+     TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
+     TeX-view-program-list '(("Skim PDF Viewer"
+                              "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
+     TeX-command-default "latexmk")))
+  (when system-win32-p
+    (require 'tex-mik)
+    (require 'sumatra-forward)))
+
 (use-package text-mode
   :ensure nil
   :bind
@@ -1382,6 +1439,12 @@ according to `headline-is-for-jira'."
   (setq tramp-default-method "plink"))
 
 (use-package transpose-frame)           ; Switch between horizontal and vertically split frames
+
+(use-package treemacs ; A tree style file explorer package
+  :config
+  (setq treemacs-width 24))
+
+(use-package treemacs-projectile) ; projectile integration for treemacs
 
 (use-package undo-tree
   :bind (:map undo-tree-visualizer-mode-map
@@ -1499,29 +1562,6 @@ according to `headline-is-for-jira'."
   ;; make-process (wrong argument type stringp), even though we don't pass
   ;; default-directory.  It is mentioned in the docs of start-process though
   ;;
-  ;; Notable issues
-  ;;
-  ;; breakage of helm-rg:
-  ;; https://github.com/emacs-helm/helm/issues/2320,
-  ;; https://github.com/cosmicexplorer/helm-rg/pull/25
-  ;;
-
-
-  (helm-mode 1)
-  ;; helm workarounds below  - define keys after it's fully active as
-  ;; otherwise we get an error that helm-command-map is void.
-
-  ;; defines helm-command-map, apparently /not/ defined by enabling
-  ;; helm-mode
-  (require 'helm-config)
-  (define-key helm-command-map (kbd "<tab>") 'helm-lisp-completion-at-point)
-  (define-key helm-command-map (kbd "M-:") 'helm-eval-expression-with-eldoc)
-  (define-key helm-command-map (kbd "a") 'helm-apropos)
-  (define-key helm-command-map (kbd "m") 'helm-multi-swoop)
-  (define-key helm-command-map (kbd "o") 'helm-occur)
-  (define-key helm-command-map (kbd "s") 'helm-swoop)
-  (define-key helm-read-file-map (kbd "C-h m") 'describe-mode)
-  (define-key helm-read-file-map (kbd "C-<backspace>") 'backward-kill-word)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1542,40 +1582,6 @@ according to `headline-is-for-jira'."
   :init
   (setq-default save-place t))
 
-(use-package tex-site
-  :ensure auctex
-  :config
-  (setq TeX-source-correlate-method 'synctex
-        TeX-source-correlate-mode t
-        TeX-source-correlate-start-server t
-        TeX-PDF-mode t
-        TeX-auto-save t
-        TeX-parse-self t)
-  (setq reftex-plug-into-AUCTeX t)
-  (setq-default TeX-master nil)
-  (cond
-   (system-win32-p
-    (setq
-     TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
-     TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
-   (system-osx-p
-    ;; use Skim as default pdf viewer. Skim's displayline is used for
-    ;; forward search from .tex to .pdf
-    (setq
-     TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
-     TeX-view-program-list '(("Skim PDF Viewer"
-                              "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
-     TeX-command-default "latexmk")))
-  (when system-win32-p
-    (require 'tex-mik)
-    (require 'sumatra-forward)))
-
-(use-package treemacs ; A tree style file explorer package
-  :config
-  (setq treemacs-width 24))
-
-(use-package treemacs-projectile) ; projectile integration for treemacs
-
 (use-package custom
   :ensure nil
   :init
@@ -1585,8 +1591,6 @@ according to `headline-is-for-jira'."
    ;; set to avoid writing back to ~
    custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
   (load custom-file))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 (use-package server
   :init
