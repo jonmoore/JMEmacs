@@ -382,7 +382,8 @@ directory, otherwise return nil."
 
 (use-package company ; completion framework
   :init
-  (add-hook 'prog-mode-hook 'company-mode))
+  (add-hook 'prog-mode-hook 'company-mode)
+  :delight company-mode)
 
 (use-package company-auctex)
 
@@ -1257,7 +1258,6 @@ according to `headline-is-for-jira'."
         pcol-column-separator "[ \t]+"))
 
 (use-package projectile
-  :delight '(:eval (concat " " (projectile-project-name)))
   :config
   (setq projectile-mode-line-prefix "/"))
 
@@ -1287,57 +1287,17 @@ according to `headline-is-for-jira'."
   (
    :map python-mode-map
    ;; Check if applicable with LSP
-   ;; ("<tab> "    . yas-or-company-or-indent-for-tab)
+   ("<tab> "    . yas-or-company-or-indent-for-tab)
    ("C-c y n" . yas-new-snippet)
    ("C-c y s" . yas-insert-snippet)
    ("<M-S-left>" . python-indent-shift-left)
    ("<M-S-right>" . python-indent-shift-right)
 
    :map inferior-python-mode-map
-   ;; ("<tab> " . yas-or-company-or-indent-for-tab)
+   ("<tab> " . yas-or-company-or-indent-for-tab)
    ("M-TAB" . python-shell-completion-complete-or-indent)))
 
 (use-package rainbow-delimiters)
-
-(defun jm-ranger-revert ()
-  "Revert all ranger settings"
-  (interactive)
-  (ranger-revert)
-  (remove-hook 'dired-mode-hook 'ranger-override-dired-fn)
-  (remove-hook 'window-configuration-change-hook 'ranger-window-check)
-  (mapcar 'ranger-revert-appearance ; workaround issue #171
-          (buffer-list)))
-
-(use-package ranger
-  ;; ranger has a number of issues that may affect standard operation
-  ;;
-  ;; 1) https://github.com/ralesi/ranger.el/issues/171, when ranger-show-literal
-  ;; is nil and using ranger to preview files that were previously open. This
-  ;; concerns configuring appearance, including header-line-format, enabling
-  ;; hl-line-mode, etc.  ranger-revert should remove most ranger global
-  ;; settings, but it's unclear if this works outside a ranger session as
-  ;; removing hooks is conditional. We could also set ranger-modify-header to
-  ;; nil, but this sacrifices tabs functionality.
-  ;;
-  ;; 2) Taking over window management, including adding ranger-window-check to
-  ;; window-configuration-change-hook, creating new frames to open buffers from
-  ;; ranger-still-dired, etc.  This can cause problems when not quitting ranger
-  ;; explicitly, and possibly in other cases too.
-  ;;
-  ;; 3) Aggresive takeover of key bindings, including C-h [??].  May be
-  ;; avoidable using ranger-emacs-mode-map.
-  :bind
-  (:map ranger-normal-mode-map
-        ("<C-h>" . nil))
-  :config
-  (advice-add 'ranger-open-file-other-window
-              :after
-              (lambda (&rest _)
-                (ranger-revert-appearance (current-buffer))))
-  (advice-add 'ranger-revert-appearance
-              :after
-              (lambda (&rest _)
-                (kill-local-variable 'cursor-type))))
 
 (use-package realgud)
 
@@ -1505,7 +1465,7 @@ according to `headline-is-for-jira'."
   :init
   (setq yas-verbosity 2)
   :config
-  ;; yas only calls this when the global mode is enabled.  WTF?
+  (yas-global-mode)
   (yas-reload-all)
   :diminish yas-minor-mode)
 
@@ -1565,6 +1525,10 @@ according to `headline-is-for-jira'."
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(savehist-mode 1)
+(save-place-mode 1)
+
 (use-package desktop
   :init
   (let* ((computername (getenv "COMPUTERNAME"))
@@ -1573,14 +1537,6 @@ according to `headline-is-for-jira'."
       (mkdir local-desktop-dir))
     (setq desktop-path (list local-desktop-dir)))
   (desktop-save-mode 1))
-
-(use-package savehist
-  :init
-  (savehist-mode 1))
-
-(use-package saveplace                  ; Save point position in files
-  :init
-  (setq-default save-place t))
 
 (use-package custom
   :ensure nil
