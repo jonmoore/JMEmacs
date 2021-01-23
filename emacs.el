@@ -721,7 +721,7 @@ display-buffer correctly."
 (use-package hydra)
 
 (defun my-ibuffer-hook ()
-  (ibuffer-switch-to-saved-filter-groups "default"))
+  (ibuffer-switch-to-saved-filter-groups "my-default-filter-groups"))
 
 (use-package ibuffer
   :bind
@@ -731,15 +731,14 @@ display-buffer correctly."
   :init
   (add-hook 'ibuffer-mode-hook 'my-ibuffer-hook)
   :config
-  (setq ibuffer-saved-filter-groups
-        (quote (("default"
-                 ("dired"   (mode . dired-mode))
-                 ("org"     (mode . org-mode))
-                 ("script"  (mode . sh-mode))
-                 ("py"      (mode . python-mode))
-                 ("emacs"   (name . "^\\*")))))
-        ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*")
-        ibuffer-display-summary nil)
+  (setq ibuffer-saved-filter-groups (quote (("my-default-filter-groups"
+                                             ("dired"   (mode . dired-mode))
+                                             ("org"     (mode . org-mode))
+                                             ("script"  (mode . sh-mode))
+                                             ("py"      (mode . python-mode))
+                                             ("elisp"   (mode . elisp-mode))
+                                             ("emacs"   (name . "^\\*")))))
+        ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*"))
 
   (define-ibuffer-op ibuffer-do-ps-print ()
     "Print marked buffers as with `ps-print-buffer-with-faces'."
@@ -1235,7 +1234,7 @@ according to `headline-is-for-jira'."
           (lambda (fpath)
             (start-process "open" "*open*" "open" fpath)))))
 
-(use-package ox-jira) ;; transforms org files to JIRA markup 
+(use-package ox-jira) ;; transforms org files to JIRA markup
 
 (use-package ox-mediawiki)
 
