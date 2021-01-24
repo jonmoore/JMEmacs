@@ -4,6 +4,7 @@
 ;;; conda.el
 
 (require 'conda)
+(require 'flycheck)
 (require 'ht)
 
 (defvar jm-conda-lsp--ht-project-env
@@ -47,7 +48,11 @@ https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143"
   (jm-configure-dap-python)
 
   ;; lsp will set up dap automatically
-  (lsp))
+  (lsp)
+  ;; Use the other Python checkers as well as lsp.  See
+  ;; https://github.com/flycheck/flycheck/issues/1762#issuecomment-750458442 and
+  ;; other comments in the issue
+  (flycheck-add-next-checker 'lsp 'python-pylint))
 
 ;; We don't need to save projectile project roots as `projectile-project-root'
 ;; recalculates these automatically
@@ -144,8 +149,6 @@ to be enabled if needed using `window-configuration-change-hook'"
 ;; and hence the Python executable.
 
 ;;; pycoverage / flycheck integration
-
-(require 'flycheck)
 
 ;;;###autoload
 (defun pycoverage-define-flycheck-checker ()

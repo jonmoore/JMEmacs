@@ -891,8 +891,6 @@ display-buffer correctly."
   ;; https://emacs-lsp.github.io/lsp-mode/page/settings/
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 
-  ;; TODO: check how to use lsp-enable-snippet
-
   :hook ((lsp-mode . lsp-enable-which-key-integration))
   :ensure conda
   :init
@@ -912,12 +910,7 @@ display-buffer correctly."
     (require 'shut-up)
     (shut-up
       (apply orig-fun args)))
-  (advice-add 'lsp--info :around #'advice-to-shut-up)
-
-  ;; Use the other Python checkers as well as lsp.  See
-  ;; https://github.com/flycheck/flycheck/issues/1762#issuecomment-750458442 and
-  ;; other comments in the issue
-  (flycheck-add-next-checker 'lsp 'python-pylint))
+  (advice-add 'lsp--info :around #'advice-to-shut-up))
 
 (use-package lsp-python-ms
   :ensure t
