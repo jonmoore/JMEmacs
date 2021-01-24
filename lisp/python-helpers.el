@@ -143,6 +143,51 @@ to be enabled if needed using `window-configuration-change-hook'"
 ;; 2. Use conda.el's `conda-env-name-to-dir' to find the venv base directory
 ;; and hence the Python executable.
 
+;;; pycoverage / flycheck integration
+
+(require 'flycheck)
+
+;;;###autoload
+(defun pycoverage-define-flycheck-checker ()
+  "Register a checker for pycoverage with flycheck"
+  (interactive)
+  (flycheck-define-checker python-pycoverage
+    "A Python test coverage checker checker using the pycoverage tool.
+
+See `https://github.com/mattharrison/pycoverage.el'.
+
+This works after pytest has run by marking lines missing
+coverage (as reported by pytest) as flycheck issues.  If the code
+was updated after pytest was run then nothing is reported.
+"
+    :command
+;; We use the cov2emacslib Python package that comes with
+;; pycoverage, updating Python's sys.path dynamically.  It could
+;; also be installed in the active virtual environment, e.g.
+;;
+;; pip install -e git+https://github.com/mattharrison/pycoverage.el#egg=pkg&subdirectory=cov2emacs
+;;
+;; in which case we would invoke python with '-m
+;; cov2emacslib.__init__' rather than '-c'
+    ("python" "-c"
+     (eval
+      (mapconcat 'identity
+                 (list
+                  "import sys"
+                  (format "sys.path.insert(0, '%scov2emacs')"
+                          (file-name-directory (locate-library "pycoverage")))
+                  "from cov2emacslib.__init__ import main"
+                  "main(sys.argv[1:])")
+                 ";"))
+     "--compile-mode" "--python-file" source-original)
+    :error-patterns
+    ((warning line-start
+              (file-name) ":"
+              line ":"
+              (message)
+              line-end))
+    :modes (python-mode)))
+
 (provide 'python-helpers)
 
 ;;; TO REVIEW
@@ -175,38 +220,4 @@ to be enabled if needed using `window-configuration-change-hook'"
 ;;                          (delq 'company-capf
 ;;                                (mapcar #'identity company-backends))))))
 ;;   (company-mode 1))
-
-;; (require 'flycheck)
-
-;; ;;;###autoload
-;; (defun pycoverage-define-flycheck-checker ()
-;;   "Register a checker for pycoverage with flycheck"
-;;   (interactive)
-;;   (flycheck-define-checker python-pycoverage
-;;     "A Python test coverage checker checker using the pycoverage tool.
-
-;; See `https://github.com/mattharrison/pycoverage.el'.
-
-;; For this checker to work the Python package cov2emacslib must be
-;; installed in the active virtual environment.
-
-;; As cov2emacslib is not yet on PyPI it is probably easiest to do
-;; that using the git code, as in
-
-;; 1. Ensure git is on PATH.  See `git-bin-dir' if configured.
-
-;; 2. Run
-;;   pip install -e git+https://github.com/mattharrison/pycoverage.el#egg=pkg&subdirectory=cov2emacs
-
-;; "
-;;     :command ("python" "-m" "cov2emacslib.__init__"
-;;               "--compile-mode" "--python-file" source-original)
-;;     :error-patterns
-;;     ((warning line-start
-;;               (file-name) ":"
-;;               line ":"
-;;               (message)
-;;               line-end))
-;;     :modes (python-mode)
-;;     :next-checkers ((t . python-flake8))))
 

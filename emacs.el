@@ -481,9 +481,7 @@ clean buffer we're an order of magnitude laxer about checking."
         (if flycheck-current-errors 3.0 15.0)))
 
 (use-package flycheck
-  ;; TODO: Check if pycoverage and pylint can be sensibly linked to flycheck
-  ;; when a conda env is active.  See code in python-helpers.el
-
+  :diminish
   :config
   ;; Each buffer gets its own idle-change-delay because of the
   ;; buffer-sensitive adjustment above.
@@ -491,10 +489,9 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-hook 'flycheck-after-syntax-check-hook
             'adjust-flycheck-automatic-syntax-eagerness)
 
-  ;; (pycoverage-define-flycheck-checker)
-  ;; (add-to-list 'flycheck-checkers 'python-pycoverage)
-  ;; (flycheck-add-next-checker 'python-pycoverage 'python-pylint)
-  )
+  (pycoverage-define-flycheck-checker)
+  (add-to-list 'flycheck-checkers 'python-pycoverage)
+  (flycheck-add-next-checker 'python-mypy 'python-pycoverage))
 
 (use-package font-lock-mode
   :ensure nil
@@ -915,7 +912,12 @@ display-buffer correctly."
     (require 'shut-up)
     (shut-up
       (apply orig-fun args)))
-  (advice-add 'lsp--info :around #'advice-to-shut-up))
+  (advice-add 'lsp--info :around #'advice-to-shut-up)
+
+  ;; Use the other Python checkers as well as lsp.  See
+  ;; https://github.com/flycheck/flycheck/issues/1762#issuecomment-750458442 and
+  ;; other comments in the issue
+  (flycheck-add-next-checker 'lsp 'python-pylint))
 
 (use-package lsp-python-ms
   :ensure t
