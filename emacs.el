@@ -1294,7 +1294,9 @@ according to `headline-is-for-jira'."
 
    :map inferior-python-mode-map
    ("<tab> " . yas-or-company-or-indent-for-tab)
-   ("M-TAB" . python-shell-completion-complete-or-indent)))
+   ("M-TAB" . python-shell-completion-complete-or-indent))
+  :config
+  (require 'pydoc-info))
 
 (use-package rainbow-delimiters)
 

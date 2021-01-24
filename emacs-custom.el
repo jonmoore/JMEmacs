@@ -8,6 +8,7 @@
  ;; If there is more than one, they won't work right.
  '(Buffer-menu-buffer+size-width 36)
  '(Buffer-menu-mode-width 10)
+ '(Info-additional-directory-list '("~/info"))
  '(ac-candidate-limit 20)
  '(align-to-tab-stop nil)
  '(archive-zip-extract '("7z" "x" "-so"))
