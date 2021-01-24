@@ -1,4 +1,5 @@
-;;; Helper functions for Python programming, based on conda and lsp-mode.
+;;; Helper functions for Python programming, based on conda, lsp-mode and
+;;; dap-mode.
 
 ;;; conda.el
 
@@ -21,10 +22,32 @@
       "Helm source for conda environments"
       jm-conda-lsp--environments-file))
 
+(defun jm-configure-dap-python ()
+  "Enable Python debugging with `dap-debug'.  Confirmed working on
+OS X when invoking breakpoint(). `dap-debug-edit-template' can be
+used to edit `dap-debug-template-configurations', which are used
+to launch debug sessions with `dap-debug'. We use debugpy as the
+debugger as this is the successor to ptvsd and is in use by
+dap-mode developers like nbfalcon.
+
+See also
+
+1) docs
+https://emacs-lsp.github.io/dap-mode/page/configuration/#python
+https://github.com/emacs-lsp/dap-mode/pull/408
+
+2) Example and notes for debug template
+https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143"
+  (require 'dap-python)
+  (setq dap-python-debugger 'debugpy))
+
 (defun jm-conda-lsp--activate-and-enable-lsp (env-path)
   (conda-env-activate-path env-path)
-  (when (not (bound-and-true-p lsp-mode))
-    (lsp)))
+
+  (jm-configure-dap-python)
+
+  ;; lsp will set up dap automatically
+  (lsp))
 
 ;; We don't need to save projectile project roots as `projectile-project-root'
 ;; recalculates these automatically

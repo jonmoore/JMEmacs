@@ -33,7 +33,7 @@
  '(enable-local-eval t)
  '(ff-quiet-mode t)
  '(fill-column 80)
- '(find-ls-option '("-exec ls -ld {} ';'" . "-ld") t)
+ '(find-ls-option '("-exec ls -ld {} ';'" . "-ld"))
  '(flycheck-check-syntax-automatically '(save idle-change mode-enabled))
  '(flycheck-idle-change-delay 5.0)
  '(flycheck-keymap-prefix "f")

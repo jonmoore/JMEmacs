@@ -736,7 +736,7 @@ display-buffer correctly."
                                              ("org"     (mode . org-mode))
                                              ("script"  (mode . sh-mode))
                                              ("py"      (mode . python-mode))
-                                             ("elisp"   (mode . elisp-mode))
+                                             ("elisp"   (mode . emacs-lisp-mode))
                                              ("emacs"   (name . "^\\*")))))
         ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*"))
 
