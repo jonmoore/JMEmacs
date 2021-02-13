@@ -192,35 +192,3 @@ was updated after pytest was run then nothing is reported.
     :modes (python-mode)))
 
 (provide 'python-helpers)
-
-;;; TO REVIEW
-;; ;;;###autoload
-;; (defun inferior-python-mode-company-backend (command &optional arg &rest ignored)
-;;   "A company-mode backend for `inferior-python-mode' using Elpy."
-;;   (interactive (list 'interactive))
-;;   (pcase command
-;;     (`prefix
-;;      (when (and (eq major-mode 'inferior-python-mode)
-;;                 (not (company-in-string-or-comment)))
-;;        (company-grab-symbol-cons "\\." 1)))
-;;     (_ (elpy-company-backend command arg ignored))))
-
-;; ;;;###autoload
-;; (defun inferior-python-mode-buffer-init ()
-;;   "Initialisation for `inferior-python-mode' copied from
-;; `elpy-module-company'"
-
-;;   ;; Annotations should be right-aligned.
-;;   (set (make-local-variable 'company-tooltip-align-annotations) t)
-;;   ;; Also, dabbrev in comments and strings is nice.
-;;   (set (make-local-variable 'company-dabbrev-code-everywhere) t)
-;;   ;; Add our own backend and remove a bunch of backends that
-;;   ;; interfere in Python mode.
-;;   (set (make-local-variable 'company-backends)
-;;        (cons 'inferior-python-mode-company-backend
-;;              (delq 'company-semantic
-;;                    (delq 'company-ropemacs
-;;                          (delq 'company-capf
-;;                                (mapcar #'identity company-backends))))))
-;;   (company-mode 1))
-
