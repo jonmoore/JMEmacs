@@ -615,12 +615,12 @@ no docs are found."
   ("M-y"            . helm-show-kill-ring)
 
   :map helm-map
-  ("<tab>"          . helm-execute-persistent-action)
+  ("TAB"            . helm-execute-persistent-action)
   ("M-RET"          . helm-select-action)       ; more sane than C-z
   ("C-'"            . ace-jump-helm-line)
 
   :map helm-command-map
-  ("<tab>"          . helm-lisp-completion-at-point)
+  ("TAB"            . helm-lisp-completion-at-point)
   ("M-:"            . helm-eval-expression-with-eldoc)
   ("a"              . helm-apropos)
   ("m"              . helm-multi-swoop)
@@ -1280,14 +1280,14 @@ according to `headline-is-for-jira'."
   (
    :map python-mode-map
    ;; Check if applicable with LSP
-   ("<tab> "    . yas-or-company-or-indent-for-tab)
+   ("TAB"     . yas-or-company-or-indent-for-tab)
    ("C-c y n" . yas-new-snippet)
    ("C-c y s" . yas-insert-snippet)
    ("<M-S-left>" . python-indent-shift-left)
    ("<M-S-right>" . python-indent-shift-right)
 
    :map inferior-python-mode-map
-   ("<tab> " . yas-or-company-or-indent-for-tab)
+   ("TAB"   . yas-or-company-or-indent-for-tab)
    ("M-TAB" . python-shell-completion-complete-or-indent))
   :config
   (require 'pydoc-info))
