@@ -230,7 +230,6 @@ directory, otherwise return nil."
            ("<end>"        . end-of-buffer)
            ("<prior>"      . (lambda () (interactive) (scroll-down-in-place)))
            ("<next>"       . (lambda () (interactive) (scroll-up-in-place)))
-           ("<f4>"         . shell-toggle)
            ("<f5>"         . other-window)
            ("<S-f5>"       . swap-buffers-previous-window-and-select)
            ("<f6>"         . rotate-buffer-to-next-window)
@@ -1328,13 +1327,7 @@ according to `headline-is-for-jira'."
    ("<up>"   . shell-cycle-backward-through-command-history)
    ("<down>" . shell-cycle-forward-through-command-history)))
 
-(use-package shell-toggle
-  ;; shell-toggle tries to use term by default but this doesn't work on windows
-  :if system-win32-p
-  :config
-  (setq shell-toggle-launch-shell 'shell))
-
-(use-package shut-up)
+(use-package shut-up)                   ; redirects `message' and stdout
 
 (use-package sicp)
 
