@@ -534,10 +534,6 @@ no docs are found."
   (setq geiser-active-implementations '(racket)
         geiser-eval--geiser-procedure-function 'geiser-racket--geiser-procedure))
 
-(use-package ghc
-  :config
-  (setq ghc-debug t))
-
 (use-package goto-addr
   :init
   (add-hook 'prog-mode-hook #'goto-address-prog-mode)
