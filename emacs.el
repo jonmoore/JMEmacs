@@ -968,7 +968,11 @@ display-buffer correctly."
         ("<M-left>"  . mediawiki-simple-outline-promote)
         ("<M-right>" . mediawiki-simple-outline-demote)
         ("<M-up>"    . outline-move-subtree-up)
-        ("<M-down>"  . outline-move-subtree-down)))
+        ("<M-down>"  . outline-move-subtree-down))
+  :config
+  ;; workaround for bug https://github.com/hexmode/mediawiki-el/issues/36
+  (remove-hook 'outline-minor-mode-hook 'mediawiki-outline-magic-keys)
+  )
 
 (use-package multiple-cursors)
 
