@@ -282,7 +282,10 @@ directory, otherwise return nil."
    ([remap isearch-query-replace]        . anzu-isearch-query-replace)
    ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
   :init (global-anzu-mode)
-  :diminish anzu-mode)
+  :diminish anzu-mode
+  :config
+  (setq anzu-search-threshold 100)
+  )
 
 (use-package auctex-latexmk ; Add LatexMk support to AUCTeX
   :ensure auctex-latexmk
