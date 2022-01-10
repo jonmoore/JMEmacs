@@ -66,9 +66,18 @@
 
 (setq load-prefer-newer t)
 (setq package-archives
-      '(("melpa" . "http://melpa.org/packages/")
-        ("gnu"   . "http://elpa.gnu.org/packages/")
-        ("org" . "https://orgmode.org/elpa/")))
+      '(("melpa"  . "https://melpa.org/packages/")
+	("nongnu" . "https://elpa.nongnu.org/nongnu/")
+	("gnu"    . "https://elpa.gnu.org/packages/")))
+
+(setq package-archive-priorities
+      '(("nongnu" . 20)
+        ("melpa"  . 15)
+        ("gnu"    . 10)))
+
+;; basically irrelevant with https and otherwise a source of
+;; tricky-to-diagnose issues
+(setq package-check-signature nil)
 
 (mapc
  (lambda (relpath)
@@ -576,9 +585,7 @@ no docs are found."
   (advice-add 'gud-display-line :after #'gud-display-line--my-gud-highlight))
 
 (defun my-haskell-mode-hook ()
-  (turn-on-haskell-indentation)
-  (when (buffer-file-name)
-    (ghc-init)))
+  (turn-on-haskell-indentation))
 
 (use-package haskell-mode
   :init
@@ -1115,8 +1122,6 @@ according to `headline-is-for-jira'."
         org-agenda-todo-keyword-format "%-4s")
 
   (require 'org-id)
-  (require 'org-toc)
-  (setq org-toc-default-depth 3)
 
   (require 'ox)
   (setq org-export-headline-levels       3
@@ -1151,10 +1156,7 @@ according to `headline-is-for-jira'."
   (setq org-ref-show-broken-links nil) ; reported as a speedup
   )
 
-;; Try not to download/use both org and org-plus-contrib, which both
-;; contain the core org package.
 (use-package org
-  :ensure org-plus-contrib
   :ensure org-chef
   :mode "\\.org'"
 
@@ -1202,6 +1204,8 @@ according to `headline-is-for-jira'."
   )
 
 (use-package org-chef)
+
+(use-package org-contrib)
 
 (use-package org-jira)
 
@@ -1521,7 +1525,8 @@ according to `headline-is-for-jira'."
 (use-package desktop
   :init
   (let* ((computername (getenv "COMPUTERNAME"))
-         (local-desktop-dir (concat "~/.emacs.d/" computername )))
+         (local-desktop-dir
+          (string-as-unibyte (concat "~/.emacs.d/" computername ))))
     (unless (file-exists-p local-desktop-dir)
       (mkdir local-desktop-dir))
     (setq desktop-path (list local-desktop-dir)))
