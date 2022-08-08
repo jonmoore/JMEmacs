@@ -6,6 +6,7 @@
 (require 'conda)
 (require 'flycheck)
 (require 'ht)
+(require 'projectile)
 
 (defvar jm-conda-lsp--ht-project-env
   (ht-create)

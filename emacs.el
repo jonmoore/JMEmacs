@@ -188,7 +188,8 @@ directory, otherwise return nil."
 
 (cond
  (system-win32-p
-  (set-face-attribute 'default nil :family "Consolas"    :height 120))
+  (set-face-attribute 'default nil :family "Consolas"    :height 120)
+  (set-face-attribute 'fixed-pitch nil :family "Consolas"    :height 120))
  ;; Inconsolata needs to be installed otherwise you can end up with Times New Roman
  (system-osx-p
   (set-face-attribute 'default nil :family "Inconsolata" :height 200)))
