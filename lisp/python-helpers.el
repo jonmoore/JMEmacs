@@ -5,19 +5,29 @@
 
 (require 'conda)
 (require 'flycheck)
-(require 'ht)
+(require 'ht)                           ; hash table library
 (require 'projectile)
 
 (defvar jm-conda-lsp--ht-project-env
   (ht-create)
   "Hash table used to map projectile projects to conda envs")
 
+(defun jm-python-user-home-directory ()
+  "Return location of Python home directory (~). Under normal use,
+this is consistent with
+https://docs.python.org/3/library/os.path.html#os.path.expanduser
+"
+  (interactive)
+  (getenv
+   (if (eq system-type 'windows-nt) "USERPROFILE" "HOME")))
+
 (defvar jm-conda-lsp--environments-file
   (concat (file-name-as-directory
-           (getenv
-            (if (eq system-type 'windows-nt) "USERPROFILE" "HOME")))
+           (jm-python-user-home-directory))
           ".conda/environments.txt")
-  "conda's file used to manage its list of conda env directories")
+  "conda's file used to manage its list of conda env
+directories. This is consistent with conda's definition in
+get_user_environments_txt_file()")
 
 (defun jm-conda-lsp--build-envs-source ()
   (helm-build-in-file-source
@@ -36,24 +46,44 @@ See also
 
 1) docs
 https://emacs-lsp.github.io/dap-mode/page/configuration/#python
-https://github.com/emacs-lsp/dap-mode/pull/408
 
 2) Example and notes for debug template
-https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143"
+https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143
+
+3) debugpy noted as the successor to python-ptvsd
+https://github.com/emacs-lsp/dap-mode/issues/306
+"
   (require 'dap-python)
   (setq dap-python-debugger 'debugpy))
 
 (defun jm-conda-lsp--activate-and-enable-lsp (env-path)
+  (require 'lsp-pyright)   ; sets up conda-postactivate-hook
   (conda-env-activate-path env-path)
-
   (jm-configure-dap-python)
-
   ;; lsp will set up dap automatically
   (lsp)
   ;; Use the other Python checkers as well as lsp.  See
   ;; https://github.com/flycheck/flycheck/issues/1762#issuecomment-750458442 and
   ;; other comments in the issue
-  (flycheck-add-next-checker 'lsp 'python-pylint))
+
+  ;; disable for now until rest of lsp is working cleanly
+  ;; getting "lsp is not a valid syntax checker"
+  ;; (flycheck-add-next-checker 'lsp 'python-pylint)
+
+
+  ;; https://gitter.im/emacs-lsp/lsp-mode?at=5f322ca888719865d95268f1
+  ;; suggests this code (flycheck-define-generic-checker 'lsp
+  ;;     "A syntax checker using the Language Server Protocol (LSP)
+  ;; provided by lsp-mode.
+  ;; See https://github.com/emacs-lsp/lsp-mode."
+  ;;     :start #'lsp-diagnostics--flycheck-start
+  ;;     :modes '(lsp-placeholder-mode) ;; placeholder
+  ;;     :predicate (lambda () lsp-mode)
+  ;;     :error-explainer (lambda (e)
+  ;;                        (cond ((string-prefix-p "clang-tidy" (flycheck-error-message e))
+  ;;                               (lsp-cpp-flycheck-clang-tidy-error-explainer e))
+  ;;                              (t (flycheck-error-message e)))))
+  )
 
 ;; We don't need to save projectile project roots as `projectile-project-root'
 ;; recalculates these automatically
@@ -62,10 +92,16 @@ https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143"
 buffer is in python-mode, is visible, is in a projectile
 project, and the user has selected a conda env for the
 project (prompted for if needed) then ensure that conda is synced
-to use that env and that lsp is active."
+to use that env and that lsp is active.
+
+The if-visible part of this is to avoid massive delays when
+starting up with many different Python buffers loaded from the
+desktop.
+"
   (when (and
          (equal major-mode 'python-mode)
-         (or (buffer-modified-p) (get-buffer-window nil t)))
+         (or (buffer-modified-p)
+             (get-buffer-window nil t)))
     (let* ((project-root (projectile-project-root))
            (saved-project-env (ht-get jm-conda-lsp--ht-project-env project-root)))
       (when project-root
@@ -96,11 +132,13 @@ to use that env and that lsp is active."
 (defun jm-conda-lsp-enable-lsp-everywhere ()
   "Initialise LSP in currently visible buffers and configure it
 to be enabled if needed using `window-configuration-change-hook'"
+  ;; take care of buffers that are currently loaded and visible
   (mapcar
    (lambda (buf)
      (with-current-buffer buf
        (jm-conda-lsp--init-if-visible)))
    (buffer-list))
+  ;; configure for future buffers
   (add-hook 'window-configuration-change-hook #'jm-conda-lsp--init-if-visible))
 
 ;; lsp-mode workspace and session management
@@ -122,32 +160,6 @@ to be enabled if needed using `window-configuration-change-hook'"
 ;;
 ;; `lsp-workspace-root' reads `lsp-session-folders' to determine the workspace
 ;; root for a given file.
-
-;; lsp-python-ms initialization
-;; ============================
-
-;; `lsp-python-ms--extra-init-params' calls `lsp-python-ms--workspace-root' to
-;; get a workspace root and `lsp-python-ms--get-python-ver-and-syspath' to set
-;; up a suitably initialized Python process.
-
-;; `lsp-python-ms--workspace-root' will (when available, as we expect) use
-;; `lsp-workspace-root'
-
-;; `lsp-python-ms--get-python-ver-and-syspath' calls
-;; `lsp-python-ms-locate-python', launches an associated process and adds the
-;; workspace root to the front of its sys.path.  TODO: does this matter in setups
-;; where we register the package being developed under site-packages?  TODO: can
-;; we add src, test, etc. as Python paths?
-
-;; `lsp-python-ms-locate-python' returns a conda env by calling
-;; `lsp-python-ms--dominating-conda-python' (assuming
-;; `lsp-python-ms-python-executable' has not been set)
-
-;; `lsp-python-ms--dominating-conda-python' will
-;; 1. Find a conda env name, preference going first to
-;; `conda-env-current-name'.  This may be a path, but that's ok
-;; 2. Use conda.el's `conda-env-name-to-dir' to find the venv base directory
-;; and hence the Python executable.
 
 ;;; pycoverage / flycheck integration
 

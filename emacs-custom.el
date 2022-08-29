@@ -82,6 +82,8 @@
  '(ls-lisp-emulation 'MS-Windows)
  '(ls-lisp-ignore-case t)
  '(ls-lisp-verbosity nil)
+ '(lsp-ui-sideline-show-code-actions t)
+ '(lsp-ui-sideline-show-hover t)
  '(mac-emulate-three-button-mouse t t)
  '(mediawiki-draft-data-file "~/draft.txt")
  '(minibuffer-prompt-properties
@@ -145,7 +147,7 @@
  '(org-use-fast-tag-selection t)
  '(p4-auto-refresh nil)
  '(package-selected-packages
-   '(orgalist ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol benchmark-init cdlatex color-moccur color-theme-modern company-auctex company-quickhelp conda csv-mode dap-mode delight dired-subtree dired-x ebib ein elmacro helm-ag helm-jira helm-lsp helm-projectile helm-rg helm-swoop highlight-sexps htmlize jq-mode json-reformat kanban live-py-mode lsp-mode lsp-python lsp-treemacs lsp-ui macrostep magit markdown-mode maxframe mediawiki nexus org-chef org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired rainbow-delimiters ranger realgud request shut-up simple-call-tree smartparens sphinx-doc transpose-frame treemacs treemacs-projectile undo-tree use-package visual-fill-column vlf which-key writeroom-mode yaml-mode yasnippet-snippets zop-to-char))
+   '(ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol benchmark-init cdlatex color-moccur color-theme-modern company-auctex company-quickhelp conda csv-mode dap-mode delight dired-subtree dired-x ebib ein elmacro helm helm-ag helm-lsp helm-projectile helm-rg helm-swoop highlight-sexps htmlize jq-mode json-mode json-reformat js2-mode js2-refactor kanban live-py-mode lorem-ipsum lsp-mode lsp-pyright lsp-treemacs lsp-ui macrostep magit markdown-mode maxframe mediawiki multiple-cursors nexus ob-restclient org-chef org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired rainbow-delimiters realgud request shut-up simple-call-tree smartparens sphinx-doc transpose-frame treemacs treemacs-projectile undo-tree use-package visual-fill-column vlf which-key winner writeroom-mode yaml-mode yasnippet yasnippet-snippets zop-to-char ztree))
  '(paradox-github-token t)
  '(pdf-view-use-unicode-ligther nil)
  '(projectile-completion-system 'helm)

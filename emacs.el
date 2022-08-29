@@ -401,8 +401,6 @@ directory, otherwise return nil."
 
 (use-package company-auctex)
 
-;; (use-package company-lsp) ; obsolete - its features are now in lsp-mode.
-
 (use-package company-quickhelp ; popup docs for company completion candidates
   :init
   (company-quickhelp-mode t))
@@ -410,7 +408,11 @@ directory, otherwise return nil."
 (use-package company-restclient)
 
 (use-package conda
-  :ensure t)
+  :ensure t
+  :config
+  ;; work around conda--get-executable-path only searching for "conda" and not "conda.exe"
+  (when system-win32-p
+    (setq conda--executable-path (f-join conda-anaconda-home conda-env-executables-dir "conda.exe"))))
 
 (use-package cperl-mode
   :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
@@ -503,9 +505,13 @@ clean buffer we're an order of magnitude laxer about checking."
   (add-hook 'flycheck-after-syntax-check-hook
             'adjust-flycheck-automatic-syntax-eagerness)
 
-  (pycoverage-define-flycheck-checker)
-  (add-to-list 'flycheck-checkers 'python-pycoverage)
-  (flycheck-add-next-checker 'python-mypy 'python-pycoverage))
+  ;; disable for now until we get LSP confirmed working cleanly
+  (message "jm- omitting flycheck support for pycoverage")
+  ;; (pycoverage-define-flycheck-checker)
+  ;; (add-to-list 'flycheck-checkers 'python-pycoverage)
+  ;; (flycheck-add-next-checker 'python-mypy 'python-pycoverage)
+
+  )
 
 (use-package font-lock-mode
   :ensure nil
@@ -915,11 +921,19 @@ display-buffer correctly."
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
   (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
 
-(use-package lsp-python-ms
-  :ensure t
-  :init (setq lsp-python-ms-auto-install-server t)
+
+(defun jm-pyright-sync-venv-from-conda-env ()
+  "Sync the pyright venv to the current conda-env"
+  (setq-local lsp-pyright-venv-path conda-env-current-path))
+
+;; lsp-pyright replaces lsp-python-ms
+(use-package lsp-pyright
   :config
-  (put 'lsp-python-ms-extra-paths 'safe-local-variable #'vectorp))
+  (add-hook 'conda-postactivate-hook 'jm-pyright-sync-venv-from-conda-env)
+  (setq jm-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs"))
+  (when (file-directory-p jm-pyright-stub-path)
+    (setq lsp-pyright-use-library-code-for-types t) ;; set this to nil if getting too many false positive type errors
+    (setq lsp-pyright-stub-path jm-pyright-stub-path)))
 
 (use-package lsp-treemacs) ; lsp-mode/treemacs integration with treeview controls
 
@@ -1255,7 +1269,7 @@ according to `headline-is-for-jira'."
 
 (use-package projectile
   :config
-  (setq projectile-mode-line-prefix "/"))
+  (setq projectile-mode-line-prefix " Proj"))
 
 (use-package ps-print
   :config
