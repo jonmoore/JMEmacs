@@ -911,12 +911,7 @@ display-buffer correctly."
   :config
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
-  (defun advice-to-shut-up (orig-fun &rest args)
-    "Call the ORIG-FUN in a `shut-up' context"
-    (require 'shut-up)
-    (shut-up
-      (apply orig-fun args)))
-  (advice-add 'lsp--info :around #'advice-to-shut-up))
+  (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
 
 (use-package lsp-python-ms
   :ensure t
@@ -1213,8 +1208,6 @@ according to `headline-is-for-jira'."
 
 (use-package org-jira)
 
-(use-package ob-restclient)
-
 (use-package org-ref
   :config
 
@@ -1335,7 +1328,14 @@ according to `headline-is-for-jira'."
    ("<up>"   . shell-cycle-backward-through-command-history)
    ("<down>" . shell-cycle-forward-through-command-history)))
 
-(use-package shut-up)                   ; redirects `message' and stdout
+(defun jm-advice-to-shut-up (orig-fun &rest args)
+  "Call the ORIG-FUN in a `shut-up' context"
+  (require 'shut-up)
+  (shut-up
+    (apply orig-fun args)))
+
+(use-package shut-up
+  )                   ; redirects `message' and stdout
 
 (use-package sicp)
 
@@ -1408,7 +1408,14 @@ according to `headline-is-for-jira'."
               ("RET" . undo-tree-visualizer-quit))
   :init
   (global-undo-tree-mode)
-  :diminish undo-tree-mode)
+  :diminish undo-tree-mode
+  :config
+  (setq undo-tree-auto-save-history t
+        ;; place history files in one location rather than scattering them everywhere
+        undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree")))
+
+  ;; Suppress messages about writing about undo-tree files
+  (advice-add 'undo-tree-save-history :around #'jm-advice-to-shut-up))
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))
