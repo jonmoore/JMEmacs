@@ -213,7 +213,9 @@ directory, otherwise return nil."
 
 (when system-win32-p
   (setq w32-pass-rwindow-to-system nil
-        w32-rwindow-modifier 'super))
+        w32-rwindow-modifier 'super
+        ;; for when we don't have a right Windows key
+        w32-apps-modifier 'super))
 
 (bind-keys ("C-c a"        . org-agenda)
            ("C-c b"        . browse-url-at-point)
