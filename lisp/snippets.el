@@ -444,3 +444,17 @@ The value is actually the first element of list whose car equals key."
   `(let ((time (current-time)))
      ,@body
      (message "%.06f" (float-time (time-since time)))))
+
+;;;###autoload
+(defun jm-package-status (pkg)
+  "Return the status of a package e.g.
+(jm-package-status 'ansi-color) returns \"built-in\""
+  (let* ((desc (or
+                (if (package-desc-p pkg) pkg)
+                (cadr (assq pkg package-alist))
+                (let ((built-in (assq pkg package--builtins)))
+                  (if built-in
+                      (package--from-builtin built-in)
+                    (cadr (assq pkg package-archive-contents))))))
+         (status (if desc (package-desc-status desc) "orphan")))
+    status))

@@ -94,16 +94,18 @@
 (unless (bound-and-true-p package--initialized)
   (package-initialize))
 
-;; Bootstrap `use-package' and `bind-key', which it depends on.
-(let* ((pkgs  '(bind-key use-package))
-       (all-installed (seq-every-p 'package-installed-p pkgs)))
-  (unless all-installed
-    (package-refresh-contents)
-    (mapc
-     (lambda (pkg)
-       (unless (package-installed-p pkg)
-         (package-install pkg)))
-     pkgs)))
+(when (version< emacs-version "29.1")
+  ;; use-package is built into Emacs 29.1 and later
+  ;; Bootstrap `use-package' and `bind-key', which it depends on.
+  (let* ((pkgs  '(bind-key use-package))
+         (all-installed (seq-every-p 'package-installed-p pkgs)))
+    (unless all-installed
+      (package-refresh-contents)
+      (mapc
+       (lambda (pkg)
+         (unless (package-installed-p pkg)
+           (package-install pkg)))
+       pkgs))))
 
 (require 'use-package)
 (setq use-package-verbose t
@@ -401,6 +403,9 @@ directory, otherwise return nil."
 
 (use-package company-auctex)
 
+(use-package company-lean
+  :after lean-mode)
+
 (use-package company-quickhelp ; popup docs for company completion candidates
   :init
   (company-quickhelp-mode t))
@@ -555,6 +560,8 @@ no docs are found."
   (setq geiser-active-implementations '(racket)
         geiser-eval--geiser-procedure-function 'geiser-racket--geiser-procedure))
 
+(use-package geiser-racket)
+
 (use-package goto-addr
   :init
   (add-hook 'prog-mode-hook #'goto-address-prog-mode)
@@ -615,10 +622,13 @@ no docs are found."
         ("SPC"      . haskell-mode-contextual-space)
         ("M-."      . haskell-mode-jump-to-def)))
 
+
 (use-package helm
   :demand
-  ;; https://www.reddit.com/r/emacs/comments/e9acvu/usepackage_and_helmmode/
-  :preface (require 'helm-config)
+  :init
+  ;; used to make :map work below
+  (require 'helm-global-bindings)
+
   :bind
   (("C-c h"         . helm-command-prefix)
   ("C-x C-b"        . helm-buffers-list)
@@ -683,6 +693,9 @@ display-buffer correctly."
 (use-package helm-descbinds
   :init
   (helm-descbinds-mode))
+
+(use-package helm-lean
+  :after lean-mode)
 
 (use-package helm-lsp ; helm for LSP symbols, actions, switching projects
   ;; separate from company
@@ -814,6 +827,12 @@ display-buffer correctly."
   :bind (:map LaTeX-mode-map
               ("<prior>" . latex-sumatra-scroll-down)
               ("<next>"  .  latex-sumatra-scroll-up)))
+
+(use-package lean-mode                  ; Support the Lean proof assistant
+  ;; https://github.com/leanprover/lean-mode
+  :config
+  (require 'unicode-fonts)
+  (unicode-fonts-setup))
 
 (defun my-emacs-lisp-mode-hook ()
   (smartparens-mode t)
@@ -1309,6 +1328,8 @@ according to `headline-is-for-jira'."
   :config
   (require 'pydoc-info))
 
+(use-package racket-mode)
+
 (use-package rainbow-delimiters)
 
 (use-package realgud)
@@ -1432,6 +1453,8 @@ according to `headline-is-for-jira'."
 
   ;; Suppress messages about writing about undo-tree files
   (advice-add 'undo-tree-save-history :around #'jm-advice-to-shut-up))
+
+(use-package unicode-fonts)
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))

@@ -90,6 +90,7 @@
    '(read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt))
  '(next-line-add-newlines nil)
  '(nxml-child-indent 4)
+ '(org-adapt-indentation t)
  '(org-agenda-dim-blocked-tasks 'invisible)
  '(org-agenda-prefix-format
    '((agenda . " %i %-18:c%-12,t%-13s")
@@ -147,7 +148,7 @@
  '(org-use-fast-tag-selection t)
  '(p4-auto-refresh nil)
  '(package-selected-packages
-   '(ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol benchmark-init cdlatex color-moccur color-theme-modern company-auctex company-quickhelp conda csv-mode dap-mode delight dired-subtree dired-x ebib ein elmacro helm helm-ag helm-lsp helm-projectile helm-rg helm-swoop highlight-sexps htmlize jq-mode json-mode json-reformat js2-mode js2-refactor kanban live-py-mode lorem-ipsum lsp-mode lsp-pyright lsp-treemacs lsp-ui macrostep magit markdown-mode maxframe mediawiki multiple-cursors nexus ob-restclient org-chef org-jira org-plus-contrib org-ref ox-jira ox-mediawiki ox-reveal ox-rst p4 peep-dired rainbow-delimiters realgud request shut-up simple-call-tree smartparens sphinx-doc transpose-frame treemacs treemacs-projectile undo-tree use-package visual-fill-column vlf which-key winner writeroom-mode yaml-mode yasnippet yasnippet-snippets zop-to-char ztree))
+   '(company hydra markdown-mode org treemacs yasnippet geiser-racket lean-mode ace-jump-helm-line ace-link ace-window adaptive-wrap anzu auctex-latexmk auto-highlight-symbol benchmark-init cdlatex color-moccur color-theme-modern company-auctex company-quickhelp conda csv-mode dap-mode delight dired-subtree dired-x ebib ein elmacro helm helm-lsp helm-projectile helm-rg helm-swoop highlight-sexps htmlize jq-mode json-mode js2-mode js2-refactor kanban live-py-mode lsp-mode lsp-pyright lsp-treemacs lsp-ui macrostep magit maxframe mediawiki multiple-cursors org-plus-contrib ox-jira ox-rst p4 peep-dired rainbow-delimiters request shut-up simple-call-tree sphinx-doc undo-tree vlf winner yasnippet-snippets zop-to-char ztree))
  '(paradox-github-token t)
  '(pdf-view-use-unicode-ligther nil)
  '(projectile-completion-system 'helm)
