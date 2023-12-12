@@ -25,6 +25,7 @@
  '(completion-ignored-extensions '(".o" "~" ".obj" ".elc" ".pyc"))
  '(cperl-indent-level 4)
  '(cperl-invalid-face nil)
+ '(create-lockfiles nil)
  '(desktop-lazy-verbose nil)
  '(desktop-load-locked-desktop t)
  '(directory-abbrev-alist nil)
@@ -91,14 +92,13 @@
  '(next-line-add-newlines nil)
  '(nxml-child-indent 4)
  '(org-adapt-indentation t)
- '(org-agenda-dim-blocked-tasks 'invisible)
  '(org-agenda-prefix-format
    '((agenda . " %i %-18:c%-12,t%-13s")
      (todo . " %i %-15c")
      (tags . " %i %-15c")
      (search . " %i %-15c")))
  '(org-agenda-start-with-clockreport-mode nil)
- '(org-agenda-todo-ignore-scheduled 5)
+ '(org-agenda-todo-ignore-scheduled 31)
  '(org-capture-templates
    '(("t" "Task" entry
       (file+headline "" "Tasks")
@@ -190,11 +190,7 @@
    '(c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode))
  '(whitespace-style
    '(face trailing tabs spaces lines newline empty indentation space-after-tab space-before-tab space-mark tab-mark newline-mark))
- '(winner-dont-bind-my-keys t)
- '(woman-imenu t)
- '(woman-use-own-frame nil)
- '(woman-use-topic-at-point t)
- '(woman-use-topic-at-point-default t))
+ '(winner-dont-bind-my-keys t))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -210,6 +206,7 @@
  '(font-lock-string-face ((nil (:foreground "yellow"))))
  '(font-lock-type-face ((((class color) (background light)) (:foreground "Blue"))))
  '(font-lock-variable-name-face ((((class color) (background light)) (:foreground "blue"))))
+ '(font-lock-warning-face ((t (:foreground "magenta" :weight bold))))
  '(longlines-visible-face ((t (:foreground "red"))))
  '(p4-diff-del-face ((t (:foreground "DodgerBlue"))) t)
  '(p4-diff-head-face ((t (:background "black"))) t)

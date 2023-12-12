@@ -98,6 +98,7 @@ The if-visible part of this is to avoid massive delays when
 starting up with many different Python buffers loaded from the
 desktop.
 "
+  (interactive)
   (when (and
          (equal major-mode 'python-mode)
          (or (buffer-modified-p)
