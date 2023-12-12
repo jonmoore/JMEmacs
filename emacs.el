@@ -118,10 +118,46 @@
   ;; To disable collection of benchmark data after init is done.
   (add-hook 'after-init-hook 'benchmark-init/deactivate))
 
+(use-package async			; async execution
+  ;; workaround for https://github.com/jwiegley/emacs-async/issues/96
+  ;; https://gist.github.com/kiennq/cfe57671bab3300d3ed849a7cbf2927c
+  :ensure t
+  :defer 5
+  :init
+  (setq async-bytecomp-allowed-packages '(all))
+  :config
+  ;; async compiling package
+  (async-bytecomp-package-mode t)
+  (dired-async-mode 1)
+  ;; limit number of async processes
+  (eval-when-compile
+    (require 'cl-lib))
+  (defvar async-maximum-parallel-procs 4)
+  (defvar async--parallel-procs 0)
+  (defvar async--queue nil)
+  (defvar-local async--cb nil)
+  (advice-add #'async-start :around
+              (lambda (orig-func func &optional callback)
+                (if (>= async--parallel-procs async-maximum-parallel-procs)
+                    (push `(,func ,callback) async--queue)
+                  (cl-incf async--parallel-procs)
+                  (let ((future (funcall orig-func func
+                                         (lambda (re)
+                                           (cl-decf async--parallel-procs)
+                                           (when async--cb (funcall async--cb re))
+                                           (when-let (args (pop async--queue))
+                                             (apply #'async-start args))))))
+                    (with-current-buffer (process-buffer future)
+                      (setq async--cb callback)))))
+              '((name . --queue-dispatch)))
+  )
+
 ;;; PERSONAL LISP
 (require 'update-personal-autoloads)
 (update-personal-autoloads)
 (load "personal-autoloads")
+
+(defalias 'url-decode-string 'url-unhex-string)
 
 ;;;
 ;;; ENVIRONMENT, PATHS, ETC
@@ -432,7 +468,11 @@ directory, otherwise return nil."
 (use-package dap-mode ; client for Debug Adapter Protocol
   :after lsp-mode
   :config
-  (dap-auto-configure-mode))
+  (setq read-process-output-max (* 1024 1024)) ;; 1MB
+
+  ;; disable until lsp is working
+  ;;(dap-auto-configure-mode)
+  )
 
 (use-package delight)
 
@@ -463,7 +503,8 @@ directory, otherwise return nil."
   (setq dired-omit-extensions (set-difference
                                dired-omit-extensions
                                '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
-                               :test 'string=)))
+                               :test 'string=)
+        dired-clean-confirm-killing-deleted-buffers nil))
 
 (use-package ediff
   :config
@@ -1104,6 +1145,12 @@ according to `headline-is-for-jira'."
   (require 'ob-restclient)
   (setq fill-column 90))
 
+(setq org-jira-jira-status-to-org-keyword-alist
+      '(("Open" . "TODO")
+        ("Reopened" . "TODO")
+        ("On hold" . "HOLD")
+        ("In Progress" . "WIP")))
+
 (defun my-org-load-hook-fn ()
   (org-clock-persistence-insinuate)
 
@@ -1241,7 +1288,9 @@ according to `headline-is-for-jira'."
 
 (use-package org-contrib)
 
-(use-package org-jira)
+(use-package org-jira
+  :config
+  (setq org-jira-download-comments nil))
 
 (use-package org-ref
   :config
@@ -1268,7 +1317,9 @@ according to `headline-is-for-jira'."
 
 (use-package ox-mediawiki)
 
-(use-package ox-reveal)
+(use-package ox-reveal
+  :config
+  (setq ox-reveal-root "./reveal.js"))
 
 (use-package ox-rst)
 
@@ -1371,6 +1422,13 @@ according to `headline-is-for-jira'."
   (shut-up
     (apply orig-fun args)))
 
+(defun jm-advice-to-shut-up-and-ignore-errors (orig-fun &rest args)
+  "Call the ORIG-FUN in a `shut-up' context"
+  (require 'shut-up)
+  (shut-up
+    (ignore-errors
+      (apply orig-fun args))))
+
 (use-package shut-up
   )                   ; redirects `message' and stdout
 
@@ -1451,13 +1509,22 @@ according to `headline-is-for-jira'."
         ;; place history files in one location rather than scattering them everywhere
         undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree")))
 
-  ;; Suppress messages about writing about undo-tree files
-  (advice-add 'undo-tree-save-history :around #'jm-advice-to-shut-up))
+  ;; Suppress messages about writing about undo-tree files.  Also ingore errors,
+  ;; which can occur when exceeding Windows 260-char limits, as undo-tree is not
+  ;; critical
+  (advice-add 'undo-tree-save-history :around #'jm-advice-to-shut-up-and-ignore-errors)
+  (advice-add 'undo-tree-load-history :around #'jm-advice-to-shut-up-and-ignore-errors)
+
+  ;; Use the old format to avoid hangs when timestamps have been updated
+  (setq undo-tree-save-format-version 0)
+  )
 
 (use-package unicode-fonts)
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
-  :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode))
+  :init
+  (autoload 'visual-fill-column-mode--enable "visual-fill-column")
+  (add-hook 'visual-line-mode-hook #'visual-fill-column-mode--enable))
 
 (use-package which-func
   :init
