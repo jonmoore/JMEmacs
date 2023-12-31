@@ -1,23 +1,32 @@
-;; For Windows install the deps in the gnu ftp emacs mirrors for
-;; Windows, e.g. emacs-25-x86_64-deps.zip by unzipping to the emacs
-;; bin directory.  Test by calling gnutls-available-p.  This is needed
-;; to access https repos on at least Emacs 25 for 64-bit Windows.  May
-;; not be needed in Emacs 26.
+;; Setting up
+;; * Install Emacs.  For Windows, use the standard zip recommended at
+;;   https://www.gnu.org/software/emacs/download.html
+;; * Clone the repo containing this file
+;; * Place the real .emacs.el in the standard location and from there
+;;   * load this, e.g. (load "/Users/jon/src/git/JMEmacs/emacs.el")
 ;;
-;; Then in the real .emacs.el
-;;
-;; * load this, e.g. (load "/Users/jon/src/git/JMEmacs/emacs.el")
-;;
-;; * For git/magit, as I have a note that exec-path should be set
-;; * early, set local-exec-paths to include paths to git.exe and
-;; * sh.exe.  For speed, don't use the wrappers in the cmd directory
-;; * of the official git Windows client.
+;;   * For git/magit, as I have a note that exec-path should be set
+;;   * early, set local-exec-paths to include paths to git.exe and
+;;   * sh.exe.  For speed, don't use the wrappers in the cmd directory
+;;   * of the official git Windows client.
 
 ;; Beware: In a complete WTF, Windows intercepts both Ctrl-shift-0 and
 ;; Ctrl-space.  Ctrl-shift-0 is the default binding for
-;; sp-forward-slurp-sexp - think "Ctrl-)". This problem reoccurs
-;; between logins.
+;; sp-forward-slurp-sexp - think "Ctrl-)".
 ;;
+;; For Windows 11
+;;
+;; Enter "Settings" in the start menu"; search for "Typing"; click "Advanced
+;; Keyboard Settings"; click on "Input Language Hotkeys"; click on "Change Key
+;; Sequence"; Change these to something other than "Not Assigned"; apply; change
+;; to "Not Assigned"; Apply.
+;;
+;; Verification: After this Ctrl-) should be detcted as a key in Emacs,
+;; e.g. with C-h k C-)
+;;
+;; TBC: does the problem reoccur between logins?  can we apply this through a registry
+;; file as for Windows 7?
+
 ;; In Windows 10 Microsoft appear to have broken Ctrl-shift-0
 ;; irreparably.  Ctrl-space can still be bound.
 ;;
@@ -149,8 +158,7 @@
                                              (apply #'async-start args))))))
                     (with-current-buffer (process-buffer future)
                       (setq async--cb callback)))))
-              '((name . --queue-dispatch)))
-  )
+              '((name . --queue-dispatch))))
 
 ;;; PERSONAL LISP
 (require 'update-personal-autoloads)
@@ -255,6 +263,8 @@ directory, otherwise return nil."
         ;; for when we don't have a right Windows key
         w32-apps-modifier 'super))
 
+;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
+;; Note that sequences consisting of C-c and a letter are reserved for users
 (bind-keys ("C-c a"        . org-agenda)
            ("C-c b"        . browse-url-at-point)
            ("C-c m"        . move-file-and-buffer)
@@ -274,8 +284,10 @@ directory, otherwise return nil."
            ("M-."          . find-function)
            ("M-["          . undo-tree-visualize)
            ("M-]"          . repeat)
+
            ("<C-S-left>"   . select-last-buffer)
            ("<C-S-right>"  . select-next-buffer)
+
            ("<home>"       . beginning-of-buffer)
            ("<end>"        . end-of-buffer)
            ("<prior>"      . (lambda () (interactive) (scroll-down-in-place)))
@@ -1042,7 +1054,6 @@ display-buffer correctly."
   (maximize-frame))
 
 (use-package mediawiki
-  :ensure nil
   :mode ("\\.wiki\\'" . mediawiki-mode)
   :bind
   (:map mediawiki-mode-map
