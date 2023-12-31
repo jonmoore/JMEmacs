@@ -6,3 +6,4 @@
 .DS_Store
 *personal-autoloads.el
 *.cov2emacs.log
+__pycache__
