@@ -217,7 +217,7 @@ directory, otherwise return nil."
         candidate))))
 
 (setq bibliography-directory
-      (jm-sub-directory-if-present dropbox-directory "/bibliography"))
+      (jm-sub-directory-if-present dropbox-directory "/Bibliography"))
 
 (if (not (boundp 'org-directory))
     (setq org-directory
@@ -342,7 +342,6 @@ directory, otherwise return nil."
   (setq anzu-search-threshold 100))
 
 (use-package auctex-latexmk ; Add LatexMk support to AUCTeX
-  :ensure auctex-latexmk
   :config
   (push
    (cond
@@ -875,7 +874,7 @@ display-buffer correctly."
   (sumatra-jump-to-line))
 
 (use-package latex
-  :ensure auctex
+  :ensure auctex ; latex.el comes with auctex
   :init
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
 
@@ -1251,7 +1250,6 @@ according to `headline-is-for-jira'."
   )
 
 (use-package org
-  :ensure org-chef
   :mode "\\.org'"
 
   :init
@@ -1280,11 +1278,12 @@ according to `headline-is-for-jira'."
 
   :config
   (setq org-capture-templates
-      '(("c" "Cookbook" entry (file "~/org/cookbook.org")
-         "%(org-chef-get-recipe-from-url)"
-         :empty-lines 1)
-        ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
-         "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))
+        `(("c" "Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
+           "%(org-chef-get-recipe-from-url)"
+           :empty-lines 1)
+          ("m" "Manual Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
+           "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))
+  ;; org-tempo supports the expansion of <s to src blocks etc.
   (require 'org-tempo)
 
   (let ((org-mobile-directory-candidate
@@ -1298,8 +1297,6 @@ according to `headline-is-for-jira'."
   )
 
 (use-package org-chef)
-
-(use-package org-contrib)
 
 (use-package org-jira
   :config
@@ -1336,11 +1333,9 @@ according to `headline-is-for-jira'."
 
 (use-package ox-rst)
 
-(use-package p4)
-
 (use-package paren
   :init
-  (show-paren-mode))
+  (show-paren-mode t))
 
 (use-package peep-dired) ; in dired, show the file at point in the other window
 
@@ -1445,10 +1440,6 @@ according to `headline-is-for-jira'."
 
 (use-package sicp)
 
-(use-package simple-call-tree
-  :init
-  (require 'cl))
-
 (use-package smartparens
   :diminish smartparens-mode)
 
@@ -1463,7 +1454,7 @@ according to `headline-is-for-jira'."
 (use-package sphinx-doc)
 
 (use-package tex-site
-  :ensure auctex
+  :ensure auctex                        ; tex-site.el comes from auctex
   :config
   (setq TeX-source-correlate-method 'synctex
         TeX-source-correlate-mode t
@@ -1477,7 +1468,12 @@ according to `headline-is-for-jira'."
    (system-win32-p
     (setq
      TeX-view-program-selection '((output-pdf "Sumatra PDF") (output-html "start"))
-     TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o"))))
+     TeX-view-program-list '(("Sumatra PDF" "SumatraPDF.exe -reuse-instance %o")))
+    (add-hook 'latex-mode-hook
+              ;; defer calling require as tex-site itself gets required by auctex-autoloads.el
+              (lambda ()
+                ((require 'tex-mik)
+                 (require 'sumatra-forward)))))
    (system-osx-p
     ;; use Skim as default pdf viewer. Skim's displayline is used for
     ;; forward search from .tex to .pdf
@@ -1485,13 +1481,7 @@ according to `headline-is-for-jira'."
      TeX-view-program-selection '((output-pdf "Skim PDF Viewer"))
      TeX-view-program-list '(("Skim PDF Viewer"
                               "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
-     TeX-command-default "latexmk")))
-  (when system-win32-p
-    (add-hook 'latex-mode-hook
-              ;; defer calling require as tex-site itself gets required by auctex-autoloads.el
-              (lambda ()
-                ((require 'tex-mik)
-                 (require 'sumatra-forward))))))
+     TeX-command-default "latexmk"))))
 
 (use-package text-mode
   :ensure nil
@@ -1540,12 +1530,12 @@ according to `headline-is-for-jira'."
   (autoload 'visual-fill-column-mode--enable "visual-fill-column")
   (add-hook 'visual-line-mode-hook #'visual-fill-column-mode--enable))
 
-(use-package which-func
+(use-package which-func                 ; print current function in mode line
   :init
   (add-hook 'prog-mode-hook
             (lambda () (which-function-mode 1))))
 
-(use-package which-key
+(use-package which-key                  ; Display available keybindings in popup
   :init
   (which-key-mode)
   (setq which-key-idle-delay 0.4
@@ -1567,7 +1557,6 @@ according to `headline-is-for-jira'."
         whitespace-line-column nil)
   :diminish (whitespace-mode . " ⓦ"))
 
-
 (use-package windmove                   ; Move between windows with Shift+Arrow
   :bind (("C-c w <left>"  . windmove-left)
          ("C-c w <right>" . windmove-right)
@@ -1583,6 +1572,8 @@ according to `headline-is-for-jira'."
 
 (use-package yaml-mode
   :config
+  ;; treat yaml-mode as a programming mode even though it is derived from
+  ;; text-mode
   (add-hook 'yaml-mode-hook
             (lambda () (run-hooks 'prog-mode-hook))))
 
@@ -1599,8 +1590,6 @@ according to `headline-is-for-jira'."
 (use-package zop-to-char                ; Better zapping
   :bind (("M-Z" . zop-to-char)
          ("M-z" . zop-up-to-char)))
-
-(use-package ztree)                     ; directory-diff'ing
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
