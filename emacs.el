@@ -890,6 +890,7 @@ display-buffer correctly."
   (unicode-fonts-setup))
 
 (defun my-emacs-lisp-mode-hook ()
+
   (smartparens-mode t)
   (smartparens-strict-mode t)
   ;; use define-key below to avoid using :map in lisp-mode because
@@ -1002,6 +1003,10 @@ display-buffer correctly."
 ;; lsp-pyright replaces lsp-python-ms
 (use-package lsp-pyright
   :config
+  (when (boundp 'jm-pyright-langserver-path)
+    (lsp-dependency
+     'pyright
+     `(:system ,jm-pyright-langserver-path)))
   (add-hook 'conda-postactivate-hook 'jm-pyright-sync-venv-from-conda-env)
   (setq jm-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs"))
   (when (file-directory-p jm-pyright-stub-path)
@@ -1441,7 +1446,12 @@ according to `headline-is-for-jira'."
 (use-package sicp)
 
 (use-package smartparens
-  :diminish smartparens-mode)
+  :diminish smartparens-mode
+  :config
+  ;; smartparens-config provides sensible defaults for smartparens in different
+  ;; languages.  It's especially important for lisp as otherwise smartparens
+  ;; will double up insertion of single quotes.
+  (require 'smartparens-config))
 
 (defun my-speedbar-mode-hook-fn ()
   (speedbar-add-supported-extension ".org")
@@ -1526,6 +1536,7 @@ according to `headline-is-for-jira'."
 (use-package unicode-fonts)
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
+  ;; This makes lines display wrapped at fill-column in visual-line-mode
   :init
   (autoload 'visual-fill-column-mode--enable "visual-fill-column")
   (add-hook 'visual-line-mode-hook #'visual-fill-column-mode--enable))

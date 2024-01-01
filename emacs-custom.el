@@ -166,7 +166,8 @@
  '(reftex-bibpath-environment-variables '("BIBINPUTS" "TEXBIB"))
  '(reftex-toc-split-windows-horizontally t)
  '(safe-local-variable-values
-   '((checkdoc-package-keywords-flag)
+   '((dired-omit-mode . t)
+     (checkdoc-package-keywords-flag)
      (mangle-whitespace . t)
      (dired-omit-extensions ".html" ".org_archive")
      (org-odd-levels-only)
