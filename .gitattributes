@@ -1,1 +1,7 @@
 *.el        text eol=lf
+
+# Git for Windows defaults to using a converter, astextplain, for pdfs, etc.  We
+# disable this here because, in combination with long-deleted pdf files, it
+# greatly slows searching history with git log
+*.pdf	!diff
+*.PDF	!diff
