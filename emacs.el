@@ -270,6 +270,8 @@ directory, otherwise return nil."
            ("C-c m"        . move-file-and-buffer)
            ("C-c r"        . rename-file-and-buffer)
 
+           ("C-h b"        . jm-describe-bindings)
+
            ("C-x C-o"      . delete-blank-lines-around-point-or-in-region)
            ("C-x LFD"      . dired-jump)
 
@@ -327,7 +329,7 @@ directory, otherwise return nil."
   (toggle-read-only))
 (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
-(use-package anzu                       ; Match info in mode-line in search modes
+(use-package anzu                       ; Show info on matches in the mode-line in search modes
   :bind
   (([remap query-replace]                . anzu-query-replace)
    ([remap query-replace-regexp]         . anzu-query-replace-regexp)
@@ -337,8 +339,7 @@ directory, otherwise return nil."
   :init (global-anzu-mode)
   :diminish anzu-mode
   :config
-  (setq anzu-search-threshold 100)
-  )
+  (setq anzu-search-threshold 100))
 
 (use-package auctex-latexmk ; Add LatexMk support to AUCTeX
   :ensure auctex-latexmk
@@ -447,21 +448,20 @@ directory, otherwise return nil."
 (use-package company ; completion framework
   :init
   (add-hook 'prog-mode-hook 'company-mode)
-  :delight company-mode)
+  :delight company-mode
+  :config
+  (company-quickhelp-mode t))
 
 (use-package company-auctex)
 
 (use-package company-lean
   :after lean-mode)
 
-(use-package company-quickhelp ; popup docs for company completion candidates
-  :init
-  (company-quickhelp-mode t))
+(use-package company-quickhelp)  ; popup docs for company completion candidates
 
 (use-package company-restclient)
 
 (use-package conda
-  :ensure t
   :config
   ;; work around conda--get-executable-path only searching for "conda" and not "conda.exe"
   (when system-win32-p
@@ -677,11 +677,6 @@ no docs are found."
 
 
 (use-package helm
-  :demand
-  :init
-  ;; used to make :map work below
-  (require 'helm-global-bindings)
-
   :bind
   (("C-c h"         . helm-command-prefix)
   ("C-x C-b"        . helm-buffers-list)
@@ -703,19 +698,22 @@ no docs are found."
   ("a"              . helm-apropos)
   ("m"              . helm-multi-swoop)
   ("o"              . helm-occur)
-  ("s"              . helm-swoop)
-
-  :map helm-read-file-map
-  ("C-h m"          . describe-mode)
-  ("C-<backspace>"  . backward-kill-word)
-  )
+  ("s"              . helm-swoop))
   :diminish helm-mode
 
   :config
   (global-unset-key (kbd "C-x c"))
   (setq helm-mode-no-completion-in-region-in-modes
         '(inferior-python-mode))
-  (helm-mode 1))
+
+  ;; bind keys here to avoid error if set using :map above
+  (require 'helm-files)
+  (bind-key "C-h m" 'describe-mode helm-read-file-map)
+  (bind-key "C-<backspace>" 'backward-kill-word helm-read-file-map))
+
+;; call outside the use-package :config block for helm to avoid loading
+;; helm-mode.el twice
+(helm-mode 1)
 
 (use-package helm-ag
   :config
@@ -743,9 +741,14 @@ display-buffer correctly."
   ;;             :around #'jm-helm-company-display-document-buffer)
   )
 
-(use-package helm-descbinds
-  :init
-  (helm-descbinds-mode))
+(defvar jm-helm-descbinds 1
+  "Whether to use helm-descbinds for describing key bindings")
+
+(defun jm-describe-bindings (&optional prefix buffer)
+  (helm-descbinds-mode jm-helm-descbinds)
+  (describe-bindings prefix buffer))
+
+(use-package helm-descbinds)
 
 (use-package helm-lean
   :after lean-mode)
@@ -889,13 +892,16 @@ display-buffer correctly."
 
 (defun my-emacs-lisp-mode-hook ()
   (smartparens-mode t)
-  (smartparens-strict-mode t))
+  (smartparens-strict-mode t)
+  ;; use define-key below to avoid using :map in lisp-mode because
+  ;; smartparens-strict-mode-map does not have an autoload, unlike
+  ;; smartparens-mode-map
+  (define-key smartparens-strict-mode-map (kbd "<M-q>") 'sp-indent-defun))
 
 (use-package lisp-mode
   :ensure smartparens
 
   :init
-  (require 'smartparens-config)
   (add-hook 'emacs-lisp-mode-hook #'my-emacs-lisp-mode-hook)
 
   :bind
@@ -962,10 +968,7 @@ display-buffer correctly."
    ;; Miscellaneous commands
    ("M-S" . sp-split-sexp)
    ("M-J" . sp-join-sexp)
-   ("C-M-t" . sp-transpose-sexp)
-
-   :map smartparens-strict-mode-map
-   ("M-q" . sp-indent-defun)))
+   ("C-M-t" . sp-transpose-sexp)))
 
 (use-package live-py-mode)
 
@@ -978,14 +981,13 @@ display-buffer correctly."
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
 
   :hook ((lsp-mode . lsp-enable-which-key-integration))
-  :ensure conda
+  :after (conda)
   :init
   (setq lsp-before-save-edits nil
         lsp-enable-indentation nil
         lsp-imenu-sort-methods '(kind position)
         lsp-lens-enable t
-        lsp-keymap-prefix "s-s"
-        )
+        lsp-keymap-prefix "s-s")
   (add-hook 'desktop-after-read-hook 'jm-conda-lsp-enable-lsp-everywhere)
   :commands lsp
   :config
@@ -1386,9 +1388,7 @@ according to `headline-is-for-jira'."
 
    :map inferior-python-mode-map
    ("TAB"   . yas-or-company-or-indent-for-tab)
-   ("M-TAB" . python-shell-completion-complete-or-indent))
-  :config
-  (require 'pydoc-info))
+   ("M-TAB" . python-shell-completion-complete-or-indent)))
 
 (use-package racket-mode)
 
@@ -1487,8 +1487,11 @@ according to `headline-is-for-jira'."
                               "/Applications/Skim.app/Contents/SharedSupport/displayline -b %n %o %b"))
      TeX-command-default "latexmk")))
   (when system-win32-p
-    (require 'tex-mik)
-    (require 'sumatra-forward)))
+    (add-hook 'latex-mode-hook
+              ;; defer calling require as tex-site itself gets required by auctex-autoloads.el
+              (lambda ()
+                ((require 'tex-mik)
+                 (require 'sumatra-forward))))))
 
 (use-package text-mode
   :ensure nil
@@ -1539,7 +1542,8 @@ according to `headline-is-for-jira'."
 
 (use-package which-func
   :init
-  (which-function-mode 1))
+  (add-hook 'prog-mode-hook
+            (lambda () (which-function-mode 1))))
 
 (use-package which-key
   :init
@@ -1608,7 +1612,7 @@ according to `headline-is-for-jira'."
   (global-set-key (kbd "M-x" ) 'execute-extended-command))
 
 (defun jm-helm-debug-init ()
-
+  (interactive)
   ;; enables helm-log
   (setq helm-debug t)
 
