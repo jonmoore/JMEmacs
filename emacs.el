@@ -88,11 +88,6 @@
 ;; tricky-to-diagnose issues
 (setq package-check-signature nil)
 
-(mapc
- (lambda (relpath)
-   (add-to-list 'load-path (concat personal-emacs-root relpath)))
- '("/lisp"))
-
 ;; The call to package-initialize is needed to stop Emacs trying to
 ;; install built-in packages from an external repository.  According
 ;; to the documentation of package-initialize, this call should not be
@@ -123,9 +118,8 @@
 
 (use-package benchmark-init        ; profile the startup time of Emacs
   :demand ;; uncomment to enable benchmarking
-  :config
   ;; To disable collection of benchmark data after init is done.
-  (add-hook 'after-init-hook 'benchmark-init/deactivate))
+  :hook (after-init . benchmark-init/deactivate))
 
 (use-package async			; async execution
   ;; workaround for https://github.com/jwiegley/emacs-async/issues/96
@@ -161,6 +155,11 @@
               '((name . --queue-dispatch))))
 
 ;;; PERSONAL LISP
+(mapc
+ (lambda (relpath)
+   (add-to-list 'load-path (concat personal-emacs-root relpath)))
+ '("/lisp"))
+
 (require 'update-personal-autoloads)
 (update-personal-autoloads)
 (load "personal-autoloads")
@@ -317,27 +316,19 @@ directory, otherwise return nil."
   (("C-c j i" . ace-window)))
 
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
-  :init
-  (add-hook 'visual-line-mode-hook #'adaptive-wrap-prefix-mode))
+  :hook (visual-line-mode . adaptive-wrap-prefix-mode))
 
 (use-package ansi-color                 ; ANSI color in compilation buffer
   )
 
-(defun colorize-compilation-buffer ()
-  (toggle-read-only)
-  (ansi-color-apply-on-region (point-min) (point-max))
-  (toggle-read-only))
-(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
-
 (use-package anzu                       ; Show info on matches in the mode-line in search modes
-  :bind
-  (([remap query-replace]                . anzu-query-replace)
-   ([remap query-replace-regexp]         . anzu-query-replace-regexp)
-   :map isearch-mode-map
-   ([remap isearch-query-replace]        . anzu-isearch-query-replace)
-   ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
-  :init (global-anzu-mode)
   :diminish anzu-mode
+  :init (global-anzu-mode)
+  :bind (([remap query-replace]                . anzu-query-replace)
+         ([remap query-replace-regexp]         . anzu-query-replace-regexp)
+         :map isearch-mode-map
+         ([remap isearch-query-replace]        . anzu-isearch-query-replace)
+         ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
   :config
   (setq anzu-search-threshold 100))
 
@@ -368,8 +359,7 @@ directory, otherwise return nil."
   :ensure nil
   :init
   (global-auto-revert-mode t)
-  (add-hook 'find-file-hook
-            'disable-autorevert-for-network-files))
+  :hook  (find-file . disable-autorevert-for-network-files))
 
 (use-package browse-kill-ring
   :bind ("M-y" . browse-kill-ring))
@@ -395,12 +385,11 @@ directory, otherwise return nil."
 (use-package cc-mode
   :mode
   ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode)
-  :bind
-  (:map c-mode-base-map
-        ("RET"		. c-context-line-break)
-        ("M-o"		. ff-find-other-file))
+  :bind (:map c-mode-base-map
+              ("RET"		. c-context-line-break)
+              ("M-o"		. ff-find-other-file))
   :init
-  (add-hook 'c-mode-common-hook 'my-c-mode-common-hook-fn)
+  :hook (c-mode-common . my-c-mode-common-hook-fn)
   :config
   (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
                               ("\\.h\\'"     (".cpp" ".c"))
@@ -442,12 +431,13 @@ directory, otherwise return nil."
 (use-package comint
   :ensure nil
   :config
+  ;; the absence of -hook prevents using :hook here, while the docs for
+  ;; comint-output-filter-functions recommends add-hook
   (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
 
 (use-package company ; completion framework
-  :init
-  (add-hook 'prog-mode-hook 'company-mode)
-  :delight company-mode
+  :diminish company-mode
+  :hook (prog-mode . company-mode)
   :config
   (company-quickhelp-mode t))
 
@@ -459,6 +449,15 @@ directory, otherwise return nil."
 (use-package company-quickhelp)  ; popup docs for company completion candidates
 
 (use-package company-restclient)
+
+(use-package compile
+  :ensure nil
+  :init
+  (defun colorize-compilation-buffer ()
+    (toggle-read-only)
+    (ansi-color-apply-on-region (point-min) (point-max))
+    (toggle-read-only))
+  :hook (compilation-filter . colorize-compilation-buffer))
 
 (use-package conda
   :config
@@ -474,7 +473,7 @@ directory, otherwise return nil."
   :mode "\\.css\\'")
 
 (use-package csv-mode
-    :mode "\\.csv\\'")
+  :mode "\\.csv\\'")
 
 (use-package dap-mode ; client for Debug Adapter Protocol
   :after lsp-mode
@@ -484,8 +483,6 @@ directory, otherwise return nil."
   ;; disable until lsp is working
   ;;(dap-auto-configure-mode)
   )
-
-(use-package delight)
 
 (use-package diminish)
 
@@ -527,7 +524,7 @@ directory, otherwise return nil."
 (use-package ein)
 
 (use-package eldoc
-  :delight eldoc-mode)
+  :diminish eldoc-mode)
 
 (use-package elmacro)
 
@@ -555,12 +552,11 @@ clean buffer we're an order of magnitude laxer about checking."
 
 (use-package flycheck
   :diminish
+  :hook  (flycheck-after-syntax-check . adjust-flycheck-automatic-syntax-eagerness)
   :config
   ;; Each buffer gets its own idle-change-delay because of the
   ;; buffer-sensitive adjustment above.
   (make-variable-buffer-local 'flycheck-idle-change-delay)
-  (add-hook 'flycheck-after-syntax-check-hook
-            'adjust-flycheck-automatic-syntax-eagerness)
 
   ;; disable for now until we get LSP confirmed working cleanly
   (message "jm- omitting flycheck support for pycoverage")
@@ -614,10 +610,9 @@ no docs are found."
 
 (use-package geiser-racket)
 
-(use-package goto-addr
-  :init
-  (add-hook 'prog-mode-hook #'goto-address-prog-mode)
-  (add-hook 'text-mode-hook #'goto-address-mode))
+(use-package goto-addr ; buttonize URLs and e-mail addresses
+  :hook ((prog-mode . goto-address-prog-mode)
+         (text-mode . goto-address-mode)))
 
 (use-package graphviz-dot-mode
   :mode "\\.dot\\'")
@@ -651,68 +646,59 @@ no docs are found."
               ("<S-f5>" . gud-break)
               ("<f10>"  . gud-next)
               ("<f11>"  . gud-step))
+  :hook (kill-buffer . gud-kill-buffer)
   :config
-  (add-hook 'kill-buffer-hook 'gud-kill-buffer)
   (advice-add 'gud-display-line :after #'gud-display-line--my-gud-highlight))
 
-(defun my-haskell-mode-hook ()
-  (turn-on-haskell-indentation))
-
 (use-package haskell-mode
-  :init
+  :hook (haskell-mode . turn-on-haskell-indentation)
+  :bind (:map haskell-mode-map
+              ("C-c C-l"  . haskell-process-load-or-reload)
+              ("C-`"      . haskell-interactive-bring)
+              ("C-c C-i"  . haskell-process-do-info)
+              ("SPC"      . haskell-mode-contextual-space)
+              ("M-."      . haskell-mode-jump-to-def))
+  :config
   (setq haskell-process-suggest-remove-import-lines t
         haskell-process-auto-import-loaded-modules t
         haskell-process-suggest-hoogle-imports t
-        haskell-process-log t)
-  (add-hook 'haskell-mode-hook
-            'my-haskell-mode-hook)
-  :bind
-  (:map haskell-mode-map
-        ("C-c C-l"  . haskell-process-load-or-reload)
-        ("C-`"      . haskell-interactive-bring)
-        ("C-c C-i"  . haskell-process-do-info)
-        ("SPC"      . haskell-mode-contextual-space)
-        ("M-."      . haskell-mode-jump-to-def)))
+        haskell-process-log t))
 
 
 (use-package helm
-  :bind
-  (("C-c h"         . helm-command-prefix)
-  ("C-x C-b"        . helm-buffers-list)
-  ("C-x C-f"        . helm-find-files)
-  ("C-x C-r"        . helm-recentf)
-  ("C-x b"          . helm-mini)
-  ("M-X"            . execute-extended-command) ;; old binding of M-x
-  ("M-x"            . helm-M-x)
-  ("M-y"            . helm-show-kill-ring)
-
-  :map helm-map
-  ("TAB"            . helm-execute-persistent-action)
-  ("M-RET"          . helm-select-action)       ; more sane than C-z
-  ("C-'"            . ace-jump-helm-line)
-
-  :map helm-command-map
-  ("TAB"            . helm-lisp-completion-at-point)
-  ("M-:"            . helm-eval-expression-with-eldoc)
-  ("a"              . helm-apropos)
-  ("m"              . helm-multi-swoop)
-  ("o"              . helm-occur)
-  ("s"              . helm-swoop))
   :diminish helm-mode
+  :bind (("C-c h"          . helm-command-prefix)
+         ("C-x C-b"        . helm-buffers-list)
+         ("C-x C-f"        . helm-find-files)
+         ("C-x C-r"        . helm-recentf)
+         ("C-x b"          . helm-mini)
+         ("M-X"            . execute-extended-command) ;; old binding of M-x
+         ("M-x"            . helm-M-x)
+         ("M-y"            . helm-show-kill-ring)
 
+         :map helm-command-map
+         ("TAB"            . helm-lisp-completion-at-point)
+         ("M-:"            . helm-eval-expression-with-eldoc)
+         ("a"              . helm-apropos)
+         ("m"              . helm-multi-swoop)
+         ("o"              . helm-occur)
+         ("s"              . helm-swoop)
+
+         :map helm-map
+         ("TAB"            . helm-execute-persistent-action)
+         ("M-RET"          . helm-select-action)       ; more sane than C-z
+         ("C-'"            . ace-jump-helm-line)
+
+         ;; helm-read-file-map is defined in helm-files, which should be
+         ;; required in :config
+         :map helm-read-file-map
+         ("C-h m"          . describe-mode)
+         ("C-<backspace>"  . backward-kill-word))
   :config
+  (require 'helm-files)
   (global-unset-key (kbd "C-x c"))
   (setq helm-mode-no-completion-in-region-in-modes
-        '(inferior-python-mode))
-
-  ;; bind keys here to avoid error if set using :map above
-  (require 'helm-files)
-  (bind-key "C-h m" 'describe-mode helm-read-file-map)
-  (bind-key "C-<backspace>" 'backward-kill-word helm-read-file-map))
-
-;; call outside the use-package :config block for helm to avoid loading
-;; helm-mode.el twice
-(helm-mode 1)
+        '(inferior-python-mode)))
 
 (use-package helm-ag
   :config
@@ -732,9 +718,8 @@ display-buffer correctly."
 (use-package helm-company ; helm interface for company completion selection
   ;; separate from company backends
   :after company
-  :bind
-  (:map company-active-map
-        ("C-o" . helm-company))
+  :bind (:map company-active-map
+              ("C-o" . helm-company))
   ;; :config
   ;; (advice-add 'helm-company-display-document-buffer
   ;;             :around #'jm-helm-company-display-document-buffer)
@@ -780,35 +765,28 @@ display-buffer correctly."
               ("C-c j k" . ace-link-help)))
 
 (use-package hideshow
-  :init
-  (add-hook 'prog-mode-hook 'hs-minor-mode)
-  :bind
-  (:map hs-minor-mode-map
-        ("C-c l" . hs-hide-level)
-        ("C-c <right>" . hs-show-block)
-        ("C-c <left>"  . hs-hide-block))
-  :diminish hs-minor-mode)
+  :diminish hs-minor-mode
+  :hook (prog-mode . hs-minor-mode)
+  :bind (:map hs-minor-mode-map
+              ("C-c l" . hs-hide-level)
+              ("C-c <right>" . hs-show-block)
+              ("C-c <left>"  . hs-hide-block)))
 
 (use-package highlight-sexps
   :ensure nil
   :config
-  (setq hl-sexp-background-colors
-        (create-hl-sexp-background-colors)))
+  (setq hl-sexp-background-colors (create-hl-sexp-background-colors)))
 
-(use-package htmlize)
+(use-package htmlize)                   ; convert buffer and text decorations to HTML
 
 (use-package hydra)
 
-(defun my-ibuffer-hook ()
-  (ibuffer-switch-to-saved-filter-groups "my-default-filter-groups"))
-
 (use-package ibuffer
-  :bind
-  (:map ibuffer-mode-map
-        ("P" . ibuffer-do-ps-print)
-        ("s p" . ibuffer-do-sort-by-filename-or-dired))
-  :init
-  (add-hook 'ibuffer-mode-hook 'my-ibuffer-hook)
+  :hook (ibuffer-mode . (lambda ()
+                          (ibuffer-switch-to-saved-filter-groups "my-default-filter-groups")))
+  :bind (:map ibuffer-mode-map
+              ("P" . ibuffer-do-ps-print)
+              ("s p" . ibuffer-do-sort-by-filename-or-dired))
   :config
   (setq ibuffer-saved-filter-groups (quote (("my-default-filter-groups"
                                              ("dired"   (mode . dired-mode))
@@ -854,14 +832,8 @@ display-buffer correctly."
 
 (use-package json-mode)
 
-(use-package json-reformat)
-
 (use-package js2-mode
   :mode "\\.js\\'")
-
-(use-package js2-refactor)
-
-(use-package kanban) ; create Kanban boards from org TODOs
 
 (defun latex-sumatra-scroll-down ()
   (interactive)
@@ -875,9 +847,7 @@ display-buffer correctly."
 
 (use-package latex
   :ensure auctex ; latex.el comes with auctex
-  :init
-  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-
+  :hook (LaTeX-mode . LaTeX-math-mode)
   :if system-win32-p
   :bind (:map LaTeX-mode-map
               ("<prior>" . latex-sumatra-scroll-down)
@@ -886,89 +856,7 @@ display-buffer correctly."
 (use-package lean-mode                  ; Support the Lean proof assistant
   ;; https://github.com/leanprover/lean-mode
   :config
-  (require 'unicode-fonts)
-  (unicode-fonts-setup))
-
-(defun my-emacs-lisp-mode-hook ()
-
-  (smartparens-mode t)
-  (smartparens-strict-mode t)
-  ;; use define-key below to avoid using :map in lisp-mode because
-  ;; smartparens-strict-mode-map does not have an autoload, unlike
-  ;; smartparens-mode-map
-  (define-key smartparens-strict-mode-map (kbd "<M-q>") 'sp-indent-defun))
-
-(use-package lisp-mode
-  :ensure smartparens
-
-  :init
-  (add-hook 'emacs-lisp-mode-hook #'my-emacs-lisp-mode-hook)
-
-  :bind
-  (:map
-   smartparens-mode-map
-
-   ("C-M-b" . sp-backward-sexp)
-   ("C-M-f" . sp-forward-sexp)
-
-   ("<C-M-left>" . sp-backward-sexp)
-   ("<C-M-right>" . sp-forward-sexp)
-   ("<C-up>" . sp-up-sexp)
-   ("<C-down>" . sp-down-sexp)
-   ("<C-S-up>" . sp-backward-up-sexp)
-   ("<C-S-down>" . sp-backward-down-sexp)
-
-   ("C-M-p" . sp-previous-sexp)
-   ("C-M-n" . sp-next-sexp)
-   ("M-a" . sp-beginning-of-sexp)
-   ("M-e" . sp-end-of-sexp)
-
-   ("M-B" . sp-backward-symbol)
-   ("M-F" . sp-forward-symbol)
-
-   ("M-p" . point-undo)
-   ("M-n" . point-redo)
-
-   ;; selection
-   ("C-]" . sp-select-next-thing-exchange)
-   ("C-M-]" . sp-select-next-thing)
-
-   ;; Deleting and killing
-   ("<M-delete>" . sp-unwrap-sexp)
-   ("<M-backspace>" . sp-backward-unwrap-sexp)
-
-   ([remap backward-delete-char] . sp-backward-delete-char)
-   ([remap backward-kill-word]   . sp-backward-kill-word)
-   ([remap delete-forward-char]  . sp-delete-char)
-   ([remap kill-line]            . sp-kill-hybrid-sexp)
-   ([remap kill-word]            . sp-kill-word)
-
-   ("C-M-k" . sp-kill-sexp)
-   ("C-M-S-k" . sp-backward-kill-sexp)
-   ("C-M-w" . sp-copy-sexp)
-
-   ;; Depth changing
-   ("M-s" . sp-splice-sexp)
-   ("C-M-s" . sp-splice-sexp-killing-around)
-   ("M-?" . sp-convolute-sexp)
-   ("<C-M-backspace>" . sp-splice-sexp-killing-backward)
-   ("<C-M-delete>" . sp-splice-sexp-killing-forward)
-
-   ;; Barf & slurp
-
-   ;; http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking
-   ;; for the first setting
-   ;; Not using "C-)" because Microsoft have broken this.
-   ;; Search for "WTF" in this file.
-   ("C-M-0" . sp-forward-slurp-sexp)
-   ("C-}" . sp-forward-barf-sexp)
-   ("C-M-9" . sp-backward-slurp-sexp)
-   ("C-{" . sp-backward-barf-sexp)
-
-   ;; Miscellaneous commands
-   ("M-S" . sp-split-sexp)
-   ("M-J" . sp-join-sexp)
-   ("C-M-t" . sp-transpose-sexp)))
+  (require 'unicode-fonts))
 
 (use-package live-py-mode)
 
@@ -977,20 +865,16 @@ display-buffer correctly."
   (setq-default lorem-ipsum-list-bullet "- "))
 
 (use-package lsp-mode     ; Language Server Protocol support
-  ;; https://emacs-lsp.github.io/lsp-mode/page/settings/
-  ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
-
-  :hook ((lsp-mode . lsp-enable-which-key-integration))
-  :after (conda)
+  ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
   :init
-  (setq lsp-before-save-edits nil
-        lsp-enable-indentation nil
-        lsp-imenu-sort-methods '(kind position)
-        lsp-lens-enable t
-        lsp-keymap-prefix "s-s")
-  (add-hook 'desktop-after-read-hook 'jm-conda-lsp-enable-lsp-everywhere)
+  (setq lsp-keymap-prefix "s-s")
+  :hook ((lsp-mode . lsp-enable-which-key-integration)
+         (desktop-after-read . jm-conda-lsp-enable-lsp-everywhere))
   :commands lsp
   :config
+  (setq lsp-before-save-edits nil
+        lsp-enable-indentation nil
+        lsp-imenu-sort-methods '(kind position))
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
   (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
@@ -1002,76 +886,59 @@ display-buffer correctly."
 
 ;; lsp-pyright replaces lsp-python-ms
 (use-package lsp-pyright
+  :hook (conda-postactivate . jm-pyright-sync-venv-from-conda-env)
   :config
   (when (boundp 'jm-pyright-langserver-path)
     (lsp-dependency
      'pyright
      `(:system ,jm-pyright-langserver-path)))
-  (add-hook 'conda-postactivate-hook 'jm-pyright-sync-venv-from-conda-env)
   (setq jm-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs"))
   (when (file-directory-p jm-pyright-stub-path)
-    (setq lsp-pyright-use-library-code-for-types t) ;; set this to nil if getting too many false positive type errors
-    (setq lsp-pyright-stub-path jm-pyright-stub-path)))
+    (setq lsp-pyright-use-library-code-for-types t ; set to nil if getting too many false positive type errors
+          lsp-pyright-stub-path jm-pyright-stub-path)))
 
 (use-package lsp-treemacs) ; lsp-mode/treemacs integration with treeview controls
 
 (use-package lsp-ui
+  :hook  ((lsp-mode . lsp-ui-mode))
   :config
-  (setq lsp-ui-doc-show-with-cursor nil
-        )
-  :hook ((lsp-mode . lsp-ui-mode)))
+  (setq lsp-ui-doc-show-with-cursor nil))
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
-  :bind
-  (:map
-   emacs-lisp-mode-map
-   ("C-c m x" . macrostep-expand)
-   :map lisp-interaction-mode-map
-   ("C-c m x" . macrostep-expand)))
+  :bind (:map
+         emacs-lisp-mode-map
+         ("C-c m x" . macrostep-expand)
+         :map lisp-interaction-mode-map
+         ("C-c m x" . macrostep-expand)))
 
 (use-package magit
   :bind ("C-x g" . magit-status)
-  :init
-  (setq magit-auto-revert-mode nil)
   :config
-  (setq magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
+  (setq magit-auto-revert-mode nil
+        magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
         magit-log-margin '(t "%Y-%m-%d %H:%M" magit-log-margin-width t 18)
         magit-log-show-refname-after-summary t
         magit-popup-use-prefix-argument 'default
         magit-wip-after-apply-mode nil
         magit-wip-after-save-mode nil
-        magit-wip-before-change-mode nil
-        ))
-
-(defun man--man-around (orig-fun &rest args)
-  "Advises `man' to use bash as the shell."
-  (let ((shell-file-name "bash"))
-    (apply orig-fun args)))
-
-(use-package man
-  :config
-  (advice-add 'man :around #'man--man-around))
+        magit-wip-before-change-mode nil))
 
 (use-package markdown-mode)
 
-(use-package maxframe
-  :init
-  (maximize-frame))
+(use-package maxframe)
 
 (use-package mediawiki
   :mode ("\\.wiki\\'" . mediawiki-mode)
-  :bind
-  (:map mediawiki-mode-map
-        ("RET"       . newline-and-indent)
-        ("<M-left>"  . mediawiki-simple-outline-promote)
-        ("<M-right>" . mediawiki-simple-outline-demote)
-        ("<M-up>"    . outline-move-subtree-up)
-        ("<M-down>"  . outline-move-subtree-down))
+  :bind (:map mediawiki-mode-map
+              ("RET"       . newline-and-indent)
+              ("<M-left>"  . mediawiki-simple-outline-promote)
+              ("<M-right>" . mediawiki-simple-outline-demote)
+              ("<M-up>"    . outline-move-subtree-up)
+              ("<M-down>"  . outline-move-subtree-down))
   :config
   ;; workaround for bug https://github.com/hexmode/mediawiki-el/issues/36
-  (remove-hook 'outline-minor-mode-hook 'mediawiki-outline-magic-keys)
-  )
+  (remove-hook 'outline-minor-mode-hook 'mediawiki-outline-magic-keys))
 
 (use-package multiple-cursors)
 
@@ -1079,10 +946,9 @@ display-buffer correctly."
 
 (use-package nxml-mode
   :ensure nil
-  :bind
-  (:map
-   nxml-mode-map
-   ("<f9>" . nexus-insert-gav-for-keyword)))
+  :bind (:map
+         nxml-mode-map
+         ("<f9>" . nexus-insert-gav-for-keyword)))
 
 ;;; ORG MODE
 
@@ -1096,8 +962,8 @@ display-buffer correctly."
   "Return if HEADLINE is for a buffer created by
 `org-jira-get-issues'."
   (org-with-point-at
-      (get-text-property 1 'org-hd-marker headline)
-    (in-a-jira-buffer)))
+   (get-text-property 1 'org-hd-marker headline)
+   (in-a-jira-buffer)))
 
 (defun jira-priority-from-jira-headline (headline)
   "Return the Jira priority for HEADLINE, as a string, as
@@ -1105,9 +971,9 @@ reported by Jira, e.g. \"Major\".  This is needed because of the
 conflict between the use of \"priority\" for `org-mode'
 properties and Jira properties."
   (org-with-point-at
-      (get-text-property 1 'org-hd-marker headline)
-    (let ((org-special-properties nil))
-      (cdr (assoc "PRIORITY" (org-entry-properties nil "priority"))))))
+   (get-text-property 1 'org-hd-marker headline)
+   (let ((org-special-properties nil))
+     (cdr (assoc "PRIORITY" (org-entry-properties nil "priority"))))))
 
 (defvar jira-priority-alist
   '(("Blocker"  . ?A)
@@ -1156,17 +1022,8 @@ according to `headline-is-for-jira'."
   (interactive)
   (org-cycle '(4)))
 
-(use-package ob-restclient)
-
 (defun my-org-mode-hook-fn ()
-  (require 'ob-restclient)
   (setq fill-column 90))
-
-(setq org-jira-jira-status-to-org-keyword-alist
-      '(("Open" . "TODO")
-        ("Reopened" . "TODO")
-        ("On hold" . "HOLD")
-        ("In Progress" . "WIP")))
 
 (defun my-org-load-hook-fn ()
   (org-clock-persistence-insinuate)
@@ -1254,40 +1111,40 @@ according to `headline-is-for-jira'."
   (setq org-ref-show-broken-links nil) ; reported as a speedup
   )
 
+(use-package ob-restclient)
+
 (use-package org
   :mode "\\.org'"
-
   :init
+  :hook (org-load . my-org-load-hook-fn)
+  :bind (:map org-mode-map
+              ("<C-tab>"        . org-cycle-t)
+              ("M-?"            . org-complete)
+              ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
+              ("<C-S-down>"     . outline-next-visible-heading)
+              ("<C-S-up>"       . outline-previous-visible-heading)
+              ("C-c ?"          . outline-mark-subtree)
+              ("<C-S-left>"     . nil)
+              ("<C-S-right>"    . nil)
+              ("C-c j k"        . ace-link-org)
+              ("C-c C-x RET f"  . org-mobile-pull)
+              ("C-c C-x RET g"  . nil))
+
+  :config
+  (defalias 'ob-temp-file 'org-babel-temp-file)
   (setq org-clock-persist t
         org-clock-in-resume t
         org-list-allow-alphabetical t
         org-disputed-keys '(([(control shift right)] . [(meta shift +)])
                             ([(control shift left)]  . [(meta shift -)]))
-        org-replace-disputed-keys t)
-  (defalias 'ob-temp-file 'org-babel-temp-file)
-  (add-hook 'org-load-hook 'my-org-load-hook-fn)
-
-  :bind
-  (:map org-mode-map
-        ("<C-tab>"        . org-cycle-t)
-        ("M-?"            . org-complete)
-        ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
-        ("<C-S-down>"     . outline-next-visible-heading)
-        ("<C-S-up>"       . outline-previous-visible-heading)
-        ("C-c ?"          . outline-mark-subtree)
-        ("<C-S-left>"     . nil)
-        ("<C-S-right>"    . nil)
-        ("C-c j k"        . ace-link-org)
-        ("C-c C-x RET f"  . org-mobile-pull)
-        ("C-c C-x RET g"  . nil))
-
-  :config
-  (setq org-capture-templates
+        org-replace-disputed-keys t
+        org-capture-templates
         `(("c" "Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
            "%(org-chef-get-recipe-from-url)"
            :empty-lines 1)
           ("m" "Manual Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
            "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))
+
   ;; org-tempo supports the expansion of <s to src blocks etc.
   (require 'org-tempo)
 
@@ -1298,14 +1155,17 @@ according to `headline-is-for-jira'."
       (setq org-mobile-directory org-mobile-directory-candidate)
       (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
       (add-hook 'after-init-hook 'org-mobile-pull)
-      (add-hook 'kill-emacs-hook 'org-mobile-push)))
-  )
+      (add-hook 'kill-emacs-hook 'org-mobile-push))))
 
 (use-package org-chef)
 
 (use-package org-jira
   :config
-  (setq org-jira-download-comments nil))
+  (setq org-jira-download-comments nil
+        org-jira-jira-status-to-org-keyword-alist '(("Open"        . "TODO")
+                                                    ("Reopened"    . "TODO")
+                                                    ("On hold"     . "HOLD")
+                                                    ("In Progress" . "WIP"))))
 
 (use-package org-ref
   :config
@@ -1376,19 +1236,17 @@ according to `headline-is-for-jira'."
 
 (use-package python
   :ensure nil
-  :bind
-  (
-   :map python-mode-map
-   ;; Check if applicable with LSP
-   ("TAB"     . yas-or-company-or-indent-for-tab)
-   ("C-c y n" . yas-new-snippet)
-   ("C-c y s" . yas-insert-snippet)
-   ("<M-S-left>" . python-indent-shift-left)
-   ("<M-S-right>" . python-indent-shift-right)
+  :bind (:map python-mode-map
+              ;; Check if applicable with LSP
+              ("TAB"     . yas-or-company-or-indent-for-tab)
+              ("C-c y n" . yas-new-snippet)
+              ("C-c y s" . yas-insert-snippet)
+              ("<M-S-left>" . python-indent-shift-left)
+              ("<M-S-right>" . python-indent-shift-right)
 
-   :map inferior-python-mode-map
-   ("TAB"   . yas-or-company-or-indent-for-tab)
-   ("M-TAB" . python-shell-completion-complete-or-indent)))
+              :map inferior-python-mode-map
+              ("TAB"   . yas-or-company-or-indent-for-tab)
+              ("M-TAB" . python-shell-completion-complete-or-indent)))
 
 (use-package racket-mode)
 
@@ -1400,9 +1258,10 @@ according to `headline-is-for-jira'."
   :mode ("\\.rcl\\'" . restclient-mode))
 
 (use-package rst                        ; ReStructuredText
-  :config
-  (bind-key "C-=" nil rst-mode-map)
-  (bind-key "M-RET" #'rst-insert-list rst-mode-map))
+  :bind (:map
+         rst-mode-map
+         ("C-=" . nil)  
+         ("M-RET" . rst-insert-list)))
 
 (use-package scroll-in-place
   :ensure nil)
@@ -1419,13 +1278,11 @@ according to `headline-is-for-jira'."
     (forward-line 1)))
 
 (use-package shell
-  :init
-  :bind
-  (:map
-   shell-mode-map
-   ("<home>" . comint-bol)
-   ("<up>"   . shell-cycle-backward-through-command-history)
-   ("<down>" . shell-cycle-forward-through-command-history)))
+  :bind (:map
+         shell-mode-map
+         ("<home>" . comint-bol)
+         ("<up>"   . shell-cycle-backward-through-command-history)
+         ("<down>" . shell-cycle-forward-through-command-history)))
 
 (defun jm-advice-to-shut-up (orig-fun &rest args)
   "Call the ORIG-FUN in a `shut-up' context"
@@ -1440,26 +1297,89 @@ according to `headline-is-for-jira'."
     (ignore-errors
       (apply orig-fun args))))
 
-(use-package shut-up
-  )                   ; redirects `message' and stdout
+(use-package shut-up)                   ; redirects `message' and stdout
 
 (use-package sicp)
 
 (use-package smartparens
   :diminish smartparens-mode
+  :hook (emacs-lisp-mode . smartparens-strict-mode)
+  :bind (:map
+         smartparens-strict-mode-map
+         ("M-q" . sp-indent-defun)
+
+         :map smartparens-mode-map
+         ("C-M-b" . sp-backward-sexp)
+         ("C-M-f" . sp-forward-sexp)
+
+         ("<C-M-left>" . sp-backward-sexp)
+         ("<C-M-right>" . sp-forward-sexp)
+         ("<C-up>" . sp-up-sexp)
+         ("<C-down>" . sp-down-sexp)
+         ("<C-S-up>" . sp-backward-up-sexp)
+         ("<C-S-down>" . sp-backward-down-sexp)
+
+         ("C-M-p" . sp-previous-sexp)
+         ("C-M-n" . sp-next-sexp)
+         ("M-a" . sp-beginning-of-sexp)
+         ("M-e" . sp-end-of-sexp)
+
+         ("M-B" . sp-backward-symbol)
+         ("M-F" . sp-forward-symbol)
+
+         ("M-p" . point-undo)
+         ("M-n" . point-redo)
+
+         ;; selection
+         ("C-]" . sp-select-next-thing-exchange)
+         ("C-M-]" . sp-select-next-thing)
+
+         ;; Deleting and killing
+         ("<M-delete>" . sp-unwrap-sexp)
+         ("<M-backspace>" . sp-backward-unwrap-sexp)
+
+         ([remap backward-delete-char] . sp-backward-delete-char)
+         ([remap backward-kill-word]   . sp-backward-kill-word)
+         ([remap delete-forward-char]  . sp-delete-char)
+         ([remap kill-line]            . sp-kill-hybrid-sexp)
+         ([remap kill-word]            . sp-kill-word)
+
+         ("C-M-k" . sp-kill-sexp)
+         ("C-M-S-k" . sp-backward-kill-sexp)
+         ("C-M-w" . sp-copy-sexp)
+
+         ;; Depth changing
+         ("M-s" . sp-splice-sexp)
+         ("C-M-s" . sp-splice-sexp-killing-around)
+         ("M-?" . sp-convolute-sexp)
+         ("<C-M-backspace>" . sp-splice-sexp-killing-backward)
+         ("<C-M-delete>" . sp-splice-sexp-killing-forward)
+
+         ;; Barf & slurp
+
+         ;; http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking
+         ;; for the first setting
+         ;; Not using "C-)" because Microsoft have broken this.
+         ;; Search for "WTF" in this file.
+         ("C-M-0" . sp-forward-slurp-sexp)
+         ("C-}" . sp-forward-barf-sexp)
+         ("C-M-9" . sp-backward-slurp-sexp)
+         ("C-{" . sp-backward-barf-sexp)
+
+         ;; Miscellaneous commands
+         ("M-S" . sp-split-sexp)
+         ("M-J" . sp-join-sexp)
+         ("C-M-t" . sp-transpose-sexp))
   :config
   ;; smartparens-config provides sensible defaults for smartparens in different
   ;; languages.  It's especially important for lisp as otherwise smartparens
   ;; will double up insertion of single quotes.
   (require 'smartparens-config))
 
-(defun my-speedbar-mode-hook-fn ()
-  (speedbar-add-supported-extension ".org")
-  (auto-raise-mode 1))
-
 (use-package speedbar
-  :config
-  (add-hook 'speedbar-mode-hook 'my-speedbar-mode-hook-fn))
+  :hook (speedbar-mode . (lambda ()
+                           (speedbar-add-supported-extension ".org")  
+                           (auto-raise-mode 1))))
 
 (use-package sphinx-doc)
 
@@ -1495,9 +1415,8 @@ according to `headline-is-for-jira'."
 
 (use-package text-mode
   :ensure nil
-  :bind
-  (:map text-mode-map
-        ([(shift return)] . newline-and-indent)))
+  :bind (:map text-mode-map
+              ([(shift return)] . newline-and-indent)))
 
 (use-package tramp
   :if system-win32-p
@@ -1513,11 +1432,11 @@ according to `headline-is-for-jira'."
 (use-package treemacs-projectile) ; projectile integration for treemacs
 
 (use-package undo-tree
-  :bind (:map undo-tree-visualizer-mode-map
-              ("RET" . undo-tree-visualizer-quit))
+  :diminish undo-tree-mode
   :init
   (global-undo-tree-mode)
-  :diminish undo-tree-mode
+  :bind (:map undo-tree-visualizer-mode-map
+              ("RET" . undo-tree-visualizer-quit))
   :config
   (setq undo-tree-auto-save-history t
         ;; place history files in one location rather than scattering them everywhere
@@ -1530,32 +1449,30 @@ according to `headline-is-for-jira'."
   (advice-add 'undo-tree-load-history :around #'jm-advice-to-shut-up-and-ignore-errors)
 
   ;; Use the old format to avoid hangs when timestamps have been updated
-  (setq undo-tree-save-format-version 0)
-  )
+  (setq undo-tree-save-format-version 0))
 
-(use-package unicode-fonts)
+(use-package unicode-fonts
+  :config
+  (unicode-fonts-setup))
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   ;; This makes lines display wrapped at fill-column in visual-line-mode
-  :init
-  (autoload 'visual-fill-column-mode--enable "visual-fill-column")
-  (add-hook 'visual-line-mode-hook #'visual-fill-column-mode--enable))
+  :hook (visual-line-mode . visual-fill-column-mode--enable))
 
 (use-package which-func                 ; print current function in mode line
-  :init
-  (add-hook 'prog-mode-hook
-            (lambda () (which-function-mode 1))))
+  :hook (prog-mode . which-function-mode))
 
 (use-package which-key                  ; Display available keybindings in popup
+  :diminish which-key-mode
   :init
   (which-key-mode)
+  :config
   (setq which-key-idle-delay 0.4
-        which-key-sort-order 'which-key-prefix-then-key-order)
-  :diminish which-key-mode)
+        which-key-sort-order 'which-key-prefix-then-key-order))
 
-(use-package whitespace                 ; Highlight bad whitespace
+(use-package whitespace                 ; Highlight bad whitespace 
+  :diminish (whitespace-mode . " ⓦ")
   :bind (("C-c t w" . whitespace-mode))
-  :init
   :config
   (setq whitespace-style '(face
                            indentation
@@ -1565,8 +1482,7 @@ according to `headline-is-for-jira'."
                            empty
                            trailing
                            lines-tail)
-        whitespace-line-column nil)
-  :diminish (whitespace-mode . " ⓦ"))
+        whitespace-line-column nil))
 
 (use-package windmove                   ; Move between windows with Shift+Arrow
   :bind (("C-c w <left>"  . windmove-left)
@@ -1582,19 +1498,17 @@ according to `headline-is-for-jira'."
 (use-package writeroom-mode)
 
 (use-package yaml-mode
-  :config
   ;; treat yaml-mode as a programming mode even though it is derived from
   ;; text-mode
-  (add-hook 'yaml-mode-hook
-            (lambda () (run-hooks 'prog-mode-hook))))
+  :hook (yaml-mode . (lambda ()
+                       (run-hooks 'prog-mode-hook))))
 
 (use-package yasnippet
-  :init
-  (setq yas-verbosity 2)
+  :diminish yas-minor-mode
   :config
+  (setq yas-verbosity 2)
   (yas-global-mode)
-  (yas-reload-all)
-  :diminish yas-minor-mode)
+  (yas-reload-all))
 
 (use-package yasnippet-snippets)        ; Official snippets
 
@@ -1623,8 +1537,7 @@ according to `headline-is-for-jira'."
   ;; prevent errors when using the minibuffer when helm is using the minibuffer
   (setq enable-recursive-minibuffers t)
 
-  (jm-reset-helm-bindings)
-  )
+  (jm-reset-helm-bindings))
 
 (progn
   ;; helm notes
@@ -1647,7 +1560,10 @@ according to `headline-is-for-jira'."
   ;; make-process (wrong argument type stringp), even though we don't pass
   ;; default-directory.  It is mentioned in the docs of start-process though
   ;;
-  )
+
+  ;; call outside the use-package :config block for helm to avoid loading
+  ;; helm-mode.el twice
+  (helm-mode 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
