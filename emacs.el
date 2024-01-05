@@ -112,35 +112,42 @@
        pkgs))))
 
 (require 'use-package)
-(setq use-package-verbose t
-      use-package-always-ensure t
-      use-package-always-defer t)
+(setq use-package-always-ensure t
+      use-package-always-defer t
+      use-package-compute-statistics t
+      use-package-verbose t)
 
 (use-package benchmark-init        ; profile the startup time of Emacs
-  :demand ;; uncomment to enable benchmarking
+  ;; We place this early and demand it to benchmark the rest of the
+  ;; initialisation process
+  :demand
   ;; To disable collection of benchmark data after init is done.
   :hook (after-init . benchmark-init/deactivate))
 
 (use-package async			; async execution
-  ;; workaround for https://github.com/jwiegley/emacs-async/issues/96
+  ;; We place this early and demand it to avoid errors related to have too many
+  ;; procesess running when compiling other packages that are installed or
+  ;; updated in bulk, e.g. after a new build or package refresh.
+
+  ;; See also
+  ;; https://github.com/jwiegley/emacs-async/issues/96
   ;; https://gist.github.com/kiennq/cfe57671bab3300d3ed849a7cbf2927c
-  :ensure t
-  :defer 5
+
+  :demand
   :init
   (setq async-bytecomp-allowed-packages '(all))
   :config
   ;; async compiling package
   (async-bytecomp-package-mode t)
-  (dired-async-mode 1)
+  ;; (dired-async-mode 1) ;; this caused issues when moving the use-package block
   ;; limit number of async processes
-  (eval-when-compile
-    (require 'cl-lib))
   (defvar async-maximum-parallel-procs 4)
   (defvar async--parallel-procs 0)
   (defvar async--queue nil)
   (defvar-local async--cb nil)
   (advice-add #'async-start :around
               (lambda (orig-func func &optional callback)
+                (require 'cl-lib)
                 (if (>= async--parallel-procs async-maximum-parallel-procs)
                     (push `(,func ,callback) async--queue)
                   (cl-incf async--parallel-procs)
@@ -188,7 +195,6 @@
                            (bound-and-true-p local-exec-paths))
                    (list (getenv "PATH")))
                   path-separator)))
-
 
 (when system-osx-p
   (setq exec-path (append (bound-and-true-p local-exec-paths)
@@ -323,7 +329,6 @@ directory, otherwise return nil."
 
 (use-package anzu                       ; Show info on matches in the mode-line in search modes
   :diminish anzu-mode
-  :init (global-anzu-mode)
   :bind (([remap query-replace]                . anzu-query-replace)
          ([remap query-replace-regexp]         . anzu-query-replace-regexp)
          :map isearch-mode-map
@@ -357,8 +362,6 @@ directory, otherwise return nil."
 
 (use-package autorevert
   :ensure nil
-  :init
-  (global-auto-revert-mode t)
   :hook  (find-file . disable-autorevert-for-network-files))
 
 (use-package browse-kill-ring
@@ -388,7 +391,6 @@ directory, otherwise return nil."
   :bind (:map c-mode-base-map
               ("RET"		. c-context-line-break)
               ("M-o"		. ff-find-other-file))
-  :init
   :hook (c-mode-common . my-c-mode-common-hook-fn)
   :config
   (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
@@ -443,8 +445,7 @@ directory, otherwise return nil."
 
 (use-package company-auctex)
 
-(use-package company-lean
-  :after lean-mode)
+(use-package company-lean)
 
 (use-package company-quickhelp)  ; popup docs for company completion candidates
 
@@ -524,6 +525,14 @@ directory, otherwise return nil."
 (use-package ein)
 
 (use-package eldoc
+  ;; note: using :diminish effectively creates a :config block, and eldoc is
+  ;; already loaded when this block is processed, thus the config is executed,
+  ;; including the call to diminish, while processing this block.  This can be
+  ;; seen in the output of use-package-report
+
+  ;; eldoc's early loading is unusual, before the `user-init-file', perhaps
+  ;; related to the eldoc.eln file under the native-lisp directory.  This
+  ;; loading seems unaffected by the contents of eldoc.el.
   :diminish eldoc-mode)
 
 (use-package elmacro)
@@ -664,8 +673,48 @@ no docs are found."
         haskell-process-suggest-hoogle-imports t
         haskell-process-log t))
 
+(defun jm-reset-helm-bindings ()
+  "Reset the bindings for major functionality to use non-helm functions"
+  (global-set-key (kbd "C-x C-b" ) 'list-buffers)
+  (global-set-key (kbd "C-x C-f" ) 'find-file)
+  (global-set-key (kbd "C-x b" ) 'switch-to-buffer)
+  (global-set-key (kbd "M-x" ) 'execute-extended-command))
+
+(defun jm-helm-debug-init ()
+  (interactive)
+  ;; enables helm-log
+  (setq helm-debug t)
+
+  ;; to disable its takeover of many interaction elements, otherwise it will
+  ;; get in the way incessantly.
+  (helm-mode -1)
+
+  ;; prevent errors when using the minibuffer when helm is using the minibuffer
+  (setq enable-recursive-minibuffers t)
+
+  (jm-reset-helm-bindings))
 
 (use-package helm
+  ;; helm notes
+
+  ;; Debugging helm in the regular Emacs way with helm enabled basically doesn't
+  ;; work.  For effective debugging, see "Debugging helm" in the online help.
+
+  ;; 1) call (jm-helm-debug-init)
+  ;;
+  ;; 2) call (helm-suspend-update t)
+  ;; https://emacs.stackexchange.com/questions/468/how-to-debug-helm. Typically
+  ;; bound as C-!
+  ;;
+  ;; 3) try to run the minimal code needed to show the issue
+  ;;
+  ;; BUT ....
+  ;;
+  ;; 4) calling helm-functions outside their regular contexts can create strange
+  ;; errors, e.g. ended up with default-directory set to nil which broke
+  ;; make-process (wrong argument type stringp), even though we don't pass
+  ;; default-directory.  It is mentioned in the docs of start-process though
+  ;;
   :diminish helm-mode
   :bind (("C-c h"          . helm-command-prefix)
          ("C-x C-b"        . helm-buffers-list)
@@ -735,11 +784,12 @@ display-buffer correctly."
 (use-package helm-descbinds)
 
 (use-package helm-lean
-  :after lean-mode)
+  ;; :after lean-mode
+  )
 
 (use-package helm-lsp ; helm for LSP symbols, actions, switching projects
   ;; separate from company
-  :after lsp
+  ;; :after lsp
   :bind (:map lsp-mode-map
               ([remap xref-find-apropos] . helm-lsp-workspace-symbol)))
 
@@ -1198,10 +1248,6 @@ according to `headline-is-for-jira'."
 
 (use-package ox-rst)
 
-(use-package paren
-  :init
-  (show-paren-mode t))
-
 (use-package peep-dired) ; in dired, show the file at point in the other window
 
 (use-package pretty-column
@@ -1518,57 +1564,17 @@ according to `headline-is-for-jira'."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun jm-reset-helm-bindings ()
-  "Reset the bindings for major functionality to use non-helm functions"
-  (global-set-key (kbd "C-x C-b" ) 'list-buffers)
-  (global-set-key (kbd "C-x C-f" ) 'find-file)
-  (global-set-key (kbd "C-x b" ) 'switch-to-buffer)
-  (global-set-key (kbd "M-x" ) 'execute-extended-command))
-
-(defun jm-helm-debug-init ()
-  (interactive)
-  ;; enables helm-log
-  (setq helm-debug t)
-
-  ;; to disable its takeover of many interaction elements, otherwise it will
-  ;; get in the way incessantly.
-  (helm-mode -1)
-
-  ;; prevent errors when using the minibuffer when helm is using the minibuffer
-  (setq enable-recursive-minibuffers t)
-
-  (jm-reset-helm-bindings))
-
-(progn
-  ;; helm notes
-
-  ;; Debugging helm in the regular Emacs way with helm enabled basically doesn't
-  ;; work.  For effective debugging, see "Debugging helm" in the online help.
-
-  ;; 1) call (jm-helm-debug-init)
-  ;;
-  ;; 2) call (helm-suspend-update t)
-  ;; https://emacs.stackexchange.com/questions/468/how-to-debug-helm. Typically
-  ;; bound as C-!
-  ;;
-  ;; 3) try to run the minimal code needed to show the issue
-  ;;
-  ;; BUT ....
-  ;;
-  ;; 4) calling helm-functions outside their regular contexts can create strange
-  ;; errors, e.g. ended up with default-directory set to nil which broke
-  ;; make-process (wrong argument type stringp), even though we don't pass
-  ;; default-directory.  It is mentioned in the docs of start-process though
-  ;;
-
-  ;; call outside the use-package :config block for helm to avoid loading
-  ;; helm-mode.el twice
-  (helm-mode 1))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(savehist-mode 1)
-(save-place-mode 1)
+(use-package emacs
+  :init
+  (global-anzu-mode)
+  (global-auto-revert-mode t)
+  (helm-mode 1)
+  (save-place-mode 1)
+  (savehist-mode 1)
+  (show-paren-mode t)
+  )
 
 (use-package desktop
   :init
