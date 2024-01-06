@@ -1,12 +1,49 @@
 ;;; Helper functions for Python programming, based on conda, lsp-mode and
 ;;; dap-mode.
-
-;;; conda.el
-
 (require 'conda)
 (require 'flycheck)
 (require 'ht)                           ; hash table library
 (require 'projectile)
+
+;;; lsp-mode notes
+;;  ==============
+
+;; Workspace and session management
+;;
+;; There is a single LSP session (a CL struct) stored as `lsp--session'.  This
+;; describes multiple workspaces, each with a root directory.  When LSP is
+;; launched in a file not already contained within a root, it will prompt for a
+;; root and add a workspace to the session.
+;;
+;; `lsp--try-project-root-workspaces' tries to open a file as a
+;; project/workspace file, prompting for a workspace root if needed, and adding
+;; it as a known workspace if it is new.
+;;
+;; LSP sessions are stored in `lsp-session-file',
+;; e.g. "~/.emacs.d/.lsp-session-v1".  Workspace
+;; folders can be removed from the session interactively with
+;; `lsp-workspace-folders-remove'
+;;
+;; `lsp-workspace-root' reads `lsp-session-folders' to determine the workspace
+;; root for a given file.
+
+;;; dap-mode notes for Python
+;; ==========================
+
+;; Provides Python debugging with entry point `dap-debug'.
+;;
+;; Confirmed working on OS X when invoking breakpoint().
+;;
+;; `dap-debug-edit-template' can be used to edit
+;; `dap-debug-template-configurations', which are used to launch debug sessions
+;; with `dap-debug'.
+;;
+;; Documentation
+;; https://emacs-lsp.github.io/dap-mode/page/configuration/#python
+;;
+;; Example and notes for debug template
+;; https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143
+
 
 (defvar jm-conda-lsp--ht-project-env
   (ht-create)
@@ -34,34 +71,16 @@ get_user_environments_txt_file()")
       "Helm source for conda environments"
       jm-conda-lsp--environments-file))
 
-(defun jm-configure-dap-python ()
-  "Enable Python debugging with `dap-debug'.  Confirmed working on
-OS X when invoking breakpoint(). `dap-debug-edit-template' can be
-used to edit `dap-debug-template-configurations', which are used
-to launch debug sessions with `dap-debug'. We use debugpy as the
-debugger as this is the successor to ptvsd and is in use by
-dap-mode developers like nbfalcon.
-
-See also
-
-1) docs
-https://emacs-lsp.github.io/dap-mode/page/configuration/#python
-
-2) Example and notes for debug template
-https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143
-
-3) debugpy noted as the successor to python-ptvsd
-https://github.com/emacs-lsp/dap-mode/issues/306
-"
-  (require 'dap-python)
-  (setq dap-python-debugger 'debugpy))
-
 (defun jm-conda-lsp--activate-and-enable-lsp (env-path)
-  (require 'lsp-pyright)   ; sets up conda-postactivate-hook
+  "The main entry point to configure a conda environment for use
+with conda, LSP and optionally DAP, depending on LSP's
+configuration."
   (conda-env-activate-path env-path)
-  (jm-configure-dap-python)
-  ;; lsp will set up dap automatically
+
+  ;; lsp will enable dap-mode if it's present as a function and
+  ;; lsp-enable-dap-auto-configure is non-nil
   (lsp)
+
   ;; Use the other Python checkers as well as lsp.  See
   ;; https://github.com/flycheck/flycheck/issues/1762#issuecomment-750458442 and
   ;; other comments in the issue
@@ -142,26 +161,6 @@ to be enabled if needed using `window-configuration-change-hook'"
   ;; configure for future buffers
   (add-hook 'window-configuration-change-hook #'jm-conda-lsp--init-if-visible))
 
-;; lsp-mode workspace and session management
-;; =========================================
-
-;; There is a single LSP session (a CL struct) stored as `lsp--session'.  This
-;; describes multiple workspaces, each with a root directory.  When LSP is
-;; launched in a file not already contained within a root, it will prompt for a
-;; root and add a workspace to the session.
-;;
-;; `lsp--try-project-root-workspaces' tries to open a file as a
-;; project/workspace file, prompting for a workspace root if needed, and adding
-;; it as a known workspace if it is new.
-;;
-;; LSP sessions are stored in `lsp-session-file',
-;; e.g. "~/.emacs.d/.lsp-session-v1".  Workspace
-;; folders can be removed from the session interactively with
-;; `lsp-workspace-folders-remove'
-;;
-;; `lsp-workspace-root' reads `lsp-session-folders' to determine the workspace
-;; root for a given file.
-
 ;;; pycoverage / flycheck integration
 
 ;;;###autoload
@@ -178,14 +177,14 @@ coverage (as reported by pytest) as flycheck issues.  If the code
 was updated after pytest was run then nothing is reported.
 "
     :command
-;; We use the cov2emacslib Python package that comes with
-;; pycoverage, updating Python's sys.path dynamically.  It could
-;; also be installed in the active virtual environment, e.g.
-;;
-;; pip install -e git+https://github.com/mattharrison/pycoverage.el#egg=pkg&subdirectory=cov2emacs
-;;
-;; in which case we would invoke python with '-m
-;; cov2emacslib.__init__' rather than '-c'
+    ;; We use the cov2emacslib Python package that comes with
+    ;; pycoverage, updating Python's sys.path dynamically.  It could
+    ;; also be installed in the active virtual environment, e.g.
+    ;;
+    ;; pip install -e git+https://github.com/mattharrison/pycoverage.el#egg=pkg&subdirectory=cov2emacs
+    ;;
+    ;; in which case we would invoke python with '-m
+    ;; cov2emacslib.__init__' rather than '-c'
     ("python" "-c"
      (eval
       (mapconcat 'identity

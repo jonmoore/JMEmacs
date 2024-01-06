@@ -56,8 +56,9 @@
   "*The root of my personal emacs workspace.")
 (message "Running emacs.el with personal-emacs-root %s" personal-emacs-root)
 
-(setq inhibit-default-init t)           ; don't load default.el
-(setq inhibit-splash-screen t)
+(setq inhibit-default-init t
+      inhibit-splash-screen t
+      inhibit-startup-screen t)
 
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
@@ -117,13 +118,6 @@
       use-package-compute-statistics t
       use-package-verbose t)
 
-(use-package benchmark-init        ; profile the startup time of Emacs
-  ;; We place this early and demand it to benchmark the rest of the
-  ;; initialisation process
-  :demand
-  ;; To disable collection of benchmark data after init is done.
-  :hook (after-init . benchmark-init/deactivate))
-
 (use-package async			; async execution
   ;; We place this early and demand it to avoid errors related to have too many
   ;; procesess running when compiling other packages that are installed or
@@ -133,7 +127,8 @@
   ;; https://github.com/jwiegley/emacs-async/issues/96
   ;; https://gist.github.com/kiennq/cfe57671bab3300d3ed849a7cbf2927c
 
-  :demand
+  ;; :demand
+  :defer 5
   :init
   (setq async-bytecomp-allowed-packages '(all))
   :config
@@ -204,32 +199,6 @@
       (list
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
                        (system-osx-p   "~/backup")))))
-
-(setq dropbox-directory
-      (let ((candidate
-             (cond
-              ((eq system-type 'darwin) "~/Dropbox")
-              ((eq system-type 'windows-nt) (concat (getenv "USERPROFILE") "\\Dropbox")))))
-        ;; nil if there's no such directory
-        (when (file-directory-p candidate) candidate)))
-
-(defun jm-sub-directory-if-present (parent-path sub-dir-path)
-  "Return the path to SUB-DIR-PATH within PARENT-PATH if it is a
-directory, otherwise return nil."
-  (when parent-path
-    (let ((candidate (concat parent-path sub-dir-path)))
-      (when (file-directory-p candidate)
-        candidate))))
-
-(setq bibliography-directory
-      (jm-sub-directory-if-present dropbox-directory "/Bibliography"))
-
-(if (not (boundp 'org-directory))
-    (setq org-directory
-          (if dropbox-directory (concat dropbox-directory "/org")
-            "~/org")))
-
-(setq org-agenda-files (list org-directory))
 
 ;;; COLORS AND APPEARANCE
 (tool-bar-mode -1)
@@ -309,6 +278,72 @@ directory, otherwise return nil."
            ("<S-f12>"      . windows-search-moccur-like)
            ("<C-f12>"      . windows-search-moccur-contains))
 
+(use-package custom
+  :ensure nil
+  :init
+  (load-theme 'word-perfect t t)
+  (enable-theme 'word-perfect)
+  (setq
+   ;; set to avoid writing back to ~
+   custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
+  (load custom-file))
+
+(use-package emacs
+  :custom
+  (Buffer-menu-buffer+size-width 36)
+  (Buffer-menu-mode-width 10)
+  (Info-additional-directory-list '("~/info"))
+  (auto-save-timeout 120)
+  (backup-by-copying t)
+  (case-fold-search t)
+  (comment-column 50)
+  (completion-ignored-extensions '(".o" "~" ".obj" ".elc" ".pyc"))
+  (create-lockfiles nil)
+  (directory-abbrev-alist nil)
+  (enable-local-eval t)
+  (fill-column 90)
+  (find-ls-option '("-exec ls -ld {} ';'" . "-ld") t)
+  (gc-cons-threshold (* 128 1000 1000))
+  (global-display-fill-column-indicator-mode t)
+  (history-delete-duplicates t)
+  (history-length 100)
+  (indent-tabs-mode nil)
+  (jit-lock-chunk-size 32768)
+  (jit-lock-context-time 5)
+  (jit-lock-stealth-load 90)
+  (jit-lock-stealth-nice nil)
+  (jit-lock-stealth-time 1)
+  (kill-whole-line t)
+  (line-move-visual nil)
+  (line-number-display-limit-width 400)
+  (ls-lisp-dirs-first t)
+  (ls-lisp-emulation 'MS-Windows)
+  (ls-lisp-ignore-case t)
+  (ls-lisp-verbosity nil)
+  (minibuffer-prompt-properties
+   '(read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt))
+  (next-line-add-newlines nil)
+  (read-buffer-completion-ignore-case t)
+  (safe-local-variable-values
+   '((dired-omit-mode . t)
+     (dired-omit-extensions ".html" ".org_archive")
+     (org-odd-levels-only)
+     (TeX-command-extra-options . "-shell-escape")
+     (activate-venv-disabled . t)))
+  (set-mark-command-repeat-pop t)
+  (show-trailing-whitespace nil)
+  (transient-mark-mode t)
+  :custom-face
+  (cursor ((t (:background "yellow"))))
+  (font-lock-builtin-face ((((class color) (background light)) (:foreground "blue"))))
+  (font-lock-comment-face ((t (:foreground "sky blue"))))
+  (font-lock-constant-face ((((class color) (background light)) (:foreground "dark green"))))
+  (font-lock-function-name-face ((((class color) (background light)) (:foreground "Blue"))))
+  (font-lock-string-face ((nil (:foreground "yellow"))))
+  (font-lock-type-face ((((class color) (background light)) (:foreground "Blue"))))
+  (font-lock-variable-name-face ((((class color) (background light)) (:foreground "blue"))))
+  (font-lock-warning-face ((t (:foreground "magenta" :weight bold)))))
+
 ;;;
 ;;;; PACKAGES
 ;;;==========
@@ -324,6 +359,10 @@ directory, otherwise return nil."
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
   :hook (visual-line-mode . adaptive-wrap-prefix-mode))
 
+(use-package align
+  :custom
+  (align-to-tab-stop nil))
+
 (use-package ansi-color                 ; ANSI color in compilation buffer
   )
 
@@ -336,6 +375,10 @@ directory, otherwise return nil."
          ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
   :config
   (setq anzu-search-threshold 100))
+
+(use-package arc-mode
+  :custom
+  (archive-zip-extract '("7z" "x" "-so")))
 
 (use-package auctex-latexmk ; Add LatexMk support to AUCTeX
   :config
@@ -362,10 +405,19 @@ directory, otherwise return nil."
 
 (use-package autorevert
   :ensure nil
-  :hook  (find-file . disable-autorevert-for-network-files))
+  :hook  (find-file . disable-autorevert-for-network-files)
+  :custom
+  (auto-revert-interval 60))
+
+(use-package bibtex
+  :custom
+  (bibtex-maintain-sorted-entries 'entry-class))
 
 (use-package browse-kill-ring
-  :bind ("M-y" . browse-kill-ring))
+  :bind ("M-y" . browse-kill-ring)
+  :config
+  (browse-kill-ring-highlight-current-entry t)
+  (browse-kill-ring-highlight-inserted-item t))
 
 (use-package cdlatex)
 
@@ -441,7 +493,9 @@ directory, otherwise return nil."
   :diminish company-mode
   :hook (prog-mode . company-mode)
   :config
-  (company-quickhelp-mode t))
+  (company-quickhelp-mode t)
+  :custom
+  (company-show-quick-access t))
 
 (use-package company-auctex)
 
@@ -476,14 +530,22 @@ directory, otherwise return nil."
 (use-package csv-mode
   :mode "\\.csv\\'")
 
-(use-package dap-mode ; client for Debug Adapter Protocol
-  :after lsp-mode
+(use-package dap-mode                   ; client for Debug Adapter Protocol
   :config
-  (setq read-process-output-max (* 1024 1024)) ;; 1MB
+  (setq read-process-output-max (* 1024 1024) ; 1MB
+        ;; Use debugpy since this is the successor to ptvsd
+        dap-python-debugger 'debugpy))
 
-  ;; disable until lsp is working
-  ;;(dap-auto-configure-mode)
-  )
+(use-package desktop
+  :config
+  (let* ((computername (getenv "COMPUTERNAME"))
+         (local-desktop-dir
+          (string-as-unibyte (concat "~/.emacs.d/" computername ))))
+    (unless (file-exists-p local-desktop-dir)
+      (mkdir local-desktop-dir))
+    (setq desktop-lazy-verbose nil
+          desktop-load-locked-desktop t
+          desktop-path (list local-desktop-dir))))
 
 (use-package diminish)
 
@@ -513,7 +575,8 @@ directory, otherwise return nil."
                                dired-omit-extensions
                                '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
                                :test 'string=)
-        dired-clean-confirm-killing-deleted-buffers nil))
+        dired-clean-confirm-killing-deleted-buffers nil
+        dired-omit-files "^\\.?#\\|^\\."))
 
 (use-package ediff
   :config
@@ -541,6 +604,8 @@ directory, otherwise return nil."
   :bind
   (("C-c x r" . er/expand-region)))
 
+(use-package esup)
+
 (use-package find-func
   :bind
   (("C-c h F"   . find-function)
@@ -560,7 +625,6 @@ clean buffer we're an order of magnitude laxer about checking."
         (if flycheck-current-errors 3.0 15.0)))
 
 (use-package flycheck
-  :diminish
   :hook  (flycheck-after-syntax-check . adjust-flycheck-automatic-syntax-eagerness)
   :config
   ;; Each buffer gets its own idle-change-delay because of the
@@ -573,7 +637,10 @@ clean buffer we're an order of magnitude laxer about checking."
   ;; (add-to-list 'flycheck-checkers 'python-pycoverage)
   ;; (flycheck-add-next-checker 'python-mypy 'python-pycoverage)
 
-  )
+  (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+        flycheck-idle-change-delay 5.0
+        flycheck-keymap-prefix "f"
+        flycheck-pylintrc "pylintrc"))
 
 (use-package font-lock-mode
   :ensure nil
@@ -626,39 +693,6 @@ no docs are found."
 (use-package graphviz-dot-mode
   :mode "\\.dot\\'")
 
-(defvar gud-overlay
-  (let* ((ov (make-overlay (point-min) (point-min))))
-    (overlay-put ov 'face 'secondary-selection)
-    ov)
-  "Overlay variable for GUD highlighting.")
-
-(defun gud-kill-buffer ()
-  (if (derived-mode-p 'gud-mode)
-      (delete-overlay gud-overlay)))
-
-(defun gud-display-line--my-gud-highlight (true-file line)
-  "Highlight current line up to first non-whitespace character."
-  (let ((bf (gud-find-file true-file)))
-    (with-current-buffer bf
-      (move-overlay
-       gud-overlay
-       (line-beginning-position)
-       (save-excursion
-         (search-forward-regexp "\\S-" (line-end-position) t )
-         (match-beginning 0))
-       (current-buffer)))))
-
-(use-package gud
-  :ensure nil
-  :bind (:map gud-mode-map
-              ("<f5>"   . gud-cont)
-              ("<S-f5>" . gud-break)
-              ("<f10>"  . gud-next)
-              ("<f11>"  . gud-step))
-  :hook (kill-buffer . gud-kill-buffer)
-  :config
-  (advice-add 'gud-display-line :after #'gud-display-line--my-gud-highlight))
-
 (use-package haskell-mode
   :hook (haskell-mode . turn-on-haskell-indentation)
   :bind (:map haskell-mode-map
@@ -668,10 +702,11 @@ no docs are found."
               ("SPC"      . haskell-mode-contextual-space)
               ("M-."      . haskell-mode-jump-to-def))
   :config
-  (setq haskell-process-suggest-remove-import-lines t
-        haskell-process-auto-import-loaded-modules t
+  (setq haskell-process-auto-import-loaded-modules t
+        haskell-process-log t
         haskell-process-suggest-hoogle-imports t
-        haskell-process-log t))
+        haskell-process-suggest-remove-import-lines t
+        haskell-process-use-presentation-mode t))
 
 (defun jm-reset-helm-bindings ()
   "Reset the bindings for major functionality to use non-helm functions"
@@ -743,6 +778,14 @@ no docs are found."
          :map helm-read-file-map
          ("C-h m"          . describe-mode)
          ("C-<backspace>"  . backward-kill-word))
+  :custom
+  (helm-ff-lynx-style-map nil "Disabling any helm keybinding is a sensible default")
+  (helm-follow-mode-persistent nil)
+  (helm-grep-ag-command
+   "rg --color=always --colors 'match:fg:yellow' --colors 'match:style:nobold' --smart-case --no-heading --line-number %s %s %s")
+  (helm-grep-ag-pipe-cmd-switches
+   '("--colors 'match:fg:yellow' --colors 'match:style:nobold'"))
+  (helm-source-names-using-follow '("Imenu" "Search Buffers" "Occur"))
   :config
   (require 'helm-files)
   (global-unset-key (kbd "C-x c"))
@@ -751,7 +794,8 @@ no docs are found."
 
 (use-package helm-ag
   :config
-  (setq helm-ag-base-command "rg"))
+  (setq helm-ag-base-command "rg"
+        helm-ag-use-grep-ignore-list t))
 
 (defun jm-helm-company-display-document-buffer (orig-fun buffer)
   "Temporarily show the documentation BUFFER.  JM: fixed to call
@@ -783,9 +827,7 @@ display-buffer correctly."
 
 (use-package helm-descbinds)
 
-(use-package helm-lean
-  ;; :after lean-mode
-  )
+(use-package helm-lean)
 
 (use-package helm-lsp ; helm for LSP symbols, actions, switching projects
   ;; separate from company
@@ -795,16 +837,19 @@ display-buffer correctly."
 
 (use-package helm-org-rifle
   :bind (:map helm-command-map
-              ("R" . helm-org-rifle)))
+              ("R" . helm-org-rifle))
+  :custom
+  (helm-org-rifle-re-end-part nil))
 
 (use-package helm-projectile)
 
 (use-package helm-rg
-  ;; to check
+  ;; This is used by helm-projectile-rg but requires the fixes in
+  ;; https://github.com/cosmicexplorer/helm-rg/issues/10, i.e.
   ;;
-  ;; breakage of helm-rg:
-  ;; https://github.com/emacs-helm/helm/issues/2320,
-  ;; https://github.com/cosmicexplorer/helm-rg/pull/25
+  ;; 1. using (or paths (list helm-rg--current-dir)) instead of paths in helm-rg
+  ;;
+  ;; 2. adding ("-p" :face helm-rg-inactive-arg-face) to helm-rg--ripgrep-argv-format-alist
   )
 
 (use-package helm-swoop)
@@ -870,6 +915,10 @@ display-buffer correctly."
            ;; so that all non pathnames are at the end
            "~")))))
 
+(use-package imenu
+  :custom
+  (imenu-tree-auto-update t))
+
 (use-package info
   :bind (:map
          Info-mode-map
@@ -901,7 +950,9 @@ display-buffer correctly."
   :if system-win32-p
   :bind (:map LaTeX-mode-map
               ("<prior>" . latex-sumatra-scroll-down)
-              ("<next>"  .  latex-sumatra-scroll-up)))
+              ("<next>"  .  latex-sumatra-scroll-up))
+  :custom-face
+  (font-latex-verbatim-face ((t (:inherit nil :foreground "burlywood")))))
 
 (use-package lean-mode                  ; Support the Lean proof assistant
   ;; https://github.com/leanprover/lean-mode
@@ -918,11 +969,14 @@ display-buffer correctly."
   ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
   :init
   (setq lsp-keymap-prefix "s-s")
-  :hook ((lsp-mode . lsp-enable-which-key-integration)
-         (desktop-after-read . jm-conda-lsp-enable-lsp-everywhere))
+  :hook (lsp-mode . lsp-enable-which-key-integration)
   :commands lsp
   :config
+  ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
+  (require 'dap-mode)
+
   (setq lsp-before-save-edits nil
+        lsp-enable-dap-auto-configure t
         lsp-enable-indentation nil
         lsp-imenu-sort-methods '(kind position))
   ;; suppress info-level messages from lsp.
@@ -952,7 +1006,9 @@ display-buffer correctly."
 (use-package lsp-ui
   :hook  ((lsp-mode . lsp-ui-mode))
   :config
-  (setq lsp-ui-doc-show-with-cursor nil))
+  (setq lsp-ui-doc-show-with-cursor nil
+        lsp-ui-sideline-show-code-actions t
+        lsp-ui-sideline-show-hover t))
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
@@ -988,7 +1044,8 @@ display-buffer correctly."
               ("<M-down>"  . outline-move-subtree-down))
   :config
   ;; workaround for bug https://github.com/hexmode/mediawiki-el/issues/36
-  (remove-hook 'outline-minor-mode-hook 'mediawiki-outline-magic-keys))
+  (remove-hook 'outline-minor-mode-hook 'mediawiki-outline-magic-keys)
+  (setq mediawiki-draft-data-file "~/draft.txt"))
 
 (use-package multiple-cursors)
 
@@ -998,7 +1055,9 @@ display-buffer correctly."
   :ensure nil
   :bind (:map
          nxml-mode-map
-         ("<f9>" . nexus-insert-gav-for-keyword)))
+         ("<f9>" . nexus-insert-gav-for-keyword))
+  :config
+  (setq nxml-child-indent 4))
 
 ;;; ORG MODE
 
@@ -1072,10 +1131,92 @@ according to `headline-is-for-jira'."
   (interactive)
   (org-cycle '(4)))
 
-(defun my-org-mode-hook-fn ()
-  (setq fill-column 90))
+(use-package ob-restclient)
 
-(defun my-org-load-hook-fn ()
+(defun jm-sub-directory-if-present (parent-path sub-dir-path)
+  "Return the path to SUB-DIR-PATH within PARENT-PATH if it is a
+directory, otherwise return nil."
+  (when parent-path
+    (let ((candidate (concat parent-path sub-dir-path)))
+      (when (file-directory-p candidate)
+        candidate))))
+
+(defun jm-dropbox-directory ()
+  "Return the path to my Dropbox directorym if present"
+  (let ((candidate
+         (cond
+          (system-osx-p "~/Dropbox")
+          (system-win32-p (concat (getenv "USERPROFILE") "\\Dropbox")))))
+    ;; nil if there's no such directory
+    (when (file-directory-p candidate) candidate))  )
+
+(use-package org
+  :mode "\\.org'"
+  :init
+  ;; set up org-mobile here as we may want to update after-init-hook
+  (if (not (boundp 'org-directory))
+      (setq org-directory
+            (if (jm-dropbox-directory) (concat (jm-dropbox-directory) "/org")
+              "~/org")))
+
+  (setq org-mobile-directory
+        (jm-sub-directory-if-present (jm-dropbox-directory) "/Apps/MobileOrg"))
+
+  (when org-mobile-directory
+    (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
+    (add-hook 'after-init-hook 'org-mobile-pull)
+    (add-hook 'kill-emacs-hook 'org-mobile-push))
+
+  :bind (:map org-mode-map
+              ("<C-tab>"        . org-cycle-t)
+              ("M-?"            . org-complete)
+              ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
+              ("<C-S-down>"     . outline-next-visible-heading)
+              ("<C-S-up>"       . outline-previous-visible-heading)
+              ("C-c ?"          . outline-mark-subtree)
+              ("<C-S-left>"     . nil)
+              ("<C-S-right>"    . nil)
+              ("C-c j k"        . ace-link-org)
+              ("C-c C-x RET f"  . org-mobile-pull)
+              ("C-c C-x RET g"  . nil))
+
+  :config
+  (defalias 'ob-temp-file 'org-babel-temp-file)
+  (setq org-adapt-indentation t
+        org-checkbox-hierarchical-statistics nil
+        org-clock-persist t
+        org-clock-in-resume t
+        org-confirm-babel-evaluate nil
+        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
+                            ([(control shift left)]  . [(meta shift -)]))
+        org-drawers '("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")
+        org-enforce-todo-checkbox-dependencies t
+        org-export-backends '(ascii html latex)
+        org-hierarchical-todo-statistics nil
+        org-list-allow-alphabetical t
+        org-log-into-drawer t
+        org-priority-default 68
+        org-replace-disputed-keys t
+        org-refile-allow-creating-parent-nodes 'confirm
+        org-refile-targets '((org-agenda-files :maxlevel . 5))
+        org-refile-use-outline-path 'file
+        org-src-lang-modes '(("ipython" . python)
+                             ("elisp" . emacs-lisp)
+                             ("ditaa" . artist)
+                             ("dot" . graphviz-dot)
+                             ("sqlite" . sql)
+                             ("calc" . fundamental)
+                             ("C" . c)
+                             ("cpp" . c++)
+                             ("C++" . c++)
+                             ("screen" . shell-script)
+                             ("shell" . sh)
+                             ("bash" . sh))
+        org-src-window-setup 'current-window
+        org-use-fast-tag-selection t)
+
+  ;; org-tempo supports the expansion of <s to src blocks etc.
+  (require 'org-tempo)
   (org-clock-persistence-insinuate)
 
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
@@ -1084,7 +1225,6 @@ according to `headline-is-for-jira'."
                                                            (restclient . t)
                                                            (emacs-lisp . t)))
 
-  (add-hook 'org-mode-hook 'my-org-mode-hook-fn)
   (set-face-foreground 'org-hide (face-background 'default))
   (setq org-enforce-todo-dependencies t
 
@@ -1105,6 +1245,8 @@ according to `headline-is-for-jira'."
 
   (require 'org-agenda)
   (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
+
+        
         org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
         org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html"))
                                      ("L" "timeline"
@@ -1119,12 +1261,32 @@ according to `headline-is-for-jira'."
                                          (org-agenda-span 22)
                                          (org-agenda-prefix-format '((agenda . " %1c %?-12t %s"))))))))
 
+        org-agenda-files (list org-directory)
+        org-agenda-prefix-format '((agenda . " %i %-18:c%-12,t%-13s")
+                                   (todo . " %i %-15c")
+                                   (tags . " %i %-15c")
+                                   (search . " %i %-15c"))
         org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
                                             (todo user-defined-up)
                                             (tags category-keep priority-down)
                                             (search category-keep)))
         org-agenda-start-with-clockreport-mode nil
+        org-agenda-todo-ignore-scheduled 31
         org-agenda-todo-keyword-format "%-4s")
+
+  (require 'org-capture)
+  (setq org-capture-templates
+        `(("c" "Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
+           "%(org-chef-get-recipe-from-url)"
+           :empty-lines 1)
+          ("m" "Manual Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
+           "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
+          ("o" "Outlook messages to convert to task" entry (file "~/org/misc.org")
+           "* TODO %^{task}\n%a\n:  From:    %:sender\n:  Subject: %:title\n\n %?\n  -----------"
+           :jump-to-captured t :empty-lines-before 1)
+          ("t" "Task" entry
+           (file+headline "" "Tasks")
+           "* TODO %?\n  %u\n  %a")))
 
   (require 'org-id)
 
@@ -1161,52 +1323,6 @@ according to `headline-is-for-jira'."
   (setq org-ref-show-broken-links nil) ; reported as a speedup
   )
 
-(use-package ob-restclient)
-
-(use-package org
-  :mode "\\.org'"
-  :init
-  :hook (org-load . my-org-load-hook-fn)
-  :bind (:map org-mode-map
-              ("<C-tab>"        . org-cycle-t)
-              ("M-?"            . org-complete)
-              ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
-              ("<C-S-down>"     . outline-next-visible-heading)
-              ("<C-S-up>"       . outline-previous-visible-heading)
-              ("C-c ?"          . outline-mark-subtree)
-              ("<C-S-left>"     . nil)
-              ("<C-S-right>"    . nil)
-              ("C-c j k"        . ace-link-org)
-              ("C-c C-x RET f"  . org-mobile-pull)
-              ("C-c C-x RET g"  . nil))
-
-  :config
-  (defalias 'ob-temp-file 'org-babel-temp-file)
-  (setq org-clock-persist t
-        org-clock-in-resume t
-        org-list-allow-alphabetical t
-        org-disputed-keys '(([(control shift right)] . [(meta shift +)])
-                            ([(control shift left)]  . [(meta shift -)]))
-        org-replace-disputed-keys t
-        org-capture-templates
-        `(("c" "Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
-           "%(org-chef-get-recipe-from-url)"
-           :empty-lines 1)
-          ("m" "Manual Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
-           "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))
-
-  ;; org-tempo supports the expansion of <s to src blocks etc.
-  (require 'org-tempo)
-
-  (let ((org-mobile-directory-candidate
-         (jm-sub-directory-if-present dropbox-directory "/Apps/MobileOrg")))
-    (when org-mobile-directory-candidate
-      (require 'org-mobile)
-      (setq org-mobile-directory org-mobile-directory-candidate)
-      (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
-      (add-hook 'after-init-hook 'org-mobile-pull)
-      (add-hook 'kill-emacs-hook 'org-mobile-push))))
-
 (use-package org-chef)
 
 (use-package org-jira
@@ -1219,24 +1335,23 @@ according to `headline-is-for-jira'."
 
 (use-package org-ref
   :config
-
+  (setq org-ref-clean-bibtex-entry-hook '(org-ref-bibtex-format-url-if-doi orcb-key-comma org-ref-replace-nonascii orcb-& orcb-% org-ref-title-case-article orcb-clean-year orcb-clean-doi orcb-clean-pages orcb-check-journal org-ref-sort-bibtex-entry orcb-fix-spacing)
+        org-ref-insert-cite-key "C-c )"
+        org-ref-show-citation-on-enter nil)
+  (setq bibliography-directory
+        (jm-sub-directory-if-present (jm-dropbox-directory) "/Bibliography"))
   (when (bound-and-true-p bibliography-directory)
-    (setq reftex-default-bibliography
-          (list (concat bibliography-directory "/jonmoore.bib")))
-
-    (setq org-ref-bibliography-notes (concat bibliography-directory "/notes.org")
+    (setq reftex-default-bibliography (list (concat bibliography-directory "/jonmoore.bib"))
+          org-ref-bibliography-notes (concat bibliography-directory "/notes.org")
           org-ref-default-bibliography reftex-default-bibliography
           org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
-          org-ref-insert-cite-key "C-c )")
-
-    (setq helm-bibtex-bibliography (car reftex-default-bibliography))
-    (setq helm-bibtex-library-path org-ref-pdf-directory)
-    (setq helm-bibtex-pdf-open-function 'org-open-file)
-    (setq helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes")))
-  (when (eq system-type 'darwin)
-    (setq helm-bibtex-pdf-open-function
-          (lambda (fpath)
-            (start-process "open" "*open*" "open" fpath)))))
+          helm-bibtex-bibliography (car reftex-default-bibliography)
+          helm-bibtex-library-path org-ref-pdf-directory
+          helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes")
+          helm-bibtex-pdf-open-function (if system-osx-p
+                                            (lambda (fpath)
+                                              (start-process "open" "*open*" "open" fpath))
+                                          'org-open-file))))
 
 (use-package ox-jira) ;; transforms org files to JIRA markup
 
@@ -1244,9 +1359,15 @@ according to `headline-is-for-jira'."
 
 (use-package ox-reveal
   :config
-  (setq ox-reveal-root "./reveal.js"))
+  (setq ox-reveal-root "./reveal.js"
+        org-reveal-hlevel 2
+        org-reveal-root "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.2.0/"))
 
 (use-package ox-rst)
+
+(use-package paren
+  :custom
+  (show-paren-style 'expression))
 
 (use-package peep-dired) ; in dired, show the file at point in the other window
 
@@ -1258,7 +1379,12 @@ according to `headline-is-for-jira'."
 
 (use-package projectile
   :config
-  (setq projectile-mode-line-prefix " Proj"))
+  (setq projectile-completion-system 'helm
+        projectile-globally-ignored-directories
+        '(".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__")
+        projectile-globally-ignored-file-suffixes '(".pyc")
+        projectile-mode-line-prefix " Proj"
+        projectile-project-root-files '("requirements.txt" "setup.py" "tox.ini")))
 
 (use-package ps-print
   :config
@@ -1292,13 +1418,20 @@ according to `headline-is-for-jira'."
 
               :map inferior-python-mode-map
               ("TAB"   . yas-or-company-or-indent-for-tab)
-              ("M-TAB" . python-shell-completion-complete-or-indent)))
+              ("M-TAB" . python-shell-completion-complete-or-indent))
+  :config
+  (setq python-indent-guess-indent-offset nil))
 
 (use-package racket-mode)
 
 (use-package rainbow-delimiters)
 
 (use-package realgud)
+
+(use-package reftex
+  :custom
+  (reftex-bibpath-environment-variables '("BIBINPUTS" "TEXBIB"))
+  (reftex-toc-split-windows-horizontally t))
 
 (use-package restclient
   :mode ("\\.rcl\\'" . restclient-mode))
@@ -1323,25 +1456,23 @@ according to `headline-is-for-jira'."
       (comint-previous-input 1)
     (forward-line 1)))
 
+(use-package server
+  :custom
+  (kill-buffer-query-functions
+   (remq
+    'server-kill-buffer-query-function
+    kill-buffer-query-functions)))
+
+(use-package sgml-mode
+  :custom
+  (sgml-basic-offset 8))
+
 (use-package shell
   :bind (:map
          shell-mode-map
          ("<home>" . comint-bol)
          ("<up>"   . shell-cycle-backward-through-command-history)
          ("<down>" . shell-cycle-forward-through-command-history)))
-
-(defun jm-advice-to-shut-up (orig-fun &rest args)
-  "Call the ORIG-FUN in a `shut-up' context"
-  (require 'shut-up)
-  (shut-up
-    (apply orig-fun args)))
-
-(defun jm-advice-to-shut-up-and-ignore-errors (orig-fun &rest args)
-  "Call the ORIG-FUN in a `shut-up' context"
-  (require 'shut-up)
-  (shut-up
-    (ignore-errors
-      (apply orig-fun args))))
 
 (use-package shut-up)                   ; redirects `message' and stdout
 
@@ -1425,7 +1556,9 @@ according to `headline-is-for-jira'."
 (use-package speedbar
   :hook (speedbar-mode . (lambda ()
                            (speedbar-add-supported-extension ".org")  
-                           (auto-raise-mode 1))))
+                           (auto-raise-mode 1)))
+  :custom
+  (speedbar-vc-do-check nil))
 
 (use-package sphinx-doc)
 
@@ -1479,8 +1612,6 @@ according to `headline-is-for-jira'."
 
 (use-package undo-tree
   :diminish undo-tree-mode
-  :init
-  (global-undo-tree-mode)
   :bind (:map undo-tree-visualizer-mode-map
               ("RET" . undo-tree-visualizer-quit))
   :config
@@ -1491,8 +1622,8 @@ according to `headline-is-for-jira'."
   ;; Suppress messages about writing about undo-tree files.  Also ingore errors,
   ;; which can occur when exceeding Windows 260-char limits, as undo-tree is not
   ;; critical
-  (advice-add 'undo-tree-save-history :around #'jm-advice-to-shut-up-and-ignore-errors)
-  (advice-add 'undo-tree-load-history :around #'jm-advice-to-shut-up-and-ignore-errors)
+  (advice-add 'undo-tree-save-history :around 'jm-advice-to-shut-up-and-ignore-errors)
+  (advice-add 'undo-tree-load-history :around 'jm-advice-to-shut-up-and-ignore-errors)
 
   ;; Use the old format to avoid hangs when timestamps have been updated
   (setq undo-tree-save-format-version 0))
@@ -1505,13 +1636,20 @@ according to `headline-is-for-jira'."
   ;; This makes lines display wrapped at fill-column in visual-line-mode
   :hook (visual-line-mode . visual-fill-column-mode--enable))
 
+(use-package warnings
+  :custom
+  (warning-suppress-types '((undo discard-info))))
+
 (use-package which-func                 ; print current function in mode line
-  :hook (prog-mode . which-function-mode))
+  :hook (prog-mode . which-function-mode)
+  :custom
+  (which-func-modes
+   '(c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode))
+  :custom-face
+  (which-func ((t (:foreground "Yellow")))))
 
 (use-package which-key                  ; Display available keybindings in popup
   :diminish which-key-mode
-  :init
-  (which-key-mode)
   :config
   (setq which-key-idle-delay 0.4
         which-key-sort-order 'which-key-prefix-then-key-order))
@@ -1520,14 +1658,9 @@ according to `headline-is-for-jira'."
   :diminish (whitespace-mode . " ⓦ")
   :bind (("C-c t w" . whitespace-mode))
   :config
-  (setq whitespace-style '(face
-                           indentation
-                           space-after-tab
-                           space-before-tab
-                           tab-mark
-                           empty
-                           trailing
-                           lines-tail)
+  '(whitespace-style
+    '())
+  (setq whitespace-style '(face tabs trailing missing-newline-at-eof)
         whitespace-line-column nil))
 
 (use-package windmove                   ; Move between windows with Shift+Arrow
@@ -1538,8 +1671,7 @@ according to `headline-is-for-jira'."
 
 (use-package winner                     ; Undo and redo window configurations
   :init
-  (setq winner-dont-bind-my-keys t)
-  (winner-mode))
+  (setq winner-dont-bind-my-keys t))
 
 (use-package writeroom-mode)
 
@@ -1564,44 +1696,22 @@ according to `headline-is-for-jira'."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (use-package emacs
-  :init
+  ;; this is quite heavy, as it requires loading python and conda
+  :hook (desktop-after-read . jm-conda-lsp-enable-lsp-everywhere)
+
+  :config
   (global-anzu-mode)
   (global-auto-revert-mode t)
+  (global-undo-tree-mode)
   (helm-mode 1)
   (save-place-mode 1)
   (savehist-mode 1)
   (show-paren-mode t)
-  )
+  (which-key-mode)
+  (winner-mode)
+  (desktop-save-mode 1)
+  (server-start))
 
-(use-package desktop
-  :init
-  (let* ((computername (getenv "COMPUTERNAME"))
-         (local-desktop-dir
-          (string-as-unibyte (concat "~/.emacs.d/" computername ))))
-    (unless (file-exists-p local-desktop-dir)
-      (mkdir local-desktop-dir))
-    (setq desktop-path (list local-desktop-dir)))
-  (desktop-save-mode 1))
-
-(use-package custom
-  :ensure nil
-  :init
-  (load-theme 'word-perfect t t)
-  (enable-theme 'word-perfect)
-  (setq
-   ;; set to avoid writing back to ~
-   custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
-  (load custom-file))
-
-(use-package server
-  :init
-  (server-start)
-  (setq kill-buffer-query-functions
-        (remq
-         'server-kill-buffer-query-function
-         kill-buffer-query-functions)))
 
 (message "Finished emacs.el")
