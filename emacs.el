@@ -992,10 +992,15 @@ display-buffer correctly."
 (use-package lsp-pyright
   :hook (conda-postactivate . jm-pyright-sync-venv-from-conda-env)
   :config
-  (when (boundp 'jm-pyright-langserver-path)
-    (lsp-dependency
-     'pyright
-     `(:system ,jm-pyright-langserver-path)))
+  (cond
+   ((not (boundp 'jm-pyright-langserver-path))
+    (message "jm- no value set for jm-pyright-langserver-path"))
+   ((not (file-exists-p jm-pyright-langserver-path))
+    (error "jm-pyright-langserver-path set but no file exists at %s" jm-pyright-langserver-path))
+   (t (message "jm Adding pyright lang server at %s" jm-pyright-langserver-path)
+      (lsp-dependency
+       'pyright
+       `(:system ,jm-pyright-langserver-path))))
   (setq jm-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs"))
   (when (file-directory-p jm-pyright-stub-path)
     (setq lsp-pyright-use-library-code-for-types t ; set to nil if getting too many false positive type errors
