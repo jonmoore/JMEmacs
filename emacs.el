@@ -684,6 +684,9 @@ no docs are found."
 
 (use-package geiser-racket)
 
+(use-package git-gutter-fringe ; Show git diff information in fringe
+  :diminish)
+
 (use-package goto-addr ; buttonize URLs and e-mail addresses
   :hook ((prog-mode . goto-address-prog-mode)
          (text-mode . goto-address-mode)))
@@ -1763,6 +1766,7 @@ directory, otherwise return nil."
   (auto-highlight-symbol-mode)
   (global-anzu-mode)
   (global-auto-revert-mode t)
+  (global-git-gutter-mode t)
   (global-undo-tree-mode)
   (helm-mode 1)
   (save-place-mode 1)
