@@ -1518,7 +1518,7 @@ call this function from other code."
   ;; ensures that this is so.
   (cond ((or truncate-lines
 	     (and truncate-partial-width-windows
-		  (< (window-width window) (screen-width)))
+		  (< (window-width window) (frame-width)))
 	     (> (window-hscroll window) 0))
 	 ;; Lines in this window are being truncated.
 	 (if (and track-eol (eolp))
@@ -1529,8 +1529,7 @@ call this function from other code."
 	 ;; ends of wrapped lines.  But if it did so, point would be on the
 	 ;; wrong window line.  This is the best we can do.
 	 (1- (window-width window)))
-	(t (% (current-column) (1- (window-width window))))
-	))
+	(t (% (current-column) (1- (window-width window))))))
 
 ;;;
 ;;;
