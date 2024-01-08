@@ -476,9 +476,7 @@
           "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
           "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
           "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
-          "\\.pch$" "\\.pdb$" "\\.res$"))
-  :config
-  (require 'moccur-edit))
+          "\\.pch$" "\\.pdb$" "\\.res$")))
 
 (use-package color-theme-modern)
 
@@ -822,6 +820,7 @@ display-buffer correctly."
   "Whether to use helm-descbinds for describing key bindings")
 
 (defun jm-describe-bindings (&optional prefix buffer)
+  (interactive)
   (helm-descbinds-mode jm-helm-descbinds)
   (describe-bindings prefix buffer))
 
@@ -981,7 +980,14 @@ display-buffer correctly."
         lsp-imenu-sort-methods '(kind position))
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
-  (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
+  (advice-add 'lsp--info :around #'jm-advice-to-shut-up)
+
+  ;; Workaround from https://github.com/emacs-lsp/lsp-mode/issues/4056#issuecomment-1786336079
+  (defface lsp-flycheck-info-unnecessary
+    '((t))
+    "Face which apply to side line for symbols not used.
+Possibly erroneously redundant of lsp-flycheck-info-unnecessary-face."
+    :group 'lsp-ui-sideline))
 
 
 (defun jm-pyright-sync-venv-from-conda-env ()
@@ -1051,6 +1057,10 @@ display-buffer correctly."
   ;; workaround for bug https://github.com/hexmode/mediawiki-el/issues/36
   (remove-hook 'outline-minor-mode-hook 'mediawiki-outline-magic-keys)
   (setq mediawiki-draft-data-file "~/draft.txt"))
+
+(use-package moccur-edit
+  :ensure nil
+  )
 
 (use-package multiple-cursors)
 
@@ -1251,7 +1261,7 @@ directory, otherwise return nil."
   (require 'org-agenda)
   (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
 
-        
+
         org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
         org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html"))
                                      ("L" "timeline"
@@ -1413,19 +1423,63 @@ directory, otherwise return nil."
 
 (use-package python
   :ensure nil
+
   :bind (:map python-mode-map
               ;; Check if applicable with LSP
               ("TAB"     . yas-or-company-or-indent-for-tab)
               ("C-c y n" . yas-new-snippet)
               ("C-c y s" . yas-insert-snippet)
               ("<M-S-left>" . python-indent-shift-left)
-              ("<M-S-right>" . python-indent-shift-right)
+              ("<M-S-right>" . python-indent-shift-right))
 
-              :map inferior-python-mode-map
-              ("TAB"   . yas-or-company-or-indent-for-tab)
-              ("M-TAB" . python-shell-completion-complete-or-indent))
+  ;; using bind-keys here works while using :bind as above didn't, possibly because of a
+  ;; call to define-key for TAB in inferior-python-mode
+  :hook (inferior-python-mode . (lambda ()
+                                  (company-mode)
+                                  (bind-keys :package python
+                                             :map inferior-python-mode-map
+                                             ("TAB" . yas-or-company-or-indent-for-tab)
+                                             ("M-TAB" . python-shell-completion-complete-or-indent))))
+
   :config
-  (setq python-indent-guess-indent-offset nil))
+  ;; On Windows we use non-native completion because there are unresolved issues with
+  ;; python.el's support for native Python completion on Windows: see the comment where
+  ;; python-shell-completion-native-disabled-interpreters is defined.  The call to
+  ;; python-shell-completion-native-try fails even though the Python code testing readline
+  ;; can be run by python and ipython when called outside Emacs
+  ;;
+  ;; Possibly related: sometimes we see the message "SyntaxError: invalid non-printable
+  ;; character U+0008", a failure when trying to print backspace characters (aka ctrl H)
+  ;; which Emacs sends when trying to test the functionality.
+  ;;
+  ;; https://emacs.stackexchange.com/a/35969
+  ;; https://github.com/jorgenschaefer/elpy/issues/887
+  ;; https://github.com/jorgenschaefer/elpy/issues/1550#issuecomment-574512892
+  ;; https://github.com/jorgenschaefer/elpy/blob/7ff8ffa918411887d165764f7a5a12bc46646e73/elpy-shell.el#L546
+  ;; https://debbugs.gnu.org/cgi/pkgreport.cgi?include=subject%3Apython+;package=emacs
+  ;;
+  ;; With non-native completion there is a gotcha that TAB fails to work on the first
+  ;; IPython prompt as python-shell-completion-complete-or-indent is thrown off by an
+  ;; empty line and ends up calling indent-for-tab-command instead of completion-at-point.
+  ;; After this it works.
+  (setq python-shell-interpreter "ipython")
+  (pcase python-shell-interpreter
+    ("ipython"
+     ;; The warn_venv configuration suppresses a warning that is triggered as follows:
+     ;; 1) conda.el and pythonic.el set python-shell-virtualenv-root which in turn
+     ;; leads 2) python-shell-calculate-process-environment to set VIRTUAL_ENV which
+     ;; 3) ipython reports as an issue because it assumes a directory layout that does
+     ;; not match conda's and 4) will warn that we're starting it outside a
+     ;; virtualenv.
+     (setq python-shell-interpreter-args
+           (mapconcat #'identity
+                      '("-i"
+                        "--simple-prompt"
+                        "--TerminalInteractiveShell.warn_venv=False"
+                        "--InteractiveShell.display_page=True")
+                      " ")))
+    ("python"
+     (setq python-shell-interpreter-args "-i"))))
 
 (use-package racket-mode)
 
@@ -1444,7 +1498,7 @@ directory, otherwise return nil."
 (use-package rst                        ; ReStructuredText
   :bind (:map
          rst-mode-map
-         ("C-=" . nil)  
+         ("C-=" . nil)
          ("M-RET" . rst-insert-list)))
 
 (use-package scroll-in-place
@@ -1560,7 +1614,7 @@ directory, otherwise return nil."
 
 (use-package speedbar
   :hook (speedbar-mode . (lambda ()
-                           (speedbar-add-supported-extension ".org")  
+                           (speedbar-add-supported-extension ".org")
                            (auto-raise-mode 1)))
   :custom
   (speedbar-vc-do-check nil))
@@ -1659,7 +1713,7 @@ directory, otherwise return nil."
   (setq which-key-idle-delay 0.4
         which-key-sort-order 'which-key-prefix-then-key-order))
 
-(use-package whitespace                 ; Highlight bad whitespace 
+(use-package whitespace                 ; Highlight bad whitespace
   :diminish (whitespace-mode . " ⓦ")
   :bind (("C-c t w" . whitespace-mode))
   :config
@@ -1706,6 +1760,7 @@ directory, otherwise return nil."
   :hook (desktop-after-read . jm-conda-lsp-enable-lsp-everywhere)
 
   :config
+  (auto-highlight-symbol-mode)
   (global-anzu-mode)
   (global-auto-revert-mode t)
   (global-undo-tree-mode)
