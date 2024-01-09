@@ -1497,7 +1497,8 @@ directory, otherwise return nil."
   ;; IPython prompt as python-shell-completion-complete-or-indent is thrown off by an
   ;; empty line and ends up calling indent-for-tab-command instead of completion-at-point.
   ;; After this it works.
-  (setq python-shell-interpreter "ipython")
+  (setq python-guess-indent nil
+        python-shell-interpreter "ipython")
   (pcase python-shell-interpreter
     ("ipython"
      ;; The warn_venv configuration suppresses a warning that is triggered as follows:
