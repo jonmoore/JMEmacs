@@ -1795,8 +1795,8 @@ directory, otherwise return nil."
   :hook (desktop-after-read . jm-conda-lsp-enable-lsp-everywhere)
 
   :config
-  (auto-highlight-symbol-mode)
   (global-anzu-mode)
+  (global-auto-highlight-symbol-mode)
   (global-auto-revert-mode t)
   (global-git-gutter-mode t)
   (global-undo-tree-mode)
