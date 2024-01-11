@@ -49,6 +49,22 @@
   (ht-create)
   "Hash table used to map projectile projects to conda envs")
 
+(defun jm-conda-lsp--format-project-env ()
+  "Return a string formatting the map of projectile projects to conda envs"
+  (let ((plist))                        ; empty
+    (maphash (lambda (k v)
+               (push k plist)
+               (push v plist))
+             jm-conda-lsp--ht-project-env)
+    (pp (nreverse plist))))
+
+(defun jm-conda-lsp-reset ()
+  "Reset state related to conda, lsp, etc.  This needs work.  LSP
+is left running"
+  (interactive)
+  (conda-env-deactivate)
+  (ht-clear jm-conda-lsp--ht-project-env))
+
 (defun jm-python-user-home-directory ()
   "Return location of Python home directory (~). Under normal use,
 this is consistent with
@@ -75,6 +91,7 @@ get_user_environments_txt_file()")
   "The main entry point to configure a conda environment for use
 with conda, LSP and optionally DAP, depending on LSP's
 configuration."
+  (message "jm-dbg - entered jm-conda-lsp--activate-and-enable-lsp")
   (conda-env-activate-path env-path)
 
   ;; lsp will enable dap-mode if it's present as a function and
@@ -102,11 +119,12 @@ configuration."
   ;;                        (cond ((string-prefix-p "clang-tidy" (flycheck-error-message e))
   ;;                               (lsp-cpp-flycheck-clang-tidy-error-explainer e))
   ;;                              (t (flycheck-error-message e)))))
+  (message "jm-dbg - exiting jm-conda-lsp--activate-and-enable-lsp")
   )
 
 ;; We don't need to save projectile project roots as `projectile-project-root'
 ;; recalculates these automatically
-(defun jm-conda-lsp--init-if-visible ()
+(defun jm-conda-lsp--init-in-buffer ()
   "Handle conda and lsp-mode initialisation.  When the current
 buffer is in python-mode, is visible, is in a projectile
 project, and the user has selected a conda env for the
@@ -118,15 +136,27 @@ starting up with many different Python buffers loaded from the
 desktop.
 "
   (interactive)
-  (when (and
+  (message "jm-dbg - entered jm-conda-lsp--init-in-buffer")
+  (message "jm-dbg - the current buffer is %s" (current-buffer))
+  (message "jm-dbg - its window is %s" (get-buffer-window nil t))
+
+  
+  (cond
+   ((and (not helm-alive-)
+         (not (string-prefix-p " *" buffer-name))
+         (not (string-prefix-p "*" buffer-name))
          (equal major-mode 'python-mode)
-         (or (buffer-modified-p)
-             (get-buffer-window nil t)))
+         (or (get-buffer-window nil t)
+             (buffer-modified-p)))
+    (message "jm-dbg - looking for projectile project root")
     (let* ((project-root (projectile-project-root))
            (saved-project-env (ht-get jm-conda-lsp--ht-project-env project-root)))
       (when project-root
+        (message "jm-dbg - setting up for project root %s" project-root)
+        (message "jm-dbg - saved-project-env %s" saved-project-env)
         (cond
          ((not saved-project-env)
+          (message "jm-dbg - (not saved-project-env)")
           (let ((env-path (let ((use-dialog-box nil))
                             ;; First try selecting from known envs with helm source;
                             ;; C-g here returns nil and invokes general file
@@ -136,6 +166,7 @@ desktop.
                              (condition-case nil
                                  (read-directory-name "Conda environment directory: ")
                                (quit nil))))))
+            ;; Save the conda env information for project-root
             (ht-set! jm-conda-lsp--ht-project-env
                      project-root
                      ;; Either select and activate an env, saving the result,
@@ -146,20 +177,34 @@ desktop.
          ((and saved-project-env
                (not (equal saved-project-env 'do-not-use-an-env))          
                (not (equal saved-project-env conda-env-current-path)))
-          (jm-conda-lsp--activate-and-enable-lsp saved-project-env)))))))
+            (message "jm-dbg - changing project root")
+            (jm-conda-lsp--activate-and-enable-lsp saved-project-env))))))
+   (t
+    (message "jm-dbg - skipping looking for projectile project root")
+    ))
+
+  (message "jm-dbg - exiting jm-conda-lsp--init-in-buffer")
+  (message "jm-dbg - the current buffer is %s" (current-buffer))
+  )
+
+(defun jm-conda-lsp--init-in-frame (frame)
+  (mapcar
+   (lambda (window)
+     (with-current-buffer (window-buffer window)
+       (jm-conda-lsp--init-in-buffer)))
+   (window-list frame)))
 
 ;;;###autoload
 (defun jm-conda-lsp-enable-lsp-everywhere ()
   "Initialise LSP in currently visible buffers and configure it
-to be enabled if needed using `window-configuration-change-hook'"
+to be enabled when needed"
   ;; take care of buffers that are currently loaded and visible
   (mapcar
-   (lambda (buf)
-     (with-current-buffer buf
-       (jm-conda-lsp--init-if-visible)))
-   (buffer-list))
+   'jm-conda-lsp--init-in-frame
+   (frame-list))
+  
   ;; configure for future buffers
-  (add-hook 'window-configuration-change-hook #'jm-conda-lsp--init-if-visible))
+  (add-hook 'window-buffer-change-functions #'jm-conda-lsp--init-in-frame))
 
 ;;; pycoverage / flycheck integration
 

@@ -530,6 +530,7 @@
 
 (use-package dap-mode                   ; client for Debug Adapter Protocol
   :config
+  (require 'dap-python)
   (setq read-process-output-max (* 1024 1024) ; 1MB
         ;; Use debugpy since this is the successor to ptvsd
         dap-python-debugger 'debugpy))
@@ -639,11 +640,6 @@ clean buffer we're an order of magnitude laxer about checking."
         flycheck-idle-change-delay 5.0
         flycheck-keymap-prefix "f"
         flycheck-pylintrc "pylintrc"))
-
-(use-package font-lock-mode
-  :ensure nil
-  :init
-  (global-font-lock-mode t))
 
 (defun jm-geiser-company--doc-buffer (id)
   "Replacement for geiser-company--doc-buffer to return nil when
@@ -1017,6 +1013,8 @@ display-buffer correctly."
         lsp-ui-sideline-show-code-actions t
         lsp-ui-sideline-show-hover t)
   ;; A bug with lsp-ui
+  ;;
+  ;; Reported at https://github.com/emacs-lsp/lsp-ui/issues/761
   ;;
   ;; While editing Python files when using lsp-mode together with pyright, lsp-ui,
   ;; lsp-ui-sideline and flycheck, warning messages like "Invalid face reference:
@@ -1799,7 +1797,7 @@ directory, otherwise return nil."
   (global-anzu-mode)
   (global-auto-highlight-symbol-mode)
   (global-auto-revert-mode t)
-  (global-git-gutter-mode t)
+  (global-font-lock-mode t)
   (global-undo-tree-mode)
   (helm-mode 1)
   (save-place-mode 1)
