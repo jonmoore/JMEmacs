@@ -142,9 +142,9 @@ desktop.
 
   
   (cond
-   ((and (not helm-alive-)
-         (not (string-prefix-p " *" buffer-name))
-         (not (string-prefix-p "*" buffer-name))
+   ((and (not helm-alive-p)
+         (not (string-prefix-p " *" (buffer-name)))
+         (not (string-prefix-p "*" (buffer-name)))
          (equal major-mode 'python-mode)
          (or (get-buffer-window nil t)
              (buffer-modified-p)))
@@ -152,7 +152,7 @@ desktop.
     (let* ((project-root (projectile-project-root))
            (saved-project-env (ht-get jm-conda-lsp--ht-project-env project-root)))
       (when project-root
-        (message "jm-dbg - setting up for project root %s" project-root)
+        (message "jm-dbg - setting up for project-root %s" project-root)
         (message "jm-dbg - saved-project-env %s" saved-project-env)
         (cond
          ((not saved-project-env)
