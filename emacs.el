@@ -641,44 +641,7 @@ clean buffer we're an order of magnitude laxer about checking."
         flycheck-keymap-prefix "f"
         flycheck-pylintrc "pylintrc"))
 
-(defun jm-geiser-company--doc-buffer (id)
-  "Replacement for geiser-company--doc-buffer to return nil when
-no docs are found."
-  (let* ((impl geiser-impl--implementation)
-         (module (geiser-eval--get-module))
-         (symbol (make-symbol id))
-         (docstring (geiser-doc--get-docstring symbol module)))
-    (if (or (not docstring) (not (listp docstring)))
-        ;; JM: return nil when no documentation is found, in line
-        ;; with other company backends, e.g. company-elisp, which
-        ;; comes with company and is presumably canonical.  The
-        ;; original version called message, returning the message
-        ;; string, which broke company-quickhelp, which notes for
-        ;; non-nil returns that "The company backend can either
-        ;; return a buffer with the doc or a cons containing the
-        ;; doc buffer and a position at which to start reading."
-        nil
-      (message "docstring %S" docstring)
-      (with-current-buffer
-          (get-buffer-create "*geiser-company-documentation*")
-        (erase-buffer)
-        (geiser-doc--insert-title
-         (geiser-autodoc--str* (cdr (assoc "signature" docstring))))
-        (newline)
-        (insert (or (cdr (assoc "docstring" docstring)) ""))
-        (current-buffer)))))
-
-(use-package geiser
-  :init
-  (eval-after-load "geiser-company"
-    '(defun geiser-company--doc-buffer (id)
-       "Redefinition of geiser-company--doc-buffer to return nil when no docs are found."
-       (jm-geiser-company--doc-buffer id)))
-  :config
-  (setq geiser-active-implementations '(racket)
-        geiser-eval--geiser-procedure-function 'geiser-racket--geiser-procedure))
-
-(use-package geiser-racket)
+(use-package geiser)
 
 (use-package git-gutter-fringe ; Show git diff information in fringe
   :diminish)
@@ -1515,7 +1478,10 @@ directory, otherwise return nil."
     ("python"
      (setq python-shell-interpreter-args "-i"))))
 
-(use-package racket-mode)
+(use-package racket-mode                ; preferred over geiser for racket
+  :mode (("\\.rkt\\'" . racket-mode)
+         ("\\.rktl\\'" . racket-mode)
+         ("\\.rktd\\'" . racket-mode)))
 
 (use-package rainbow-delimiters)
 
