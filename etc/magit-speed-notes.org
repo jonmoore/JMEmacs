@@ -1,0 +1,224 @@
+* Links
+*** https://jakemccrary.com/blog/2020/11/14/speeding-up-magit/
+*** https://magit.vc/manual/magit/Performance.html
+*** https://magit.vc/manual/magit/Microsoft-Windows-Performance.html
+*** https://magit.vc/manual/magit/Per_002dRepository-Configuration.html
+* magit variables
+*** magit-refresh-verbose
+    Enabling this reports timings that help figuring out which sections are
+    bottlenecks. The additional output can be found in the *Messages* buffer.
+
+    This can be toggled with M-x magit-toggle-verbose-refresh.
+*** magit-status-sections-hooks
+***** Baseline value
+      magit-status-sections-hook is a variable defined in ‘magit-status.el’.
+
+      : magit-insert-status-headers
+      : magit-insert-merge-log
+      : magit-insert-rebase-sequence
+      : magit-insert-am-sequence
+      : magit-insert-sequencer-sequence
+      : magit-insert-bisect-output
+      : magit-insert-bisect-rest
+      : magit-insert-bisect-log
+      : magit-insert-untracked-files
+      : magit-insert-unstaged-changes
+      : magit-insert-staged-changes
+      : magit-insert-stashes
+      : magit-insert-unpushed-to-pushremote
+      : magit-insert-unpushed-to-upstream-or-recent
+      : magit-insert-unpulled-from-pushremote
+      : magit-insert-unpulled-from-upstream)
+*** magit-status-headers-hook
+***** Baseline value
+
+      Called from magit-status-sections-hook
+
+      Initial value
+      : magit-insert-error-header
+      : magit-insert-diff-filter-header
+      : magit-insert-head-branch-header
+      : magit-insert-upstream-branch-header
+      : magit-insert-push-branch-header
+      : magit-insert-tags-header
+*** magit-disabled-section-inserters
+    Interesting comment
+    
+    "Disable the section inserter FN in the current repository.
+    It is only intended for use in \".dir-locals.el\" and
+    \".dir-locals-2.el\".  Also see info node `(magit)Per-Repository
+    Configuration'."
+* magit functions
+*** magit-toggle-verbose-refresh
+* Timings
+
+  Timings generated from magit-refresh-verbose
+  
+*** https://github.com/jonmoore/sicp, clean
+
+    Based on a clean (no changes, synced to upstream) workspace
+
+    
+***** Summary
+      | round    | time (seconds) |
+      |----------+----------------|
+      | Baseline |          2.431 |
+      | Round 1  |          1.706 |
+      | Round 2  |          0.960 |
+      |          |                |
+***** <2024-01-14 Sun> Baseline
+
+Refreshing buffer ‘magit: sicp’...
+
+    | action                                      | time (seconds) | flag |
+    |---------------------------------------------+----------------+------|
+    | magit-insert-error-header                   |          3e-06 |      |
+    | magit-insert-diff-filter-header             |        4.6e-05 |      |
+    | magit-insert-head-branch-header             |       0.219251 | !!   |
+    | magit-insert-upstream-branch-header         |       0.203503 | !!   |
+    | magit-insert-push-branch-header             |        7.6e-05 |      |
+    | magit-insert-tags-header                    |       0.219012 | !!   |
+    | magit-insert-status-headers                 |       0.750339 | !!   |
+    | magit-insert-merge-log                      |       0.112725 | !!   |
+    | magit-insert-rebase-sequence                |       0.001318 |      |
+    | magit-insert-am-sequence                    |        0.00089 |      |
+    | magit-insert-sequencer-sequence             |       0.001506 |      |
+    | magit-insert-bisect-output                  |       0.000774 |      |
+    | magit-insert-bisect-rest                    |       0.000186 |      |
+    | magit-insert-bisect-log                     |       0.000197 |      |
+    | magit-insert-untracked-files                |       0.146207 | !!   |
+    | magit-insert-unstaged-changes               |       0.109318 | !!   |
+    | magit-insert-staged-changes                 |       0.220631 | !!   |
+    | magit-insert-stashes                        |       0.416303 | !!   |
+    | magit-insert-unpushed-to-pushremote         |        7.8e-05 |      |
+    | magit-insert-unpushed-to-upstream-or-recent |       0.412192 | !!   |
+    | magit-insert-unpulled-from-pushremote       |          6e-06 |      |
+    | magit-insert-unpulled-from-upstream         |       0.125326 | !!   |
+    | total                                       |         2.431s |      |
+      
+***** <2024-01-14 Sun> Round 1
+
+    From baseline, keep these as they look useful
+    | magit-insert-status-headers                 |       0.750339 | !!   |
+    | magit-insert-untracked-files                |       0.146207 | !!   |
+    | magit-insert-unstaged-changes               |       0.109318 | !!   |
+    | magit-insert-staged-changes                 |       0.220631 | !!   |
+
+    Remove these
+    | magit-insert-head-branch-header             |       0.219251 | !!   |
+    | magit-insert-upstream-branch-header         |       0.203503 | !!   |
+    | magit-insert-tags-header                    |       0.219012 | !!   |
+    | magit-insert-merge-log                      |       0.112725 | !!   |
+    | magit-insert-stashes                        |       0.416303 | !!   |
+    | magit-insert-unpushed-to-upstream-or-recent |       0.412192 | !!   |
+    | magit-insert-unpulled-from-upstream         |       0.125326 | !!   |
+
+    #+begin_src elisp
+      (progn
+        (remove-hook 'magit-status-sections-hook 'magit-insert-head-branch-header)
+        (remove-hook 'magit-status-sections-hook 'magit-insert-upstream-branch-header)
+        (remove-hook 'magit-status-sections-hook 'magit-insert-tags-header)
+        (remove-hook 'magit-status-sections-hook 'magit-insert-merge-log)
+        (remove-hook 'magit-status-sections-hook 'magit-insert-stashes)
+        (remove-hook 'magit-status-sections-hook 'magit-insert-unpushed-to-upstream-or-recent)
+        (remove-hook 'magit-status-sections-hook 'magit-insert-unpulled-from-upstream)
+        )
+    #+end_src    
+
+    Refreshing buffer ‘magit: sicp’...done (1.706s)
+
+        | action                              | time (seconds) | flag | notes |
+        |-------------------------------------+----------------+------+-------|
+        | magit-insert-rebase-sequence        |       0.089914 | !!   |       |
+        | magit-insert-unstaged-changes       |       0.097341 | !!   |       |
+        | magit-insert-untracked-files        |       0.108468 | !!   |       |
+        | magit-insert-tags-header            |       0.179608 | !!   | [1]   |
+        | magit-insert-staged-changes         |       0.206253 | !!   |       |
+        | magit-insert-upstream-branch-header |        0.23004 | !!   | [1]   |
+        | magit-insert-head-branch-header     |       0.341493 | !!   | [1]   |
+        | magit-insert-status-headers         |       0.966909 | !!   |       |
+
+        1. These functions should have been removed from magit-status-headers-hook, not
+           magit-status-sections-hook.  See "Round 2" for related optimization.
+    
+******* ELP / etrace instrumentation
+
+        #+begin_src elisp
+          (progn
+            (elp-instrument-function 'magit-insert-error-header)
+            (elp-instrument-function 'magit-insert-diff-filter-header)
+            (elp-instrument-function 'magit-insert-head-branch-header)
+            (elp-instrument-function 'magit-insert-upstream-branch-header)
+            (elp-instrument-function 'magit-insert-push-branch-header)
+            (elp-instrument-function 'magit-insert-tags-header)
+            )
+        #+end_src
+
+        #+begin_src elisp
+          (progn
+            (elp-restore-function 'magit-insert-error-header)
+            (elp-restore-function 'magit-insert-diff-filter-header)
+            (elp-restore-function 'magit-insert-head-branch-header)
+            (elp-restore-function 'magit-insert-upstream-branch-header)
+            (elp-restore-function 'magit-insert-push-branch-header)
+            (elp-restore-function 'magit-insert-tags-header)
+            )
+        #+end_src
+
+        Noticeable time spent in
+
+        : magit-insert-head-branch-header
+        : magit-insert-upstream-branch-header
+        : magit-insert-tags-header
+
+        Roughly 200ms each
+
+***** <2024-01-14 Sun> Round 2
+
+      #+begin_src elisp
+        (progn
+          (remove-hook 'magit-status-headers-hook 'magit-insert-upstream-branch-header)
+          (remove-hook 'magit-status-headers-hook 'magit-insert-tags-header)
+          (remove-hook 'magit-status-headers-hook 'magit-insert-push-branch-header)
+          )
+      #+end_src
+
+        | action                          | time (seconds) | flag |
+        |---------------------------------+----------------+------|
+        | magit-insert-head-branch-header |       0.200065 | !!   |
+        | magit-insert-status-headers     |       0.304973 | !!   |
+        | magit-insert-rebase-sequence    |       0.104886 | !!   |
+        | magit-insert-untracked-files    |        0.10324 | !!   |
+        | magit-insert-unstaged-changes   |       0.094207 | !!   |
+        | magit-insert-staged-changes     |       0.221365 | !!   |
+        |---------------------------------+----------------+------|
+        |                                 |       1.028736 |      |
+        | ^                               |              x |      |
+        |---------------------------------+----------------+------|
+        #+TBLFM: $x=vsum(@2..@-1)
+        
+        Question
+        - is magit-insert-head-branch-header getting called twice, once as above and then
+          also inside magit-insert-status-headers?
+          - apparently not, only seeing it getting called once
+          - the backtrace looks like
+            : magit-insert-head-branch-header()
+            : apply(magit-insert-head-branch-header nil)
+            : magit-run-section-hook(magit-status-headers-hook)
+            : magit-insert-headers(magit-status-headers-hook)
+            : magit-insert-status-headers()
+            : apply(magit-insert-status-headers nil)
+            : magit-run-section-hook(magit-status-sections-hook)
+            : magit-status-refresh-buffer()
+            : apply(magit-status-refresh-buffer nil)
+            : magit-refresh-buffer()
+          - from the table above the total of reported sections seems higher than the
+            total time reported (0.957 in this case), also consistent
+
+***** <2024-01-14 Sun> Round 3
+      #+begin_src elisp
+        (progn
+          (remove-hook 'magit-status-sections-hook 'magit-insert-rebase-sequence)
+          (remove-hook 'magit-status-sections-hook 'magit-insert-am-sequence)
+          )
+      #+end_src
