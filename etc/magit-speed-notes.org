@@ -50,6 +50,20 @@
     Configuration'."
 * magit functions
 *** magit-toggle-verbose-refresh
+*** magit-debug-git-executable
+* Git for Windows information
+*** which git executable gets run
+    c:\Program Files\Git\mingw64\libexec\git-core\git.exe
+*** from magit-debug-git-executable
+    magit-git-executable: "C:/Program Files/Git/mingw64/libexec/git-core/git.exe" (2.41.0.windows.2)
+
+    c:/Program Files/Git/mingw64/bin/git.exe (2.41.0.windows.2)
+
+    C:/Program Files/Git/cmd/git.exe (2.41.0.windows.2)
+
+*** about the different executables
+    - https://stackoverflow.com/a/40556175/4876
+    
 * Timings
 
   Timings generated from magit-refresh-verbose
