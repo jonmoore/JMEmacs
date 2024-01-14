@@ -1714,6 +1714,16 @@ directory, otherwise return nil."
   :config
   (unicode-fonts-setup))
 
+(use-package vc ;; built-in support for version-control systems
+  :config
+  ;; From https://emacs.stackexchange.com/a/10957
+  (defadvice vc-mode-line (after strip-backend () activate)
+    (when (stringp vc-mode)
+      (let ((noback (replace-regexp-in-string
+                     (format "^ %s" (vc-backend buffer-file-name))
+                     " " vc-mode)))
+        (setq vc-mode noback)))))
+
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   ;; This makes lines display wrapped at fill-column in visual-line-mode
   :hook (visual-line-mode . visual-fill-column-mode--enable))
