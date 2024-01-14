@@ -1058,7 +1058,17 @@ display-buffer correctly."
         magit-popup-use-prefix-argument 'default
         magit-wip-after-apply-mode nil
         magit-wip-after-save-mode nil
-        magit-wip-before-change-mode nil))
+        magit-wip-before-change-mode nil)
+  ;; reduce the amount of information reported by magit-status, hence the time this
+  ;; requires
+  (progn
+    (remove-hook 'magit-status-sections-hook 'magit-insert-merge-log)
+    (remove-hook 'magit-status-sections-hook 'magit-insert-stashes)
+    (remove-hook 'magit-status-sections-hook 'magit-insert-unpulled-from-upstream)
+    (remove-hook 'magit-status-sections-hook 'magit-insert-unpushed-to-upstream-or-recent)
+    (remove-hook 'magit-status-headers-hook 'magit-insert-upstream-branch-header)
+    (remove-hook 'magit-status-headers-hook 'magit-insert-push-branch-header)
+    (remove-hook 'magit-status-headers-hook 'magit-insert-tags-header)))
 
 (use-package markdown-mode)
 
