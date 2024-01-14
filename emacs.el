@@ -936,10 +936,33 @@ display-buffer correctly."
   ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
   (require 'dap-mode)
 
-  (setq lsp-before-save-edits nil
-        lsp-enable-dap-auto-configure t
-        lsp-enable-indentation nil
-        lsp-imenu-sort-methods '(kind position))
+  (setq lsp-before-save-edits                          nil
+        lsp-enable-dap-auto-configure                    t
+        lsp-enable-indentation                         nil
+        lsp-imenu-sort-methods            '(kind position)
+
+        ;; the order of the settings below is taken from
+        ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+        lsp-enable-symbol-highlighting                   t
+        lsp-ui-doc-enable                                t
+        lsp-ui-doc-show-with-cursor                      t
+        lsp-ui-doc-show-with-mouse                     nil
+        lsp-lens-enable                                  t
+        lsp-headerline-breadcrumb-enable                 t
+        lsp-ui-sideline-enable                           t
+        lsp-ui-sideline-show-code-actions                t
+        lsp-ui-sideline-show-hover                     nil
+        lsp-modeline-code-actions-enable               nil
+        lsp-diagnostics-provider                     :auto
+        lsp-ui-sideline-show-diagnostics               nil
+        lsp-eldoc-enable-hover                           t
+        lsp-modeline-diagnostics-enable                nil
+        lsp-signature-auto-activate                      t
+        lsp-signature-render-documentation               t
+        lsp-completion-provider                      :capf
+        lsp-completion-show-detail                       t
+        lsp-completion-show-kind                         t
+                                                         )
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
   (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
