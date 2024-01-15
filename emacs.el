@@ -1689,6 +1689,9 @@ directory, otherwise return nil."
   :bind (:map text-mode-map
               ([(shift return)] . newline-and-indent)))
 
+(use-package toc-org
+  :hook (org-mode . toc-org-mode))
+
 (use-package tramp
   :if system-win32-p
   :config
