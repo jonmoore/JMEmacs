@@ -1806,6 +1806,7 @@ directory, otherwise return nil."
   :hook (desktop-after-read . jm-conda-lsp-enable-lsp-everywhere)
 
   :config
+  (require 'vc)
   (global-anzu-mode)
   (global-auto-highlight-symbol-mode)
   (global-auto-revert-mode t)
