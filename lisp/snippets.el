@@ -270,10 +270,19 @@ The value is actually the first element of list whose car equals key."
 
 ;;;###autoload
 (defmacro measure-time (&rest body)
-  "Measure the time it takes to evaluate BODY."
-  `(let ((time (current-time)))
-     ,@body
-     (message "%.06f" (float-time (time-since time)))))
+  "Measure the time in seconds elapsed for execution of
+BODY. Return this and also print a message."
+  ;; based on benchmark-elapse
+  (declare (indent 0) (debug t))
+  (let ((t0 (make-symbol "t0"))
+        (t-elapsed (make-symbol "t-elapsed")))
+    `(let ((,t0 (current-time)))
+       ,@body
+       (setq ,t-elapsed (float-time (time-since ,t0)))
+       (message "t-elapsed %.06f" ,t-elapsed)
+       ,t-elapsed
+       )))
+
 
 ;;;###autoload
 (defun jm-package-status (pkg)
