@@ -1723,6 +1723,12 @@ directory, otherwise return nil."
   ;; Use the old format to avoid hangs when timestamps have been updated
   (setq undo-tree-save-format-version 0))
 
+(defun jm-undo-tree-reset-corrupted-tree ()
+  "Work-around for undo-tree bugs that cause crashes when saving
+files.  This persists across sessions"
+  (interactive)
+  (setq buffer-undo-tree nil))
+
 (use-package unicode-fonts
   :config
   (unicode-fonts-setup))
