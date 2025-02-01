@@ -580,6 +580,8 @@
         dired-clean-confirm-killing-deleted-buffers nil
         dired-omit-files "^\\.?#\\|^\\."))
 
+(use-package disable-mouse)             ; suppress mouse events
+
 (use-package ediff
   :config
   (setq ediff-custom-diff-options "-c -w"
@@ -643,6 +645,8 @@ clean buffer we're an order of magnitude laxer about checking."
         flycheck-idle-change-delay 5.0
         flycheck-keymap-prefix "f"
         flycheck-pylintrc "pylintrc"))
+
+(use-package free-keys)
 
 (use-package geiser)
 
