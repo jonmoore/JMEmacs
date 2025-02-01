@@ -506,19 +506,43 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   ;; comint-output-filter-functions recommends add-hook
   (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
 
+;; possible settings from the company info manual
+
+;; company-indent-or-complete-common: Indent the current line or region, or complete the
+;; common part.
+;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+;; (with-eval-after-load 'company
+;;   (define-key company-active-map (kbd "M-/") #'company-complete))
+
+;; company-complete-common-or-cycle is an interactive compiled Lisp function in ‘company.el’.
+;; (company-complete-common-or-cycle &optional ARG)
+;; Insert the common part of all candidates, or select the next one.
+
+;; (with-eval-after-load 'company
+;;   (define-key company-active-map
+;;               (kbd "TAB")
+;;               #'company-complete-common-or-cycle)
+;;   (define-key company-active-map
+;;               (kbd "<backtab>")
+;;               (lambda ()
+;;                 (interactive)
+;;                 (company-complete-common-or-cycle -1))))
 (use-package company ; completion framework
   :diminish company-mode
   :hook (prog-mode . company-mode)
   :config
   (company-quickhelp-mode t)
   :custom
-  (company-show-quick-access t))
+  (company-show-quick-access t)
+  (company-minimum-prefix-length 5)
+  (company-idle-delay nil) ;; default is 0.2, which often severely gets in the way
+  )
 
 (use-package company-auctex)
 
 (use-package company-lean)
 
-(use-package company-quickhelp)  ; popup docs for company completion candidates
+(use-package company-quickhelp)  ; shows popup docs for company completion candidates
 
 (use-package company-restclient)
 
