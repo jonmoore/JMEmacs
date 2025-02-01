@@ -261,6 +261,8 @@
            ("M-["          . undo-tree-visualize)
            ("M-]"          . repeat)
 
+           ("M-C-g"        . gptel)
+
            ("<C-S-left>"   . select-last-buffer)
            ("<C-S-right>"  . select-next-buffer)
 
@@ -325,7 +327,8 @@
   (next-line-add-newlines nil)
   (read-buffer-completion-ignore-case t)
   (safe-local-variable-values
-   '((dired-omit-mode . t)
+   '((gptel-org-branching-context . t)
+     (dired-omit-mode . t)
      (dired-omit-extensions ".html" ".org_archive")
      (org-odd-levels-only)
      (TeX-command-extra-options . "-shell-escape")
@@ -649,6 +652,11 @@ clean buffer we're an order of magnitude laxer about checking."
 (use-package goto-addr ; buttonize URLs and e-mail addresses
   :hook ((prog-mode . goto-address-prog-mode)
          (text-mode . goto-address-mode)))
+
+(use-package gptel
+  :config
+  (setq gptel-expert-commands t
+        gptel-use-curl nil))
 
 (use-package graphviz-dot-mode
   :mode "\\.dot\\'")
