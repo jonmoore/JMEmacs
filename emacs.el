@@ -1125,7 +1125,20 @@ display-buffer correctly."
     (remove-hook 'magit-status-sections-hook 'magit-insert-unpushed-to-upstream-or-recent)
     (remove-hook 'magit-status-headers-hook 'magit-insert-upstream-branch-header)
     (remove-hook 'magit-status-headers-hook 'magit-insert-push-branch-header)
-    (remove-hook 'magit-status-headers-hook 'magit-insert-tags-header)))
+    (remove-hook 'magit-status-headers-hook 'magit-insert-tags-header))
+
+  ;; This is a hack to speed up magit status refresh, as I don't use
+  ;; submodules.
+  ;;
+  ;; Make `magit-ignore-submodules-p' always return nil, presuming this corresponds to git
+  ;; diff's default setting for diff.ignoreSubmodules of "all".  Consistently with this,
+  ;; `magit-ignore-submodules-p' returns nil when called for a git repo with no config
+  ;; set.
+  (progn
+    (advice-add 'magit-ignore-submodules-p
+                :override
+                (lambda (&rest _args) nil)
+                '((name . "always-nil")))))
 
 (use-package markdown-mode)
 
