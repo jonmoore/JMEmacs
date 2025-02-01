@@ -280,6 +280,22 @@
            ("<S-f12>"      . windows-search-moccur-like)
            ("<C-f12>"      . windows-search-moccur-contains))
 
+(defun jm-custom-toggle-all-more-hide ()
+  "Toggle all \"More/Hide\" widgets in current buffer.  From alphapapa's
+https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
+  (interactive)
+  (widget-map-buttons (lambda (widget _)
+                        (pcase (widget-get widget :off)
+                          ("More" (widget-apply-action widget)))
+                        nil)))
+
+(defun jm-custom-toggle-all-custom-variables ()
+  (interactive)
+  (widget-map-buttons (lambda (widget _)
+                        (if (eq (widget-type (widget-get widget :parent)) 'custom-variable)
+                            (custom-toggle-hide-variable widget))
+                        nil)))
+
 (use-package custom
   :ensure nil
   :init
