@@ -798,6 +798,11 @@ clean buffer we're an order of magnitude laxer about checking."
   (helm-grep-ag-pipe-cmd-switches
    '("--colors 'match:fg:yellow' --colors 'match:style:nobold'"))
   (helm-source-names-using-follow '("Imenu" "Search Buffers" "Occur"))
+
+  ;; helm-find-files caches lists of files by directory assuming that file-notify can be
+  ;; used to update the cache reliably but that's been broken over the years on, at least,
+  ;; Windows, MacOS, and WSL.  This leads to out-of-date file lists so disable it.
+  (helm-ff-use-notify nil)
   :config
   (require 'helm-files)
   (global-unset-key (kbd "C-x c"))
