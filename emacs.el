@@ -1467,6 +1467,9 @@ directory, otherwise return nil."
                                               (start-process "open" "*open*" "open" fpath))
                                           'org-open-file))))
 
+(use-package outline
+  :config
+  (setq outline-minor-mode-cycle 1))
 (use-package ox-jira) ;; transforms org files to JIRA markup
 
 (use-package ox-mediawiki)
@@ -1771,7 +1774,12 @@ directory, otherwise return nil."
 
 (use-package treemacs ; A tree style file explorer package
   :config
-  (setq treemacs-width 24))
+  (setq treemacs-width 24)
+  ;; Oddly, just requiring treemacs turns on the modes below.  Spacemacs handles this
+  ;; "feature" similarly.
+  (treemacs-follow-mode -1)
+  (treemacs-fringe-indicator-mode -1)
+  (treemacs-filewatch-mode -1))
 
 (use-package treemacs-projectile) ; projectile integration for treemacs
 
