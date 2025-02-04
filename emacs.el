@@ -113,6 +113,13 @@
        pkgs))))
 
 (require 'use-package)
+
+;; I only use quelpa to load packages from github.  From Emacs 30 onwards this should be
+;; possible with package/use-package.
+(use-package quelpa-use-package
+  :init (setq quelpa-update-melpa-p nil)
+  :config (quelpa-use-package-activate-advice))
+
 (setq use-package-always-ensure t
       use-package-always-defer t
       use-package-compute-statistics t
