@@ -551,8 +551,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package company-auctex)
 
-(use-package company-lean)
-
 (use-package company-quickhelp)  ; shows popup docs for company completion candidates
 
 (use-package company-restclient)
@@ -856,8 +854,6 @@ display-buffer correctly."
 
 (use-package helm-descbinds)
 
-(use-package helm-lean)
-
 (use-package helm-lsp ; helm for LSP symbols, actions, switching projects
   ;; separate from company
   ;; :after lsp
@@ -983,8 +979,11 @@ display-buffer correctly."
   :custom-face
   (font-latex-verbatim-face ((t (:inherit nil :foreground "burlywood")))))
 
-(use-package lean-mode                  ; Support the Lean proof assistant
-  ;; https://github.com/leanprover/lean-mode
+(use-package lean4-mode
+  :quelpa (lean4-mode :fetcher github
+                      :repo "leanprover-community/lean4-mode"
+                      :files ("*.el" "data")
+                      )
   :config
   (require 'unicode-fonts))
 
