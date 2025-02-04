@@ -202,14 +202,14 @@
                    (list (getenv "PATH")))
                   path-separator)))
 
-(when system-osx-p
+(when (or system-osx-p system-linux-p)
   (setq exec-path (append (bound-and-true-p local-exec-paths)
                           exec-path)))
 
 (setq backup-directory-alist
       (list
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
-                       (system-osx-p   "~/backup")))))
+                       ((or system-osx-p system-linux-p)   "~/backup")))))
 
 ;;; COLORS AND APPEARANCE
 (tool-bar-mode -1)
@@ -418,7 +418,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
      '("Latexmk" "latexmk -pdflatex=\"pdflatex --shell-escape -synctex=1 -file-line-error\" -pdf %s"
        TeX-run-TeX nil t
        :help "Run Latexmk on file"))
-    (system-osx-p
+    ((or system-osx-p system-linux-p)
      '("latexmk" "latexmk -pdf -synctex=1 %s"
        TeX-run-TeX nil t
        :help "Run latexmk on file")))
@@ -1270,10 +1270,15 @@ directory, otherwise return nil."
   "Return the path to my Dropbox directorym if present"
   (let ((candidate
          (cond
-          (system-osx-p "~/Dropbox")
-          (system-win32-p (concat (getenv "USERPROFILE") "\\Dropbox")))))
+          ((or system-osx-p system-linux-p)
+           "~/Dropbox")
+          (system-win32-p
+           (concat (getenv "USERPROFILE") "\\Dropbox"))
+          )))
     ;; nil if there's no such directory
-    (when (file-directory-p candidate) candidate))  )
+    (when (and candidate
+               (file-directory-p candidate))
+      candidate)))
 
 (use-package org
   :mode "\\.org'"
