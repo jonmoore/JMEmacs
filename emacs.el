@@ -223,7 +223,12 @@
   (set-face-attribute 'fixed-pitch nil :family "Consolas"    :height 120))
  ;; Inconsolata needs to be installed otherwise you can end up with Times New Roman
  (system-osx-p
-  (set-face-attribute 'default nil :family "Inconsolata" :height 200)))
+  (set-face-attribute 'default nil :family "Inconsolata" :height 200))
+ (system-linux-p
+  (set-face-attribute 'default nil :family "DejaVu Sans Mono" :height 140)
+  (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono" :height 140))
+ (t
+  (warn "default face not set as no setting was found for the current system.")))
 
 ;;; EDITING AND GLOBAL KEY SETTINGS
 (prefer-coding-system 'utf-8)
