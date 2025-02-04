@@ -156,6 +156,10 @@
                       (setq async--cb callback)))))
               '((name . --queue-dispatch))))
 
+;; Suppress warnings about too-wide docstrings
+(setq byte-compile-warnings
+      '(not docstrings))
+
 ;;; PERSONAL LISP
 (mapc
  (lambda (relpath)
