@@ -163,9 +163,12 @@
                       (setq async--cb callback)))))
               '((name . --queue-dispatch))))
 
-;; Suppress warnings about too-wide docstrings
+;; Somebody decided that warnings about too-wide docstrings, using package cl, etc. merit
+;; opening a *Warnings* buffer with big bright red stop-sign icons by default.  People
+;; have no sense sometimes.
 (setq byte-compile-warnings
       '(not docstrings))
+(setq warning-minimum-level :error)
 
 ;;; PERSONAL LISP
 (mapc
