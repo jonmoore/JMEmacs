@@ -1181,6 +1181,8 @@ display-buffer correctly."
   :ensure nil
   )
 
+(use-package mermaid-mode)
+
 (use-package multiple-cursors)
 
 (use-package nexus)
@@ -1264,6 +1266,11 @@ according to `headline-is-for-jira'."
 (defun org-cycle-t ()
   (interactive)
   (org-cycle '(4)))
+
+(use-package ob-mermaid
+  :config
+  (message "jm: configuring ob-mermaid. Note that svg display is broken in emacs 29.x: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=64908")
+  )
 
 (use-package ob-restclient)
 
@@ -1360,9 +1367,10 @@ directory, otherwise return nil."
 
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
   (org-babel-do-load-languages 'org-babel-load-languages '((dot . t)
+                                                           (emacs-lisp . t)
+                                                           (mermaid . t)
                                                            (python . t)
-                                                           (restclient . t)
-                                                           (emacs-lisp . t)))
+                                                           (restclient . t)))
 
   (set-face-foreground 'org-hide (face-background 'default))
   (setq org-enforce-todo-dependencies t
