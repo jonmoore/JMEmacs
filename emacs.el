@@ -1599,7 +1599,9 @@ directory, otherwise return nil."
   ;; empty line and ends up calling indent-for-tab-command instead of completion-at-point.
   ;; After this it works.
   (setq python-guess-indent nil
-        python-shell-interpreter "ipython")
+        python-shell-interpreter "ipython"
+        python-fill-docstring-style 'pep-257-nn ; no blank line at the end
+        )
   (pcase python-shell-interpreter
     ("ipython"
      ;; The warn_venv configuration suppresses a warning that is triggered as follows:
