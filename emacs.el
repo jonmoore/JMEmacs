@@ -1763,6 +1763,8 @@ directory, otherwise return nil."
 
 (use-package sphinx-doc)
 
+(use-package svg-lib)
+
 (use-package tex-site
   :ensure auctex                        ; tex-site.el comes from auctex
   :config
