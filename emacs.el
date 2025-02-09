@@ -578,10 +578,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (when system-win32-p
     (setq conda--executable-path (f-join conda-anaconda-home conda-env-executables-dir "conda.exe"))))
 
-(use-package cperl-mode
-  :mode "\\.\\([pP][Llm]\\|al\\|t\\)\\'"
-  :interpreter "perl")
-
 (use-package css-mode
   :mode "\\.css\\'")
 
