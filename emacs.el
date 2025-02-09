@@ -386,14 +386,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 ;;;; PACKAGES
 ;;;==========
 
-(use-package ace-jump-helm-line) ; Ace-jump to a candidate in helm window
-
-(use-package ace-link) ; Quickly follow links
-
-(use-package ace-window                 ; Fast window switching
-  :bind
-  (("C-c j i" . ace-window)))
-
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
   :hook (visual-line-mode . adaptive-wrap-prefix-mode))
 
@@ -414,7 +406,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :config
   (setq anzu-search-threshold 100))
 
-(use-package arc-mode
+(use-package arc-mode                   ; built-in
   :custom
   (archive-zip-extract '("7z" "x" "-so")))
 
@@ -642,8 +634,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package ebib)
 
-(use-package ein)
-
 (use-package eldoc
   ;; note: using :diminish effectively creates a :config block, and eldoc is
   ;; already loaded when this block is processed, thus the config is executed,
@@ -700,8 +690,6 @@ clean buffer we're an order of magnitude laxer about checking."
         flycheck-pylintrc "pylintrc"))
 
 (use-package free-keys)
-
-(use-package geiser)
 
 (use-package git-gutter-fringe ; Show git diff information in fringe
   :diminish)
@@ -1533,7 +1521,7 @@ directory, otherwise return nil."
         projectile-mode-line-prefix " Proj"
         projectile-project-root-files '("requirements.txt" "setup.py" "tox.ini")))
 
-(use-package ps-print
+(use-package ps-print                   ; built-in
   :config
   (setq ps-bottom-margin       36
         ps-top-margin          36
@@ -1551,6 +1539,7 @@ directory, otherwise return nil."
 (use-package pycoverage
   ;; may need to vendor this - there's a github issue reporting installation
   ;; from MELPA is broken
+  ;; https://github.com/mattharrison/pycoverage.el/issues/9
   )
 
 (use-package python
