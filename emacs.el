@@ -1338,6 +1338,7 @@ directory, otherwise return nil."
         org-drawers '("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")
         org-enforce-todo-checkbox-dependencies t
         org-export-backends '(ascii html latex)
+        org-export-allow-bind-keywords t
         org-hierarchical-todo-statistics nil
         org-list-allow-alphabetical t
         org-log-into-drawer t
