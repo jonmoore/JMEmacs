@@ -6,125 +6,126 @@
 
 (require 'gptel)
 
+(defun jm--gptel-tools-read-url (url)
+  "Fetch and read the contents of a URL."
+  (with-current-buffer (url-retrieve-synchronously url)
+    (goto-char (point-min))
+    (forward-paragraph)
+    (let ((dom (libxml-parse-html-region (point) (point-max))))
+      (run-at-time 0 nil #'kill-buffer (current-buffer))
+      (with-temp-buffer
+        (shr-insert-document dom)
+        (buffer-substring-no-properties (point-min) (point-max))))))
+
 (gptel-make-tool
- :function (lambda (url)
-             (with-current-buffer (url-retrieve-synchronously url)
-               (goto-char (point-min)) (forward-paragraph)
-               (let ((dom (libxml-parse-html-region (point) (point-max))))
-                 (run-at-time 0 nil #'kill-buffer (current-buffer))
-                 (with-temp-buffer
-                   (shr-insert-document dom)
-                   (buffer-substring-no-properties (point-min) (point-max))))))
+ :function #'jm--gptel-tools-read-url
  :name "read_url"
  :description "Fetch and read the contents of a URL"
- :args (list '(:name "url"
-               :type "string"
-               :description "The URL to read"))
+ :args (list '(:name "url" :type "string" :description "The URL to read"))
  :category "web")
 
+(defun jm--gptel-tools-append-to-buffer (buffer text)
+  "Append TEXT to BUFFER. If the buffer does not exist, it will be created."
+  (with-current-buffer (get-buffer-create buffer)
+    (save-excursion
+      (goto-char (point-max))
+      (insert text)))
+  (format "Appended text to buffer %s" buffer))
+
 (gptel-make-tool
- :function (lambda (buffer text)
-             (with-current-buffer (get-buffer-create buffer)
-               (save-excursion
-                 (goto-char (point-max))
-                 (insert text)))
-             (format "Appended text to buffer %s" buffer))
+ :function #'jm--gptel-tools-append-to-buffer
  :name "append_to_buffer"
  :description "Append text to the an Emacs buffer.  If the buffer does not exist, it will be created."
- :args (list '(:name "buffer"
-               :type "string"
-               :description "The name of the buffer to append text to.")
-             '(:name "text"
-               :type "string"
-               :description "The text to append to the buffer."))
+ :args (list '(:name "buffer" :type "string" :description "The name of the buffer to append text to.")
+             '(:name "text" :type "string" :description "The text to append to the buffer."))
  :category "emacs")
 
-;; Message buffer logging tool
+(defun jm--gptel-tools-echo-message (text)
+  "Send a message with TEXT to the *Messages* buffer."
+  (message "%s" text)
+  (format "Message sent: %s" text))
+
 (gptel-make-tool
- :function (lambda (text)
-             (message "%s" text)
-             (format "Message sent: %s" text))
+ :function #'jm--gptel-tools-echo-message
  :name "echo_message"
  :description "Send a message to the *Messages* buffer"
- :args (list '(:name "text"
-               :type "string"
-               :description "The text to send to the messages buffer"))
+ :args (list '(:name "text" :type "string" :description "The text to send to the messages buffer"))
  :category "emacs")
 
-;; buffer retrieval tool
+(defun jm--gptel-tools-read-buffer (buffer)
+  "Return the contents of BUFFER.
+Signal an error if BUFFER is not live."
+  (unless (buffer-live-p (get-buffer buffer))
+    (error "Error: buffer %s is not live." buffer))
+  (with-current-buffer buffer
+    (buffer-substring-no-properties (point-min) (point-max))))
+
 (gptel-make-tool
- :function (lambda (buffer)
-             (unless (buffer-live-p (get-buffer buffer))
-               (error "Error: buffer %s is not live." buffer))
-             (with-current-buffer  buffer
-               (buffer-substring-no-properties (point-min) (point-max))))
+ :function #'jm--gptel-tools-read-buffer
  :name "read_buffer"
  :description "Return the contents of an Emacs buffer"
- :args (list '(:name "buffer"
-               :type "string"
-               :description "The name of the buffer whose contents are to be retrieved"))
+ :args (list '(:name "buffer" :type "string" :description "The name of the buffer whose contents are to be retrieved"))
  :category "emacs")
 
+(defun jm--gptel-tools-list-directory (directory)
+  "List the contents of DIRECTORY."
+  (mapconcat #'identity
+             (directory-files directory)
+             "\n"))
 
 (gptel-make-tool
- :function (lambda (directory)
-	     (mapconcat #'identity
-                        (directory-files directory)
-                        "\n"))
+ :function #'jm--gptel-tools-list-directory
  :name "list_directory"
  :description "List the contents of a given directory"
- :args (list '(:name "directory"
-	       :type "string"
-	       :description "The path to the directory to list"))
+ :args (list '(:name "directory" :type "string" :description "The path to the directory to list"))
  :category "filesystem")
 
+(defun jm--gptel-tools-make-directory (parent name)
+  "Create a new directory named NAME in the directory PARENT.
+Return a message indicating success or failure."
+  (condition-case nil
+      (progn
+        (make-directory (expand-file-name name parent) t)
+        (format "Directory %s created/verified in %s" name parent))
+    (error (format "Error creating directory %s in %s" name parent))))
+
 (gptel-make-tool
- :function (lambda (parent name)
-             (condition-case nil
-                 (progn
-                   (make-directory (expand-file-name name parent) t)
-                   (format "Directory %s created/verified in %s" name parent))
-               (error (format "Error creating directory %s in %s" name parent))))
+ :function #'jm--gptel-tools-make-directory
  :name "make_directory"
  :description "Create a new directory with the given name in the specified parent directory"
- :args (list '(:name "parent"
-	       :type "string"
-	       :description "The parent directory where the new directory should be created, e.g. /tmp")
-             '(:name "name"
-	       :type "string"
-	       :description "The name of the new directory to create, e.g. testdir"))
+ :args (list '(:name "parent" :type "string" :description "The parent directory where the new directory should be created, e.g. /tmp")
+             '(:name "name" :type "string" :description "The name of the new directory to create, e.g. testdir"))
  :category "filesystem")
 
+(defun jm--gptel-tools-create-file (path filename content)
+  "Create a new file with FILENAME at PATH containing CONTENT.
+Return a message indicating the creation success."
+  (let ((full-path (expand-file-name filename path)))
+    (with-temp-buffer
+      (insert content)
+      (write-file full-path))
+    (format "Created file %s in %s" filename path)))
+
 (gptel-make-tool
- :function (lambda (path filename content)
-             (let ((full-path (expand-file-name filename path)))
-               (with-temp-buffer
-                 (insert content)
-                 (write-file full-path))
-               (format "Created file %s in %s" filename path)))
+ :function #'jm--gptel-tools-create-file
  :name "create_file"
  :description "Create a new file with the specified content"
- :args (list '(:name "path"
-	       :type "string"
-	       :description "The directory where to create the file")
-             '(:name "filename"
-	       :type "string"
-	       :description "The name of the file to create")
-             '(:name "content"
-	       :type "string"
-	       :description "The content to write to the file"))
+ :args (list '(:name "path" :type "string" :description "The directory where to create the file")
+             '(:name "filename" :type "string" :description "The name of the file to create")
+             '(:name "content" :type "string" :description "The content to write to the file"))
  :category "filesystem")
 
+(defun jm--gptel-tools-read-file (filepath)
+  "Read and return the contents of a file at FILEPATH."
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name filepath))
+    (buffer-string)))
+
 (gptel-make-tool
- :function (lambda (filepath)
-	     (with-temp-buffer
-	       (insert-file-contents (expand-file-name filepath))
-	       (buffer-string)))
+ :function #'jm--gptel-tools-read-file
  :name "read_file"
  :description "Read and display the contents of a file"
- :args (list '(:name "filepath"
-	       :type "string"
-	       :description "Path to the file to read.  Supports relative paths and ~."))
+ :args (list '(:name "filepath" :type "string" :description "Path to the file to read.  Supports relative paths and ~."))
  :category "filesystem")
 
 (provide 'jm-gptel-tools)
