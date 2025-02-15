@@ -699,6 +699,7 @@ clean buffer we're an order of magnitude laxer about checking."
          (text-mode . goto-address-mode)))
 
 (use-package gptel
+  :pin melpa
   :config
   (setq gptel-expert-commands t
         gptel-use-curl nil
