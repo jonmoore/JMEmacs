@@ -1323,6 +1323,7 @@ directory, otherwise return nil."
         org-enforce-todo-checkbox-dependencies t
         org-export-backends '(ascii html latex)
         org-export-allow-bind-keywords t
+        org-format-latex-options (plist-put org-format-latex-options :scale 2.5)
         org-hierarchical-todo-statistics nil
         org-list-allow-alphabetical t
         org-log-into-drawer t
