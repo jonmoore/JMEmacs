@@ -35,6 +35,26 @@
 
 (require 'gptel)
 
+(defun gptel-describe-tools ()
+  "Display a buffer containing summary information about the known GPTel tools."
+  (interactive)
+  (let ((buffer (get-buffer-create "*GPTel Tools*")))
+    (with-current-buffer buffer
+      (erase-buffer)
+      (insert (format "%-20s %-20s %-80s\n" "Category" "Tool Name" "Description"))
+      (insert (make-string 120 ?=) "\n")
+      (dolist (category-tools gptel--known-tools)
+        (let ((category (car category-tools))
+              (tools (cdr category-tools)))
+          (dolist (tool-pair tools)
+            (let ((tool (cdr tool-pair)))
+              (insert (format "%-20s %-20s %-80s\n"
+                              category
+                              (gptel-tool-name tool)
+                              (gptel-tool-description tool)))))))
+      (goto-char (point-min)))
+    (display-buffer buffer)))
+
 (defun jm--gptel-tools-read-url (url)
   "Fetch and read the contents of a URL."
   (with-current-buffer (url-retrieve-synchronously url)
