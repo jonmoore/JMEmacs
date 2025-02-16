@@ -53,49 +53,6 @@
  :args (list '(:name "url" :type "string" :description "The URL to read"))
  :category "web")
 
-(defun jm--gptel-tools-append-to-buffer (buffer text)
-  "Append TEXT to BUFFER. If the buffer does not exist, it will be created."
-  (with-current-buffer (get-buffer-create buffer)
-    (save-excursion
-      (goto-char (point-max))
-      (insert text)))
-  (format "Appended text to buffer %s" buffer))
-
-(gptel-make-tool
- :function #'jm--gptel-tools-append-to-buffer
- :name "append_to_buffer"
- :description "Append text to the an Emacs buffer.  If the buffer does not exist, it will be created."
- :args (list '(:name "buffer" :type "string" :description "The name of the buffer to append text to.")
-             '(:name "text" :type "string" :description "The text to append to the buffer."))
- :category "emacs")
-
-(defun jm--gptel-tools-echo-message (text)
-  "Send a message with TEXT to the *Messages* buffer."
-  (message "%s" text)
-  (format "Message sent: %s" text))
-
-(gptel-make-tool
- :function #'jm--gptel-tools-echo-message
- :name "echo_message"
- :description "Send a message to the *Messages* buffer"
- :args (list '(:name "text" :type "string" :description "The text to send to the messages buffer"))
- :category "emacs")
-
-(defun jm--gptel-tools-read-buffer (buffer)
-  "Return the contents of BUFFER.
-Signal an error if BUFFER is not live."
-  (unless (buffer-live-p (get-buffer buffer))
-    (error "Error: buffer %s is not live." buffer))
-  (with-current-buffer buffer
-    (buffer-substring-no-properties (point-min) (point-max))))
-
-(gptel-make-tool
- :function #'jm--gptel-tools-read-buffer
- :name "read_buffer"
- :description "Return the contents of an Emacs buffer"
- :args (list '(:name "buffer" :type "string" :description "The name of the buffer whose contents are to be retrieved"))
- :category "emacs")
-
 (defun jm--gptel-tools-list-directory (directory)
   "List the contents of DIRECTORY."
   (mapconcat #'identity
@@ -157,4 +114,95 @@ Return a message indicating the creation success."
  :args (list '(:name "filepath" :type "string" :description "Path to the file to read.  Supports relative paths and ~."))
  :category "filesystem")
 
+;;; :category emacs
+
+(defun jm--gptel-tools-append-to-buffer (buffer text)
+  "Append TEXT to BUFFER. If the buffer does not exist, it will be created."
+  (with-current-buffer (get-buffer-create buffer)
+    (save-excursion
+      (goto-char (point-max))
+      (insert text)))
+  (format "Appended text to buffer %s" buffer))
+
+(gptel-make-tool
+ :function #'jm--gptel-tools-append-to-buffer
+ :name "append_to_buffer"
+ :description "Append text to the an Emacs buffer.  If the buffer does not exist, it will be created."
+ :args (list '(:name "buffer" :type "string" :description "The name of the buffer to append text to.")
+             '(:name "text" :type "string" :description "The text to append to the buffer."))
+ :category "emacs")
+
+(defun jm--gptel-tools-echo-message (text)
+  "Send a message with TEXT to the *Messages* buffer."
+  (message "%s" text)
+  (format "Message sent: %s" text))
+
+(gptel-make-tool
+ :function #'jm--gptel-tools-echo-message
+ :name "echo_message"
+ :description "Send a message to the *Messages* buffer"
+ :args (list '(:name "text" :type "string" :description "The text to send to the messages buffer"))
+ :category "emacs")
+
+
+(defun jm--gptel-tools-read-buffer (buffer)
+  "Return the contents of BUFFER.
+Signal an error if BUFFER is not live."
+  (unless (buffer-live-p (get-buffer buffer))
+    (error "Error: buffer %s is not live." buffer))
+  (with-current-buffer buffer
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(gptel-make-tool
+ :function #'jm--gptel-tools-read-buffer
+ :name "read_buffer"
+ :description "Return the contents of an Emacs buffer"
+ :args (list '(:name "buffer" :type "string" :description "The name of the buffer whose contents are to be retrieved"))
+ :category "emacs")
+
+(defun jm--gptel-tools-search-emacs-documentation (pattern)
+  "Search the Emacs documentation for a given PATTERN, call apropos
+and return its summary buffer contents as a string.
+
+Example:
+  (jm--gptel-tools-search-emacs-documentation \"find-file\")"
+  ;; The advice here provides the same argument-preprocessing as calling apropos
+  ;; interactively.  It's extracted from apropos-read-pattern, which apropos uses, but
+  ;; using the pattern argument rather prompting the user for a text input.  Ideally we'd
+  ;; have a generic mechanism to call a function as if the user provided that exact input.
+
+  ;; Aside on LLMs: I asked both gpt-o4 and web versions of Gemini to generate this tool.
+  ;; Their attempts had the right structure but I ended up writing the non-trivial bits
+  ;; below (for argument processing and window management).  That was the bulk of the
+  ;; work, i.e. it took more time than I would have needed to create the skeleton from
+  ;; scratch.  Even with that I don't think this is at the standard an Emacs expert would
+  ;; implement, e.g. I suspect there's are ways to (1) generically use the interactive
+  ;; buffer preprocessing rather than copy-pasting from apropos-read-pattern and (2) stop
+  ;; the *Apropos* window being created rather than deleting it after apropos creates it.
+  (let ((advice-id (advice-add 'apropos-read-pattern :override
+                               (lambda (&rest args)
+                                 (if (string-equal (regexp-quote pattern) pattern)
+                                     (or (split-string pattern "[ \t]+" t)
+                                         (user-error "No word list given"))
+                                   pattern)))))
+    (call-interactively 'apropos)
+    (advice-remove 'apropos-read-pattern advice-id)
+    ;; apropos displays the *Apropos* buffer in a window but doesn't return the contents.
+    ;; below we kill the window and return the buffer contents for use by the LLM.
+    (let* ((apropos-buffer (get-buffer "*Apropos*"))
+           (apropos-contents (with-current-buffer apropos-buffer (buffer-string)))
+           (apropos-window (get-buffer-window apropos-buffer)))
+      (when apropos-window (delete-window apropos-window))
+      apropos-contents)))
+
+(gptel-make-tool
+ :function #'jm--gptel-tools-search-emacs-documentation
+ :name "search_emacs_docs"
+ :description "Search the Emacs documentation for a given keyword or topic"
+ :args (list '(:name "pattern" :type "string" :description "The keyword or topic to search for in the Emacs documentation."))
+ :category "emacs")
+
 (provide 'jm-gptel-tools)
+
+;;; Tools to build
+
