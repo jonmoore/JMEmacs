@@ -35,6 +35,7 @@
 
 (require 'gptel)
 
+;;;###autoload
 (defun gptel-describe-tools ()
   "Display a buffer containing summary information about the known GPTel tools."
   (interactive)
