@@ -1668,7 +1668,7 @@ directory, otherwise return nil."
 
 (use-package smartparens
   :diminish smartparens-mode
-  :hook (emacs-lisp-mode . smartparens-strict-mode)
+  :hook (emacs-lisp-mode . smartparens-mode)
   :bind (:map
          smartparens-strict-mode-map
          ("M-q" . sp-indent-defun)
