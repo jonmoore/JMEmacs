@@ -56,6 +56,78 @@
       (goto-char (point-min)))
     (display-buffer buffer)))
 
+(defun jm-gptel-describe-function-for-llm (function)
+  "Describe FUNCTION for further processing by an LLM.
+Return the text collected from running `describe-function' and
+the function code itself (found via `find-function') as a single string."
+  (let (description function-code)
+    (save-excursion
+      ;; Capture the output of describe-function
+      (describe-function function)
+      (with-current-buffer "*Help*"
+        (setq description (buffer-substring-no-properties (point-min) (point-max))))
+
+      ;; Find the function and copy its text to function-code
+      (when-let ((location (find-function-noselect function)))
+        (with-current-buffer (car location)
+          (let ((start (cdr location)))
+            (goto-char start)
+            (end-of-defun)
+            (setq function-code (buffer-substring-no-properties start (point)))))))
+
+    (concat description "\n"
+            "Its code is below:\n\n"
+            function-code)))
+
+(defun jm-gptel-prompt-to-request-tool (function)
+  "Return a prompt to request creating code which calls
+`gptel-make-tool' to make a tool that wraps FUNCTION, assumed to
+be an elisp function discoverable via `find-function'"
+  (let (here-is-example)
+
+    ;; Hard-code the example here because I don't have a way yet to
+    ;; encode the call to gptel-make-tool.
+    ;;
+    ;; TODO: maybe just use the docs / code from gptel-make-tool
+    (setq here-is-example
+          "Here is an example of how to convert a function jm--gptel-tools-read-url into
+a tool for emacs gptel library that can be used with an OpenAI API.
+
+(defun jm--gptel-tools-read-url (url)
+  \"Fetch and read the contents of a URL.\"
+  (with-current-buffer (url-retrieve-synchronously url)
+    (goto-char (point-min))
+    (forward-paragraph)
+    (let ((dom (libxml-parse-html-region (point) (point-max))))
+      (run-at-time 0 nil #'kill-buffer (current-buffer))
+      (with-temp-buffer
+        (shr-insert-document dom)
+        (buffer-substring-no-properties (point-min) (point-max))))))
+
+(gptel-make-tool
+ :function #'jm--gptel-tools-read-url
+ :name \"read_url\"
+ :description \"Fetch and read the contents of a URL\"
+ :args (list '(:name \"url\" :type \"string\" :description \"The URL to read\"))
+ :category \"web\")
+
+"
+          )
+    (setq gptel-make-tool-description
+          (jm-gptel-describe-function-for-llm 'gptel-make-tool)
+
+          )
+    (concat here-is-example
+            "\nBelow is information on gptel-make-tool\n"
+            gptel-make-tool-description
+            "\nBelow is information on another function " (symbol-name function) "\n"
+            (jm-gptel-describe-function-for-llm function)
+            "\nWrite a tool using gptel-make-tool that wraps " (symbol-name function)
+            "\nJust return the code to call gptel-make-tool.  Do not escape it with back quotes or provide example code"
+
+
+            )))
+
 (defun jm--gptel-tools-read-url (url)
   "Fetch and read the contents of a URL."
   (with-current-buffer (url-retrieve-synchronously url)
