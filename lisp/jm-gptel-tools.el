@@ -128,6 +128,20 @@ a tool for emacs gptel library that can be used with an OpenAI API.
 
             )))
 
+(defun jm-gptel-make-wrapper-tool-call (function)
+  "Use gptel to insert code at point that should call
+`gptel-make-tool' to create a tool that wraps FUNCTION. FUNCTION
+is assumed to be an elisp function discoverable via
+‘find-function’.
+
+Example call:
+
+(jm-gptel-make-wrapper-tool-call 'number-sequence)
+"
+  (gptel-request
+      (jm-gptel-prompt-to-request-tool function)))
+
+
 (defun jm--gptel-tools-read-url (url)
   "Fetch and read the contents of a URL."
   (with-current-buffer (url-retrieve-synchronously url)
