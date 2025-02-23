@@ -251,21 +251,32 @@ Return a message indicating the creation success."
  :args (list '(:name "text" :type "string" :description "The text to send to the messages buffer"))
  :category "emacs")
 
-
-(defun jm--gptel-tools-read-buffer (buffer)
-  "Return the contents of BUFFER.
-Signal an error if BUFFER is not live."
-  (unless (buffer-live-p (get-buffer buffer))
-    (error "Error: buffer %s is not live." buffer))
-  (with-current-buffer buffer
-    (buffer-substring-no-properties (point-min) (point-max))))
-
 (gptel-make-tool
- :function #'jm--gptel-tools-read-buffer
- :name "read_buffer"
+ :function #'buffer-contents
+ :name "buffer_contents"
  :description "Return the contents of an Emacs buffer"
  :args (list '(:name "buffer" :type "string" :description "The name of the buffer whose contents are to be retrieved"))
  :category "emacs")
+
+(defun jm--call-and-return-from-buffer (function buffer &rest args)
+  "Call FUNCTION with ARGS and return the contents of BUFFER,
+assumed to be created or modified by FUNCTION.  This is wrapped
+with `save-window-excursion'."
+  (unless (fboundp function)
+    (error "Provided argument `%s' is not a valid function symbol" function))
+  (save-window-excursion
+    (apply function args)
+    (buffer-contents buffer)))
+
+(defun description-string (describe-helper target &rest args)
+  "Return a description of TARGET using DESCRIBE-HELPER with ARGS.
+DESCRIBE-HELPER must be one of the standard Emacs describe
+functions, e.g. describe-function. TARGET must be a string."
+  (unless (fboundp describe-helper)
+    (error "DESCRIBE-HELPER '%s' is not a valid function" describe-helper))
+  (unless (stringp target)
+    (error "TARGET '%s' is not a string" target))
+  (jm--call-and-return-from-buffer describe-helper "*Help*" (intern target) args))
 
 (defun jm--gptel-tools-search-emacs-documentation (pattern)
   "Search the Emacs documentation for a given PATTERN, call apropos
@@ -275,8 +286,9 @@ Example:
   (jm--gptel-tools-search-emacs-documentation \"find-file\")"
   ;; The advice here provides the same argument-preprocessing as calling apropos
   ;; interactively.  It's extracted from apropos-read-pattern, which apropos uses, but
-  ;; using the pattern argument rather prompting the user for a text input.  Ideally we'd
-  ;; have a generic mechanism to call a function as if the user provided that exact input.
+  ;; using the PATTERN argument rather than prompting the user for a text input.  Ideally
+  ;; we'd have a generic mechanism to call a function as if the user provided that exact
+  ;; input.
 
   ;; Aside on LLMs: I asked both gpt-o4 and web versions of Gemini to generate this tool.
   ;; Their attempts had the right structure but I ended up writing the non-trivial bits
@@ -292,24 +304,72 @@ Example:
                                      (or (split-string pattern "[ \t]+" t)
                                          (user-error "No word list given"))
                                    pattern)))))
-    (call-interactively 'apropos)
-    (advice-remove 'apropos-read-pattern advice-id)
-    ;; apropos displays the *Apropos* buffer in a window but doesn't return the contents.
-    ;; below we kill the window and return the buffer contents for use by the LLM.
-    (let* ((apropos-buffer (get-buffer "*Apropos*"))
-           (apropos-contents (with-current-buffer apropos-buffer (buffer-string)))
-           (apropos-window (get-buffer-window apropos-buffer)))
-      (when apropos-window (delete-window apropos-window))
-      apropos-contents)))
+    (save-window-excursion
+      (call-interactively 'apropos)
+      (advice-remove 'apropos-read-pattern advice-id)
+      (jm--gptel-tools-read-buffer "*Apropos*"))))
 
 (gptel-make-tool
  :function #'jm--gptel-tools-search-emacs-documentation
  :name "search_emacs_docs"
- :description "Search the Emacs documentation for a given keyword or topic"
+ :description "Search the Emacs documentation for a given keyword or topic using apropos."
  :args (list '(:name "pattern" :type "string" :description "The keyword or topic to search for in the Emacs documentation."))
- :category "emacs")
+ :category "emacs-docs")
+
+(gptel-make-tool
+ :function (lambda (function-name) (description-string 'describe-function function-name))
+ :name "describe_function"
+ :description "Display the full documentation of the function named FUNCTION-NAME. When called, it shows detailed information about the function, including its parameters and a description of its behavior."
+ :args (list '(:name "function"
+               :type "string"
+               :description "The name of the function to describe."))
+ :category "emacs-docs")
+
+(gptel-make-tool
+ :function (lambda (command-name) (description-string 'describe-command command-name))
+ :name "describe_command"
+ :description "Display the full documentation of the command named COMMAND-NAME ."
+ :args (list '(:name "command"
+               :type string
+               :description "The name of the command to describe."))
+ :category "emacs-docs")
+
+(gptel-make-tool
+ :function (lambda (package-name) (description-string 'describe-package package-name))
+ :name "describe_package"
+ :description "Display the full documentation of the package named PACKAGE-NAME."
+ :args (list '(:name "package"
+                :type "string"
+                :description "The name of the package to describe."))
+ :category "emacs-docs")
+
+(gptel-make-tool
+ :function (lambda (symbol-name) (description-string 'describe-symbol symbol-name))
+ :name "describe_symbol"
+ :description "Display the full documentation of the symbol named SYMBOL-NAME, including function, variable, and/or face information."
+ :args (list '(:name "symbol"
+                 :type "string"
+                 :description "The symbol to describe."))
+ :category "emacs-docs")
+
+(gptel-make-tool
+ :function (lambda (variable-name buffer frame)
+             (description-string 'describe-variable variable-name buffer frame))
+ :name "describe_variable"
+ :description "Display the full documentation of a variable in a specified buffer or frame."
+ :args (list '(:name "variable"
+               :type "string"
+               :description "The name of the variable to describe.")
+             '(:name "buffer"
+               :type "string"
+               :description "The buffer in which the variable's buffer-local value is sought."
+               :optional t)
+             '(:name "frame"
+               :type "string"
+               :description "The frame in which the variable's buffer-local value is sought."
+               :optional t))
+ :category "emacs-docs")
 
 (provide 'jm-gptel-tools)
 
 ;;; Tools to build
-
