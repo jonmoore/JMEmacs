@@ -703,8 +703,10 @@ clean buffer we're an order of magnitude laxer about checking."
   :config
   (setq gptel-expert-commands t
         gptel-use-curl nil
-        gptel-model "gpt-4o"
-        ))
+        gptel-model 'gpt-4o
+        )
+  (require 'jm-gptel-tools)
+  )
 
 (use-package graphviz-dot-mode
   :mode "\\.dot\\'")
