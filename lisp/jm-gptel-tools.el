@@ -6,10 +6,6 @@
 
 ;; More possible tools, per Gemini
 ;;
-;; extract_text_from_html: Takes HTML content (likely obtained from `read_url`) and
-;; extracts the plain text, removing HTML tags.  Uses Emacs' built-in HTML parsing or a
-;; dedicated library.
-;;
 ;; fetch_json_from_url: Fetches data from a URL that returns JSON. Parses the JSON
 ;; and returns an Emacs Lisp object (list or hash-table).  Essential for interacting with
 ;; APIs.
@@ -17,10 +13,6 @@
 ;; search_web: Performs a web search using a specified query.  Could use a search
 ;; engine API (e.g., Google, DuckDuckGo) or a library like `url.el`.  Returns a list of
 ;; search results (titles and URLs).
-;;
-;; search_emacs_documentation: Searches the Emacs documentation for a given keyword
-;; or topic. Returns a list of relevant documentation entries.  Useful for helping the LLM
-;; understand Emacs functionality.
 ;;
 ;; get_current_time: Returns the current date and time in a specified format.
 ;; Useful for timestamps and time-sensitive operations.
