@@ -182,3 +182,15 @@ even when they are not"
                            'maximized
                          nil)))
 
+;;;###autoload
+(defun buffer-contents (buffer &optional with-properties)
+  "Return the contents of BUFFER as a string.  Signal an error if
+BUFFER is not live.  If WITH-PROPERTIES is non-nil, return text
+with properties."
+  (unless (buffer-live-p (get-buffer buffer))
+    (error "Error: buffer %s is not live." buffer))
+  (with-current-buffer buffer
+    (if with-properties
+        (buffer-substring (point-min) (point-max))
+      (buffer-substring-no-properties (point-min) (point-max)))))
+
