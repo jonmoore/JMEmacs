@@ -79,7 +79,7 @@ the function code itself (found via `find-function') as a single string."
             "Its code is below:\n\n"
             function-code)))
 
-(defun jm-gptel-prompt-to-request-tool (function)
+(defun jm-gptel-make-wrapper-tool-prompt (function)
   "Return a prompt to request creating code which calls
 `gptel-make-tool' to make a tool that wraps FUNCTION, assumed to
 be an elisp function discoverable via `find-function'"
@@ -128,7 +128,7 @@ a tool for emacs gptel library that can be used with an OpenAI API.
 
             )))
 
-(defun jm-gptel-make-wrapper-tool-call (function)
+(defun jm-gptel-make-wrapper-tool-insert-code (function)
   "Use gptel to insert code at point that should call
 `gptel-make-tool' to create a tool that wraps FUNCTION. FUNCTION
 is assumed to be an elisp function discoverable via
@@ -136,10 +136,10 @@ is assumed to be an elisp function discoverable via
 
 Example call:
 
-(jm-gptel-make-wrapper-tool-call 'number-sequence)
+(jm-gptel-make-wrapper-tool-insert-code'number-sequence)
 "
   (gptel-request
-      (jm-gptel-prompt-to-request-tool function)))
+      (jm-gptel-make-wrapper-tool-prompt function)))
 
 
 (defun jm--gptel-tools-read-url (url)
