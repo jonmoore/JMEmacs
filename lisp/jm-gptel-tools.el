@@ -355,6 +355,22 @@ Example:
                :optional t))
  :category "emacs-docs")
 
+(defun info-node-contents (symbol-name)
+  "Return the contents of the info node for SYMBOL-NAME
+as determined by `info-lookup-symbol'."
+  (when-let ((symbol (intern-soft symbol-name)))
+    (save-window-excursion
+      (info-lookup-symbol symbol 'emacs-lisp-mode)
+      (buffer-contents "*info*"))))
+
+(gptel-make-tool :function #'info-node-contents
+                 :name "info_node_contents"
+                 :description "Return the contents of the info node for SYMBOL-NAME as determined by `info-lookup-symbol'."
+                 :args (list '(:name "symbol-name"
+                                     :type string
+                                     :description "the name of the symbol to look up"))
+                 :category "emacs-docs")
+
 (provide 'jm-gptel-tools)
 
 
