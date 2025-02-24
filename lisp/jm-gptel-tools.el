@@ -3,27 +3,10 @@
 ;;
 ;; Note that running gptel-make-tool here does not automatically set tools to be used in
 ;; gptel. You can set tools to be used from the UI.
-
-;; More possible tools, per Gemini
 ;;
-;; fetch_json_from_url: Fetches data from a URL that returns JSON. Parses the JSON
-;; and returns an Emacs Lisp object (list or hash-table).  Essential for interacting with
-;; APIs.
+;; Run gptel-describe-tools to describe the currently-registered tools in a dedicated
+;; buffer.
 ;;
-;; search_web: Performs a web search using a specified query.  Could use a search
-;; engine API (e.g., Google, DuckDuckGo) or a library like `url.el`.  Returns a list of
-;; search results (titles and URLs).
-;;
-;; get_current_time: Returns the current date and time in a specified format.
-;; Useful for timestamps and time-sensitive operations.
-;;
-;; translate_text_with_api: Uses a translation API (e.g., Google Translate, DeepL)
-;; to translate text between languages.  Takes the text and target language as arguments.
-;;
-;; summarize_text_with_algorithm: Uses a local summarization algorithm (not an LLM)
-;; to summarize text. This could be faster and cheaper than using the LLM for simple
-;; summarization.
-
 
 (require 'gptel)
 
@@ -364,4 +347,26 @@ Example:
 
 (provide 'jm-gptel-tools)
 
+
 ;;; Tools to build
+
+;; Possible tools, per Gemini
+;;
+;; fetch_json_from_url: Fetches data from a URL that returns JSON. Parses the JSON
+;; and returns an Emacs Lisp object (list or hash-table).  Essential for interacting with
+;; APIs.
+;;
+;; search_web: Performs a web search using a specified query.  Could use a search
+;; engine API (e.g., Google, DuckDuckGo) or a library like `url.el`.  Returns a list of
+;; search results (titles and URLs).
+;;
+;; get_current_time: Returns the current date and time in a specified format.
+;; Useful for timestamps and time-sensitive operations.
+;;
+;; translate_text_with_api: Uses a translation API (e.g., Google Translate, DeepL)
+;; to translate text between languages.  Takes the text and target language as arguments.
+;;
+;; summarize_text_with_algorithm: Uses a local summarization algorithm (not an LLM)
+;; to summarize text. This could be faster and cheaper than using the LLM for simple
+;; summarization.
+
