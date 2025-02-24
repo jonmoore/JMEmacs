@@ -31,41 +31,68 @@
       (goto-char (point-min)))
     (display-buffer buffer)))
 
+(defun jm--call-and-return-from-buffer (function buffer &rest args)
+  "Call FUNCTION with ARGS and return the contents of BUFFER,
+assumed to be created or modified by FUNCTION.  This is wrapped
+with `save-window-excursion'."
+  (cl-check-type function fbound)
+  (save-window-excursion
+    (apply function args)
+    (buffer-contents buffer)))
+
+(defun description-string (describe-helper target &rest args)
+  "Return a description of TARGET using DESCRIBE-HELPER with ARGS.
+DESCRIBE-HELPER must be one of the standard Emacs describe
+functions, e.g. describe-function. TARGET must be a string."
+  (cl-check-type describe-helper fbound)
+  (cl-check-type target string)
+  (apply 'jm--call-and-return-from-buffer
+         describe-helper "*Help*" (intern target) args))
+
+(defun function-definition-code (func)
+  "Return the code of the definition of the Emacs Lisp
+function FUNC, which can be either a symbol or a string.  Signal
+an error if no definition can be found."
+  (cl-check-type func (or symbol string))
+  (let* ((func-symbol (if (stringp func) (intern func) func))
+         (location (find-function-noselect func-symbol))
+         (buffer (if (consp location) (car location) location))
+         (beginning-position (if (consp location) (cdr location) nil)))
+    (unless buffer
+      (error "Cannot find source file for %s" func-symbol))
+    (unless beginning-position
+      (error "Cannot find position of %s in %s" func-symbol buffer))
+    (with-current-buffer buffer
+      (goto-char beginning-position)
+      (end-of-defun)
+      (buffer-substring-no-properties beginning-position (point)))))
+
 (defun jm-gptel-describe-function-for-llm (function)
   "Describe FUNCTION for further processing by an LLM.
 Return the text collected from running `describe-function' and
 the function code itself (found via `find-function') as a single string."
-  (let (description function-code)
-    (save-excursion
-      ;; Capture the output of describe-function
-      (describe-function function)
-      (with-current-buffer "*Help*"
-        (setq description (buffer-substring-no-properties (point-min) (point-max))))
+  (cl-check-type function symbol)
+  (let ((function-name (symbol-name function)))
+    (concat
+     (format "The description for %s is below:\n\n" function-name)
+     (description-string 'describe-function function-name)
+     "\n"
+     (format "The code for %s is below:\n\n" function-name)
+     (function-definition-code function))))
 
-      ;; Find the function and copy its text to function-code
-      (when-let ((location (find-function-noselect function)))
-        (with-current-buffer (car location)
-          (let ((start (cdr location)))
-            (goto-char start)
-            (end-of-defun)
-            (setq function-code (buffer-substring-no-properties start (point)))))))
-
-    (concat description "\n"
-            "Its code is below:\n\n"
-            function-code)))
 
 (defun jm-gptel-make-wrapper-tool-prompt (function)
   "Return a prompt to request creating code which calls
 `gptel-make-tool' to make a tool that wraps FUNCTION, assumed to
-be an elisp function discoverable via `find-function'"
-  (let (here-is-example)
-
-    ;; Hard-code the example here because I don't have a way yet to
-    ;; encode the call to gptel-make-tool.
-    ;;
-    ;; TODO: maybe just use the docs / code from gptel-make-tool
-    (setq here-is-example
-          "Here is an example of how to convert a function jm--gptel-tools-read-url into
+be a symbol for an elisp function discoverable via
+`find-function'."
+  ;; Hard-code the example here because I don't have a way yet to
+  ;; encode the call to gptel-make-tool.
+  ;;
+  ;; TODO: maybe just use the docs / code from gptel-make-tool
+  (cl-check-type function symbol)
+  (let ((here-is-example
+         "Here is an example of how to convert a function jm--gptel-tools-read-url into
 a tool for emacs gptel library that can be used with an OpenAI API.
 
 (defun jm--gptel-tools-read-url (url)
@@ -86,22 +113,14 @@ a tool for emacs gptel library that can be used with an OpenAI API.
  :args (list '(:name \"url\" :type \"string\" :description \"The URL to read\"))
  :category \"web\")
 
-"
-          )
-    (setq gptel-make-tool-description
-          (jm-gptel-describe-function-for-llm 'gptel-make-tool)
-
-          )
+"))
     (concat here-is-example
             "\nBelow is information on gptel-make-tool\n"
-            gptel-make-tool-description
+            (jm-gptel-describe-function-for-llm 'gptel-make-tool)
             "\nBelow is information on another function " (symbol-name function) "\n"
             (jm-gptel-describe-function-for-llm function)
             "\nWrite a tool using gptel-make-tool that wraps " (symbol-name function)
-            "\nJust return the code to call gptel-make-tool.  Do not escape it with back quotes or provide example code"
-
-
-            )))
+            "\nJust return the code to call gptel-make-tool.  Do not escape it with back quotes or provide example code")))
 
 (defun jm-gptel-make-wrapper-tool-insert-code (function)
   "Use gptel to insert code at point that should call
@@ -196,7 +215,7 @@ Return a message indicating the creation success."
  :args (list '(:name "filepath" :type "string" :description "Path to the file to read.  Supports relative paths and ~."))
  :category "filesystem")
 
-;;; :category emacs
+;;; :category emacs-docs
 
 (defun jm--gptel-tools-append-to-buffer (buffer text)
   "Append TEXT to BUFFER. If the buffer does not exist, it will be created."
@@ -233,26 +252,17 @@ Return a message indicating the creation success."
  :args (list '(:name "buffer" :type "string" :description "The name of the buffer whose contents are to be retrieved"))
  :category "emacs")
 
-(defun jm--call-and-return-from-buffer (function buffer &rest args)
-  "Call FUNCTION with ARGS and return the contents of BUFFER,
-assumed to be created or modified by FUNCTION.  This is wrapped
-with `save-window-excursion'."
-  (unless (fboundp function)
-    (error "Provided argument `%s' is not a valid function symbol" function))
-  (save-window-excursion
-    (apply function args)
-    (buffer-contents buffer)))
+(gptel-make-tool
+ :function #'function-definition-code
+ :name "get_function_code"
+ :description "Return the code of the definition of an Emacs Lisp function."
+ :args (list '(:name "function"
+                :type "string"
+                :description "The name of the function whose code is to be returned."))
+ :category "emacs")
 
-(defun description-string (describe-helper target &rest args)
-  "Return a description of TARGET using DESCRIBE-HELPER with ARGS.
-DESCRIBE-HELPER must be one of the standard Emacs describe
-functions, e.g. describe-function. TARGET must be a string."
-  (unless (fboundp describe-helper)
-    (error "DESCRIBE-HELPER '%s' is not a valid function" describe-helper))
-  (unless (stringp target)
-    (error "TARGET '%s' is not a string" target))
-  (jm--call-and-return-from-buffer describe-helper "*Help*" (intern target) args))
 
+;;; :category emacs-docs
 (defun jm--gptel-tools-search-emacs-documentation (pattern)
   "Search the Emacs documentation for a given PATTERN, call apropos
 and return its summary buffer contents as a string.
@@ -282,7 +292,7 @@ Example:
     (save-window-excursion
       (call-interactively 'apropos)
       (advice-remove 'apropos-read-pattern advice-id)
-      (jm--gptel-tools-read-buffer "*Apropos*"))))
+      (buffer-contents "*Apropos*"))))
 
 (gptel-make-tool
  :function #'jm--gptel-tools-search-emacs-documentation
