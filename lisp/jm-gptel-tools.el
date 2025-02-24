@@ -256,11 +256,25 @@ Return a message indicating the creation success."
  :function #'function-definition-code
  :name "get_function_code"
  :description "Return the code of the definition of an Emacs Lisp function."
- :args (list '(:name "function"
+ :args (list '( :name "function"
                 :type "string"
                 :description "The name of the function whose code is to be returned."))
  :category "emacs")
 
+(defun library-code (library-name)
+  "Get the source code of LIBRARY-NAME."
+  (when (locate-library library-name)
+    (save-window-excursion
+      (find-library library-name)
+      (buffer-string))))
+
+(gptel-make-tool :name "library_code"
+                 :function #'library-code
+                 :description "get the source code of a library or package in emacs"
+                 :args (list '( :name "library name"
+                                :type string
+                                :description "the library name"))
+                 :category "emacs")
 
 ;;; :category emacs-docs
 (defun jm--gptel-tools-search-emacs-documentation (pattern)
