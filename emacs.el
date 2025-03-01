@@ -21,7 +21,7 @@
 ;; Sequence"; Change these to something other than "Not Assigned"; apply; change
 ;; to "Not Assigned"; Apply.
 ;;
-;; Verification: After this Ctrl-) should be detcted as a key in Emacs,
+;; Verification: After this Ctrl-) should be detected as a key in Emacs,
 ;; e.g. with C-h k C-)
 ;;
 ;; TBC: does the problem reoccur between logins?  can we apply this through a registry
@@ -29,15 +29,6 @@
 
 ;; In Windows 10 Microsoft appear to have broken Ctrl-shift-0
 ;; irreparably.  Ctrl-space can still be bound.
-;;
-;; For Windows 7 the file etc/fix-ctrl-shift-0.reg can be used to
-;; perform the two steps below and make both Ctrl-shift-0 and
-;; Ctrl-space available for binding.  You will need to log out and log
-;; in again for this to take effect.
-;;
-;; 1) disable bindings for keyboard layout shortcuts.
-;;
-;; 2) disable bindings for Chinese IME settings
 ;;
 ;; References:
 ;;
@@ -1516,7 +1507,7 @@ directory, otherwise return nil."
   (setq pcol-str-separator " "
         pcol-column-separator "[ \t]+"))
 
-(use-package prog-mode
+(use-package prog-mode                  ; built-in
   :ensure nil
   :bind (:map prog-mode-map
               ("C-c c" . company-complete-common)))
