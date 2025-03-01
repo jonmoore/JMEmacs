@@ -157,6 +157,7 @@ Refreshing buffer ‘magit: sicp’...
     
 ******* ELP / etrace instrumentation
 
+        Instrument these functions
         #+begin_src elisp
           (progn
             (elp-instrument-function 'magit-insert-error-header)
@@ -168,6 +169,7 @@ Refreshing buffer ‘magit: sicp’...
             )
         #+end_src
 
+        Restore the non-isntrumented versions
         #+begin_src elisp
           (progn
             (elp-restore-function 'magit-insert-error-header)
