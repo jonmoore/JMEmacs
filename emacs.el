@@ -546,7 +546,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :custom
   (company-show-quick-access t)
   (company-minimum-prefix-length 5)
-  (company-idle-delay nil) ;; default is 0.2, which often severely gets in the way
+  (company-idle-delay 2.0) ;; default is 0.2, which often severely gets in the way
   )
 
 (use-package company-auctex)
@@ -1515,6 +1515,11 @@ directory, otherwise return nil."
   :init
   (setq pcol-str-separator " "
         pcol-column-separator "[ \t]+"))
+
+(use-package prog-mode
+  :ensure nil
+  :bind (:map prog-mode-map
+              ("C-c c" . company-complete-common)))
 
 (use-package projectile
   :config
