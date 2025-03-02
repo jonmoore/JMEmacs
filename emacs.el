@@ -1868,10 +1868,7 @@ files.  This persists across sessions"
 
 (use-package whitespace                 ; Highlight bad whitespace
   :diminish (whitespace-mode . " ⓦ")
-  :bind (("C-c t w" . whitespace-mode))
   :config
-  '(whitespace-style
-    '())
   (setq whitespace-style '(face tabs trailing missing-newline-at-eof)
         whitespace-line-column nil))
 
