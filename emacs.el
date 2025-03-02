@@ -1563,6 +1563,9 @@ directory, otherwise return nil."
                                              ("M-TAB" . python-shell-completion-complete-or-indent))))
 
   :config
+  ;; TODO: check if the comments / workarounds in the rest of this comment are still
+  ;; recent Windows / Python versions.
+  ;;
   ;; On Windows we use non-native completion because there are unresolved issues with
   ;; python.el's support for native Python completion on Windows: see the comment where
   ;; python-shell-completion-native-disabled-interpreters is defined.  The call to
@@ -1589,17 +1592,19 @@ directory, otherwise return nil."
         )
   (pcase python-shell-interpreter
     ("ipython"
-     ;; The warn_venv configuration suppresses a warning that is triggered as follows:
-     ;; 1) conda.el and pythonic.el set python-shell-virtualenv-root which in turn
-     ;; leads 2) python-shell-calculate-process-environment to set VIRTUAL_ENV which
-     ;; 3) ipython reports as an issue because it assumes a directory layout that does
-     ;; not match conda's and 4) will warn that we're starting it outside a
-     ;; virtualenv.
+     ;; A note on the warn_venv configuration.  I removed it as it doesn't seem to be
+     ;; needed anymore, at least on Linux, but have left the comments for reference.
+     ;;
+     ;; This suppressed a warning that was triggered as follows: 1) conda.el and
+     ;; pythonic.el set python-shell-virtualenv-root which in turn led 2)
+     ;; python-shell-calculate-process-environment to set VIRTUAL_ENV which 3) ipython
+     ;; reported as an issue because it assumed a directory layout that did not match
+     ;; conda's and 4) warned that we had started it outside a virtualenv.
      (setq python-shell-interpreter-args
            (mapconcat #'identity
                       '("-i"
                         "--simple-prompt"
-                        "--TerminalInteractiveShell.warn_venv=False"
+                        ;; "--TerminalInteractiveShell.warn_venv=False"  ; not needed?
                         "--InteractiveShell.display_page=True")
                       " ")))
     ("python"
