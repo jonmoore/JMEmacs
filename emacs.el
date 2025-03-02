@@ -669,8 +669,9 @@ clean buffer we're an order of magnitude laxer about checking."
   ;; buffer-sensitive adjustment above.
   (make-variable-buffer-local 'flycheck-idle-change-delay)
 
-  ;; disable for now until we get LSP confirmed working cleanly
+  ;; TODO: enable now we have LSP and flycheck working cleanly
   (message "jm- omitting flycheck support for pycoverage")
+  ;; TODO: document this, see if python-mypy is still needed (or conflicts with pyright)
   ;; (pycoverage-define-flycheck-checker)
   ;; (add-to-list 'flycheck-checkers 'python-pycoverage)
   ;; (flycheck-add-next-checker 'python-mypy 'python-pycoverage)
