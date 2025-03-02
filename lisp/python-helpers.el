@@ -84,8 +84,33 @@ get_user_environments_txt_file()")
 
 (defun jm-conda-lsp--build-envs-source ()
   (helm-build-in-file-source
-      "Helm source for conda environments"
+      "Conda environments from ~/.conda"
       jm-conda-lsp--environments-file))
+
+(defun jm-pixi-conda--environments-for-project-root (project-root)
+  "Return the pixi-managed conda environments for PROJECT-ROOT, a
+directory path passed as a string, as a list of strings.  This
+assumes typical use where the environments are directories within
+PROJECT-ROOT/.pixi/envs.  Returns nil if no such environments are
+found."
+  (let* ((pixi-dir (expand-file-name ".pixi" project-root))
+         (envs-dir (expand-file-name "envs" pixi-dir)))
+    (if (and (file-directory-p pixi-dir) (file-directory-p envs-dir))
+        (let ((subdirs (directory-files envs-dir t)))
+           (remove-if (lambda (subdir)
+                        (or (member (file-name-nondirectory subdir) '("." ".."))
+                            (not (file-directory-p subdir))))
+                      subdirs))
+      nil)))
+
+
+(defun jm-pixi-conda--environments-source (project-root)
+  "Return a helm source for pixi-managed conda environments"
+  (helm-build-sync-source "Pixi conda environments"
+    :candidates
+    ;; here candidates is a simple list
+    (jm-pixi-conda--environments-for-project-root project-root)))
+
 
 (defun jm-conda-lsp--activate-and-enable-lsp (env-path)
   "The main entry point to configure a conda environment for use
@@ -152,7 +177,10 @@ desktop.
                             ;; C-g here returns nil and invokes general file
                             ;; selection, where C-g => do not use an env
                             (or
-                             (helm :sources (jm-conda-lsp--build-envs-source))
+                             (helm :sources
+                                   (list
+                                    (jm-pixi-conda--environments-source project-root)
+                                    (jm-conda-lsp--build-envs-source)))
                              (condition-case nil
                                  (read-directory-name "Conda environment directory: ")
                                (quit nil))))))
