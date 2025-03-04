@@ -1530,15 +1530,6 @@ directory, otherwise return nil."
         ps-number-of-columns    1
         ps-print-color-p       t))
 
-(use-package pycoverage
-  ;; may need to vendor this - there's a github issue reporting installation
-  ;; from MELPA is broken
-  ;; https://github.com/mattharrison/pycoverage.el/issues/9
-  :after (flycheck lsp)
-  :config
-  (pycoverage-define-flycheck-checker)
-  (add-to-list 'flycheck-checkers 'python-pycoverage))
-
 (use-package python
   :ensure nil
 
@@ -1559,8 +1550,6 @@ directory, otherwise return nil."
                                        :map inferior-python-mode-map
                                        ("TAB" . yas-or-company-or-indent-for-tab)
                                        ("M-TAB" . python-shell-completion-complete-or-indent))))
-  (python-mode . (lambda ()
-                   (flycheck-add-next-checker 'lsp 'python-pycoverage)))
 
   :config
   ;; TODO: check if the comments / workarounds in the rest of this comment are still
@@ -1590,7 +1579,6 @@ directory, otherwise return nil."
         python-shell-interpreter "ipython"
         python-fill-docstring-style 'pep-257-nn ; no blank line at the end
         )
-    (flycheck-add-next-checker 'lsp 'python-pycoverage)
   (pcase python-shell-interpreter
     ("ipython"
      ;; A note on the warn_venv configuration.  I removed it as it doesn't seem to be

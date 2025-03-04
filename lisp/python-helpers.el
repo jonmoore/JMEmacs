@@ -219,47 +219,5 @@ to be enabled when needed"
   ;; configure for future buffers
   (add-hook 'window-buffer-change-functions #'jm-conda-lsp--init-in-frame))
 
-;;; pycoverage / flycheck integration
-
-;;;###autoload
-(defun pycoverage-define-flycheck-checker ()
-  "Register a checker for pycoverage with flycheck"
-  (interactive)
-  (flycheck-define-checker python-pycoverage
-    "A Python test coverage checker checker using the pycoverage tool.
-
-See `https://github.com/mattharrison/pycoverage.el'.
-
-This works after pytest has run by marking lines missing
-coverage (as reported by pytest) as flycheck issues.  If the code
-was updated after pytest was run then nothing is reported.
-"
-    :command
-    ;; We use the cov2emacslib Python package that comes with
-    ;; pycoverage, updating Python's sys.path dynamically.  It could
-    ;; also be installed in the active virtual environment, e.g.
-    ;;
-    ;; pip install -e git+https://github.com/mattharrison/pycoverage.el#egg=pkg&subdirectory=cov2emacs
-    ;;
-    ;; in which case we would invoke python with '-m
-    ;; cov2emacslib.__init__' rather than '-c'
-    ("python" "-c"
-     (eval
-      (mapconcat 'identity
-                 (list
-                  "import sys"
-                  (format "sys.path.insert(0, '%scov2emacs')"
-                          (file-name-directory (locate-library "pycoverage")))
-                  "from cov2emacslib.__init__ import main"
-                  "main(sys.argv[1:])")
-                 ";"))
-     "--compile-mode" "--python-file" source-original)
-    :error-patterns
-    ((warning line-start
-              (file-name) ":"
-              line ":"
-              (message)
-              line-end))
-    :modes (python-mode)))
 
 (provide 'python-helpers)
