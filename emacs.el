@@ -669,13 +669,6 @@ clean buffer we're an order of magnitude laxer about checking."
   ;; buffer-sensitive adjustment above.
   (make-variable-buffer-local 'flycheck-idle-change-delay)
 
-  ;; TODO: enable now we have LSP and flycheck working cleanly
-  (message "jm- omitting flycheck support for pycoverage")
-  ;; TODO: document this, see if python-mypy is still needed (or conflicts with pyright)
-  ;; (pycoverage-define-flycheck-checker)
-  ;; (add-to-list 'flycheck-checkers 'python-pycoverage)
-  ;; (flycheck-add-next-checker 'python-mypy 'python-pycoverage)
-
   (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
         flycheck-idle-change-delay 5.0
         flycheck-keymap-prefix "f"
@@ -1541,7 +1534,10 @@ directory, otherwise return nil."
   ;; may need to vendor this - there's a github issue reporting installation
   ;; from MELPA is broken
   ;; https://github.com/mattharrison/pycoverage.el/issues/9
-  )
+  :after (flycheck lsp)
+  :config
+  (pycoverage-define-flycheck-checker)
+  (add-to-list 'flycheck-checkers 'python-pycoverage))
 
 (use-package python
   :ensure nil
@@ -1556,12 +1552,15 @@ directory, otherwise return nil."
 
   ;; using bind-keys here works while using :bind as above didn't, possibly because of a
   ;; call to define-key for TAB in inferior-python-mode
-  :hook (inferior-python-mode . (lambda ()
-                                  (company-mode)
-                                  (bind-keys :package python
-                                             :map inferior-python-mode-map
-                                             ("TAB" . yas-or-company-or-indent-for-tab)
-                                             ("M-TAB" . python-shell-completion-complete-or-indent))))
+  :hook
+  (inferior-python-mode . (lambda ()
+                            (company-mode)
+                            (bind-keys :package python
+                                       :map inferior-python-mode-map
+                                       ("TAB" . yas-or-company-or-indent-for-tab)
+                                       ("M-TAB" . python-shell-completion-complete-or-indent))))
+  (python-mode . (lambda ()
+                   (flycheck-add-next-checker 'lsp 'python-pycoverage)))
 
   :config
   ;; TODO: check if the comments / workarounds in the rest of this comment are still
@@ -1591,6 +1590,7 @@ directory, otherwise return nil."
         python-shell-interpreter "ipython"
         python-fill-docstring-style 'pep-257-nn ; no blank line at the end
         )
+    (flycheck-add-next-checker 'lsp 'python-pycoverage)
   (pcase python-shell-interpreter
     ("ipython"
      ;; A note on the warn_venv configuration.  I removed it as it doesn't seem to be
