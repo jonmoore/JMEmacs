@@ -673,7 +673,7 @@ clean buffer we're an order of magnitude laxer about checking."
 
   (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
         flycheck-idle-change-delay 5.0
-        flycheck-keymap-prefix "f"
+        flycheck-keymap-prefix (kbd "C-c f")
         flycheck-pylintrc "pylintrc"))
 
 (use-package free-keys)
