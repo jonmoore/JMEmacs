@@ -1871,7 +1871,7 @@ files.  This persists across sessions"
   (setq whitespace-style '(face tabs trailing missing-newline-at-eof)
         whitespace-line-column nil))
 
-(use-package windmove                   ; Move between windows with Shift+Arrow
+(use-package windmove                   ; Select windows with Shift+Arrow
   :bind (("C-c w <left>"  . windmove-left)
          ("C-c w <right>" . windmove-right)
          ("C-c w <up>"    . windmove-up)
