@@ -107,8 +107,8 @@ a tool for emacs gptel library that can be used with an OpenAI API.
         (buffer-substring-no-properties (point-min) (point-max))))))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-read-url
  :name \"read_url\"
+ :function #'jm--gptel-tools-read-url
  :description \"Fetch and read the contents of a URL\"
  :args (list '(:name \"url\" :type \"string\" :description \"The URL to read\"))
  :category \"web\")
@@ -148,8 +148,8 @@ Example call:
         (buffer-substring-no-properties (point-min) (point-max))))))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-read-url
  :name "read_url"
+ :function #'jm--gptel-tools-read-url
  :description "Fetch and read the contents of a URL"
  :args (list '(:name "url" :type "string" :description "The URL to read"))
  :category "web")
@@ -161,8 +161,8 @@ Example call:
              "\n"))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-list-directory
  :name "list_directory"
+ :function #'jm--gptel-tools-list-directory
  :description "List the contents of a given directory"
  :args (list '(:name "directory" :type "string" :description "The path to the directory to list"))
  :category "filesystem")
@@ -177,8 +177,8 @@ Return a message indicating success or failure."
     (error (format "Error creating directory %s in %s" name parent))))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-make-directory
  :name "make_directory"
+ :function #'jm--gptel-tools-make-directory
  :description "Create a new directory with the given name in the specified parent directory"
  :args (list '(:name "parent" :type "string" :description "The parent directory where the new directory should be created, e.g. /tmp")
              '(:name "name" :type "string" :description "The name of the new directory to create, e.g. testdir"))
@@ -194,8 +194,8 @@ Return a message indicating the creation success."
     (format "Created file %s in %s" filename path)))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-create-file
  :name "create_file"
+ :function #'jm--gptel-tools-create-file
  :description "Create a new file with the specified content"
  :args (list '(:name "path" :type "string" :description "The directory where to create the file")
              '(:name "filename" :type "string" :description "The name of the file to create")
@@ -209,8 +209,8 @@ Return a message indicating the creation success."
     (buffer-string)))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-read-file
  :name "read_file"
+ :function #'jm--gptel-tools-read-file
  :description "Read and display the contents of a file"
  :args (list '(:name "filepath" :type "string" :description "Path to the file to read.  Supports relative paths and ~."))
  :category "filesystem")
@@ -226,8 +226,8 @@ Return a message indicating the creation success."
   (format "Appended text to buffer %s" buffer))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-append-to-buffer
  :name "append_to_buffer"
+ :function #'jm--gptel-tools-append-to-buffer
  :description "Append text to the an Emacs buffer.  If the buffer does not exist, it will be created."
  :args (list '(:name "buffer" :type "string" :description "The name of the buffer to append text to.")
              '(:name "text" :type "string" :description "The text to append to the buffer."))
@@ -239,22 +239,22 @@ Return a message indicating the creation success."
   (format "Message sent: %s" text))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-echo-message
  :name "echo_message"
+ :function #'jm--gptel-tools-echo-message
  :description "Send a message to the *Messages* buffer"
  :args (list '(:name "text" :type "string" :description "The text to send to the messages buffer"))
  :category "emacs")
 
 (gptel-make-tool
- :function #'buffer-contents
  :name "buffer_contents"
+ :function #'buffer-contents
  :description "Return the contents of an Emacs buffer"
  :args (list '(:name "buffer" :type "string" :description "The name of the buffer whose contents are to be retrieved"))
  :category "emacs")
 
 (gptel-make-tool
- :function #'function-definition-code
  :name "get_function_code"
+ :function #'function-definition-code
  :description "Return the code of the definition of an Emacs Lisp function."
  :args (list '( :name "function"
                 :type "string"
@@ -268,13 +268,14 @@ Return a message indicating the creation success."
       (find-library library-name)
       (buffer-string))))
 
-(gptel-make-tool :name "library_code"
-                 :function #'library-code
-                 :description "get the source code of a library or package in emacs"
-                 :args (list '( :name "library name"
-                                :type string
-                                :description "the library name"))
-                 :category "emacs")
+(gptel-make-tool
+ :name "library_code"
+ :function #'library-code
+ :description "get the source code of a library or package in emacs"
+ :args (list '( :name "library name"
+                :type string
+                :description "the library name"))
+ :category "emacs")
 
 ;;; :category emacs-docs
 (defun jm--gptel-tools-search-emacs-documentation (pattern)
@@ -309,15 +310,15 @@ Example:
       (buffer-contents "*Apropos*"))))
 
 (gptel-make-tool
- :function #'jm--gptel-tools-search-emacs-documentation
  :name "search_emacs_docs"
+ :function #'jm--gptel-tools-search-emacs-documentation
  :description "Search the Emacs documentation for a given keyword or topic using apropos."
  :args (list '(:name "pattern" :type "string" :description "The keyword or topic to search for in the Emacs documentation."))
  :category "emacs-docs")
 
 (gptel-make-tool
- :function (lambda (function-name) (description-string 'describe-function function-name))
  :name "describe_function"
+ :function (lambda (function-name) (description-string 'describe-function function-name))
  :description "Display the full documentation of the function named FUNCTION-NAME. When called, it shows detailed information about the function, including its parameters and a description of its behavior."
  :args (list '(:name "function"
                :type "string"
@@ -325,8 +326,8 @@ Example:
  :category "emacs-docs")
 
 (gptel-make-tool
- :function (lambda (command-name) (description-string 'describe-command command-name))
  :name "describe_command"
+ :function (lambda (command-name) (description-string 'describe-command command-name))
  :description "Display the full documentation of the command named COMMAND-NAME ."
  :args (list '(:name "command"
                :type string
@@ -334,8 +335,8 @@ Example:
  :category "emacs-docs")
 
 (gptel-make-tool
- :function (lambda (package-name) (description-string 'describe-package package-name))
  :name "describe_package"
+ :function (lambda (package-name) (description-string 'describe-package package-name))
  :description "Display the full documentation of the package named PACKAGE-NAME."
  :args (list '(:name "package"
                 :type "string"
@@ -343,8 +344,8 @@ Example:
  :category "emacs-docs")
 
 (gptel-make-tool
- :function (lambda (symbol-name) (description-string 'describe-symbol symbol-name))
  :name "describe_symbol"
+ :function (lambda (symbol-name) (description-string 'describe-symbol symbol-name))
  :description "Display the full documentation of the symbol named SYMBOL-NAME, including function, variable, and/or face information."
  :args (list '(:name "symbol"
                  :type "string"
@@ -352,9 +353,9 @@ Example:
  :category "emacs-docs")
 
 (gptel-make-tool
+ :name "describe_variable"
  :function (lambda (variable-name buffer frame)
              (description-string 'describe-variable variable-name buffer frame))
- :name "describe_variable"
  :description "Display the full documentation of a variable in a specified buffer or frame."
  :args (list '(:name "variable"
                :type "string"
@@ -377,13 +378,14 @@ as determined by `info-lookup-symbol'."
       (info-lookup-symbol symbol 'emacs-lisp-mode)
       (buffer-contents "*info*"))))
 
-(gptel-make-tool :function #'info-node-contents
-                 :name "info_node_contents"
-                 :description "Return the contents of the info node for SYMBOL-NAME as determined by `info-lookup-symbol'."
-                 :args (list '(:name "symbol-name"
-                                     :type string
-                                     :description "the name of the symbol to look up"))
-                 :category "emacs-docs")
+(gptel-make-tool
+ :name "info_node_contents"
+ :function #'info-node-contents
+ :description "Return the contents of the info node for SYMBOL-NAME as determined by `info-lookup-symbol'."
+ :args (list '(:name "symbol-name"
+                     :type string
+                     :description "the name of the symbol to look up"))
+ :category "emacs-docs")
 
 (provide 'jm-gptel-tools)
 
