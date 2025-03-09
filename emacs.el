@@ -1314,6 +1314,8 @@ directory, otherwise return nil."
         org-enforce-todo-checkbox-dependencies t
         org-export-backends '(ascii html latex)
         org-export-allow-bind-keywords t
+        ;; workaround - see https://www.reddit.com/r/orgmode/comments/1c9wm8x/weird_issue_sometimes_headline_wont_expand/
+        org-fold-core-style  'overlays
         org-format-latex-options (plist-put org-format-latex-options :scale 2.5)
         org-hierarchical-todo-statistics nil
         org-list-allow-alphabetical t
