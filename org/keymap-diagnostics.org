@@ -1,0 +1,582 @@
+#+TITLE: Analyzing Keymap Conflicts in Emacs
+
+* Overview
+
+  This document provides methods to identify and report conflicts among key bindings in
+  Emacs. The goal is to detect overlapping key bindings across various minor modes enabled
+  in Emacs.
+
+  Also, it's an experiment with literate programming using Org.
+
+  Approach
+  1. Select the modes and/or associated keymaps of interest.
+  2. Identify key binding conflicts across modes.
+  3. Display the conflicts.
+
+*** Collecting mode key bindings
+***** collect-mode-key-bindings
+      This function accepts a list of modes and returns an association
+      list mapping the modes to information on associated key
+      bindings.
+
+       #+begin_src elisp :results none :tangle yes
+         ;;;###autoload
+         (defun collect-mode-key-bindings (mode-list)
+           "Collect key bindings for modes in MODE-LIST and return them as an
+         alist mapping modes to key binding information."
+           (let ((bindings nil))
+             (dolist (mode mode-list bindings)
+               (let* ((keymap (mode-to-keymap mode))
+                      (mode-bindings (keymap-to-bindings keymap)))
+                 (push (cons mode mode-bindings) bindings)))))
+       #+end_src
+******* Examples
+        Demonstrate usage through simple examples with specific
+        modes.
+
+         #+begin_src elisp :tangle no :exports both
+           (pp
+            (collect-mode-key-bindings '(change-log-mode visual-line-mode)))
+           #+end_src
+
+         #+RESULTS:
+         : ((visual-line-mode
+         :   ("<remap> <kill-line>" . kill-visual-line)
+         :   ("<remap> <move-beginning-of-line>" . beginning-of-visual-line)
+         :   ("<remap> <move-end-of-line>" . end-of-visual-line))
+         :  (change-log-mode
+         :   ("C-c C-c" . change-log-goto-source)
+         :   ("C-c C-f" . change-log-find-file)
+         :   ("C-c C-n" . add-log-edit-next-comment)
+         :   ("C-c C-p" . add-log-edit-prev-comment)))
+
+***** From mode to keymap
+      Define a function to retrieve the keymap associated with a
+      specific mode symbol.
+
+      #+begin_src elisp :results none :tangle yes
+        ;;;###autoload
+        (defun mode-to-keymap (mode)
+          "Return the keymap associated with a given MODE."
+          (let* ((mode-name (symbol-name mode))
+                 (mode-map-name (intern (format "%s-map" mode-name))))
+            ;; Check if the keymap is defined and available
+            (and (boundp mode-map-name) (symbol-value mode-map-name))))
+      #+end_src
+
+******* Examples
+        #+begin_src elisp :tangle no :exports both
+          (pp (mode-to-keymap 'change-log-mode))
+        #+end_src
+
+        #+RESULTS:
+        #+begin_example
+        (keymap
+         (menu-bar keymap
+                   (changelog menu-item "ChangeLog"
+                              (keymap "ChangeLog"
+                                      (Previous\ Log-Edit\ Comment menu-item "Previous Log-Edit Comment" add-log-edit-prev-comment :help "Cycle backward through Log-Edit mode comment history")
+                                      (Next\ Log-Edit\ Comment menu-item "Next Log-Edit Comment" add-log-edit-next-comment :help "Cycle forward through Log-Edit mode comment history")
+                                      (nil "--")
+                                      (Find\ File menu-item "Find File" change-log-find-file :help "Visit the file for the change under point")
+                                      (Go\ To\ Source menu-item "Go To Source" change-log-goto-source :help "Go to source location of ChangeLog tag near point"))))
+         (3 keymap
+            (3 . change-log-goto-source)
+            (6 . change-log-find-file)
+            (14 . add-log-edit-next-comment)
+            (16 . add-log-edit-prev-comment)))
+        #+end_example
+
+***** From keymap to bindings
+      Convert keymap data into an alist format suitable for conflict
+      analysis.  We use the =describe-map-tree= function within a
+      temporary buffer (1) to avoid having to reproduce / understand
+      the complex logic inside describe-map-tree and friends, and (2)
+      to take advantage of it generating almost exactly the content we
+      want as strings.
+       
+      #+begin_src elisp :results none :tangle yes
+        ;;;###autoload
+        (defun keymap-to-bindings (keymap)
+          "Return an alist mapping key bindings to functions for the
+        given KEYMAP."
+          (when keymap ; describe-map-tree does not handle nil keymaps
+            (let (alist)
+              (with-temp-buffer
+                ;; Describe the map in temporary buffer
+                (describe-map-tree keymap t nil nil nil t)
+                (goto-char (point-min))
+                (while (re-search-forward "^\\([^\t\n]+\\)[ \t]+\\([^ \t\n]*\\)$" nil t)
+                  (let ((key (substring-no-properties (match-string 1)))
+                        (command (intern (substring-no-properties (match-string 2)))))
+                    (unless (eq command 'Binding)
+                      (push (cons key command) alist))))
+                (nreverse alist)))))
+      #+end_src
+
+******* Examples
+        #+begin_src elisp :tangle no :exports both
+          (pp (keymap-to-bindings change-log-mode-map))
+        #+end_src
+
+        #+RESULTS:
+        : (("C-c C-c" . change-log-goto-source)
+        :  ("C-c C-f" . change-log-find-file)
+        :  ("C-c C-n" . add-log-edit-next-comment)
+        :  ("C-c C-p" . add-log-edit-prev-comment))
+
+        #+begin_src elisp :tangle no :exports both
+          (pp (keymap-to-bindings visual-line-mode-map))
+        #+end_src
+
+        #+RESULTS:
+        : (("<remap> <kill-line>" . kill-visual-line)
+        :  ("<remap> <move-beginning-of-line>" . beginning-of-visual-line)
+        :  ("<remap> <move-end-of-line>" . end-of-visual-line))
+
+*** Key binding clashes between modes.
+    Identify key bindings that clash between modes.
+    #+begin_src elisp :results none :tangle yes
+      ;;;###autoload
+      (defun mode-key-binding-clashes (mode-key-bindings)
+        "Return clashes among key bindings from the MODE-KEY-BINDINGS."
+        (seq-filter (lambda (pair)(>= (length (cdr pair)) 2))
+                    (seq-group-by #'cadr
+                                  (flatten-bindings mode-key-bindings))))
+
+      ;;;###autoload
+      (defun flatten-bindings (bindings)
+        "Flatten an alist-of-alists (mode->key->bindings) into
+                       a corresponding list of triples."
+        (mapcan
+         (lambda (binding)
+           (mapcar
+            (lambda (key-binding)
+              ;; Construct triples of (mode key command)
+              (let ((key (car key-binding))
+                    (command (cdr key-binding)))
+                (list (car binding) key command)))
+            (cdr binding)))
+         bindings))
+    #+end_src
+
+***** Examples
+      Analyze conflicts between specific modes like
+      `change-log-mode` and `org-mode`.
+      #+begin_src elisp :tangle no :exports both
+        (pp
+         (mode-key-binding-clashes
+          (collect-mode-key-bindings '(change-log-mode org-mode))))
+      #+end_src
+
+      #+RESULTS:
+      #+begin_example
+      (("C-c C-c"
+        (org-mode "C-c C-c" org-ctrl-c-ctrl-c)
+        (change-log-mode "C-c C-c" change-log-goto-source))
+       ("C-c C-f"
+        (org-mode "C-c C-f" org-forward-heading-same-level)
+        (change-log-mode "C-c C-f" change-log-find-file))
+       ("C-c C-n"
+        (org-mode "C-c C-n" outline-next-visible-heading)
+        (change-log-mode "C-c C-n" add-log-edit-next-comment))
+       ("C-c C-p"
+        (org-mode "C-c C-p" outline-previous-visible-heading)
+        (change-log-mode "C-c C-p" add-log-edit-prev-comment)))
+      #+end_example
+
+*** Key binding clashes for a buffer
+    Identify key binding clashes within a buffer's active modes.
+    #+begin_src elisp :results none :tangle yes
+      ;;;###autoload
+      (defun buffer-key-binding-clashes (&optional buffer)
+        "Return key binding clashes for the specified BUFFER or the
+      current buffer if none is specified."
+        (let* ((buffer (or buffer (current-buffer)))
+               (local-minors (buffer-local-value 'local-minor-modes buffer))
+               (major (buffer-local-value 'major-mode buffer))
+               (active (cons major local-minors)))
+          (mode-key-binding-clashes
+           (collect-mode-key-bindings 
+            active))))
+    #+end_src
+
+* Practical applications
+*** Display clashes for the current buffer
+    Display all clashes among the active minor modes and the current
+    major mode.
+    #+begin_src elisp :tangle no :exports both
+      (pp
+       (buffer-key-binding-clashes))
+    #+end_src
+
+    #+RESULTS:
+    : nil
+
+*** Display clashes from minor-mode-list
+    Display all clashes among the minor modes from =minor-mode-list=.
+    #+begin_src elisp :tangle no
+      (pp
+       (mode-key-binding-clashes
+        (collect-mode-key-bindings 
+         minor-mode-list)))
+    #+end_src
+
+    #+RESULTS:
+    #+begin_example
+    (("C-c <left>"
+      (hs-minor-mode "C-c <left>" hs-hide-block)
+      (tab-bar-history-mode "C-c <left>" tab-bar-history-back))
+     ("C-c <right>"
+      (hs-minor-mode "C-c <right>" hs-show-block)
+      (tab-bar-history-mode "C-c <right>" tab-bar-history-forward))
+     ("."
+      (view-mode "." set-mark-command)
+      (undo-tree-visualizer-selection-mode "." \[byte-code\]))
+     ("M-?"
+      (completion-in-region-mode "M-?" completion-help-at-point)
+      (smartparens-mode "M-?" sp-convolute-sexp))
+     ("<remap> <backward-delete-char>"
+      (smartparens-mode "<remap> <backward-delete-char>" sp-backward-delete-char)
+      (smartparens-strict-mode "<remap> <backward-delete-char>" sp-backward-delete-char))
+     ("<remap> <backward-kill-word>"
+      (smartparens-mode "<remap> <backward-kill-word>" sp-backward-kill-word)
+      (smartparens-strict-mode "<remap> <backward-kill-word>" sp-backward-kill-word))
+     ("<remap> <delete-forward-char>"
+      (smartparens-mode "<remap> <delete-forward-char>" sp-delete-char)
+      (smartparens-strict-mode "<remap> <delete-forward-char>" sp-delete-char))
+     ("<remap> <kill-line>"
+      (visual-line-mode "<remap> <kill-line>" kill-visual-line)
+      (smartparens-mode "<remap> <kill-line>" sp-kill-hybrid-sexp)
+      (smartparens-strict-mode "<remap> <kill-line>" sp-kill-hybrid-sexp))
+     ("<remap> <kill-word>"
+      (smartparens-mode "<remap> <kill-word>" sp-kill-word)
+      (smartparens-strict-mode "<remap> <kill-word>" sp-kill-word))
+     ("C-M-n"
+      (smartparens-mode "C-M-n" sp-next-sexp)
+      (compilation-shell-minor-mode "C-M-n" compilation-next-error))
+     ("C-M-p"
+      (smartparens-mode "C-M-p" sp-previous-sexp)
+      (compilation-shell-minor-mode "C-M-p" compilation-previous-error))
+     ("<"
+      (view-mode "<" beginning-of-buffer)
+      (undo-tree-visualizer-selection-mode "<" \[byte-code\])
+      (compilation-minor-mode "<" beginning-of-buffer))
+     (">"
+      (view-mode ">" end-of-buffer)
+      (undo-tree-visualizer-selection-mode ">" \[byte-code\])
+      (compilation-minor-mode ">" end-of-buffer))
+     ("S-SPC"
+      (view-mode "S-SPC" View-scroll-page-backward)
+      (compilation-minor-mode "S-SPC" scroll-down-command))
+     ("M-{"
+      (compilation-shell-minor-mode "M-{" compilation-previous-file)
+      (compilation-minor-mode "M-{" compilation-previous-file))
+     ("M-}"
+      (compilation-shell-minor-mode "M-}" compilation-next-file)
+      (compilation-minor-mode "M-}" compilation-next-file))
+     ("C-c @ C-a"
+      (hs-minor-mode "C-c @ C-a" hs-show-all)
+      (outline-minor-mode "C-c @ C-a" outline-show-all))
+     ("C-c @ C-c"
+      (hs-minor-mode "C-c @ C-c" hs-toggle-hiding)
+      (outline-minor-mode "C-c @ C-c" outline-hide-entry))
+     ("C-c @ C-d"
+      (hs-minor-mode "C-c @ C-d" hs-hide-block)
+      (outline-minor-mode "C-c @ C-d" outline-hide-subtree))
+     ("C-c @ C-e"
+      (hs-minor-mode "C-c @ C-e" hs-toggle-hiding)
+      (outline-minor-mode "C-c @ C-e" outline-show-entry))
+     ("C-c @ C-l"
+      (hs-minor-mode "C-c @ C-l" hs-hide-level)
+      (outline-minor-mode "C-c @ C-l" outline-hide-leaves))
+     ("C-c @ C-s"
+      (hs-minor-mode "C-c @ C-s" hs-show-block)
+      (outline-minor-mode "C-c @ C-s" outline-show-subtree))
+     ("C-c @ C-t"
+      (hs-minor-mode "C-c @ C-t" hs-hide-all)
+      (outline-minor-mode "C-c @ C-t" outline-hide-body))
+     ("M-a"
+      (smartparens-mode "M-a" sp-beginning-of-sexp)
+      (lsp-signature-mode "M-a" lsp-signature-toggle-full-docs))
+     ("C-g"
+      (lsp-signature-mode "C-g" lsp-signature-stop)
+      (lsp-ui-peek-mode "C-g" lsp-ui-peek--abort))
+     ("C-n"
+      (undo-tree-visualizer-selection-mode "C-n" undo-tree-visualizer-select-next)
+      (lsp-ui-peek-mode "C-n" lsp-ui-peek--select-next))
+     ("C-p"
+      (undo-tree-visualizer-selection-mode "C-p" undo-tree-visualizer-select-previous)
+      (lsp-ui-peek-mode "C-p" lsp-ui-peek--select-prev))
+     ("<down>"
+      (undo-tree-visualizer-selection-mode "<down>" undo-tree-visualizer-select-next)
+      (lsp-ui-peek-mode "<down>" lsp-ui-peek--select-next))
+     ("<left>"
+      (undo-tree-visualizer-selection-mode "<left>" undo-tree-visualizer-select-left)
+      (lsp-ui-peek-mode "<left>" lsp-ui-peek--select-prev-file))
+     ("<right>"
+      (undo-tree-visualizer-selection-mode "<right>" undo-tree-visualizer-select-right)
+      (lsp-ui-peek-mode "<right>" lsp-ui-peek--select-next-file))
+     ("<up>"
+      (undo-tree-visualizer-selection-mode "<up>" undo-tree-visualizer-select-previous)
+      (lsp-ui-peek-mode "<up>" lsp-ui-peek--select-prev))
+     ("M-RET"
+      (completion-in-region-mode "M-RET" minibuffer-choose-completion)
+      (compilation-shell-minor-mode "M-RET" compile-goto-error)
+      (lsp-ui-peek-mode "M-RET" lsp-ui-peek--goto-xref-other-window))
+     ("M-n"
+      (smartparens-mode "M-n" point-redo)
+      (compilation-minor-mode "M-n" compilation-next-error)
+      (lsp-signature-mode "M-n" lsp-signature-next)
+      (lsp-ui-peek-mode "M-n" lsp-ui-peek--select-next-file))
+     ("M-p"
+      (smartparens-mode "M-p" point-undo)
+      (compilation-minor-mode "M-p" compilation-previous-error)
+      (lsp-signature-mode "M-p" lsp-signature-previous)
+      (lsp-ui-peek-mode "M-p" lsp-ui-peek--select-prev-file))
+     ("SPC"
+      (view-mode "SPC" View-scroll-page-forward)
+      (compilation-minor-mode "SPC" scroll-up-command)
+      (edebug-mode "SPC" edebug-step-mode))
+     ("="
+      (view-mode "=" what-line)
+      (lsp-treemacs-error-list-mode "=" lsp-treemacs-cycle-severity)
+      (edebug-mode "=" edebug-temp-display-freq-count))
+     ("?"
+      (view-mode "?" describe-mode)
+      (compilation-minor-mode "?" describe-mode)
+      (edebug-mode "?" edebug-help))
+     ("C"
+      (view-mode "C" View-kill-and-leave)
+      (edebug-mode "C" edebug-Continue-fast-mode))
+     ("E"
+      (view-mode "E" View-exit-and-edit)
+      (edebug-mode "E" edebug-visit-eval-list))
+     ("b"
+      (undo-tree-visualizer-selection-mode "b" undo-tree-visualizer-select-left)
+      (edebug-mode "b" edebug-set-breakpoint))
+     ("c"
+      (view-mode "c" View-leave)
+      (edebug-mode "c" edebug-continue-mode))
+     ("d"
+      (view-mode "d" View-scroll-half-page-forward)
+      (undo-tree-visualizer-selection-mode "d" undo-tree-visualizer-selection-toggle-diff)
+      (edebug-mode "d" edebug-pop-to-backtrace))
+     ("e"
+      (view-mode "e" View-exit)
+      (edebug-mode "e" edebug-eval-expression))
+     ("f"
+      (undo-tree-visualizer-selection-mode "f" undo-tree-visualizer-select-right)
+      (edebug-mode "f" edebug-forward-sexp))
+     ("g"
+      (view-mode "g" View-goto-line)
+      (compilation-minor-mode "g" recompile)
+      (lsp-terraform-modules-mode "g" lsp-terraform-ls--modules-refresh)
+      (edebug-mode "g" edebug-go-mode))
+     ("h"
+      (view-mode "h" describe-mode)
+      (compilation-minor-mode "h" describe-mode)
+      (edebug-mode "h" edebug-goto-here))
+     ("n"
+      (view-mode "n" View-search-last-regexp-forward)
+      (undo-tree-visualizer-selection-mode "n" undo-tree-visualizer-select-next)
+      (compilation-minor-mode "n" next-error-no-select)
+      (lsp-ui-peek-mode "n" lsp-ui-peek--select-next)
+      (edebug-mode "n" edebug-next-mode))
+     ("o"
+      (view-mode "o" View-scroll-to-buffer-end)
+      (edebug-mode "o" edebug-step-out))
+     ("p"
+      (view-mode "p" View-search-last-regexp-backward)
+      (undo-tree-visualizer-selection-mode "p" undo-tree-visualizer-select-previous)
+      (compilation-minor-mode "p" previous-error-no-select)
+      (lsp-ui-peek-mode "p" lsp-ui-peek--select-prev)
+      (edebug-mode "p" edebug-bounce-point))
+     ("r"
+      (view-mode "r" isearch-backward)
+      (lsp-treemacs-deps-list-mode "r" lsp-treemacs-generic-refresh)
+      (edebug-mode "r" edebug-previous-result))
+     ("u"
+      (view-mode "u" View-scroll-half-page-backward)
+      (edebug-mode "u" edebug-unset-breakpoint))
+     ("w"
+      (view-mode "w" View-scroll-page-backward-set-page-size)
+      (edebug-mode "w" edebug-where))
+     ("x"
+      (view-mode "x" exchange-point-and-mark)
+      (lsp-treemacs-error-list-mode "x" lsp-treemacs-quick-fix)
+      (edebug-mode "x" edebug-set-conditional-breakpoint))
+     ("s"
+      (view-mode "s" isearch-forward)
+      (edebug-backtrace-mode "s" backtrace-goto-source))
+     ("'"
+      (view-mode "'" register-to-point)
+      (org-cdlatex-mode "'" org-cdlatex-math-modify))
+     ("TAB"
+      (completion-in-region-mode "TAB" completion-at-point)
+      (lsp-ui-peek-mode "TAB" lsp-ui-peek--toggle-file)
+      (restclient-outline-mode "TAB" restclient-toggle-body-visibility-or-indent))
+     ("C-c C-k"
+      (compilation-minor-mode "C-c C-k" kill-compilation)
+      (lsp-signature-mode "C-c C-k" lsp-signature-stop)
+      (org-src-mode "C-c C-k" org-edit-src-abort)
+      (org-capture-mode "C-c C-k" org-capture-kill))
+     ("C-c C-c"
+      (image-minor-mode "C-c C-c" image-toggle-display)
+      (compilation-minor-mode "C-c C-c" compile-goto-error)
+      (edebug-mode "C-c C-c" edebug-go-mode)
+      (org-capture-mode "C-c C-c" org-capture-finalize)
+      (doc-view-minor-mode "C-c C-c" doc-view-toggle-display))
+     ("0 .. 9"
+      (view-mode "0 .. 9" digit-argument)
+      (compilation-minor-mode "0 .. 9" digit-argument)
+      (gnus-dead-summary-mode "0 .. 9" digit-argument))
+     ("RET"
+      (view-mode "RET" View-scroll-line-forward)
+      (undo-tree-visualizer-selection-mode "RET" undo-tree-visualizer-set)
+      (compilation-minor-mode "RET" compile-goto-error)
+      (lsp-ui-peek-mode "RET" lsp-ui-peek--goto-xref)
+      (gnus-dead-summary-mode "RET" gnus-summary-wake-up-the-dead))
+     ("-"
+      (view-mode "-" negative-argument)
+      (compilation-minor-mode "-" negative-argument)
+      (edebug-mode "-" negative-argument)
+      (gnus-dead-summary-mode "-" negative-argument))
+     ("Q"
+      (view-mode "Q" View-quit-all)
+      (edebug-mode "Q" edebug-top-level-nonstop)
+      (gnus-dead-summary-mode "Q" bury-buffer))
+     ("q"
+      (view-mode "q" View-quit)
+      (compilation-minor-mode "q" quit-window)
+      (lsp-ui-doc-frame-mode "q" lsp-ui-doc-unfocus-frame)
+      (lsp-ui-peek-mode "q" lsp-ui-peek--abort)
+      (edebug-mode "q" top-level)
+      (restclient-response-mode "q" \[lambda\])
+      (doc-view-presentation-mode "q" doc-view-presentation-exit)
+      (gnus-dead-summary-mode "q" bury-buffer))
+     ("DEL"
+      (view-mode "DEL" View-scroll-page-backward)
+      (compilation-minor-mode "DEL" scroll-down-command)
+      (edebug-mode "DEL" backward-delete-char-untabify)
+      (gnus-dead-summary-mode "DEL" gnus-summary-wake-up-the-dead))
+     ("<left-margin> <mouse-1>"
+      (outline-minor-mode "<left-margin> <mouse-1>" outline-cycle)
+      (dap-mode "<left-margin> <mouse-1>" dap-mode-mouse-set-clear-breakpoint)
+      (visual-fill-column-mode "<left-margin> <mouse-1>" mouse-set-point))
+     ("<right-margin> <mouse-1>"
+      (outline-minor-mode "<right-margin> <mouse-1>" outline-cycle)
+      (visual-fill-column-mode "<right-margin> <mouse-1>" mouse-set-point)))
+    #+end_example
+
+* Background: built-in capabilities
+*** describe-keymap
+
+    This is part of the =help-fns= library; it was originally part of Drew Adams'
+    =help-fns+= library.
+
+    Its description is below:
+    #+begin_src help :tangle no :eval never
+      describe-keymap is an autoloaded interactive native-compiled Lisp function in
+      ‘help-fns.el’.
+
+      (describe-keymap KEYMAP)
+
+      Describe key bindings in KEYMAP.
+      When called interactively, prompt for a variable that has a
+      keymap value.
+    #+end_src
+***** How it works
+
+      The =describe-keymap= function in Emacs Lisp is designed to describe key bindings
+      within a given keymap. It works as follows:
+
+      1. *Interactive prompting*: When called interactively, it prompts the user for a
+         symbol that represents a keymap. The prompting uses =completing-read= to suggest
+         symbols that are known to be keymap variables.
+
+      2. *Validation*: It checks if the given symbol represents a valid keymap using
+         =keymapp= and =symbol-value=. If not, it raises an error.
+
+      3. *Description setup*: It sets up the help buffer, utilizing =help-setup-xref= for
+         navigation within the help system.
+
+      4. *Documentation display*: It fetches and displays the documentation string of the
+         keymap if available, and it indicates the source of the keymap definition,
+         whether it's in Emacs C source or a specific Emacs Lisp file.
+
+      5. *Key bindings display*: Finally, it uses =substitute-command-keys= to insert the
+         formatted key bindings from the keymap into the help buffer, so that the user can
+         view the complete set of bindings defined in that keymap.
+
+      During its operation, if no persistent symbol is associated with a keymap, it uses a
+      temporary symbol name to facilitate processing.
+***** Example output
+      #+begin_src help :tangle no :eval never
+change-log-mode-map is a keymap variable defined in ‘add-log.el’.
+
+Documentation:
+Keymap for Change Log major mode.
+
+
+Key             Binding
+
+C-c C-c		change-log-goto-source
+C-c C-f		change-log-find-file
+C-c C-n		add-log-edit-next-comment
+C-c C-p		add-log-edit-prev-comment
+
+[back]
+      #+end_src
+***** The call-stack into map-keymap
+      From running describe-keymap after using =trace-function-background= on map-keymap,
+      map-keymap appears to be called.
+
+      However it is not called directly from help-fns.  To get the stack we can use
+      trace-function-background with a context arg of =(debug)= to obtain the backtrace.
+
+      #+begin_src elisp :tangle no :eval never
+        (describe-keymap 'change-log-mode-map)
+      #+end_src
+
+      #+RESULTS:
+
+      This gives a call stack to map-keymap
+        #+begin_src debugger :tangle no :eval never
+        #f(compiled-function () #<bytecode -0xf28bd42b54420>)()
+        #f(compiled-function (body &rest args) #<bytecode -0xb8bf4e5f43c1c6d>)(#<subr map-keymap> #f(compiled-function (key item) #<bytecode -0x13fe17d549bc5d7f>) (keymap (menu-bar keymap (changelog menu-item "ChangeLog" (keymap "ChangeLog" (Previous\ Log-Edit\ Comment menu-item "Previous Log-Edit Comment" add-log-edit-prev-comment :help "Cycle backward through Log-Edit mode comment histo...") (Next\ Log-Edit\ Comment menu-item "Next Log-Edit Comment" add-log-edit-next-comment :help "Cycle forward through Log-Edit mode comment histor...") (nil "--") (Find\ File menu-item "Find File" change-log-find-file :help "Visit the file for the change under point") (Go\ To\ Source menu-item "Go To Source" change-log-goto-source :help "Go to source location of ChangeLog tag near point")))) (3 keymap (3 . change-log-goto-source) (6 . change-log-find-file) (14 . add-log-edit-next-comment) (16 . add-log-edit-prev-comment))) nil)
+        apply(#f(compiled-function (body &rest args) #<bytecode -0xb8bf4e5f43c1c6d>) #<subr map-keymap> (#f(compiled-function (key item) #<bytecode -0x13fe17d549bc5d7f>) (keymap (menu-bar keymap (changelog menu-item "ChangeLog" (keymap "ChangeLog" (Previous\ Log-Edit\ Comment menu-item "Previous Log-Edit Comment" add-log-edit-prev-comment :help "Cycle backward through Log-Edit mode comment histo...") (Next\ Log-Edit\ Comment menu-item "Next Log-Edit Comment" add-log-edit-next-comment :help "Cycle forward through Log-Edit mode comment histor...") (nil "--") (Find\ File menu-item "Find File" change-log-find-file :help "Visit the file for the change under point") (Go\ To\ Source menu-item "Go To Source" change-log-goto-source :help "Go to source location of ChangeLog tag near point")))) (3 keymap (3 . change-log-goto-source) (6 . change-log-find-file) (14 . add-log-edit-next-comment) (16 . add-log-edit-prev-comment))) nil))
+        map-keymap(#f(compiled-function (key item) #<bytecode -0x13fe17d549bc5d7f>) (keymap (menu-bar keymap (changelog menu-item "ChangeLog" (keymap "ChangeLog" (Previous\ Log-Edit\ Comment menu-item "Previous Log-Edit Comment" add-log-edit-prev-comment :help "Cycle backward through Log-Edit mode comment histo...") (Next\ Log-Edit\ Comment menu-item "Next Log-Edit Comment" add-log-edit-next-comment :help "Cycle forward through Log-Edit mode comment histor...") (nil "--") (Find\ File menu-item "Find File" change-log-find-file :help "Visit the file for the change under point") (Go\ To\ Source menu-item "Go To Source" change-log-goto-source :help "Go to source location of ChangeLog tag near point")))) (3 keymap (3 . change-log-goto-source) (6 . change-log-find-file) (14 . add-log-edit-next-comment) (16 . add-log-edit-prev-comment))) nil)
+        keymap-canonicalize((keymap (menu-bar keymap (changelog menu-item "ChangeLog" (keymap "ChangeLog" (Previous\ Log-Edit\ Comment menu-item "Previous Log-Edit Comment" add-log-edit-prev-comment :help "Cycle backward through Log-Edit mode comment histo...") (Next\ Log-Edit\ Comment menu-item "Next Log-Edit Comment" add-log-edit-next-comment :help "Cycle forward through Log-Edit mode comment histor...") (nil "--") (Find\ File menu-item "Find File" change-log-find-file :help "Visit the file for the change under point") (Go\ To\ Source menu-item "Go To Source" change-log-goto-source :help "Go to source location of ChangeLog tag near point")))) (3 keymap (3 . change-log-goto-source) (6 . change-log-find-file) (14 . add-log-edit-next-comment) (16 . add-log-edit-prev-comment))))
+        describe-map((keymap (menu-bar keymap (changelog menu-item "ChangeLog" (keymap "ChangeLog" (Previous\ Log-Edit\ Comment menu-item "Previous Log-Edit Comment" add-log-edit-prev-comment :help "Cycle backward through Log-Edit mode comment histo...") (Next\ Log-Edit\ Comment menu-item "Next Log-Edit Comment" add-log-edit-next-comment :help "Cycle forward through Log-Edit mode comment histor...") (nil "--") (Find\ File menu-item "Find File" change-log-find-file :help "Visit the file for the change under point") (Go\ To\ Source menu-item "Go To Source" change-log-goto-source :help "Go to source location of ChangeLog tag near point")))) (3 keymap (3 . change-log-goto-source) (6 . change-log-find-file) (14 . add-log-edit-next-comment) (16 . add-log-edit-prev-comment))) [] nil t nil t t nil)
+        describe-map-tree((keymap (menu-bar keymap (changelog menu-item "ChangeLog" (keymap "ChangeLog" (Previous\ Log-Edit\ Comment menu-item "Previous Log-Edit Comment" add-log-edit-prev-comment :help "Cycle backward through Log-Edit mode comment histo...") (Next\ Log-Edit\ Comment menu-item "Next Log-Edit Comment" add-log-edit-next-comment :help "Cycle forward through Log-Edit mode comment histor...") (nil "--") (Find\ File menu-item "Find File" change-log-find-file :help "Visit the file for the change under point") (Go\ To\ Source menu-item "Go To Source" change-log-goto-source :help "Go to source location of ChangeLog tag near point")))) (3 keymap (3 . change-log-goto-source) (6 . change-log-find-file) (14 . add-log-edit-next-comment) (16 . add-log-edit-prev-comment))) t nil nil nil t nil nil t)
+        substitute-command-keys("\\{change-log-mode-map}")
+        (insert (substitute-command-keys (concat "\\{" name "}")))
+        (save-current-buffer (set-buffer standard-output) (if used-gentemp nil (princ (format-message "%S is a keymap variable" keymap)) (if (not file-name) (progn (setq help-mode--current-data (list :symbol keymap)) (princ ".\n\n")) (princ (format-message " defined in `%s'.\n\n" (if (eq file-name 'C-source) "C source code" (help-fns-short-filename file-name)))) (save-excursion (re-search-backward (substitute-command-keys "`\\([^`']+\\)'") nil t) (setq help-mode--current-data (list :symbol keymap :file file-name)) (help-xref-button 1 'help-variable-def keymap file-name)))) (if (and (not (equal "" doc)) doc) (progn (princ "Documentation:\n") (princ (format-message "%s\n\n" doc)))) (insert (substitute-command-keys (concat "\\{" name "}"))))
+        (closure ((file-name . "/usr/share/emacs/29.3/lisp/vc/add-log.el") (doc . "Keymap for Change Log major mode.") (name . "change-log-mode-map") (used-gentemp) (keymap . change-log-mode-map)) nil (save-current-buffer (set-buffer standard-output) (if used-gentemp nil (princ (format-message "%S is a keymap variable" keymap)) (if (not file-name) (progn (setq help-mode--current-data (list :symbol keymap)) (princ ".\n\n")) (princ (format-message " defined in `%s'.\n\n" (if (eq file-name ...) "C source code" (help-fns-short-filename file-name)))) (save-excursion (re-search-backward (substitute-command-keys "`\\([^`']+\\)'") nil t) (setq help-mode--current-data (list :symbol keymap :file file-name)) (help-xref-button 1 'help-variable-def keymap file-name)))) (if (and (not (equal "" doc)) doc) (progn (princ "Documentation:\n") (princ (format-message "%s\n\n" doc)))) (insert (substitute-command-keys (concat "\\{" name "}")))))()
+        help--window-setup("*Help*" (closure ((file-name . "/usr/share/emacs/29.3/lisp/vc/add-log.el") (doc . "Keymap for Change Log major mode.") (name . "change-log-mode-map") (used-gentemp) (keymap . change-log-mode-map)) nil (save-current-buffer (set-buffer standard-output) (if used-gentemp nil (princ (format-message "%S is a keymap variable" keymap)) (if (not file-name) (progn (setq help-mode--current-data (list :symbol keymap)) (princ ".\n\n")) (princ (format-message " defined in `%s'.\n\n" (if ... "C source code" ...))) (save-excursion (re-search-backward (substitute-command-keys "`\\([^`']+\\)'") nil t) (setq help-mode--current-data (list :symbol keymap :file file-name)) (help-xref-button 1 'help-variable-def keymap file-name)))) (if (and (not (equal "" doc)) doc) (progn (princ "Documentation:\n") (princ (format-message "%s\n\n" doc)))) (insert (substitute-command-keys (concat "\\{" name "}"))))))
+        (let* ((name (symbol-name keymap)) (doc (documentation-property keymap 'variable-documentation)) (file-name (find-lisp-object-file-name keymap 'defvar))) (help--window-setup (help-buffer) #'(lambda nil (save-current-buffer (set-buffer standard-output) (if used-gentemp nil (princ (format-message "%S is a keymap variable" keymap)) (if (not file-name) (progn ... ...) (princ ...) (save-excursion ... ... ...))) (if (and (not ...) doc) (progn (princ "Documentation:\n") (princ ...))) (insert (substitute-command-keys (concat "\\{" name "}")))))))
+        (let (used-gentemp (help-buffer-under-preparation t)) (if (and (symbolp keymap) (boundp keymap) (keymapp (symbol-value keymap))) nil (if (not (keymapp keymap)) (progn (if (symbolp keymap) (error "Not a keymap variable: %S" keymap) (error "Not a keymap")))) (let ((sym nil)) (if sym nil (setq sym (cl-gentemp "KEYMAP OBJECT (no variable) ")) (setq used-gentemp t) (set sym keymap)) (setq keymap sym))) (setq keymap (or (condition-case nil (progn (indirect-variable keymap)) (error nil)) keymap)) (help-setup-xref (list #'describe-keymap keymap) (called-interactively-p 'interactive)) (let* ((name (symbol-name keymap)) (doc (documentation-property keymap 'variable-documentation)) (file-name (find-lisp-object-file-name keymap 'defvar))) (help--window-setup (help-buffer) #'(lambda nil (save-current-buffer (set-buffer standard-output) (if used-gentemp nil (princ ...) (if ... ... ... ...)) (if (and ... doc) (progn ... ...)) (insert (substitute-command-keys ...)))))) (if used-gentemp (progn (makunbound keymap))))
+        describe-keymap(change-log-mode-map)
+        #+end_src
+*** describe-map-tree
+
+    Called via =describe-keymap=, this is a useful starting point for
+    reusing Emacs functionality.
+    #+begin_src help :tangle no :eval never
+      describe-map-tree is a native-compiled Lisp function in ‘help.el’.
+
+      (describe-map-tree STARTMAP &optional PARTIAL SHADOW PREFIX TITLE NO-MENU TRANSL
+      ALWAYS-TITLE MENTION-SHADOW BUFFER)
+
+      Insert a description of the key bindings in STARTMAP.
+      This is followed by the key bindings of all maps reachable
+      through STARTMAP.
+
+      ...
+    #+end_src
+* Local Variables :noexport:
+Local Variables:
+org-babel-default-header: ((:language . "elisp"))
+electric-indent-mode: nil
+End:
