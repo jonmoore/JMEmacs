@@ -253,7 +253,7 @@ Return a message indicating the creation success."
  :category "emacs")
 
 (gptel-make-tool
- :name "get_function_code"
+ :name "function_code"
  :function #'function-definition-code
  :description "Return the code of the definition of an Emacs Lisp function."
  :args (list '( :name "function"
@@ -262,7 +262,7 @@ Return a message indicating the creation success."
  :category "emacs")
 
 (defun library-code (library-name)
-  "Get the source code of LIBRARY-NAME."
+  "Return the source code of LIBRARY-NAME."
   (when (locate-library library-name)
     (save-window-excursion
       (find-library library-name)
@@ -271,7 +271,7 @@ Return a message indicating the creation success."
 (gptel-make-tool
  :name "library_code"
  :function #'library-code
- :description "get the source code of a library or package in emacs"
+ :description "Return the source code of a library or package in emacs"
  :args (list '( :name "library name"
                 :type string
                 :description "the library name"))
