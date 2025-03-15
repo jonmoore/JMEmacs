@@ -122,6 +122,7 @@ a tool for emacs gptel library that can be used with an OpenAI API.
             "\nWrite a tool using gptel-make-tool that wraps " (symbol-name function)
             "\nJust return the code to call gptel-make-tool.  Do not escape it with back quotes or provide example code")))
 
+;;;###autoload
 (defun jm-gptel-make-wrapper-tool-insert-code (function)
   "Use gptel to insert code at point that should call
 `gptel-make-tool' to create a tool that wraps FUNCTION. FUNCTION
@@ -370,21 +371,40 @@ Example:
                :optional t))
  :category "emacs-docs")
 
-(defun info-node-contents (symbol-name)
+(defun info-elisp-symbol-contents (symbol-name)
   "Return the contents of the info node for SYMBOL-NAME
-as determined by `info-lookup-symbol'."
+as determined by `info-lookup-symbol', specifically for Emacs Lisp symbols."
   (when-let ((symbol (intern-soft symbol-name)))
     (save-window-excursion
       (info-lookup-symbol symbol 'emacs-lisp-mode)
       (buffer-contents "*info*"))))
 
 (gptel-make-tool
- :name "info_node_contents"
- :function #'info-node-contents
- :description "Return the contents of the info node for SYMBOL-NAME as determined by `info-lookup-symbol'."
+ :name "info_elisp_symbol_contents"
+ :function #'info-elisp-symbol-contents
+ :description "Return the contents of the info node for SYMBOL-NAME as determined by `info-lookup-symbol', specifically for Emacs Lisp symbols."
  :args (list '(:name "symbol-name"
                      :type string
-                     :description "the name of the symbol to look up"))
+                     :description "the name of the Emacs Lisp symbol to look up"))
+ :category "emacs-docs")
+
+
+(defun info-elisp-nodename-contents (nodename)
+  "Return the contents of a specific NODENAME from the Emacs Lisp manual.
+
+NODENAME should be a string, e.g., \"Interactive Evaluation\" or \"Defining Variables\".
+
+This function first looks for a case-sensitive match for NODENAME;
+if none is found it then tries a case-insensitive match."
+  (save-window-excursion
+    (Info-find-node "elisp" nodename)
+    (buffer-contents "*info*")))
+
+(gptel-make-tool
+ :name "elisp_nodename_contents"
+ :function #'info-elisp-nodename-contents
+ :description "Return the contents of a specific NODENAME from the Emacs Lisp manual."
+ :args (list '(:name "nodename" :type "string" :description "The name of the node in the Emacs Lisp manual."))
  :category "emacs-docs")
 
 (provide 'jm-gptel-tools)
