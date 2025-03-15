@@ -663,21 +663,27 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (defun adjust-flycheck-automatic-syntax-eagerness ()
   "Adjust how often we check for errors based on if there are any.
 This lets us fix any errors as quickly as possible, but in a
-clean buffer we're an order of magnitude laxer about checking."
-  (setq flycheck-idle-change-delay
-        (if flycheck-current-errors 3.0 15.0)))
+clean buffer we delay checking for longer."
+  ;; Each buffer gets its own idle-change-delay.
+  (setq-local flycheck-idle-change-delay
+        (if flycheck-current-errors 5.0 15.0)))
 
 (use-package flycheck
+  ;; Note: do not waste time trying to fix flycheck warnings if you turn on flycheck in
+  ;; this file for testing.  The elisp byte compiler reports many warnings that won't
+  ;; generate any runtime failures (at the least, it doesn't know about personal autoloads
+  ;; and may also have issues with conditionals), and the flycheck wrapping of the byte
+  ;; compiler doesn't provide a way to selectively disable classes of warnings. Also, the
+  ;; gain from applying defvar and declare-function eveerywhere is not worth the cost.
   :hook  (flycheck-after-syntax-check . adjust-flycheck-automatic-syntax-eagerness)
   :config
-  ;; Each buffer gets its own idle-change-delay because of the
-  ;; buffer-sensitive adjustment above.
-  (make-variable-buffer-local 'flycheck-idle-change-delay)
-
+  ;; the key settings below are per the flycheck docs for flycheck-keymap-prefix
+  (define-key flycheck-mode-map flycheck-keymap-prefix nil)
   (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-        flycheck-idle-change-delay 5.0
         flycheck-keymap-prefix (kbd "C-c f")
-        flycheck-pylintrc "pylintrc"))
+        flycheck-pylintrc "pylintrc")
+  (define-key flycheck-mode-map flycheck-keymap-prefix
+              flycheck-command-map))
 
 (use-package free-keys)
 
