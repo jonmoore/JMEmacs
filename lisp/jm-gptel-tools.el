@@ -407,6 +407,53 @@ if none is found it then tries a case-insensitive match."
  :args (list '(:name "nodename" :type "string" :description "The name of the node in the Emacs Lisp manual."))
  :category "emacs-docs")
 
+;;; Ens-user functions using gptel
+
+;; These are end-user functions that use gptel as opposed to LLM tools for gptel or
+;; functions used to create LLM tools.
+(defun jm-gptel-function-declaration-prompt (function)
+  "Return a prompt to request gptel to insert a declaration of
+FUNCTION at prompt. FUNCTION should be an elisp function
+discoverable via ‘find-function’."
+  (cl-check-type function symbol)
+  (let ((function-name (symbol-name function)))
+    (concat  "Insert a declaration for the Emacs function "
+             function-name
+             " using the Emacs lisp function declare-function."
+
+             "\nBelow is information on declare-function from its own Emacs documentation\n"
+             (jm-gptel-describe-function-for-llm 'declare-function)
+
+             "\nBelow is further information from the Emacs Lisp manual on 'Declaring Functions'\n"
+             (info-elisp-nodename-contents "Declaring Functions")
+
+             "\nBelow is information on "
+             function-name
+             "\nThis contains information useful for populating the arglist argument of declare-function\n"
+             (jm-gptel-describe-function-for-llm function)
+             "\nBased on the information above insert the appropriate call to declare-function for " function-name "."
+             "\nJust return the raw code needed.  Do not escape it with back quotes like ``` or provide example code")))
+
+(defun jm-gptel-insert-function-declaration (function)
+  "Use gptel to insert a declaration of FUNCTION at prompt.
+FUNCTION should be a symbol for an elisp function discoverable
+via `find-function'.
+
+When called interactively it will prompt for the function to be
+declared.
+
+Example call:
+
+(jm-gptel-insert-function-declaration 'number-sequence)"
+  (interactive
+   (let ((fn-name (completing-read "Function to declare: " obarray
+                                   #'fboundp
+                                   t)))
+     (list (intern fn-name))))
+  (cl-check-type function symbol)
+  (gptel-request
+   (jm-gptel-function-declaration-prompt function)))
+
 (provide 'jm-gptel-tools)
 
 
@@ -431,4 +478,3 @@ if none is found it then tries a case-insensitive match."
 ;; summarize_text_with_algorithm: Uses a local summarization algorithm (not an LLM)
 ;; to summarize text. This could be faster and cheaper than using the LLM for simple
 ;; summarization.
-
