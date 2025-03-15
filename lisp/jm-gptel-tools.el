@@ -407,7 +407,7 @@ if none is found it then tries a case-insensitive match."
  :args (list '(:name "nodename" :type "string" :description "The name of the node in the Emacs Lisp manual."))
  :category "emacs-docs")
 
-;;; Ens-user functions using gptel
+;;; End-user functions using gptel
 
 ;; These are end-user functions that use gptel as opposed to LLM tools for gptel or
 ;; functions used to create LLM tools.
@@ -421,7 +421,7 @@ discoverable via ‘find-function’."
              function-name
              " using the Emacs lisp function declare-function."
 
-             "\nBelow is information on declare-function from its own Emacs documentation\n"
+             "\nBelow is information on declare-function\n"
              (jm-gptel-describe-function-for-llm 'declare-function)
 
              "\nBelow is further information from the Emacs Lisp manual on 'Declaring Functions'\n"
@@ -439,20 +439,19 @@ discoverable via ‘find-function’."
 FUNCTION should be a symbol for an elisp function discoverable
 via `find-function'.
 
-When called interactively it will prompt for the function to be
+When called interactively, it will prompt for the function to be
 declared.
 
 Example call:
 
 (jm-gptel-insert-function-declaration 'number-sequence)"
+  ;; For Lisp functions with source available this could probably be written directly
+  ;; based on the function code.  This function was really a quick exercise in creating
+  ;; a tool combining LLMs and other tools.
   (interactive
-   (let ((fn-name (completing-read "Function to declare: " obarray
-                                   #'fboundp
-                                   t)))
-     (list (intern fn-name))))
+   (list (intern (completing-read "Function to declare: " obarray #'fboundp t))))
   (cl-check-type function symbol)
-  (gptel-request
-   (jm-gptel-function-declaration-prompt function)))
+  (gptel-request (jm-gptel-function-declaration-prompt function)))
 
 (provide 'jm-gptel-tools)
 
