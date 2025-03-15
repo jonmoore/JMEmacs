@@ -1606,8 +1606,9 @@ directory, otherwise return nil."
     ("python"
      (setq python-shell-interpreter-args "-i"))))
 
-(use-package py-vterm-interaction       ; vterm-based mode for ipython and Python repls
-  )
+(when system-linux-p                      ; vterm is not supported on Windows
+  (use-package py-vterm-interaction       ; vterm-based mode for ipython and Python repls
+    ))
 
 (use-package racket-mode                ; preferred over geiser for racket
   :mode (("\\.rkt\\'" . racket-mode)
