@@ -248,10 +248,10 @@
         ;; for when we don't have a right Windows key
         w32-apps-modifier 'super))
 
-(defconst helm-completion-stack-p t
+(defconst helm-completion-stack-p nil
   "Whether to use the Helm completion stack.")
 
-(defconst mocve-completion-stack-p nil
+(defconst mocve-completion-stack-p t
   "Whether to use the MOCVE (Marginalia, Orderless, Consult, Vertico, Embark) completion stack.")
 
 (when (and helm-completion-stack-p mocve-completion-stack-p)
