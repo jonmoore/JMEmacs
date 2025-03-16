@@ -1,4 +1,5 @@
-;; Setting up
+;;; emacs.el --- my customizations
+;;; Commentary:
 ;; * Install Emacs.  For Windows, use the standard zip recommended at
 ;;   https://www.gnu.org/software/emacs/download.html
 ;; * Clone the repo containing this file
@@ -39,12 +40,14 @@
 ;; https://www.emacswiki.org/emacs/DisableImeForEmacs
 ;; https://superuser.com/a/706636
 
+;;; Code:
+
 ;; Local settings can be included in the real .emacs.el before or
 ;; after this file is loaded
 (defvar personal-emacs-root
   (file-name-directory (if load-in-progress load-file-name
                          buffer-file-name))
-  "*The root of my personal emacs workspace.")
+  "*The root of my personal Emacs workspace.")
 (message "Running emacs.el with personal-emacs-root %s" personal-emacs-root)
 
 (setq inhibit-default-init t
@@ -108,50 +111,50 @@
 ;; I only use quelpa to load packages from github.  From Emacs 30 onwards this should be
 ;; possible with package/use-package.
 (use-package quelpa-use-package
-  :init (setq quelpa-update-melpa-p nil)
-  :config (quelpa-use-package-activate-advice))
+  :config
+  (defvar quelpa-update-melpa-p nil)
+  (quelpa-use-package-activate-advice))
 
 (setq use-package-always-ensure t
       use-package-always-defer t
       use-package-compute-statistics t
       use-package-verbose t)
 
-(use-package async			; async execution
-  ;; We place this early and demand it to avoid errors related to have too many
-  ;; procesess running when compiling other packages that are installed or
-  ;; updated in bulk, e.g. after a new build or package refresh.
+(use-package async                      ; async execution
+  ;; We place this early to avoid errors related to have too many procesess running when
+  ;; compiling other packages that are installed or updated in bulk, e.g. after a new
+  ;; build or package refresh.
 
   ;; See also
   ;; https://github.com/jwiegley/emacs-async/issues/96
   ;; https://gist.github.com/kiennq/cfe57671bab3300d3ed849a7cbf2927c
 
-  ;; :demand
   :defer 5
   :init
-  (setq async-bytecomp-allowed-packages '(all))
+  (defvar async-bytecomp-allowed-packages '(all))
   :config
   ;; async compiling package
   (async-bytecomp-package-mode t)
-  ;; (dired-async-mode 1) ;; this caused issues when moving the use-package block
   ;; limit number of async processes
   (defvar async-maximum-parallel-procs 4)
   (defvar async--parallel-procs 0)
   (defvar async--queue nil)
-  (defvar-local async--cb nil)
+  (defvar async--cb nil)
   (advice-add #'async-start :around
-              (lambda (orig-func func &optional callback)
+              ;; -async-start is effectively async-start
+              (lambda (-async-start start-func &optional finish-func)
                 (require 'cl-lib)
                 (if (>= async--parallel-procs async-maximum-parallel-procs)
-                    (push `(,func ,callback) async--queue)
+                    (push `(,start-func ,finish-func) async--queue)
                   (cl-incf async--parallel-procs)
-                  (let ((future (funcall orig-func func
-                                         (lambda (re)
+                  (let ((future (funcall -async-start start-func
+                                         (lambda (result)
                                            (cl-decf async--parallel-procs)
-                                           (when async--cb (funcall async--cb re))
+                                           (when async--cb (funcall async--cb result))
                                            (when-let (args (pop async--queue))
                                              (apply #'async-start args))))))
                     (with-current-buffer (process-buffer future)
-                      (setq async--cb callback)))))
+                      (setq-local async--cb finish-func)))))
               '((name . --queue-dispatch))))
 
 ;; Somebody decided that warnings about too-wide docstrings, using package cl, etc. merit
@@ -159,7 +162,7 @@
 ;; have no sense sometimes.
 (setq byte-compile-warnings
       '(not docstrings))
-(setq warning-minimum-level :error)
+(defvar warning-minimum-level :error)
 
 ;;; PERSONAL LISP
 (mapc

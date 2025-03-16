@@ -194,3 +194,4 @@ with properties."
         (buffer-substring (point-min) (point-max))
       (buffer-substring-no-properties (point-min) (point-max)))))
 
+(provide 'buffer-helpers)
