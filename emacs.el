@@ -1965,7 +1965,7 @@ files.  This persists across sessions"
 
 (use-package emacs
   ;; this is quite heavy, as it requires loading python and conda
-  :hook (desktop-after-read . jm-conda-lsp-enable-lsp-everywhere)
+  :hook (desktop-after-read . python-helpers-enable-lsp-everywhere)
 
   :config
   (require 'vc)
