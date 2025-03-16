@@ -247,13 +247,13 @@
         ;; for when we don't have a right Windows key
         w32-apps-modifier 'super))
 
-(defconst helm-completion-stack-p nil
+(defconst completion-helm-p nil
   "Whether to use the Helm completion stack.")
 
-(defconst mocve-completion-stack-p t
+(defconst completion-mocve-p t
   "Whether to use the MOCVE (Marginalia, Orderless, Consult, Vertico, Embark) completion stack.")
 
-(when (and helm-completion-stack-p mocve-completion-stack-p)
+(when (and completion-helm-p completion-mocve-p)
   (error "Cannot use both the Helm and MOCVE completion stacks"))
 
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
@@ -299,7 +299,7 @@
            ("<S-f12>"      . windows-search-moccur-like)
            ("<C-f12>"      . windows-search-moccur-contains))
 
-(when mocve-completion-stack-p
+(when completion-mocve-p
   (bind-keys
    ("C-x b" . consult-buffer)
    ("M-g g" . consult-goto-line)
@@ -582,7 +582,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (when system-win32-p
     (setq conda--executable-path (f-join conda-anaconda-home conda-env-executables-dir "conda.exe"))))
 
-(when mocve-completion-stack-p
+(when completion-mocve-p
   (use-package consult            ; Provides enhanced command-line UI tools.
     ))
 
@@ -665,7 +665,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package elmacro)
 
-(when mocve-completion-stack-p
+(when completion-mocve-p
   (use-package embark             ; Provides actions on minibuffer completions.
     :bind
     (("C-." . embark-act)         ;; pick some comfortable key
@@ -773,7 +773,7 @@ clean buffer we delay checking for longer."
   (jm-reset-helm-bindings))
 
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm
     ;; helm notes
 
@@ -841,7 +841,7 @@ clean buffer we delay checking for longer."
     (setq helm-mode-no-completion-in-region-in-modes
           '(inferior-python-mode))))
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm-ag
     :config
     (setq helm-ag-base-command "rg"
@@ -858,7 +858,7 @@ display-buffer correctly."
                      display-buffer-reuse-window)
                     . ())))
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm-company ; helm interface for company completion selection
     ;; separate from company backends
     :after company
@@ -872,37 +872,37 @@ display-buffer correctly."
 (defun jm-describe-bindings (&optional prefix buffer)
   (interactive)
   (cond
-   (helm-completion-stack-p
+   (completion-helm-p
     (unless helm-descbinds-mode
       (which-key-mode -1)
       (helm-descbinds-mode 1)))
-   (t ;; mocve-completion-stack-p
+   (t ;; completion-mocve-p
     (when helm-descbinds-mode
       (helm-descbinds-mode -1)
       (which-key-mode 1))))
   (describe-bindings prefix buffer))
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm-descbinds))
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm-lsp ; helm for LSP symbols, actions, switching projects
     ;; separate from company
     ;; :after lsp
     :bind (:map lsp-mode-map
                 ([remap xref-find-apropos] . helm-lsp-workspace-symbol))))
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm-org-rifle
     :bind (:map helm-command-map
                 ("R" . helm-org-rifle))
     :custom
     (helm-org-rifle-re-end-part nil)))
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm-projectile))
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm-rg
     ;; This is used by helm-projectile-rg but requires the fixes in
     ;; https://github.com/cosmicexplorer/helm-rg/issues/10, i.e.
@@ -912,7 +912,7 @@ display-buffer correctly."
     ;; 2. adding ("-p" :face helm-rg-inactive-arg-face) to helm-rg--ripgrep-argv-format-alist
     ))
 
-(when helm-completion-stack-p
+(when completion-helm-p
   (use-package helm-swoop))
 
 (use-package hideshow
@@ -1180,7 +1180,7 @@ display-buffer correctly."
                 (lambda (&rest _args) nil)
                 '((name . "always-nil")))))
 
-(when mocve-completion-stack-p
+(when completion-mocve-p
   (use-package marginalia         ; Provides annotations for completion candidates.
     ))
 
@@ -1320,7 +1320,7 @@ directory, otherwise return nil."
                (file-directory-p candidate))
       candidate)))
 
-(when mocve-completion-stack-p
+(when completion-mocve-p
   (use-package orderless          ; Provides flexible completion style.
     :demand t
     :custom
@@ -1526,7 +1526,7 @@ directory, otherwise return nil."
           org-ref-bibliography-notes (concat bibliography-directory "/notes.org")
           org-ref-default-bibliography reftex-default-bibliography
           org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/"))
-    (when helm-completion-stack-p
+    (when completion-helm-p
       (setq helm-bibtex-bibliography (car reftex-default-bibliography)
             helm-bibtex-library-path org-ref-pdf-directory
             helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes")
@@ -1574,7 +1574,7 @@ directory, otherwise return nil."
         projectile-globally-ignored-file-suffixes '(".pyc")
         projectile-mode-line-prefix " Proj"
         projectile-project-root-files '("requirements.txt" "setup.py" "tox.ini"))
-  (when helm-completion-stack-p
+  (when completion-helm-p
     (setq projectile-completion-system 'helm)))
 
 (use-package ps-print                   ; built-in
@@ -1898,7 +1898,7 @@ files.  This persists across sessions"
                      " " vc-mode)))
         (setq vc-mode noback)))))
 
-(when mocve-completion-stack-p
+(when completion-mocve-p
   (use-package vertico            ; Provides a vertical completion U.I.
     ))
 
@@ -1984,9 +1984,9 @@ files.  This persists across sessions"
   (winner-mode)
   (yas-global-mode)
 
-  (when helm-completion-stack-p
+  (when completion-helm-p
     (helm-mode))
-  (when mocve-completion-stack-p
+  (when completion-mocve-p
     (marginalia-mode)
     (vertico-mode))
 
