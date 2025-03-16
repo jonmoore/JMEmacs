@@ -1741,70 +1741,64 @@ directory, otherwise return nil."
   :hook (emacs-lisp-mode . smartparens-mode)
   :bind (:map
          smartparens-strict-mode-map
-         ("M-q" . sp-indent-defun)
+         ("M-q"           . sp-indent-defun)
 
          :map smartparens-mode-map
-         ("C-M-b" . sp-backward-sexp)
-         ("C-M-f" . sp-forward-sexp)
+         ;; Navigating
+         ("C-M-b"         . sp-backward-sexp)
+         ("C-M-f"         . sp-forward-sexp)
 
-         ("<C-M-left>" . sp-backward-sexp)
-         ("<C-M-right>" . sp-forward-sexp)
-         ("<C-up>" . sp-up-sexp)
-         ("<C-down>" . sp-down-sexp)
-         ("<C-S-up>" . sp-backward-up-sexp)
-         ("<C-S-down>" . sp-backward-down-sexp)
+         ("<C-M-left>"    . sp-backward-sexp)
+         ("<C-M-right>"   . sp-forward-sexp)
+         ;; The key bindings below are so that the up/down pairs correspond to actions and
+         ;; their inverses, at least roughly.
+         ("<C-up>"        . sp-backward-up-sexp)
+         ("<C-down>"      . sp-down-sexp)
+         ("<C-S-up>"      . sp-up-sexp)
+         ("<C-S-down>"    . sp-backward-down-sexp)
 
-         ("C-M-p" . sp-previous-sexp)
-         ("C-M-n" . sp-next-sexp)
-         ("M-a" . sp-beginning-of-sexp)
-         ("M-e" . sp-end-of-sexp)
+         ("C-M-p"         . sp-previous-sexp)
+         ("C-M-n"         . sp-next-sexp)
+         ("M-a"           . sp-beginning-of-sexp)
+         ("M-e"           . sp-end-of-sexp)
 
-         ("M-B" . sp-backward-symbol)
-         ("M-F" . sp-forward-symbol)
+         ("M-B"           . sp-backward-symbol)
+         ("M-F"           . sp-forward-symbol)
 
-         ("M-p" . point-undo)
-         ("M-n" . point-redo)
+         ;; Selecting and copying
+         ("C-M-]"         . sp-select-next-thing-exchange)
+         ("C-M-w"         . sp-copy-sexp)
 
-         ;; selection
-         ("C-]" . sp-select-next-thing-exchange)
-         ("C-M-]" . sp-select-next-thing)
-
-         ;; Deleting and killing
-         ("<M-delete>" . sp-unwrap-sexp)
+         ;; Editing, but not deleting sexp contents
+         ("C-M-s"         . sp-splice-sexp)
+         ("C-M-?"         . sp-convolute-sexp)
+         ("C-M-S"         . sp-split-sexp)
+         ("C-M-J"         . sp-join-sexp)
+         ("C-M-t"         . sp-transpose-sexp)
+         ("<M-delete>"    . sp-unwrap-sexp)
          ("<M-backspace>" . sp-backward-unwrap-sexp)
 
+         ;; Slurp and barf, respectively, push and pop sexps onto and off the current
+         ;; list.  See http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking for
+         ;; the first setting; not using "C-)" because Microsoft have broken this.  Search
+         ;; for "WTF" in this file.
+         ("C-M-0"         . sp-forward-slurp-sexp)
+         ("C-}"           . sp-forward-barf-sexp)
+         ("C-M-9"         . sp-backward-slurp-sexp)
+         ("C-{"           . sp-backward-barf-sexp)
+
+         ;; Deleting and killing
          ([remap backward-delete-char] . sp-backward-delete-char)
          ([remap backward-kill-word]   . sp-backward-kill-word)
          ([remap delete-forward-char]  . sp-delete-char)
          ([remap kill-line]            . sp-kill-hybrid-sexp)
          ([remap kill-word]            . sp-kill-word)
 
-         ("C-M-k" . sp-kill-sexp)
+         ("C-M-k"   . sp-kill-sexp)
          ("C-M-S-k" . sp-backward-kill-sexp)
-         ("C-M-w" . sp-copy-sexp)
 
-         ;; Depth changing
-         ("M-s" . sp-splice-sexp)
-         ("C-M-s" . sp-splice-sexp-killing-around)
-         ("M-?" . sp-convolute-sexp)
          ("<C-M-backspace>" . sp-splice-sexp-killing-backward)
-         ("<C-M-delete>" . sp-splice-sexp-killing-forward)
-
-         ;; Barf & slurp
-
-         ;; http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking
-         ;; for the first setting
-         ;; Not using "C-)" because Microsoft have broken this.
-         ;; Search for "WTF" in this file.
-         ("C-M-0" . sp-forward-slurp-sexp)
-         ("C-}" . sp-forward-barf-sexp)
-         ("C-M-9" . sp-backward-slurp-sexp)
-         ("C-{" . sp-backward-barf-sexp)
-
-         ;; Miscellaneous commands
-         ("M-S" . sp-split-sexp)
-         ("M-J" . sp-join-sexp)
-         ("C-M-t" . sp-transpose-sexp))
+         ("<C-M-delete>"    . sp-splice-sexp-killing-forward))
   :config
   ;; smartparens-config provides sensible defaults for smartparens in different
   ;; languages.  It's especially important for lisp as otherwise smartparens
