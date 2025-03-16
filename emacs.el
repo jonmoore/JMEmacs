@@ -300,6 +300,18 @@
            ("<S-f12>"      . windows-search-moccur-like)
            ("<C-f12>"      . windows-search-moccur-contains))
 
+(when mocve-completion-stack-p
+  (bind-keys
+   ("C-x b" . consult-buffer)
+   ("M-g g" . consult-goto-line)
+   ("M-g M-g" . consult-goto-line)
+   ("M-s g" . consult-grep)
+   ("M-s k" . consult-keep-lines)
+   ("M-s l" . consult-line)
+   ("M-s m" . consult-multi-occur)
+   ("M-s r" . consult-ripgrep)
+   ("M-s u" . consult-focus-lines)))
+
 (defun jm-custom-toggle-all-more-hide ()
   "Toggle all \"More/Hide\" widgets in current buffer.  From alphapapa's
 https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
@@ -574,8 +586,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (when system-win32-p
     (setq conda--executable-path (f-join conda-anaconda-home conda-env-executables-dir "conda.exe"))))
 
-(use-package consult            ; Provides enhanced command-line UI tools.
-  )
+(when mocve-completion-stack-p
+  (use-package consult            ; Provides enhanced command-line UI tools.
+    ))
 
 (use-package cov)
 
@@ -656,8 +669,12 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package elmacro)
 
-(use-package embark             ; Provides actions on minibuffer completions.
-  )
+(when mocve-completion-stack-p
+  (use-package embark             ; Provides actions on minibuffer completions.
+    :bind
+    (("C-." . embark-act)         ;; pick some comfortable key
+     ("C-;" . embark-dwim)        ;; good alternative: M-.
+     ("C-h B" . embark-bindings))))
 
 (use-package expand-region
   :bind
@@ -857,12 +874,17 @@ display-buffer correctly."
     ;;             :around #'jm-helm-company-display-document-buffer)
     ))
 
-(defvar jm-helm-descbinds 1
-  "Whether to use helm-descbinds for describing key bindings")
-
 (defun jm-describe-bindings (&optional prefix buffer)
   (interactive)
-  (helm-descbinds-mode jm-helm-descbinds)
+  (cond
+   (helm-completion-stack-p
+    (unless helm-descbinds-mode
+      (which-key-mode -1)
+      (helm-descbinds-mode 1)))
+   (t ;; mocve-completion-stack-p
+    (when helm-descbinds-mode
+      (helm-descbinds-mode -1)
+      (which-key-mode 1))))
   (describe-bindings prefix buffer))
 
 (when helm-completion-stack-p
@@ -1169,8 +1191,9 @@ display-buffer correctly."
                 (lambda (&rest _args) nil)
                 '((name . "always-nil")))))
 
-(use-package marginalia         ; Provides annotations for completion candidates.
-  )
+(when mocve-completion-stack-p
+  (use-package marginalia         ; Provides annotations for completion candidates.
+    ))
 
 (use-package markdown-mode)
 
@@ -1308,8 +1331,12 @@ directory, otherwise return nil."
                (file-directory-p candidate))
       candidate)))
 
-(use-package orderless          ; Provides flexible completion style.
-  )
+(when mocve-completion-stack-p
+  (use-package orderless          ; Provides flexible completion style.
+    :demand t
+    :custom
+    (completion-styles '(orderless))
+    (completion-category-overrides '((file (styles basic partial-completion))))))
 
 (use-package org
   :mode "\\.org'"
@@ -1889,8 +1916,9 @@ files.  This persists across sessions"
                      " " vc-mode)))
         (setq vc-mode noback)))))
 
-(use-package vertico            ; Provides a vertical completion U.I.
-  )
+(when mocve-completion-stack-p
+  (use-package vertico            ; Provides a vertical completion U.I.
+    ))
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   ;; This makes lines display wrapped at fill-column in visual-line-mode
@@ -1967,12 +1995,15 @@ files.  This persists across sessions"
   (save-place-mode 1)
   (savehist-mode 1)
   (show-paren-mode t)
-  (which-key-mode)
   (winner-mode)
   (desktop-save-mode 1)
   (server-start)
   (when helm-completion-stack-p
-    (helm-mode 1)))
+    (helm-mode 1))
+  (when mocve-completion-stack-p
+    (marginalia-mode)
+    (vertico-mode)
+    ))
 
 
 (message "Finished emacs.el")
