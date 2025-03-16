@@ -160,8 +160,6 @@
 ;; Somebody decided that warnings about too-wide docstrings, using package cl, etc. merit
 ;; opening a *Warnings* buffer with big bright red stop-sign icons by default.  People
 ;; have no sense sometimes.
-(setq byte-compile-warnings
-      '(not docstrings))
 (defvar warning-minimum-level :error)
 
 ;;; PERSONAL LISP
@@ -249,6 +247,15 @@
         w32-rwindow-modifier 'super
         ;; for when we don't have a right Windows key
         w32-apps-modifier 'super))
+
+(defconst helm-completion-stack-p t
+  "Whether to use the Helm completion stack.")
+
+(defconst mocve-completion-stack-p nil
+  "Whether to use the MOCVE (Marginalia, Orderless, Consult, Vertico, Embark) completion stack.")
+
+(when (and helm-completion-stack-p mocve-completion-stack-p)
+  (error "Cannot use both the Helm and MOCVE completion stacks"))
 
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
 ;; Note that sequences consisting of C-c and a letter are reserved for users
