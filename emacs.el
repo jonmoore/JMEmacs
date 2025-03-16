@@ -753,78 +753,81 @@ clean buffer we delay checking for longer."
 
   (jm-reset-helm-bindings))
 
-(use-package helm
-  ;; helm notes
 
-  ;; Debugging helm in the regular Emacs way with helm enabled basically doesn't
-  ;; work.  For effective debugging, see "Debugging helm" in the online help.
+(when helm-completion-stack-p
+  (use-package helm
+    ;; helm notes
 
-  ;; 1) call (jm-helm-debug-init)
-  ;;
-  ;; 2) call (helm-suspend-update t)
-  ;; https://emacs.stackexchange.com/questions/468/how-to-debug-helm. Typically
-  ;; bound as C-!
-  ;;
-  ;; 3) try to run the minimal code needed to show the issue
-  ;;
-  ;; BUT ....
-  ;;
-  ;; 4) calling helm-functions outside their regular contexts can create strange
-  ;; errors, e.g. ended up with default-directory set to nil which broke
-  ;; make-process (wrong argument type stringp), even though we don't pass
-  ;; default-directory.  It is mentioned in the docs of start-process though
-  ;;
-  :diminish helm-mode
-  :bind (("C-c h"          . helm-command-prefix)
-         ("C-x C-b"        . helm-buffers-list)
-         ("C-x C-f"        . helm-find-files)
-         ("C-x C-r"        . helm-recentf)
-         ("C-x b"          . helm-mini)
-         ("M-X"            . execute-extended-command) ;; old binding of M-x
-         ("M-x"            . helm-M-x)
-         ("M-y"            . helm-show-kill-ring)
+    ;; Debugging helm in the regular Emacs way with helm enabled basically doesn't
+    ;; work.  For effective debugging, see "Debugging helm" in the online help.
 
-         :map helm-command-map
-         ("TAB"            . helm-lisp-completion-at-point)
-         ("M-:"            . helm-eval-expression-with-eldoc)
-         ("a"              . helm-apropos)
-         ("m"              . helm-multi-swoop)
-         ("o"              . helm-occur)
-         ("s"              . helm-swoop)
+    ;; 1) call (jm-helm-debug-init)
+    ;;
+    ;; 2) call (helm-suspend-update t)
+    ;; https://emacs.stackexchange.com/questions/468/how-to-debug-helm. Typically
+    ;; bound as C-!
+    ;;
+    ;; 3) try to run the minimal code needed to show the issue
+    ;;
+    ;; BUT ....
+    ;;
+    ;; 4) calling helm-functions outside their regular contexts can create strange
+    ;; errors, e.g. ended up with default-directory set to nil which broke
+    ;; make-process (wrong argument type stringp), even though we don't pass
+    ;; default-directory.  It is mentioned in the docs of start-process though
+    ;;
+    :diminish helm-mode
+    :bind (("C-c h"          . helm-command-prefix)
+           ("C-x C-b"        . helm-buffers-list)
+           ("C-x C-f"        . helm-find-files)
+           ("C-x C-r"        . helm-recentf)
+           ("C-x b"          . helm-mini)
+           ("M-X"            . execute-extended-command) ;; old binding of M-x
+           ("M-x"            . helm-M-x)
+           ("M-y"            . helm-show-kill-ring)
 
-         :map helm-map
-         ("TAB"            . helm-execute-persistent-action)
-         ("M-RET"          . helm-select-action)       ; more sane than C-z
-         ("C-'"            . ace-jump-helm-line)
+           :map helm-command-map
+           ("TAB"            . helm-lisp-completion-at-point)
+           ("M-:"            . helm-eval-expression-with-eldoc)
+           ("a"              . helm-apropos)
+           ("m"              . helm-multi-swoop)
+           ("o"              . helm-occur)
+           ("s"              . helm-swoop)
 
-         ;; helm-read-file-map is defined in helm-files, which should be
-         ;; required in :config
-         :map helm-read-file-map
-         ("C-h m"          . describe-mode)
-         ("C-<backspace>"  . backward-kill-word))
-  :custom
-  (helm-ff-lynx-style-map nil "Disabling any helm keybinding is a sensible default")
-  (helm-follow-mode-persistent nil)
-  (helm-grep-ag-command
-   "rg --color=always --colors 'match:fg:yellow' --colors 'match:style:nobold' --smart-case --no-heading --line-number %s %s %s")
-  (helm-grep-ag-pipe-cmd-switches
-   '("--colors 'match:fg:yellow' --colors 'match:style:nobold'"))
-  (helm-source-names-using-follow '("Imenu" "Search Buffers" "Occur"))
+           :map helm-map
+           ("TAB"            . helm-execute-persistent-action)
+           ("M-RET"          . helm-select-action)       ; more sane than C-z
+           ("C-'"            . ace-jump-helm-line)
 
-  ;; helm-find-files caches lists of files by directory assuming that file-notify can be
-  ;; used to update the cache reliably but that's been broken over the years on, at least,
-  ;; Windows, MacOS, and WSL.  This leads to out-of-date file lists so disable it.
-  (helm-ff-use-notify nil)
-  :config
-  (require 'helm-files)
-  (global-unset-key (kbd "C-x c"))
-  (setq helm-mode-no-completion-in-region-in-modes
-        '(inferior-python-mode)))
+           ;; helm-read-file-map is defined in helm-files, which should be
+           ;; required in :config
+           :map helm-read-file-map
+           ("C-h m"          . describe-mode)
+           ("C-<backspace>"  . backward-kill-word))
+    :custom
+    (helm-ff-lynx-style-map nil "Disabling any helm keybinding is a sensible default")
+    (helm-follow-mode-persistent nil)
+    (helm-grep-ag-command
+     "rg --color=always --colors 'match:fg:yellow' --colors 'match:style:nobold' --smart-case --no-heading --line-number %s %s %s")
+    (helm-grep-ag-pipe-cmd-switches
+     '("--colors 'match:fg:yellow' --colors 'match:style:nobold'"))
+    (helm-source-names-using-follow '("Imenu" "Search Buffers" "Occur"))
 
-(use-package helm-ag
-  :config
-  (setq helm-ag-base-command "rg"
-        helm-ag-use-grep-ignore-list t))
+    ;; helm-find-files caches lists of files by directory assuming that file-notify can be
+    ;; used to update the cache reliably but that's been broken over the years on, at least,
+    ;; Windows, MacOS, and WSL.  This leads to out-of-date file lists so disable it.
+    (helm-ff-use-notify nil)
+    :config
+    (require 'helm-files)
+    (global-unset-key (kbd "C-x c"))
+    (setq helm-mode-no-completion-in-region-in-modes
+          '(inferior-python-mode))))
+
+(when helm-completion-stack-p
+  (use-package helm-ag
+    :config
+    (setq helm-ag-base-command "rg"
+          helm-ag-use-grep-ignore-list t)))
 
 (defun jm-helm-company-display-document-buffer (orig-fun buffer)
   "Temporarily show the documentation BUFFER.  JM: fixed to call
@@ -837,15 +840,16 @@ display-buffer correctly."
                      display-buffer-reuse-window)
                     . ())))
 
-(use-package helm-company ; helm interface for company completion selection
-  ;; separate from company backends
-  :after company
-  :bind (:map company-active-map
-              ("C-o" . helm-company))
-  ;; :config
-  ;; (advice-add 'helm-company-display-document-buffer
-  ;;             :around #'jm-helm-company-display-document-buffer)
-  )
+(when helm-completion-stack-p
+  (use-package helm-company ; helm interface for company completion selection
+    ;; separate from company backends
+    :after company
+    :bind (:map company-active-map
+                ("C-o" . helm-company))
+    ;; :config
+    ;; (advice-add 'helm-company-display-document-buffer
+    ;;             :around #'jm-helm-company-display-document-buffer)
+    ))
 
 (defvar jm-helm-descbinds 1
   "Whether to use helm-descbinds for describing key bindings")
@@ -855,32 +859,38 @@ display-buffer correctly."
   (helm-descbinds-mode jm-helm-descbinds)
   (describe-bindings prefix buffer))
 
-(use-package helm-descbinds)
+(when helm-completion-stack-p
+  (use-package helm-descbinds))
 
-(use-package helm-lsp ; helm for LSP symbols, actions, switching projects
-  ;; separate from company
-  ;; :after lsp
-  :bind (:map lsp-mode-map
-              ([remap xref-find-apropos] . helm-lsp-workspace-symbol)))
+(when helm-completion-stack-p
+  (use-package helm-lsp ; helm for LSP symbols, actions, switching projects
+    ;; separate from company
+    ;; :after lsp
+    :bind (:map lsp-mode-map
+                ([remap xref-find-apropos] . helm-lsp-workspace-symbol))))
 
-(use-package helm-org-rifle
-  :bind (:map helm-command-map
-              ("R" . helm-org-rifle))
-  :custom
-  (helm-org-rifle-re-end-part nil))
+(when helm-completion-stack-p
+  (use-package helm-org-rifle
+    :bind (:map helm-command-map
+                ("R" . helm-org-rifle))
+    :custom
+    (helm-org-rifle-re-end-part nil)))
 
-(use-package helm-projectile)
+(when helm-completion-stack-p
+  (use-package helm-projectile))
 
-(use-package helm-rg
-  ;; This is used by helm-projectile-rg but requires the fixes in
-  ;; https://github.com/cosmicexplorer/helm-rg/issues/10, i.e.
-  ;;
-  ;; 1. using (or paths (list helm-rg--current-dir)) instead of paths in helm-rg
-  ;;
-  ;; 2. adding ("-p" :face helm-rg-inactive-arg-face) to helm-rg--ripgrep-argv-format-alist
-  )
+(when helm-completion-stack-p
+  (use-package helm-rg
+    ;; This is used by helm-projectile-rg but requires the fixes in
+    ;; https://github.com/cosmicexplorer/helm-rg/issues/10, i.e.
+    ;;
+    ;; 1. using (or paths (list helm-rg--current-dir)) instead of paths in helm-rg
+    ;;
+    ;; 2. adding ("-p" :face helm-rg-inactive-arg-face) to helm-rg--ripgrep-argv-format-alist
+    ))
 
-(use-package helm-swoop)
+(when helm-completion-stack-p
+  (use-package helm-swoop))
 
 (use-package help-mode
   :ensure nil
@@ -1488,14 +1498,15 @@ directory, otherwise return nil."
     (setq reftex-default-bibliography (list (concat bibliography-directory "/jonmoore.bib"))
           org-ref-bibliography-notes (concat bibliography-directory "/notes.org")
           org-ref-default-bibliography reftex-default-bibliography
-          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/")
-          helm-bibtex-bibliography (car reftex-default-bibliography)
-          helm-bibtex-library-path org-ref-pdf-directory
-          helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes")
-          helm-bibtex-pdf-open-function (if system-osx-p
-                                            (lambda (fpath)
-                                              (start-process "open" "*open*" "open" fpath))
-                                          'org-open-file))))
+          org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/"))
+    (when helm-completion-stack-p
+      (setq helm-bibtex-bibliography (car reftex-default-bibliography)
+            helm-bibtex-library-path org-ref-pdf-directory
+            helm-bibtex-notes-path (concat bibliography-directory "/helm-bibtex-notes")
+            helm-bibtex-pdf-open-function (if system-osx-p
+                                              (lambda (fpath)
+                                                (start-process "open" "*open*" "open" fpath))
+                                            'org-open-file)))))
 
 (use-package outline
   :config
@@ -1531,12 +1542,13 @@ directory, otherwise return nil."
 
 (use-package projectile
   :config
-  (setq projectile-completion-system 'helm
-        projectile-globally-ignored-directories
+  (setq projectile-globally-ignored-directories
         '(".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__")
         projectile-globally-ignored-file-suffixes '(".pyc")
         projectile-mode-line-prefix " Proj"
-        projectile-project-root-files '("requirements.txt" "setup.py" "tox.ini")))
+        projectile-project-root-files '("requirements.txt" "setup.py" "tox.ini"))
+  (when helm-completion-stack-p
+    (setq projectile-completion-system 'helm)))
 
 (use-package ps-print                   ; built-in
   :config
@@ -1937,14 +1949,15 @@ files.  This persists across sessions"
   (global-auto-revert-mode t)
   (global-font-lock-mode t)
   (global-undo-tree-mode)
-  (helm-mode 1)
   (save-place-mode 1)
   (savehist-mode 1)
   (show-paren-mode t)
   (which-key-mode)
   (winner-mode)
   (desktop-save-mode 1)
-  (server-start))
+  (server-start)
+  (when helm-completion-stack-p
+    (helm-mode 1)))
 
 
 (message "Finished emacs.el")
