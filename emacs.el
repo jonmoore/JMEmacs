@@ -134,7 +134,7 @@
   (defvar async-bytecomp-allowed-packages '(all))
   :config
   ;; async compiling package
-  (async-bytecomp-package-mode t)
+  (async-bytecomp-package-mode)
   ;; limit number of async processes
   (defvar async-maximum-parallel-procs 4)
   (defvar async--parallel-procs 0)
@@ -207,7 +207,6 @@
                        ((or system-osx-p system-linux-p)   "~/backup")))))
 
 ;;; COLORS AND APPEARANCE
-(tool-bar-mode -1)
 (setq frame-title-format  '(:eval (buffer-file-names-in-selected-frame))
       query-replace-highlight t
       search-highlight t)
@@ -354,10 +353,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (fill-column 90)
   (find-ls-option '("-exec ls -ld {} ';'" . "-ld") t)
   (gc-cons-threshold (* 128 1000 1000))
-  (global-display-fill-column-indicator-mode t)
   (history-delete-duplicates t)
   (history-length 100)
-  (indent-tabs-mode nil)
   (jit-lock-chunk-size 4096)
   (jit-lock-defer-time 0.25)
   (jit-lock-context-time 5)
@@ -386,7 +383,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
      ))
   (set-mark-command-repeat-pop t)
   (show-trailing-whitespace nil)
-  (transient-mark-mode t)
   :custom-face
   (cursor ((t (:background "yellow"))))
   (font-lock-builtin-face ((((class color) (background light)) (:foreground "blue"))))
@@ -1808,7 +1804,7 @@ directory, otherwise return nil."
 (use-package speedbar
   :hook (speedbar-mode . (lambda ()
                            (speedbar-add-supported-extension ".org")
-                           (auto-raise-mode 1)))
+                           (auto-raise-mode)))
   :custom
   (speedbar-vc-do-check nil))
 
@@ -1961,10 +1957,8 @@ files.  This persists across sessions"
                        (run-hooks 'prog-mode-hook))))
 
 (use-package yasnippet
-  :diminish yas-minor-mode
   :config
   (setq yas-verbosity 2)
-  (yas-global-mode)
   (yas-reload-all))
 
 (use-package yasnippet-snippets)        ; Official snippets
@@ -1981,23 +1975,32 @@ files.  This persists across sessions"
 
   :config
   (require 'vc)
+  (indent-tabs-mode -1)
+  (tool-bar-mode -1)
+
   (global-anzu-mode)
   (global-auto-highlight-symbol-mode)
-  (global-auto-revert-mode t)
-  (global-font-lock-mode t)
+  (global-auto-revert-mode)
+  (global-display-fill-column-indicator-mode)
+  (global-font-lock-mode)
   (global-undo-tree-mode)
-  (save-place-mode 1)
-  (savehist-mode 1)
-  (show-paren-mode t)
+  (recentf-mode)
+  (save-place-mode)
+  (savehist-mode)
+  (show-paren-mode)
+  (transient-mark-mode)
   (winner-mode)
-  (desktop-save-mode 1)
-  (server-start)
+  (yas-global-mode)
+
   (when helm-completion-stack-p
-    (helm-mode 1))
+    (helm-mode))
   (when mocve-completion-stack-p
     (marginalia-mode)
-    (vertico-mode)
-    ))
+    (vertico-mode))
+
+  (desktop-save-mode)
+
+  (server-start))
 
 
 (message "Finished emacs.el")
