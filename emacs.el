@@ -816,7 +816,6 @@ clean buffer we delay checking for longer."
            :map helm-map
            ("TAB"            . helm-execute-persistent-action)
            ("M-RET"          . helm-select-action)       ; more sane than C-z
-           ("C-'"            . ace-jump-helm-line)
 
            ;; helm-read-file-map is defined in helm-files, which should be
            ;; required in :config
@@ -916,11 +915,6 @@ display-buffer correctly."
 (when helm-completion-stack-p
   (use-package helm-swoop))
 
-(use-package help-mode
-  :ensure nil
-  :bind (:map help-mode-map
-              ("C-c j k" . ace-link-help)))
-
 (use-package hideshow
   :diminish hs-minor-mode
   :hook (prog-mode . hs-minor-mode)
@@ -984,7 +978,6 @@ display-buffer correctly."
 (use-package info
   :bind (:map
          Info-mode-map
-         ("j"           . ace-link-info)
          (";"           . Info-search-next)
          (":"           . Info-search-backward)
          ([(shift tab)] . Info-prev-reference)))
@@ -1360,7 +1353,6 @@ directory, otherwise return nil."
               ("C-c ?"          . outline-mark-subtree)
               ("<C-S-left>"     . nil)
               ("<C-S-right>"    . nil)
-              ("C-c j k"        . ace-link-org)
               ("C-c C-x RET f"  . org-mobile-pull)
               ("C-c C-x RET g"  . nil))
 
