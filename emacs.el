@@ -1724,6 +1724,8 @@ directory, otherwise return nil."
 
 (use-package sicp)
 
+(use-package simple-call-tree)
+
 (use-package smartparens
   :diminish smartparens-mode
   :hook (emacs-lisp-mode . smartparens-mode)
