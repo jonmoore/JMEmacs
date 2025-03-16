@@ -574,6 +574,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (when system-win32-p
     (setq conda--executable-path (f-join conda-anaconda-home conda-env-executables-dir "conda.exe"))))
 
+(use-package consult            ; Provides enhanced command-line UI tools.
+  )
+
 (use-package cov)
 
 (use-package css-mode
@@ -652,6 +655,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :diminish eldoc-mode)
 
 (use-package elmacro)
+
+(use-package embark             ; Provides actions on minibuffer completions.
+  )
 
 (use-package expand-region
   :bind
@@ -1163,6 +1169,9 @@ display-buffer correctly."
                 (lambda (&rest _args) nil)
                 '((name . "always-nil")))))
 
+(use-package marginalia         ; Provides annotations for completion candidates.
+  )
+
 (use-package markdown-mode)
 
 (use-package maxframe)
@@ -1298,6 +1307,9 @@ directory, otherwise return nil."
     (when (and candidate
                (file-directory-p candidate))
       candidate)))
+
+(use-package orderless          ; Provides flexible completion style.
+  )
 
 (use-package org
   :mode "\\.org'"
@@ -1876,6 +1888,9 @@ files.  This persists across sessions"
                      (format "^ %s" (vc-backend buffer-file-name))
                      " " vc-mode)))
         (setq vc-mode noback)))))
+
+(use-package vertico            ; Provides a vertical completion U.I.
+  )
 
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
   ;; This makes lines display wrapped at fill-column in visual-line-mode
