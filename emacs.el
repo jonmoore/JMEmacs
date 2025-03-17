@@ -1951,10 +1951,10 @@ files.  This persists across sessions"
 
 (use-package emacs
   ;; this is quite heavy, as it requires loading python and conda
-  :hook (desktop-after-read . python-helpers-enable-lsp-everywhere)
+  ;; :hook (desktop-after-read . python-helpers-enable-lsp-everywhere)
 
   :config
-  (require 'vc)
+  (python-helpers-enable-lsp-everywhere)
   (indent-tabs-mode -1)
   (tool-bar-mode -1)
 
@@ -1973,10 +1973,12 @@ files.  This persists across sessions"
   (yas-global-mode)
 
   (when completion-helm-p
+    (which-key-mode -1)
     (helm-mode))
   (when completion-mocve-p
     (marginalia-mode)
-    (vertico-mode))
+    (vertico-mode)
+    (which-key-mode))
 
   (desktop-save-mode)
 
