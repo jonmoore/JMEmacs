@@ -232,7 +232,7 @@
                ;;(file-writable-p (buffer-file-name))
                (y-or-n-p (format "Make buffer %s writable?"
                                  (current-buffer)))
-               (or (toggle-read-only -1) t)
+               (or (read-only-mode -1) t)
                (not buffer-read-only))
           (moccur-edit-change-file)
         (display-warning             ; (Not defined in old Emacses! *)

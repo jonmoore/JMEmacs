@@ -571,9 +571,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :ensure nil
   :init
   (defun colorize-compilation-buffer ()
-    (toggle-read-only)
+    (read-only-mode -1)
     (ansi-color-apply-on-region (point-min) (point-max))
-    (toggle-read-only))
+    (read-only-mode))
   :hook (compilation-filter . colorize-compilation-buffer))
 
 (use-package conda
