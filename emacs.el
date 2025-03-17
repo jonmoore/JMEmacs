@@ -258,7 +258,8 @@
   (error "Cannot use both the Helm and MOCVE completion stacks"))
 
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
-;; Note that sequences consisting of C-c and a letter are reserved for users
+;; Note that sequences consisting of C-c and a letter, either upper or lower case, are
+;; reserved for users, as are the function keys F5-F9.
 (bind-keys ("C-c a"        . org-agenda)
            ("C-c b"        . browse-url-at-point)
            ("C-c m"        . move-file-and-buffer)
@@ -281,36 +282,21 @@
            ("M-["          . undo-tree-visualize)
            ("M-]"          . repeat)
 
-           ("M-C-g"        . gptel)
+           ("M-C-g"        . gptel-send)
+           ("M-C-G"        . gptel)
 
            ("<C-S-left>"   . select-last-buffer)
            ("<C-S-right>"  . select-next-buffer)
 
            ("<home>"       . beginning-of-buffer)
            ("<end>"        . end-of-buffer)
-           ("<prior>"      . (lambda () (interactive) (scroll-down-in-place)))
-           ("<next>"       . (lambda () (interactive) (scroll-up-in-place)))
+           ("<prior>"      . scroll-down-in-place)
+           ("<next>"       . scroll-up-in-place)
            ("<f5>"         . other-window)
            ("<S-f5>"       . swap-buffers-previous-window-and-select)
            ("<f6>"         . rotate-buffer-to-next-window)
            ("<S-f6>"       . rotate-buffer-to-next-window-and-select)
-           ("<f8>"         . cycle-frame-maximized)
-           ("<f11>"        . org-clock-in-and-goto)
-           ("<S-f11>"      . org-clock-goto)
-           ("<S-f12>"      . windows-search-moccur-like)
-           ("<C-f12>"      . windows-search-moccur-contains))
-
-(when completion-mocve-p
-  (bind-keys
-   ("C-x b" . consult-buffer)
-   ("M-g g" . consult-goto-line)
-   ("M-g M-g" . consult-goto-line)
-   ("M-s g" . consult-grep)
-   ("M-s k" . consult-keep-lines)
-   ("M-s l" . consult-line)
-   ("M-s m" . consult-multi-occur)
-   ("M-s r" . consult-ripgrep)
-   ("M-s u" . consult-focus-lines)))
+           ("<f8>"         . cycle-frame-maximized))
 
 (defun jm-custom-toggle-all-more-hide ()
   "Toggle all \"More/Hide\" widgets in current buffer.  From alphapapa's
@@ -402,7 +388,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
   :hook (visual-line-mode . adaptive-wrap-prefix-mode))
 
-(use-package align
+(use-package align			; built-in
   :custom
   (align-to-tab-stop nil))
 
@@ -446,23 +432,23 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
              buffer-file-name)
     (setq global-auto-revert-ignore-buffer t)))
 
-(use-package autorevert
+(use-package autorevert			; built-in
   :ensure nil
   :hook  (find-file . disable-autorevert-for-network-files)
   :custom
   (auto-revert-interval 60))
 
-(use-package bibtex
+(use-package bibtex			; built-in
   :custom
   (bibtex-maintain-sorted-entries 'entry-class))
 
-(use-package browse-kill-ring
+(use-package browse-kill-ring		; Interactively insert items from kill-ring.
   :bind ("M-y" . browse-kill-ring)
   :config
   (browse-kill-ring-highlight-current-entry t)
   (browse-kill-ring-highlight-inserted-item t))
 
-(use-package cdlatex)
+(use-package cdlatex)			; Fast input methods for LaTeX
 
 (defun my-c-mode-common-hook-fn ()
 
@@ -484,19 +470,17 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :mode
   ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode)
   :bind (:map c-mode-base-map
-              ("RET"		. c-context-line-break)
-              ("M-o"		. ff-find-other-file))
+              ("RET"		. c-context-line-break))
   :hook (c-mode-common . my-c-mode-common-hook-fn)
   :config
   (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
                               ("\\.h\\'"     (".cpp" ".c"))
                               ("\\.hpp\\'"   (".cpp"))
                               ("\\.c\\'"     (".h")))
-        c-default-style '((java-mode . "java")
-                          (other . "stroustrup"))
+        c-default-style '((other . "stroustrup"))
         c-echo-syntactic-information-p nil))
 
-(use-package color-moccur
+(use-package color-moccur		; Multi-buffer occur (grep) mode.
   :bind (("M-s O" . moccur)
          :map isearch-mode-map
          ("M-o" . isearch-moccur )
@@ -507,8 +491,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         dmoccur-use-project t
         dmoccur-list '(("dir" default-directory (".*") dir)))
   (setq *moccur-buffer-name-exclusion-list*
-        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\.aps" ".+\.clw"
-          ".+\.ncb" ".+\.opt" ".+\.plg" ".+\.rc" ".+\.scc" "\\.aps$"
+        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\\.aps" ".+\\.clw"
+          ".+\\.ncb" ".+\\.opt" ".+\\.plg" ".+\\.rc" ".+\\.scc" "\\.aps$"
           "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
           "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
           "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
@@ -521,9 +505,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
           "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
           "\\.pch$" "\\.pdb$" "\\.res$")))
 
-(use-package color-theme-modern)
+(use-package color-theme-modern)	; Ports of color-theme themes to deftheme.
 
-(use-package comint
+(use-package comint			; built-in
   :ensure nil
   :config
   ;; the absence of -hook prevents using :hook here, while the docs for
@@ -532,27 +516,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 ;; possible settings from the company info manual
 
-;; company-indent-or-complete-common: Indent the current line or region, or complete the
-;; common part.
-;; (global-set-key (kbd "<tab>") #'company-indent-or-complete-common)
-;; (with-eval-after-load 'company
-;;   (define-key company-active-map (kbd "M-/") #'company-complete))
-
-;; company-complete-common-or-cycle is an interactive compiled Lisp function in ‘company.el’.
-;; (company-complete-common-or-cycle &optional ARG)
-;; Insert the common part of all candidates, or select the next one.
-
-;; (with-eval-after-load 'company
-;;   (define-key company-active-map
-;;               (kbd "TAB")
-;;               #'company-complete-common-or-cycle)
-;;   (define-key company-active-map
-;;               (kbd "<backtab>")
-;;               (lambda ()
-;;                 (interactive)
-;;                 (company-complete-common-or-cycle -1))))
 (use-package company ; completion framework
-  :diminish company-mode
   :hook (prog-mode . company-mode)
   :config
   (company-quickhelp-mode t)
@@ -562,13 +526,13 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (company-idle-delay 2.0) ;; default is 0.2, which often severely gets in the way
   )
 
-(use-package company-auctex)
+(use-package company-auctex)		; Company-mode auto-completion for AUCTeX.
 
-(use-package company-quickhelp)  ; shows popup docs for company completion candidates
+(use-package company-quickhelp)         ; shows popup docs for company completion candidates
 
-(use-package company-restclient)
+(use-package company-restclient)	; Company-mode completion back-end for restclient-mode
 
-(use-package compile
+(use-package compile			; built-in
   :ensure nil
   :init
   (defun colorize-compilation-buffer ()
@@ -577,22 +541,35 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     (read-only-mode))
   :hook (compilation-filter . colorize-compilation-buffer))
 
-(use-package conda
+(use-package conda			; Work with your conda environments.
   :config
   ;; work around conda--get-executable-path only searching for "conda" and not "conda.exe"
   (when system-win32-p
     (setq conda--executable-path (f-join conda-anaconda-home conda-env-executables-dir "conda.exe"))))
 
 (when completion-mocve-p
-  (use-package consult            ; Provides enhanced command-line UI tools.
-    ))
+  (use-package consult                  ; Enhanced completing-read functions
+    :init
+    (define-prefix-command 'consult-map nil "consult map")
+    (define-key global-map (kbd "M-s") 'consult-map)
+    :bind (("C-x b"   . consult-buffer)
+	   ("M-g g"   . consult-goto-line)
+	   ("M-g M-g" . consult-goto-line)
 
-(use-package cov)
+	   :map consult-map
+	   ("g" . consult-grep)
+	   ("k" . consult-keep-lines)
+	   ("l" . consult-line)
+	   ("m" . consult-multi-occur)
+	   ("r" . consult-ripgrep)
+	   ("u" . consult-focus-lines))))
 
-(use-package css-mode
+(use-package cov)			; Show coverage stats in the fringe.
+
+(use-package css-mode			; built-in
   :mode "\\.css\\'")
 
-(use-package csv-mode
+(use-package csv-mode			; Major mode for editing comma/char separated values
   :mode "\\.csv\\'")
 
 (use-package dap-mode                   ; client for Debug Adapter Protocol
@@ -602,7 +579,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         ;; Use debugpy since this is the successor to ptvsd
         dap-python-debugger 'debugpy))
 
-(use-package desktop
+(use-package desktop			; built-in
   :config
   (let* ((computername (getenv "COMPUTERNAME"))
          (local-desktop-dir
@@ -613,11 +590,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
           desktop-load-locked-desktop t
           desktop-path (list local-desktop-dir))))
 
-(use-package diminish)
+(use-package diminish)			; Provide suppression of modeline display by minor modes.
 
-(use-package dired-subtree)
-
-(use-package dired
+(use-package dired			; built-in
   :ensure nil
   :bind (:map dired-mode-map
               ("i" . dired-subtree-toggle)
@@ -633,7 +608,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (setq dired-dnd-protocol-alist nil
         find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))))
 
-(use-package dired-x
+(use-package dired-subtree)		; Insert subdirectories in a tree-like fashion.
+
+(use-package dired-x			; built-in
   :ensure nil
   :hook (dired-mode . dired-omit-mode)
   :config
@@ -646,14 +623,14 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package disable-mouse)             ; suppress mouse events
 
-(use-package ediff
+(use-package ediff			; built-in
   :config
   (setq ediff-custom-diff-options "-c -w"
         ediff-diff-options "-w"))
 
-(use-package ebib)
+(use-package ebib)			; A BibTeX database manager.
 
-(use-package eldoc
+(use-package eldoc			; built-in
   ;; note: using :diminish effectively creates a :config block, and eldoc is
   ;; already loaded when this block is processed, thus the config is executed,
   ;; including the call to diminish, while processing this block.  This can be
@@ -664,31 +641,44 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   ;; loading seems unaffected by the contents of eldoc.el.
   :diminish eldoc-mode)
 
-(use-package elmacro)
+(use-package elmacro)			; Convert keyboard macros to emacs lisp.
+
+(use-package consult                  ; Enhanced completing-read functions
+  :init
+  (define-prefix-command 'consult-map nil "consult map")
+  (define-key global-map (kbd "M-s") 'consult-map)
+  :bind (("C-x b"   . consult-buffer)
+	 ("M-g g"   . consult-goto-line)
+	 ("M-g M-g" . consult-goto-line)
+
+	 :map consult-map
+	 ("g" . consult-grep)
+	 ("k" . consult-keep-lines)
+	 ("l" . consult-line)
+	 ("m" . consult-multi-occur)
+	 ("r" . consult-ripgrep)
+	 ("u" . consult-focus-lines)))
 
 (when completion-mocve-p
-  (use-package embark             ; Provides actions on minibuffer completions.
-    :bind
-    (("C-." . embark-act)         ;; pick some comfortable key
-     ("C-;" . embark-dwim)        ;; good alternative: M-.
-     ("C-h B" . embark-bindings))))
+  (use-package embark                   ; Provides actions on minibuffer completions.
+    :init
+    (define-prefix-command 'embark-map nil "embark map")
+    (define-key global-map (kbd "C-c e") 'embark-map)
+    :bind (("C-h B" . embark-bindings)
+	   :map embark-map
+	   ("." . embark-act)               ;; pick some comfortable key
+	   (";" . embark-dwim)              ;; good alternative: M-.
+	   )))
 
-(use-package expand-region
+(use-package expand-region		; Increase selected region by semantic units.
   :bind
-  (("C-c x r" . er/expand-region)))
+  (("C-c x" . er/expand-region)))
 
-(use-package esup)
+(use-package esup)			; The Emacs StartUp Profiler (ESUP).
 
-(use-package find-func
-  :bind
-  (("C-c h F"   . find-function)
-   ("C-c h 4 F" . find-function-other-window)
-   ("C-c h K"   . find-function-on-key)
-   ("C-c h V"   . find-variable)
-   ("C-c h 4 V" . find-variable-other-window)))
-
-(use-package ffap
-  :config (setq ffap-machine-p-known 'reject))
+(use-package ffap			; built-in
+  :config
+  (setq ffap-machine-p-known 'reject))
 
 (defun adjust-flycheck-automatic-syntax-eagerness ()
   "Adjust how often we check for errors based on if there are any.
@@ -698,7 +688,7 @@ clean buffer we delay checking for longer."
   (setq-local flycheck-idle-change-delay
         (if flycheck-current-errors 5.0 15.0)))
 
-(use-package flycheck
+(use-package flycheck			; On-the-fly syntax checking
   ;; Note: do not waste time trying to fix flycheck warnings if you turn on flycheck in
   ;; this file for testing.  The elisp byte compiler reports many warnings that won't
   ;; generate any runtime failures (at the least, it doesn't know about personal autoloads
@@ -715,29 +705,29 @@ clean buffer we delay checking for longer."
   (define-key flycheck-mode-map flycheck-keymap-prefix
               flycheck-command-map))
 
-(use-package free-keys)
+(use-package free-keys			; Show free keybindings for modkeys or prefixes
+  )
 
-(use-package git-gutter-fringe ; Show git diff information in fringe
+(use-package git-gutter-fringe          ; Show git diff information in fringe
   :diminish)
 
-(use-package goto-addr ; buttonize URLs and e-mail addresses
+(use-package goto-addr                  ; buttonize URLs and e-mail addresses
   :hook ((prog-mode . goto-address-prog-mode)
          (text-mode . goto-address-mode)))
 
-(use-package gptel
+(use-package gptel			; Interact with ChatGPT or other LLMs.
   :pin melpa
   :config
   (setq gptel-expert-commands t
         gptel-use-curl nil
         gptel-model 'gpt-4o
         )
-  (require 'jm-gptel-tools)
-  )
+  (require 'jm-gptel-tools))
 
-(use-package graphviz-dot-mode
+(use-package graphviz-dot-mode		; Mode for the dot-language used by graphviz (att).
   :mode "\\.dot\\'")
 
-(use-package haskell-mode
+(use-package haskell-mode		; A Haskell editing mode
   :hook (haskell-mode . turn-on-haskell-indentation)
   :bind (:map haskell-mode-map
               ("C-c C-l"  . haskell-process-load-or-reload)
@@ -772,7 +762,6 @@ clean buffer we delay checking for longer."
   (setq enable-recursive-minibuffers t)
 
   (jm-reset-helm-bindings))
-
 
 (when completion-helm-p
   (use-package helm
@@ -843,7 +832,7 @@ clean buffer we delay checking for longer."
           '(inferior-python-mode))))
 
 (when completion-helm-p
-  (use-package helm-ag
+  (use-package helm-ag			; helm support for searching with ag, rg, etc
     :config
     (setq helm-ag-base-command "rg"
           helm-ag-use-grep-ignore-list t)))
@@ -860,7 +849,7 @@ display-buffer correctly."
                     . ())))
 
 (when completion-helm-p
-  (use-package helm-company ; helm interface for company completion selection
+  (use-package helm-company             ; helm interface for company completion selection
     ;; separate from company backends
     :after company
     :bind (:map company-active-map
@@ -872,39 +861,38 @@ display-buffer correctly."
 
 (defun jm-describe-bindings (&optional prefix buffer)
   (interactive)
-  (cond
-   (completion-helm-p
-    (unless helm-descbinds-mode
-      (which-key-mode -1)
-      (helm-descbinds-mode 1)))
-   (t ;; completion-mocve-p
+
+  (if completion-helm-p
+      (progn
+	(unless helm-descbinds-mode
+	  (helm-descbinds-mode))
+	(describe-bindings prefix buffer))
+    ;; I prefer describe-bindings to embark-bindings as a default
     (when helm-descbinds-mode
-      (helm-descbinds-mode -1)
-      (which-key-mode 1))))
-  (describe-bindings prefix buffer))
+      (helm-descbinds-mode -1))
+    (describe-bindings prefix buffer)))
 
 (when completion-helm-p
-  (use-package helm-descbinds))
+  (use-package helm-descbinds))		; helm version of `describe-bindings'
 
 (when completion-helm-p
-  (use-package helm-lsp ; helm for LSP symbols, actions, switching projects
-    ;; separate from company
+  (use-package helm-lsp                 ; helm for LSP symbols, actions, switching projects
     ;; :after lsp
     :bind (:map lsp-mode-map
                 ([remap xref-find-apropos] . helm-lsp-workspace-symbol))))
 
 (when completion-helm-p
-  (use-package helm-org-rifle
+  (use-package helm-org-rifle		; Rifle through your Org files.
     :bind (:map helm-command-map
                 ("R" . helm-org-rifle))
     :custom
     (helm-org-rifle-re-end-part nil)))
 
 (when completion-helm-p
-  (use-package helm-projectile))
+  (use-package helm-projectile))	; Helm integration for Projectile.
 
 (when completion-helm-p
-  (use-package helm-rg
+  (use-package helm-rg	                ; A helm interface to ripgrep.
     ;; This is used by helm-projectile-rg but requires the fixes in
     ;; https://github.com/cosmicexplorer/helm-rg/issues/10, i.e.
     ;;
@@ -914,9 +902,9 @@ display-buffer correctly."
     ))
 
 (when completion-helm-p
-  (use-package helm-swoop))
+  (use-package helm-swoop))		; Efficiently hopping squeezed lines powered by helm interface.
 
-(use-package hideshow
+(use-package hideshow			; built-in
   :diminish hs-minor-mode
   :hook (prog-mode . hs-minor-mode)
   :bind (:map hs-minor-mode-map
@@ -924,20 +912,19 @@ display-buffer correctly."
               ("C-c <right>" . hs-show-block)
               ("C-c <left>"  . hs-hide-block)))
 
-(use-package highlight-sexps
+(use-package highlight-sexps		; built-in.  highlight an expanding set of surrounding
   :ensure nil
   :config
   (setq hl-sexp-background-colors (create-hl-sexp-background-colors)))
 
 (use-package htmlize)                   ; convert buffer and text decorations to HTML
 
-(use-package hydra)
+(use-package hydra)			; Make bindings that stick around.
 
-(use-package ibuffer
+(use-package ibuffer			; built-in.
   :hook (ibuffer-mode . (lambda ()
                           (ibuffer-switch-to-saved-filter-groups "my-default-filter-groups")))
   :bind (:map ibuffer-mode-map
-              ("P" . ibuffer-do-ps-print)
               ("s p" . ibuffer-do-sort-by-filename-or-dired))
   :config
   (setq ibuffer-saved-filter-groups (quote (("my-default-filter-groups"
@@ -1933,11 +1920,15 @@ files.  This persists across sessions"
   (setq whitespace-style '(face tabs trailing missing-newline-at-eof)
         whitespace-line-column nil))
 
-(use-package windmove                   ; Select windows with Shift+Arrow
-  :bind (("C-c w <left>"  . windmove-left)
-         ("C-c w <right>" . windmove-right)
-         ("C-c w <up>"    . windmove-up)
-         ("C-c w <down>"  . windmove-down)))
+(use-package windmove                   ; Select windows with arrows
+  :init
+  (define-prefix-command 'windmove-map nil "windmove map")
+  (define-key global-map (kbd "C-c w") 'windmove-map)
+  :bind (:map windmove-map
+	 ("<left>"  . windmove-left)
+         ("<right>" . windmove-right)
+         ("<up>"    . windmove-up)
+         ("<down>"  . windmove-down)))
 
 (use-package winner                     ; Undo and redo window configurations
   :init
