@@ -71,8 +71,8 @@
 (setq load-prefer-newer t)
 (setq package-archives
       '(("melpa"  . "https://melpa.org/packages/")
-	("nongnu" . "https://elpa.nongnu.org/nongnu/")
-	("gnu"    . "https://elpa.gnu.org/packages/")))
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("gnu"    . "https://elpa.gnu.org/packages/")))
 
 (setq package-archive-priorities
       '(("nongnu" . 20)
@@ -388,7 +388,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
   :hook (visual-line-mode . adaptive-wrap-prefix-mode))
 
-(use-package align			; built-in
+(use-package align                      ; built-in
   :custom
   (align-to-tab-stop nil))
 
@@ -408,6 +408,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (use-package arc-mode                   ; built-in
   :custom
   (archive-zip-extract '("7z" "x" "-so")))
+
+(use-package auctex)                    ; Integrated environment for *TeX*
 
 (use-package auctex-latexmk ; Add LatexMk support to AUCTeX
   :config
@@ -432,23 +434,23 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
              buffer-file-name)
     (setq global-auto-revert-ignore-buffer t)))
 
-(use-package autorevert			; built-in
+(use-package autorevert                 ; built-in
   :ensure nil
   :hook  (find-file . disable-autorevert-for-network-files)
   :custom
   (auto-revert-interval 60))
 
-(use-package bibtex			; built-in
+(use-package bibtex                     ; built-in
   :custom
   (bibtex-maintain-sorted-entries 'entry-class))
 
-(use-package browse-kill-ring		; Interactively insert items from kill-ring.
+(use-package browse-kill-ring           ; Interactively insert items from kill-ring.
   :bind ("M-y" . browse-kill-ring)
   :config
   (browse-kill-ring-highlight-current-entry t)
   (browse-kill-ring-highlight-inserted-item t))
 
-(use-package cdlatex)			; Fast input methods for LaTeX
+(use-package cdlatex)                   ; Fast input methods for LaTeX
 
 (defun my-c-mode-common-hook-fn ()
 
@@ -470,7 +472,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :mode
   ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode)
   :bind (:map c-mode-base-map
-              ("RET"		. c-context-line-break))
+              ("RET"            . c-context-line-break))
   :hook (c-mode-common . my-c-mode-common-hook-fn)
   :config
   (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
@@ -480,7 +482,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         c-default-style '((other . "stroustrup"))
         c-echo-syntactic-information-p nil))
 
-(use-package color-moccur		; Multi-buffer occur (grep) mode.
+(use-package color-moccur               ; Multi-buffer occur (grep) mode.
   :bind (("M-s O" . moccur)
          :map isearch-mode-map
          ("M-o" . isearch-moccur )
@@ -505,9 +507,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
           "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
           "\\.pch$" "\\.pdb$" "\\.res$")))
 
-(use-package color-theme-modern)	; Ports of color-theme themes to deftheme.
+(use-package color-theme-modern)        ; Ports of color-theme themes to deftheme.
 
-(use-package comint			; built-in
+(use-package comint                     ; built-in
   :ensure nil
   :config
   ;; the absence of -hook prevents using :hook here, while the docs for
@@ -526,13 +528,13 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (company-idle-delay 2.0) ;; default is 0.2, which often severely gets in the way
   )
 
-(use-package company-auctex)		; Company-mode auto-completion for AUCTeX.
+(use-package company-auctex)            ; Company-mode auto-completion for AUCTeX.
 
 (use-package company-quickhelp)         ; shows popup docs for company completion candidates
 
-(use-package company-restclient)	; Company-mode completion back-end for restclient-mode
+(use-package company-restclient)        ; Company-mode completion back-end for restclient-mode
 
-(use-package compile			; built-in
+(use-package compile                    ; built-in
   :ensure nil
   :init
   (defun colorize-compilation-buffer ()
@@ -541,7 +543,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     (read-only-mode))
   :hook (compilation-filter . colorize-compilation-buffer))
 
-(use-package conda			; Work with your conda environments.
+(use-package conda                      ; Work with your conda environments.
   :config
   ;; work around conda--get-executable-path only searching for "conda" and not "conda.exe"
   (when system-win32-p
@@ -553,23 +555,23 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     (define-prefix-command 'consult-map nil "consult map")
     (define-key global-map (kbd "M-s") 'consult-map)
     :bind (("C-x b"   . consult-buffer)
-	   ("M-g g"   . consult-goto-line)
-	   ("M-g M-g" . consult-goto-line)
+           ("M-g g"   . consult-goto-line)
+           ("M-g M-g" . consult-goto-line)
 
-	   :map consult-map
-	   ("g" . consult-grep)
-	   ("k" . consult-keep-lines)
-	   ("l" . consult-line)
-	   ("m" . consult-multi-occur)
-	   ("r" . consult-ripgrep)
-	   ("u" . consult-focus-lines))))
+           :map consult-map
+           ("g" . consult-grep)
+           ("k" . consult-keep-lines)
+           ("l" . consult-line)
+           ("m" . consult-multi-occur)
+           ("r" . consult-ripgrep)
+           ("u" . consult-focus-lines))))
 
-(use-package cov)			; Show coverage stats in the fringe.
+(use-package cov)                       ; Show coverage stats in the fringe.
 
-(use-package css-mode			; built-in
+(use-package css-mode                   ; built-in
   :mode "\\.css\\'")
 
-(use-package csv-mode			; Major mode for editing comma/char separated values
+(use-package csv-mode                   ; Major mode for editing comma/char separated values
   :mode "\\.csv\\'")
 
 (use-package dap-mode                   ; client for Debug Adapter Protocol
@@ -579,7 +581,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         ;; Use debugpy since this is the successor to ptvsd
         dap-python-debugger 'debugpy))
 
-(use-package desktop			; built-in
+(use-package desktop                    ; built-in
   :config
   (let* ((computername (getenv "COMPUTERNAME"))
          (local-desktop-dir
@@ -590,9 +592,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
           desktop-load-locked-desktop t
           desktop-path (list local-desktop-dir))))
 
-(use-package diminish)			; Provide suppression of modeline display by minor modes.
+(use-package diminish)                  ; Provide suppression of modeline display by minor modes.
 
-(use-package dired			; built-in
+(use-package dired                      ; built-in
   :ensure nil
   :bind (:map dired-mode-map
               ("i" . dired-subtree-toggle)
@@ -608,9 +610,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (setq dired-dnd-protocol-alist nil
         find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))))
 
-(use-package dired-subtree)		; Insert subdirectories in a tree-like fashion.
+(use-package dired-subtree)             ; Insert subdirectories in a tree-like fashion.
 
-(use-package dired-x			; built-in
+(use-package dired-x                    ; built-in
   :ensure nil
   :hook (dired-mode . dired-omit-mode)
   :config
@@ -623,14 +625,14 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package disable-mouse)             ; suppress mouse events
 
-(use-package ediff			; built-in
+(use-package ediff                      ; built-in
   :config
   (setq ediff-custom-diff-options "-c -w"
         ediff-diff-options "-w"))
 
-(use-package ebib)			; A BibTeX database manager.
+(use-package ebib)                      ; A BibTeX database manager.
 
-(use-package eldoc			; built-in
+(use-package eldoc                      ; built-in
   ;; note: using :diminish effectively creates a :config block, and eldoc is
   ;; already loaded when this block is processed, thus the config is executed,
   ;; including the call to diminish, while processing this block.  This can be
@@ -641,23 +643,23 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   ;; loading seems unaffected by the contents of eldoc.el.
   :diminish eldoc-mode)
 
-(use-package elmacro)			; Convert keyboard macros to emacs lisp.
+(use-package elmacro)                   ; Convert keyboard macros to emacs lisp.
 
 (use-package consult                  ; Enhanced completing-read functions
   :init
   (define-prefix-command 'consult-map nil "consult map")
   (define-key global-map (kbd "M-s") 'consult-map)
   :bind (("C-x b"   . consult-buffer)
-	 ("M-g g"   . consult-goto-line)
-	 ("M-g M-g" . consult-goto-line)
+         ("M-g g"   . consult-goto-line)
+         ("M-g M-g" . consult-goto-line)
 
-	 :map consult-map
-	 ("g" . consult-grep)
-	 ("k" . consult-keep-lines)
-	 ("l" . consult-line)
-	 ("m" . consult-multi-occur)
-	 ("r" . consult-ripgrep)
-	 ("u" . consult-focus-lines)))
+         :map consult-map
+         ("g" . consult-grep)
+         ("k" . consult-keep-lines)
+         ("l" . consult-line)
+         ("m" . consult-multi-occur)
+         ("r" . consult-ripgrep)
+         ("u" . consult-focus-lines)))
 
 (when completion-mocve-p
   (use-package embark                   ; Provides actions on minibuffer completions.
@@ -665,18 +667,18 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     (define-prefix-command 'embark-map nil "embark map")
     (define-key global-map (kbd "C-c e") 'embark-map)
     :bind (("C-h B" . embark-bindings)
-	   :map embark-map
-	   ("." . embark-act)               ;; pick some comfortable key
-	   (";" . embark-dwim)              ;; good alternative: M-.
-	   )))
+           :map embark-map
+           ("." . embark-act)               ;; pick some comfortable key
+           (";" . embark-dwim)              ;; good alternative: M-.
+           )))
 
-(use-package expand-region		; Increase selected region by semantic units.
+(use-package expand-region              ; Increase selected region by semantic units.
   :bind
   (("C-c x" . er/expand-region)))
 
-(use-package esup)			; The Emacs StartUp Profiler (ESUP).
+(use-package esup)                      ; The Emacs StartUp Profiler (ESUP).
 
-(use-package ffap			; built-in
+(use-package ffap                       ; built-in
   :config
   (setq ffap-machine-p-known 'reject))
 
@@ -688,7 +690,7 @@ clean buffer we delay checking for longer."
   (setq-local flycheck-idle-change-delay
         (if flycheck-current-errors 5.0 15.0)))
 
-(use-package flycheck			; On-the-fly syntax checking
+(use-package flycheck                   ; On-the-fly syntax checking
   ;; Note: do not waste time trying to fix flycheck warnings if you turn on flycheck in
   ;; this file for testing.  The elisp byte compiler reports many warnings that won't
   ;; generate any runtime failures (at the least, it doesn't know about personal autoloads
@@ -705,7 +707,7 @@ clean buffer we delay checking for longer."
   (define-key flycheck-mode-map flycheck-keymap-prefix
               flycheck-command-map))
 
-(use-package free-keys			; Show free keybindings for modkeys or prefixes
+(use-package free-keys                  ; Show free keybindings for modkeys or prefixes
   )
 
 (use-package git-gutter-fringe          ; Show git diff information in fringe
@@ -715,7 +717,7 @@ clean buffer we delay checking for longer."
   :hook ((prog-mode . goto-address-prog-mode)
          (text-mode . goto-address-mode)))
 
-(use-package gptel			; Interact with ChatGPT or other LLMs.
+(use-package gptel                      ; Interact with ChatGPT or other LLMs.
   :pin melpa
   :config
   (setq gptel-expert-commands t
@@ -724,10 +726,10 @@ clean buffer we delay checking for longer."
         )
   (require 'jm-gptel-tools))
 
-(use-package graphviz-dot-mode		; Mode for the dot-language used by graphviz (att).
+(use-package graphviz-dot-mode          ; Mode for the dot-language used by graphviz (att).
   :mode "\\.dot\\'")
 
-(use-package haskell-mode		; A Haskell editing mode
+(use-package haskell-mode               ; A Haskell editing mode
   :hook (haskell-mode . turn-on-haskell-indentation)
   :bind (:map haskell-mode-map
               ("C-c C-l"  . haskell-process-load-or-reload)
@@ -832,7 +834,7 @@ clean buffer we delay checking for longer."
           '(inferior-python-mode))))
 
 (when completion-helm-p
-  (use-package helm-ag			; helm support for searching with ag, rg, etc
+  (use-package helm-ag                  ; helm support for searching with ag, rg, etc
     :config
     (setq helm-ag-base-command "rg"
           helm-ag-use-grep-ignore-list t)))
@@ -864,16 +866,16 @@ display-buffer correctly."
 
   (if completion-helm-p
       (progn
-	(unless helm-descbinds-mode
-	  (helm-descbinds-mode))
-	(describe-bindings prefix buffer))
+        (unless helm-descbinds-mode
+          (helm-descbinds-mode))
+        (describe-bindings prefix buffer))
     ;; I prefer describe-bindings to embark-bindings as a default
     (when helm-descbinds-mode
       (helm-descbinds-mode -1))
     (describe-bindings prefix buffer)))
 
 (when completion-helm-p
-  (use-package helm-descbinds))		; helm version of `describe-bindings'
+  (use-package helm-descbinds))         ; helm version of `describe-bindings'
 
 (when completion-helm-p
   (use-package helm-lsp                 ; helm for LSP symbols, actions, switching projects
@@ -882,17 +884,17 @@ display-buffer correctly."
                 ([remap xref-find-apropos] . helm-lsp-workspace-symbol))))
 
 (when completion-helm-p
-  (use-package helm-org-rifle		; Rifle through your Org files.
+  (use-package helm-org-rifle           ; Rifle through your Org files.
     :bind (:map helm-command-map
                 ("R" . helm-org-rifle))
     :custom
     (helm-org-rifle-re-end-part nil)))
 
 (when completion-helm-p
-  (use-package helm-projectile))	; Helm integration for Projectile.
+  (use-package helm-projectile))        ; Helm integration for Projectile.
 
 (when completion-helm-p
-  (use-package helm-rg	                ; A helm interface to ripgrep.
+  (use-package helm-rg                  ; A helm interface to ripgrep.
     ;; This is used by helm-projectile-rg but requires the fixes in
     ;; https://github.com/cosmicexplorer/helm-rg/issues/10, i.e.
     ;;
@@ -902,9 +904,9 @@ display-buffer correctly."
     ))
 
 (when completion-helm-p
-  (use-package helm-swoop))		; Efficiently hopping squeezed lines powered by helm interface.
+  (use-package helm-swoop))             ; Efficiently hopping squeezed lines powered by helm interface.
 
-(use-package hideshow			; built-in
+(use-package hideshow                   ; built-in
   :diminish hs-minor-mode
   :hook (prog-mode . hs-minor-mode)
   :bind (:map hs-minor-mode-map
@@ -912,16 +914,16 @@ display-buffer correctly."
               ("C-c <right>" . hs-show-block)
               ("C-c <left>"  . hs-hide-block)))
 
-(use-package highlight-sexps		; built-in.  highlight an expanding set of surrounding
+(use-package highlight-sexps            ; built-in.  highlight an expanding set of surrounding
   :ensure nil
   :config
   (setq hl-sexp-background-colors (create-hl-sexp-background-colors)))
 
 (use-package htmlize)                   ; convert buffer and text decorations to HTML
 
-(use-package hydra)			; Make bindings that stick around.
+(use-package hydra)                     ; Make bindings that stick around.
 
-(use-package ibuffer			; built-in.
+(use-package ibuffer                    ; built-in.
   :hook (ibuffer-mode . (lambda ()
                           (ibuffer-switch-to-saved-filter-groups "my-default-filter-groups")))
   :bind (:map ibuffer-mode-map
@@ -953,18 +955,18 @@ display-buffer correctly."
            ;; so that all non pathnames are at the end
            "~")))))
 
-(use-package info
+(use-package info                       ; built-in.
   :bind (:map
          Info-mode-map
          (";"           . Info-search-next)
          (":"           . Info-search-backward)
          ([(shift tab)] . Info-prev-reference)))
 
-(use-package jq-mode)
+(use-package jq-mode)                   ; edit jq scripts
 
-(use-package json-mode)
+(use-package json-mode)                 ; Major mode for editing JSON files.
 
-(use-package js2-mode
+(use-package js2-mode                   ; Improved JavaScript editing mode.
   :mode "\\.js\\'")
 
 (defun latex-sumatra-scroll-down ()
@@ -977,8 +979,8 @@ display-buffer correctly."
   (scroll-up-in-place)
   (sumatra-jump-to-line))
 
-(use-package latex
-  :ensure auctex ; latex.el comes with auctex
+(use-package latex                      ; part of AUCTeX
+  :ensure auctex
   :hook (LaTeX-mode . LaTeX-math-mode)
   :if system-win32-p
   :bind (:map LaTeX-mode-map
@@ -987,7 +989,7 @@ display-buffer correctly."
   :custom-face
   (font-latex-verbatim-face ((t (:inherit nil :foreground "burlywood")))))
 
-(use-package lean4-mode
+(use-package lean4-mode                 ; Major mode for Lean 4 language
   :quelpa (lean4-mode :fetcher github
                       :repo "leanprover-community/lean4-mode"
                       :files ("*.el" "data")
@@ -995,13 +997,13 @@ display-buffer correctly."
   :config
   (require 'unicode-fonts))
 
-(use-package live-py-mode)
+(use-package live-py-mode)              ; live coding in Python
 
 (use-package lorem-ipsum
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
-(use-package lsp-mode     ; Language Server Protocol support
+(use-package lsp-mode                   ; Language Server Protocol support
   ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
   :init
   (setq lsp-keymap-prefix "s-s")
@@ -1915,7 +1917,7 @@ files.  This persists across sessions"
   (define-prefix-command 'windmove-map nil "windmove map")
   (define-key global-map (kbd "C-c w") 'windmove-map)
   :bind (:map windmove-map
-	 ("<left>"  . windmove-left)
+         ("<left>"  . windmove-left)
          ("<right>" . windmove-right)
          ("<up>"    . windmove-up)
          ("<down>"  . windmove-down)))
