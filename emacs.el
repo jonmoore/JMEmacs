@@ -936,12 +936,6 @@ display-buffer correctly."
                                              ("emacs"   (name . "^\\*")))))
         ibuffer-never-show-predicates (list "\\*helm.*" "\\*Completions\\*"))
 
-  (define-ibuffer-op ibuffer-do-ps-print ()
-    "Print marked buffers as with `ps-print-buffer-with-faces'."
-    (:opstring "printed"
-               :modifier-p nil)
-    (ps-print-buffer-with-faces))
-
   (define-ibuffer-sorter filename-or-dired
     "Sort the buffers by their pathname."
     (:description "filenames plus dired")
