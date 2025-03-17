@@ -953,10 +953,6 @@ display-buffer correctly."
            ;; so that all non pathnames are at the end
            "~")))))
 
-(use-package imenu
-  :custom
-  (imenu-tree-auto-update t))
-
 (use-package info
   :bind (:map
          Info-mode-map
