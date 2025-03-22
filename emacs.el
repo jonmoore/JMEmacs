@@ -255,7 +255,16 @@
   "Whether to use the MOCVE (Marginalia, Orderless, Consult, Vertico, Embark) minibuffer completion stack.")
 
 (when (and minibuffer-completion-helm-p minibuffer-completion-mocve-p)
-  (error "Cannot use both the Helm and MOCVE completion stacks"))
+  (error "Cannot use both the Helm and MOCVE minibuffer completion stacks"))
+
+(defconst in-buffer-completion-company-p t
+  "Whether to use the Company in-buffer completion stack.")
+
+(defconst in-buffer-completion-capf-p nil
+  "Whether to use the native capf in-buffer completions.")
+
+(when (and in-buffer-completion-company-p in-buffer-completion-capf-p)
+  (error "Cannot use both the Company and capf in-buffer completion stacks"))
 
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
 ;; Note that sequences consisting of C-c and a letter, either upper or lower case, are
