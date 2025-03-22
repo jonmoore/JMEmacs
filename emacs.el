@@ -257,10 +257,10 @@
 (when (and minibuffer-completion-helm-p minibuffer-completion-mocve-p)
   (error "Cannot use both the Helm and MOCVE minibuffer completion stacks"))
 
-(defconst in-buffer-completion-company-p t
+(defconst in-buffer-completion-company-p nil
   "Whether to use the Company in-buffer completion stack.")
 
-(defconst in-buffer-completion-capf-p nil
+(defconst in-buffer-completion-capf-p t
   "Whether to use the native capf in-buffer completions.")
 
 (when (and in-buffer-completion-company-p in-buffer-completion-capf-p)
@@ -589,8 +589,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
            ("u" . consult-focus-lines))))
 
 (when in-buffer-completion-capf-p
-  (use-package corfu)
-  )
+  (use-package corfu))
 
 (use-package cov)                       ; Show coverage stats in the fringe.
 
@@ -1085,6 +1084,18 @@ display-buffer correctly."
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
   (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
 
+(when in-buffer-completion-capf-p
+  ;; actually we're using Corfu
+  (use-package lsp-mode
+    :custom
+    (lsp-completion-provider :none) ;; we use Corfu!
+    :init
+    (defun my/lsp-mode-setup-completion ()
+      (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+            '(orderless))) ;; Configure orderless
+    :hook
+    (lsp-completion-mode . my/lsp-mode-setup-completion))
+  )
 
 (defun jm-pyright-sync-venv-from-conda-env ()
   "Sync the pyright venv to the current conda-env"
@@ -2027,6 +2038,8 @@ files.  This persists across sessions"
     (marginalia-mode)
     (vertico-mode)
     (which-key-mode))
+  (when in-buffer-completion-capf-p
+    (global-corfu-mode))
 
   (desktop-save-mode)
 
