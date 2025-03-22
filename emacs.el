@@ -455,7 +455,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package browse-kill-ring           ; Interactively insert items from kill-ring.
   :bind ("M-y" . browse-kill-ring)
-  :config
+  :custom
   (browse-kill-ring-highlight-current-entry t)
   (browse-kill-ring-highlight-inserted-item t))
 
