@@ -550,6 +550,15 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     (setq conda--executable-path (f-join conda-anaconda-home conda-env-executables-dir "conda.exe"))))
 
 (when completion-mocve-p
+  (defun consult-line-symbol ()
+    "Run `consult-line' in the current buffer, filtering based on
+ `symbol-at-point.'"
+    (interactive)
+    (let ((symbol (symbol-at-point)))
+      (if symbol
+          (consult-line (symbol-name symbol))
+        (consult-line))))
+
   (use-package consult                  ; Enhanced completing-read functions
     :init
     (define-prefix-command 'consult-map nil "consult map")
@@ -563,7 +572,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
            ("k" . consult-keep-lines)
            ("l" . consult-line)
            ("m" . consult-multi-occur)
+           ("o" . consult-outline)
            ("r" . consult-ripgrep)
+           ("s" . consult-line-symbol)
            ("u" . consult-focus-lines))))
 
 (use-package cov)                       ; Show coverage stats in the fringe.
