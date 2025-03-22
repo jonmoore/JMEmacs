@@ -18,16 +18,31 @@
          (yas-expand-from-trigger-key))))
 
 ;;;###autoload
-(defun yas-or-company-or-indent-for-tab ()
-  "Do yasnippet expansion if possible, else do company expansion
-if possible, else call `indent-for-tab-command'"
+(defun try-company-expansion ()
+  "Try to expand with company completion if possible."
+  (when in-buffer-completion-company-p
+    (when (save-excursion (company-expansion-looks-possible))
+      (company-expansion-looks-possible) ; for side-effect
+      (company-complete-common)
+      t)))
+
+;;;###autoload
+(defun try-capf-expansion ()
+  "Try to expand with capf completion if possible."
+  (when (and in-buffer-completion-capf-p
+             (completion-at-point))
+    t))
+
+;;;###autoload
+(defun yas-or-complete-or-indent-for-tab ()
+  "Do yasnippet expansion if possible, else perform completion
+expansion if possible, else call `indent-for-tab-command'"
   (interactive)
   (if (minibufferp)
       (minibuffer-complete)
-    (if (not (try-yas-expand))
-        (if (save-excursion (company-expansion-looks-possible))
-            (progn
-              (company-expansion-looks-possible) ; for side-effect
-              (company-complete-common))
-          (indent-for-tab-command)))))
-
+    (cond
+     ((try-yas-expand))
+     ((try-company-expansion))
+     ((try-capf-expansion))
+     (t (indent-for-tab-command))
+     )))

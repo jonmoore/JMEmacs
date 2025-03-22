@@ -525,23 +525,24 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   ;; comint-output-filter-functions recommends add-hook
   (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
 
-;; possible settings from the company info manual
+(when in-buffer-completion-company-p
+  ;; possible settings from the company info manual
+  (use-package company ; completion framework
+    :hook (prog-mode . company-mode)
+    :config
+    (company-quickhelp-mode t)
+    :custom
+    (company-show-quick-access t)
+    (company-minimum-prefix-length 5)
+    (company-idle-delay 2.0) ;; default is 0.2, which often severely gets in the way
+    )
 
-(use-package company ; completion framework
-  :hook (prog-mode . company-mode)
-  :config
-  (company-quickhelp-mode t)
-  :custom
-  (company-show-quick-access t)
-  (company-minimum-prefix-length 5)
-  (company-idle-delay 2.0) ;; default is 0.2, which often severely gets in the way
+  (use-package company-auctex)            ; Company-mode auto-completion for AUCTeX.
+
+  (use-package company-quickhelp)         ; shows popup docs for company completion candidates
+
+  (use-package company-restclient)        ; Company-mode completion back-end for restclient-mode
   )
-
-(use-package company-auctex)            ; Company-mode auto-completion for AUCTeX.
-
-(use-package company-quickhelp)         ; shows popup docs for company completion candidates
-
-(use-package company-restclient)        ; Company-mode completion back-end for restclient-mode
 
 (use-package compile                    ; built-in
   :ensure nil
@@ -861,7 +862,7 @@ display-buffer correctly."
                      display-buffer-reuse-window)
                     . ())))
 
-(when minibuffer-completion-helm-p
+(when (and minibuffer-completion-helm-p in-buffer-completion-company-p)
   (use-package helm-company             ; helm interface for company completion selection
     ;; separate from company backends
     :after company
@@ -1579,8 +1580,11 @@ directory, otherwise return nil."
 
 (use-package prog-mode                  ; built-in
   :ensure nil
-  :bind (:map prog-mode-map
-              ("C-c c" . company-complete-common)))
+  :init
+  (when in-buffer-completion-company-p
+    (bind-keys :map prog-mode-map
+               :filter
+               ("C-c c" . company-complete-common))))
 
 (use-package projectile
   :config
@@ -1614,7 +1618,7 @@ directory, otherwise return nil."
 
   :bind (:map python-mode-map
               ;; Check if applicable with LSP
-              ("TAB"     . yas-or-company-or-indent-for-tab)
+              ("TAB"     . yas-or-complete-or-indent-for-tab)
               ("C-c y n" . yas-new-snippet)
               ("C-c y s" . yas-insert-snippet)
               ("<M-S-left>" . python-indent-shift-left)
@@ -1624,10 +1628,11 @@ directory, otherwise return nil."
   ;; call to define-key for TAB in inferior-python-mode
   :hook
   (inferior-python-mode . (lambda ()
-                            (company-mode)
+                            (when in-buffer-completion-company-p
+                             (company-mode))
                             (bind-keys :package python
                                        :map inferior-python-mode-map
-                                       ("TAB" . yas-or-company-or-indent-for-tab)
+                                       ("TAB" . yas-or-complete-or-indent-for-tab)
                                        ("M-TAB" . python-shell-completion-complete-or-indent))))
 
   :config
