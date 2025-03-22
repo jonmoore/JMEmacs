@@ -14,7 +14,7 @@
 ;; $dot_text
 ;; #+end_src
 
-(when completion-helm-p
+(when minibuffer-completion-helm-p
   (require 'helm))
 
 (require 'simple-call-tree)
@@ -70,9 +70,9 @@ like `simple-call-tree-alist'"
 
 (defun jm-simple-call-tree--select-buffer (prompt)
   "Prompt the user with PROMPT to select a buffer. 
-Use helm if `completion-helm-p' is true; otherwise,
+Use helm if `minibuffer-completion-helm-p' is true; otherwise,
 use `completing-read'."
-  (if completion-helm-p
+  (if minibuffer-completion-helm-p
       (helm :sources (helm-build-sync-source "Select Buffer"
                        :candidates (helm-buffer-list))
             :prompt prompt)

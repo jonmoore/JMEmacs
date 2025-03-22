@@ -4,7 +4,7 @@
 (require 'flycheck)
 (require 'ht)                           ; hash table library
 (require 'projectile)
-(when completion-helm-p
+(when minibuffer-completion-helm-p
   (require 'helm))
 
 ;;; lsp-mode notes
@@ -120,7 +120,7 @@ from a mix of project-specific and global environments."
 (defun python-helpers--select-conda-env (project-root)
   "Select a conda environment for the given PROJECT-ROOT."
   (let ((use-dialog-box nil))
-    (or (if completion-helm-p
+    (or (if minibuffer-completion-helm-p
 	    (python-helpers--select-conda-env-helm project-root)
 	  (python-helpers--select-conda-env-completing-read project-root))
         (condition-case nil
