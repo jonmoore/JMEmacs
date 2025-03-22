@@ -552,7 +552,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (when completion-mocve-p
   (defun consult-line-symbol ()
     "Run `consult-line' in the current buffer, filtering based on
- `symbol-at-point.'"
+`symbol-at-point.'"
     (interactive)
     (let ((symbol (symbol-at-point)))
       (if symbol
@@ -571,6 +571,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
            ("g" . consult-grep)
            ("k" . consult-keep-lines)
            ("l" . consult-line)
+           ("L" . consult-line-multi)
            ("m" . consult-multi-occur)
            ("o" . consult-outline)
            ("r" . consult-ripgrep)
@@ -661,22 +662,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :diminish eldoc-mode)
 
 (use-package elmacro)                   ; Convert keyboard macros to emacs lisp.
-
-(use-package consult                  ; Enhanced completing-read functions
-  :init
-  (define-prefix-command 'consult-map nil "consult map")
-  (define-key global-map (kbd "M-s") 'consult-map)
-  :bind (("C-x b"   . consult-buffer)
-         ("M-g g"   . consult-goto-line)
-         ("M-g M-g" . consult-goto-line)
-
-         :map consult-map
-         ("g" . consult-grep)
-         ("k" . consult-keep-lines)
-         ("l" . consult-line)
-         ("m" . consult-multi-occur)
-         ("r" . consult-ripgrep)
-         ("u" . consult-focus-lines)))
 
 (when completion-mocve-p
   (use-package embark                   ; Provides actions on minibuffer completions.
