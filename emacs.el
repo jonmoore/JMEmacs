@@ -588,6 +588,10 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
            ("s" . consult-line-symbol)
            ("u" . consult-focus-lines))))
 
+(when in-buffer-completion-capf-p
+  (use-package corfu)
+  )
+
 (use-package cov)                       ; Show coverage stats in the fringe.
 
 (use-package css-mode                   ; built-in
