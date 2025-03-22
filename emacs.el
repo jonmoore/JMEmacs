@@ -1022,7 +1022,10 @@ display-buffer correctly."
 
 (defun jm-lsp-keybindings ()
   "Install my lsp-mode key bindings and remove others"
-  (setcdr lsp-command-map nil)
+  (interactive)
+  (define-prefix-command 'lsp-command-map nil "lsp-mode command map")
+  (define-key lsp-mode-map (kbd "C-c d") 'lsp-command-map)
+
   (define-key lsp-command-map "d" 'lsp-find-definition)
   (define-key lsp-command-map "r" 'lsp-find-references)
   (define-key lsp-command-map "t" 'lsp-find-type-definition)
