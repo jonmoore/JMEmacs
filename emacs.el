@@ -610,6 +610,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (setq dired-dnd-protocol-alist nil
         find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))))
 
+(use-package dired-preview)             ; Automatically preview file at point in Dired
+
 (use-package dired-subtree)             ; Insert subdirectories in a tree-like fashion.
 
 (use-package dired-x                    ; built-in
