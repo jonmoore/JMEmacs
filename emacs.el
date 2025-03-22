@@ -586,11 +586,15 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :mode "\\.csv\\'")
 
 (use-package dap-mode                   ; client for Debug Adapter Protocol
+  :after lsp-mode
+  :hook ((python-mode . dap-ui-mode)
+         (python-mode . dap-mode))
   :config
   (require 'dap-python)
   (setq read-process-output-max (* 1024 1024) ; 1MB
-        ;; Use debugpy since this is the successor to ptvsd
-        dap-python-debugger 'debugpy))
+        dap-python-debugger 'debugpy)
+  (add-hook 'dap-stopped-hook
+            (lambda (arg) (call-interactively #'dap-hydra))))
 
 (use-package desktop                    ; built-in
   :config
@@ -1016,15 +1020,40 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
+
+
+(defun jm-lsp-keybindings ()
+  "Install my lsp-mode key bindings and remove others"
+  (setcdr lsp-command-map nil)
+  (define-key lsp-command-map "d" 'lsp-find-definition)
+  (define-key lsp-command-map "r" 'lsp-find-references)
+  (define-key lsp-command-map "t" 'lsp-find-type-definition)
+  (define-key lsp-command-map "h" 'lsp-describe-thing-at-point)
+  (define-key lsp-command-map "l" 'lsp-document-highlight)
+  (define-key lsp-command-map "F" 'lsp-format-buffer)
+  (define-key lsp-command-map "R" 'lsp-rename)
+
+  (define-key lsp-command-map "wD" 'lsp-disconnect)
+  (define-key lsp-command-map "wd" 'lsp-describe-session)
+  (define-key lsp-command-map "wb" 'lsp-workspace-blocklist-remove)
+  (define-key lsp-command-map "wa" 'lsp-workspace-folders-add)
+  (define-key lsp-command-map "wr" 'lsp-workspace-folders-remove)
+  (define-key lsp-command-map "wS" 'lsp-workspace-restart)
+  (define-key lsp-command-map "wQ" 'lsp-workspace-shutdown))
+
 (use-package lsp-mode                   ; Language Server Protocol support
   ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
+
   :init
-  (setq lsp-keymap-prefix "s-s")
-  :hook (lsp-mode . lsp-enable-which-key-integration)
+  ;; must set this before loading lsp
+  (setq lsp-keymap-prefix "C-c d")
+  :hook
+  (lsp-mode . jm-lsp-keybindings)
   :commands lsp
   :config
   ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
   (require 'dap-mode)
+  (jm-lsp-keybindings)
 
   (setq lsp-before-save-edits                          nil
         lsp-enable-dap-auto-configure                    t
@@ -1044,7 +1073,7 @@ display-buffer correctly."
         lsp-ui-sideline-show-hover                     nil
         lsp-modeline-code-actions-enable               nil
         lsp-diagnostics-provider                     :auto
-        lsp-ui-sideline-show-diagnostics               nil
+        lsp-ui-sideline-show-diagnostics                 t
         lsp-eldoc-enable-hover                           t
         lsp-modeline-diagnostics-enable                nil
         lsp-signature-auto-activate                      t
@@ -1052,7 +1081,7 @@ display-buffer correctly."
         lsp-completion-provider                      :capf
         lsp-completion-show-detail                       t
         lsp-completion-show-kind                         t
-                                                         )
+        )
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
   (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
@@ -1062,7 +1091,6 @@ display-buffer correctly."
   "Sync the pyright venv to the current conda-env"
   (setq-local lsp-pyright-venv-path conda-env-current-path))
 
-;; lsp-pyright replaces lsp-python-ms
 (use-package lsp-pyright
   :hook (conda-postactivate . jm-pyright-sync-venv-from-conda-env)
   :config
@@ -1586,6 +1614,8 @@ directory, otherwise return nil."
         ps-print-color-p       t))
 
 (use-package python
+  ;; we don't hook python-mode but use a call to python-helpers-enable-lsp-everywhere
+  ;; elsewhere so that conda and lsp get initialized in the right order.
   :ensure nil
 
   :bind (:map python-mode-map
@@ -1844,6 +1874,7 @@ directory, otherwise return nil."
 
 (use-package transpose-frame)           ; Switch between horizontal and vertically split frames
 
+;; todo: to see if lsp-treemacs justifies keeping this
 (use-package treemacs ; A tree style file explorer package
   :config
   (setq treemacs-width 24)
@@ -1854,6 +1885,8 @@ directory, otherwise return nil."
   (treemacs-filewatch-mode -1))
 
 (use-package treemacs-projectile) ; projectile integration for treemacs
+
+;; not adding treesitter until the integration is robust, at least Emacs 31
 
 (use-package undo-tree
   :diminish undo-tree-mode
@@ -1961,12 +1994,13 @@ files.  This persists across sessions"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package emacs
+  :custom
+  (indent-tabs-mode nil)
+
   ;; this is quite heavy, as it requires loading python and conda
-  ;; :hook (desktop-after-read . python-helpers-enable-lsp-everywhere)
+  :hook (desktop-after-read . python-helpers-enable-lsp-everywhere)
 
   :config
-  (python-helpers-enable-lsp-everywhere)
-  (indent-tabs-mode -1)
   (tool-bar-mode -1)
 
   (global-anzu-mode)

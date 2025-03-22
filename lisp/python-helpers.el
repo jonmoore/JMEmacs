@@ -45,17 +45,17 @@
 ;; https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143
 
 
-(defvar python-helpers--ht-project-env
+(defvar python-helpers--ht-project-conda-env
   (ht-create)
   "Hash table used to map projectile projects to conda envs")
 
-(defun python-helpers--format-project-env ()
+(defun python-helpers--format-project-conda-env ()
   "Return a string formatting the map of projectile projects to conda envs"
   (let ((plist))                        ; empty
     (maphash (lambda (k v)
                (push k plist)
                (push v plist))
-             python-helpers--ht-project-env)
+             python-helpers--ht-project-conda-env)
     (pp (nreverse plist))))
 
 (defun python-helpers--user-home-directory ()
@@ -99,7 +99,7 @@ get_user_environments_txt_file()")
       (insert-file-contents python-helpers--conda-environments-file)
       (split-string (buffer-string) "\n" t))))
 
-(defun python-helpers--select-environment-completing-read (project-root)
+(defun python-helpers--select-conda-env-completing-read (project-root)
   "Prompt the user to select a conda environment for PROJECT-ROOT,
 from a combined list of project-specific and global environments."
   (completing-read "Select a conda environment: "
@@ -107,7 +107,7 @@ from a combined list of project-specific and global environments."
 		    (python-helpers--pixi-environments project-root)
 		    (python-helpers--conda-environments))))
 
-(defun python-helpers--select-environment-helm (project-root)
+(defun python-helpers--select-conda-env-helm (project-root)
   "Prompt the user to select a conda environment for PROJECT-ROOT,
 from a mix of project-specific and global environments."
   (helm :sources (list (helm-build-sync-source "Pixi conda environments"
@@ -117,12 +117,12 @@ from a mix of project-specific and global environments."
 			   "Conda environments from ~/.conda"
 			   python-helpers--conda-environments-file))))
 
-(defun python-helpers--select-env-path (project-root)
-  "Select a conda environment path for the given PROJECT-ROOT."
+(defun python-helpers--select-conda-env (project-root)
+  "Select a conda environment for the given PROJECT-ROOT."
   (let ((use-dialog-box nil))
     (or (if completion-helm-p
-	    (python-helpers--select-environment-helm project-root)
-	  (python-helpers--select-environment-completing-read project-root))
+	    (python-helpers--select-conda-env-helm project-root)
+	  (python-helpers--select-conda-env-completing-read project-root))
         (condition-case nil
             (read-directory-name "Conda environment directory: ")
           (quit nil)))))
@@ -132,17 +132,20 @@ from a mix of project-specific and global environments."
 with conda, LSP and optionally DAP, depending on LSP's
 configuration."
   (conda-env-activate-path env-path)
-
+  ;; at this stage lsp-pyright-langserver-command should be on PATH
+  (require 'lsp-pyright)
   ;; lsp will enable dap-mode if it's present as a function and
   ;; lsp-enable-dap-auto-configure is non-nil
   (lsp))
 
 (defun python-helpers--init-in-buffer ()
   "Handle conda and lsp-mode initialisation.  When the current
-buffer is in python-mode, is visible, is in a projectile
-project, and the user has selected a conda env for the
-project (prompted for if needed) then ensure that conda is synced
-to use that env and that lsp is active.
+buffer is in python-mode, is visible, is in a projectile project,
+and the user has selected a conda env for the project (prompted
+for if needed) then ensure that conda is synced to use that env
+and that lsp is active.  The initialisation order is first
+project (calculated automatically by projectile), then conda env,
+then lsp.
 
 The if-visible part of this is to avoid massive delays when
 starting up with many different Python buffers loaded from the
@@ -156,23 +159,23 @@ desktop."
          (or (get-buffer-window nil t)
              (buffer-modified-p)))
     (let* ((project-root (projectile-project-root))
-           (saved-project-env (ht-get python-helpers--ht-project-env project-root)))
+           (saved-project-conda-env (ht-get python-helpers--ht-project-conda-env project-root)))
       (when project-root
         (cond
-         ((not saved-project-env)
-          (let ((env-path (python-helpers--select-env-path project-root)))
+         ((not saved-project-conda-env)
+          (let ((conda-env-path (python-helpers--select-conda-env project-root)))
             ;; Save the conda env information for project-root
-            (ht-set! python-helpers--ht-project-env
+            (ht-set! python-helpers--ht-project-conda-env
                      project-root
                      ;; Either select and activate an env, saving the result,
                      ;; or else decline to select and save that result as 'do-not-use-an-env
-                     (or env-path 'do-not-use-an-env))
-            (when env-path
-              (python-helpers--activate-and-enable-lsp env-path))))
-         ((and saved-project-env
-               (not (equal saved-project-env 'do-not-use-an-env))
-               (not (equal saved-project-env conda-env-current-path)))
-          (python-helpers--activate-and-enable-lsp saved-project-env))
+                     (or conda-env-path 'do-not-use-an-env))
+            (when conda-env-path
+              (python-helpers--activate-and-enable-lsp conda-env-path))))
+         ((and saved-project-conda-env
+               (not (equal saved-project-conda-env 'do-not-use-an-env))
+               (not (equal saved-project-conda-env conda-env-current-path)))
+          (python-helpers--activate-and-enable-lsp saved-project-conda-env))
          ;; TODO - add case for changing buffer into a buffer in the same project but
          ;; where LSP is not active.  Need to define case for 'do-not-use-an-env
          ))))))
@@ -201,6 +204,6 @@ to be enabled when needed"
 is left running"
   (interactive)
   (conda-env-deactivate)
-  (ht-clear python-helpers--ht-project-env))
+  (ht-clear python-helpers--ht-project-conda-env))
 
 (provide 'python-helpers)
