@@ -1113,7 +1113,14 @@ that conda is set by early in the call to lsp, as
 
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
-  (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
+  (advice-add 'lsp--info :around #'jm-advice-to-shut-up)
+
+  (setq lsp-file-watch-ignored-directories
+        (append
+         '("[/\\\\]\\.hypothesis\\'" "[/\\\\]\\.pixi\\'" "[/\\\\]\\.ruff_cache\\'")
+         lsp-file-watch-ignored-directories
+         ))
+  )
 
 
 (defun jm-pyright-sync-venv-from-conda-env ()
