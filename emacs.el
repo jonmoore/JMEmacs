@@ -1640,7 +1640,7 @@ directory, otherwise return nil."
 (use-package projectile
   :config
   (setq projectile-globally-ignored-directories
-        '(".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__")
+        '(".idea" ".git" ".tox" "_tcp" ".*__pycache__" "__pycache__" "*__pycache__" ".pixi" ".hypothesis" ".ruff_cache")
         projectile-globally-ignored-file-suffixes '(".pyc")
         projectile-mode-line-prefix " Proj"
         projectile-project-root-files '("requirements.txt" "setup.py" "tox.ini"))
@@ -1917,10 +1917,10 @@ directory, otherwise return nil."
 (use-package toc-org
   :hook (org-mode . toc-org-mode))
 
-(use-package tramp
-  :if system-win32-p
+(use-package tramp                      ; built-in
   :config
-  (setq tramp-default-method "plink"))
+  (when system-win32-p
+    (setq tramp-default-method "plink")))
 
 (use-package transpose-frame)           ; Switch between horizontal and vertically split frames
 
@@ -1988,7 +1988,7 @@ files.  This persists across sessions"
   :custom
   (warning-suppress-types '((undo discard-info))))
 
-(use-package which-func                 ; print current function in mode line
+(use-package which-func                 ; built-in: print current function in mode line
   :hook (prog-mode . which-function-mode)
   :custom
   (which-func-modes
