@@ -1,5 +1,6 @@
 ;;; Helper functions for Python programming, based on conda, lsp-mode and
 ;;; dap-mode.
+(require 'cl-seq)
 (require 'conda)
 (require 'flycheck)
 (require 'ht)                           ; hash table library
@@ -77,10 +78,10 @@ found."
          (envs-dir (expand-file-name "envs" pixi-dir)))
     (if (and (file-directory-p pixi-dir) (file-directory-p envs-dir))
         (let ((subdirs (directory-files envs-dir t)))
-           (remove-if (lambda (subdir)
-                        (or (member (file-name-nondirectory subdir) '("." ".."))
-                            (not (file-directory-p subdir))))
-                      subdirs))
+          (cl-remove-if (lambda (subdir)
+                          (or (member (file-name-nondirectory subdir) '("." ".."))
+                              (not (file-directory-p subdir))))
+                        subdirs))
       nil)))
 
 (defvar python-helpers--conda-environments-file
