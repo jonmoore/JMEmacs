@@ -1374,8 +1374,15 @@ directory, otherwise return nil."
       (when (file-directory-p candidate)
         candidate))))
 
+(when minibuffer-completion-mocve-p
+  (use-package orderless          ; Provides flexible completion style.
+    :demand t
+    :custom
+    (completion-styles '(orderless))
+    (completion-category-overrides '((file (styles basic partial-completion))))))
+
 (defun jm-dropbox-directory ()
-  "Return the path to my Dropbox directorym if present"
+  "Return the path to my Dropbox directory if present"
   (let ((candidate
          (cond
           ((or system-osx-p system-linux-p)
@@ -1387,13 +1394,6 @@ directory, otherwise return nil."
     (when (and candidate
                (file-directory-p candidate))
       candidate)))
-
-(when minibuffer-completion-mocve-p
-  (use-package orderless          ; Provides flexible completion style.
-    :demand t
-    :custom
-    (completion-styles '(orderless))
-    (completion-category-overrides '((file (styles basic partial-completion))))))
 
 (use-package org
   :mode "\\.org'"
@@ -1606,6 +1606,7 @@ directory, otherwise return nil."
 (use-package outline
   :config
   (setq outline-minor-mode-cycle 1))
+
 (use-package ox-jira) ;; transforms org files to JIRA markup
 
 (use-package ox-mediawiki)
@@ -1621,8 +1622,6 @@ directory, otherwise return nil."
 (use-package paren
   :custom
   (show-paren-style 'expression))
-
-(use-package peep-dired) ; in dired, show the file at point in the other window
 
 (use-package pretty-column
   :ensure nil
