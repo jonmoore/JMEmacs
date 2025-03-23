@@ -127,17 +127,7 @@ from a mix of project-specific and global environments."
             (read-directory-name "Conda environment directory: ")
           (quit nil)))))
 
-(defun python-helpers--activate-and-enable-lsp (env-path)
-  "The main entry point to configure a conda environment for use
-with conda, LSP and optionally DAP, depending on LSP's
-configuration."
-  (conda-env-activate-path env-path)
-  ;; at this stage lsp-pyright-langserver-command should be on PATH
-  (require 'lsp-pyright)
-  ;; lsp will enable dap-mode if it's present as a function and
-  ;; lsp-enable-dap-auto-configure is non-nil
-  (lsp))
-
+;;;###autoload
 (defun python-helpers--init-in-buffer ()
   "Handle conda and lsp-mode initialisation.  When the current
 buffer is in python-mode, is visible, is in a projectile project,
@@ -147,11 +137,10 @@ and that lsp is active.  The initialisation order is first
 project (calculated automatically by projectile), then conda env,
 then lsp.
 
-The if-visible part of this is to avoid massive delays when
+The visibility-testing part of this is to avoid massive delays when
 starting up with many different Python buffers loaded from the
-desktop."
+desktop. Ideally we would lean on lsp-deferred for this."
   (interactive)
-
   (cond
    ((and (not (string-prefix-p " *" (buffer-name)))
          (not (string-prefix-p "*" (buffer-name)))
@@ -171,14 +160,20 @@ desktop."
                      ;; or else decline to select and save that result as 'do-not-use-an-env
                      (or conda-env-path 'do-not-use-an-env))
             (when conda-env-path
-              (python-helpers--activate-and-enable-lsp conda-env-path))))
+              (conda-env-activate-path conda-env-path))))
          ((and saved-project-conda-env
                (not (equal saved-project-conda-env 'do-not-use-an-env))
                (not (equal saved-project-conda-env conda-env-current-path)))
-          (python-helpers--activate-and-enable-lsp saved-project-conda-env))
+          (conda-env-activate-path  saved-project-conda-env))
          ;; TODO - add case for changing buffer into a buffer in the same project but
          ;; where LSP is not active.  Need to define case for 'do-not-use-an-env
-         ))))))
+         )
+
+        ;; at this stage lsp-pyright-langserver-command should be on PATH
+        (require 'lsp-pyright)
+        ;; lsp will enable dap-mode if it's present as a function and
+        ;; lsp-enable-dap-auto-configure is non-nil
+        (lsp))))))
 
 (defun python-helpers--init-in-frame (frame)
   (mapcar
@@ -199,6 +194,7 @@ to be enabled when needed"
   ;; configure for future buffers
   (add-hook 'window-buffer-change-functions #'python-helpers--init-in-frame))
 
+;;;###autoload
 (defun python-helpers-reset ()
   "Reset state related to conda, lsp, etc.  This needs work.  LSP
 is left running"

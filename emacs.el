@@ -1040,6 +1040,25 @@ display-buffer correctly."
   (define-key lsp-command-map "wS" 'lsp-workspace-restart)
   (define-key lsp-command-map "wQ" 'lsp-workspace-shutdown))
 
+(defun lsp-mode-handler (&rest args)
+  "Helper for correct loading of `python-mode' buffers with
+`lsp-mode' as a minor mode.  Needed because we manage lsp-mode
+through `python-helpers--init-in-buffer', which also ensures that conda
+etc. are set up before starting lsp.
+
+It may be possible to manage this through a hook for lsp-mode,
+although that's not 100% clear as we don't want large numbers of lsp-mode buffers delaying loading.
+
+lsp-deferred does part of the job but we still need to ensure
+that conda is set by early in the call to lsp, as
+"
+  (message "jm- lsp-mode-handler args:%s" args)
+  (cond
+   ((eq desktop-buffer-major-mode 'python-mode)
+    (python-helpers--init-in-buffer))
+   (t
+    (lsp-deferred))))
+
 (use-package lsp-mode                   ; Language Server Protocol support
   ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
 
@@ -1087,6 +1106,11 @@ display-buffer correctly."
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless)))
 
+  ;; Try to make python-mode/lsp-mode buffers reload correctly
+  (push
+   (cons 'lsp-mode #'lsp-mode-handler)
+   desktop-minor-mode-handlers)
+
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
   (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
@@ -1098,16 +1122,27 @@ display-buffer correctly."
 
 (use-package lsp-pyright
   :hook (conda-postactivate . jm-pyright-sync-venv-from-conda-env)
+  ;; basedpyright is working although the setup is fragile to errors.
+  ;;
+  ;; The most likely issue is not finding the executable when lsp-package-path calls
+  ;; lsp--system-path to look for a :system installation, which looks on exec-path. This
+  ;; should have been updated by a previous activation (in emacs) of the conda environment
+  ;; using the conda package.  See the *lsp-log* buffer for diagnostics.
+  ;;
+  ;; lsp may offer to install a langserver from npm but we want to pick up the correct one
+  ;; from an env.
+  ;;
+  ;; gotcha: much of lsp-pyright's setup is global and done once at init-time only, so
+  ;; changing variables may produce confusing results.
+
+  :custom
+  (lsp-pyright-langserver-command
+   (cond ((not (boundp 'jm-pyright-langserver-path))
+          "basedpyright")
+         ((not (file-exists-p jm-pyright-langserver-path))
+          (error "jm-pyright-langserver-path set but no file exists at %s" jm-pyright-langserver-path))
+         (t jm-pyright-langserver-path)))
   :config
-  (cond
-   ((not (boundp 'jm-pyright-langserver-path))
-    (message "jm- no value set for jm-pyright-langserver-path"))
-   ((not (file-exists-p jm-pyright-langserver-path))
-    (error "jm-pyright-langserver-path set but no file exists at %s" jm-pyright-langserver-path))
-   (t (message "jm Adding pyright lang server at %s" jm-pyright-langserver-path)
-      (lsp-dependency
-       'pyright
-       `(:system ,jm-pyright-langserver-path))))
   (setq jm-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs"))
   (when (file-directory-p jm-pyright-stub-path)
     (setq lsp-pyright-use-library-code-for-types t ; set to nil if getting too many false positive type errors
