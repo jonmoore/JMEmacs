@@ -1018,8 +1018,6 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
-
-
 (defun jm-lsp-keybindings ()
   "Install my lsp-mode key bindings and remove others"
   (interactive)
@@ -1079,26 +1077,20 @@ display-buffer correctly."
         lsp-modeline-diagnostics-enable                nil
         lsp-signature-auto-activate                      t
         lsp-signature-render-documentation               t
-        lsp-completion-provider                      :capf
         lsp-completion-show-detail                       t
         lsp-completion-show-kind                         t
         )
+  (when in-buffer-completion-company-p
+    (setq lsp-completion-provider                    :capf))
+  (when in-buffer-completion-capf-p
+    (setq lsp-completion-provider                    :none)
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
+
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
   (advice-add 'lsp--info :around #'jm-advice-to-shut-up))
 
-(when in-buffer-completion-capf-p
-  ;; actually we're using Corfu
-  (use-package lsp-mode
-    :custom
-    (lsp-completion-provider :none) ;; we use Corfu!
-    :init
-    (defun my/lsp-mode-setup-completion ()
-      (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-            '(orderless))) ;; Configure orderless
-    :hook
-    (lsp-completion-mode . my/lsp-mode-setup-completion))
-  )
 
 (defun jm-pyright-sync-venv-from-conda-env ()
   "Sync the pyright venv to the current conda-env"
