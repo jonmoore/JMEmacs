@@ -1044,14 +1044,7 @@ display-buffer correctly."
   "Helper for correct loading of `python-mode' buffers with
 `lsp-mode' as a minor mode.  Needed because we manage lsp-mode
 through `python-helpers--init-in-buffer', which also ensures that conda
-etc. are set up before starting lsp.
-
-It may be possible to manage this through a hook for lsp-mode,
-although that's not 100% clear as we don't want large numbers of lsp-mode buffers delaying loading.
-
-lsp-deferred does part of the job but we still need to ensure
-that conda is set by early in the call to lsp, as
-"
+etc. are set up before starting lsp."
   (message "jm- lsp-mode-handler args:%s" args)
   (cond
    ((eq desktop-buffer-major-mode 'python-mode)
@@ -1067,6 +1060,7 @@ that conda is set by early in the call to lsp, as
   (setq lsp-keymap-prefix "C-c d")
   :hook
   (lsp-mode . jm-lsp-keybindings)
+
   :commands lsp
   :config
   ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
@@ -1119,9 +1113,7 @@ that conda is set by early in the call to lsp, as
         (append
          '("[/\\\\]\\.hypothesis\\'" "[/\\\\]\\.pixi\\'" "[/\\\\]\\.ruff_cache\\'")
          lsp-file-watch-ignored-directories
-         ))
-  )
-
+         )))
 
 (defun jm-pyright-sync-venv-from-conda-env ()
   "Sync the pyright venv to the current conda-env"
@@ -1131,17 +1123,34 @@ that conda is set by early in the call to lsp, as
   :hook (conda-postactivate . jm-pyright-sync-venv-from-conda-env)
   ;; basedpyright is working although the setup is fragile to errors.
   ;;
-  ;; The most likely issue is not finding the executable when lsp-package-path calls
+  ;; The most common issue has been not finding the executable when lsp-package-path calls
   ;; lsp--system-path to look for a :system installation, which looks on exec-path. This
   ;; should have been updated by a previous activation (in emacs) of the conda environment
   ;; using the conda package.  See the *lsp-log* buffer for diagnostics.
   ;;
-  ;; lsp may offer to install a langserver from npm but we want to pick up the correct one
-  ;; from an env.
-  ;;
   ;; gotcha: much of lsp-pyright's setup is global and done once at init-time only, so
   ;; changing variables may produce confusing results.
+  ;;
+  ;; lsp-before-initialize-hook is called too late to help with conda activation.  The lsp
+  ;; function calls, in order 1) lsp--filter-clients, which indirectly calls
+  ;; lsp--system-path 2) lsp--try-project-root-workspaces, which indirectly calls
+  ;; lsp-before-initialize-hook
 
+  ;; Ideas, in roughly descending order of preference - For all of these, we still need to
+  ;; activate conda envs based on buffer changes:
+  ;;
+  ;; - stick with the current approach of a custom initialization function and a
+  ;;   desktop-restore handler for lsp-mode
+  ;;
+  ;; - create a major mode derived from python-mode.  This might work but direct
+  ;;   references to python-mode could be an issue.  Could check python-ts-mode for comparison
+  ;;
+  ;; - add advice to lsp so that when it is called for Python, we first ensure that conda
+  ;;   is set up.
+  ;;
+  ;; - create a simple minor mode, handling both conda and lsp.  But running lsp calls
+  ;;   lsp-mode, so you'd have to manage both.  And derived modes are only a thing for
+  ;;   major modes.
   :custom
   (lsp-pyright-langserver-command
    (cond ((not (boundp 'jm-pyright-langserver-path))
@@ -1664,7 +1673,7 @@ directory, otherwise return nil."
 
 (use-package python
   ;; we don't hook python-mode but use a call to python-helpers-enable-lsp-everywhere
-  ;; elsewhere so that conda and lsp get initialized in the right order.
+  ;; elsewhere so that conda and lsp get initialized correctly.
   :ensure nil
 
   :bind (:map python-mode-map
@@ -2056,6 +2065,7 @@ files.  This persists across sessions"
   (global-anzu-mode)
   (global-auto-highlight-symbol-mode)
   (global-auto-revert-mode)
+  (global-disable-mouse-mode)
   (global-display-fill-column-indicator-mode)
   (global-font-lock-mode)
   (global-undo-tree-mode)
@@ -2080,6 +2090,5 @@ files.  This persists across sessions"
   (desktop-save-mode)
 
   (server-start))
-
 
 (message "Finished emacs.el")

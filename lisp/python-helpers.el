@@ -161,20 +161,18 @@ desktop. Ideally we would lean on lsp-deferred for this."
                      ;; or else decline to select and save that result as 'do-not-use-an-env
                      (or conda-env-path 'do-not-use-an-env))
             (when conda-env-path
-              (conda-env-activate-path conda-env-path))))
-         ((and saved-project-conda-env
-               (not (equal saved-project-conda-env 'do-not-use-an-env))
-               (not (equal saved-project-conda-env conda-env-current-path)))
-          (conda-env-activate-path  saved-project-conda-env))
+              (conda-env-activate-path conda-env-path)
+              (lsp))))
+         ;; skip if the saved env is already active or no env is required
+         ((memq saved-project-conda-env
+                (list conda-env-current-path 'do-not-use-an-env)))
+         (t
+          (progn
+            (conda-env-activate-path saved-project-conda-env)
+            (lsp)))
          ;; TODO - add case for changing buffer into a buffer in the same project but
          ;; where LSP is not active.  Need to define case for 'do-not-use-an-env
-         )
-
-        ;; at this stage lsp-pyright-langserver-command should be on PATH
-        (require 'lsp-pyright)
-        ;; lsp will enable dap-mode if it's present as a function and
-        ;; lsp-enable-dap-auto-configure is non-nil
-        (lsp))))))
+         ))))))
 
 (defun python-helpers--init-in-frame (frame)
   (mapcar
