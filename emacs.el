@@ -1278,6 +1278,11 @@ etc. are set up before starting lsp."
   (remove-hook 'outline-minor-mode-hook 'mediawiki-outline-magic-keys)
   (setq mediawiki-draft-data-file "~/draft.txt"))
 
+(use-package minimap                    ; Sidebar showing a "mini-map" of a buffer
+  :custom
+  (minimap-minimum width       20)
+  (minimap-window-location 'right))
+
 (use-package moccur-edit
   :ensure nil
   )
@@ -1450,6 +1455,7 @@ directory, otherwise return nil."
         org-fold-core-style  'overlays
         org-format-latex-options (plist-put org-format-latex-options :scale 2.5)
         org-hierarchical-todo-statistics nil
+        org-html-htmlize-output-type 'css
         org-list-allow-alphabetical t
         org-log-into-drawer t
         org-priority-default 68
