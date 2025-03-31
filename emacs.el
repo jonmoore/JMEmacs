@@ -1491,19 +1491,12 @@ directory, otherwise return nil."
 
   (set-face-foreground 'org-hide (face-background 'default))
   (setq org-enforce-todo-dependencies t
-
         org-fast-tag-selection-single-key nil
         org-hide-leading-stars t
-
         org-log-done t
         org-log-reschedule 'time
         org-log-redeadline 'time
-
-        ;; org-mode should really be smart enough to get this automatically
-        org-not-done-heading-regexp
-        "^\\(\\*+\\)\\(?: +\\(TODO\\|WIP\\|ASSIGNED\\)\\)\\(?: +\\(.*?\\)\\)?[ 	]*$"
         org-odd-levels-only t
-
         org-tags-column -80
         org-use-speed-commands t)
 
