@@ -1589,13 +1589,26 @@ directory, otherwise return nil."
 
 (use-package org-chef)
 
+(defun jm-insert-org-jira-todo-keywords ()
+  "Insert a SEQ_TODO line for org keywords we use with Jira at the top of the file if
+one doesn't already exist.  Then restart org-mode to ensure this gets picked up."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (unless (re-search-forward "^#\\+SEQ_TODO:" nil t)
+      (insert "#+SEQ_TODO: TODO(t) HOLD(h) WIP(w) | Done(d)\n"))
+    (goto-char (point-min))
+    (org-ctrl-c-ctrl-c)))
+
 (use-package org-jira
   :config
   (setq org-jira-download-comments nil
         org-jira-jira-status-to-org-keyword-alist '(("Open"        . "TODO")
                                                     ("Reopened"    . "TODO")
                                                     ("On hold"     . "HOLD")
-                                                    ("In Progress" . "WIP"))))
+                                                    ("In Progress" . "WIP")))
+  :hook
+  (org-jira-mode . jm-insert-org-jira-todo-keywords))
 
 (use-package org-ref
   :config
