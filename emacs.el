@@ -1427,20 +1427,57 @@ directory, otherwise return nil."
     (add-hook 'kill-emacs-hook 'org-mobile-push))
 
   :bind (:map org-mode-map
+              ;; unset these two, to keep the global-map bindings active'
+              ("<C-S-left>"     . nil)
+              ("<C-S-right>"    . nil)
+
               ("<C-tab>"        . org-cycle-t)
               ("M-?"            . org-complete)
               ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
               ("<C-S-down>"     . outline-next-visible-heading)
               ("<C-S-up>"       . outline-previous-visible-heading)
-              ("C-c ?"          . outline-mark-subtree)
-              ("<C-S-left>"     . nil)
-              ("<C-S-right>"    . nil)
-              ("C-c C-x RET f"  . org-mobile-pull)
-              ("C-c C-x RET g"  . nil))
+              ("C-c ?"          . outline-mark-subtree))
 
   :config
   (defalias 'ob-temp-file 'org-babel-temp-file)
   (setq org-adapt-indentation t
+        org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
+        org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
+        org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html"))
+                                     ("L" "timeline"
+                                      ((todo
+                                        "TODO"
+                                        ((org-agenda-overriding-header "=== TODO tasks without scheduled date ===")
+                                         (org-agenda-skip-function '(org-agenda-skip-entry-if 'scheduled))
+                                         (org-agenda-prefix-format '((todo . " %1c ")))))
+                                       (agenda
+                                        ""
+                                        ((org-agenda-overriding-header "=== Scheduled tasks ===")
+                                         (org-agenda-span 22)
+                                         (org-agenda-prefix-format '((agenda . " %1c %?-12t %s"))))))))
+        org-agenda-files (list org-directory)
+        org-agenda-prefix-format '((agenda . " %i %-18:c%-12,t%-13s")
+                                   (todo . " %i %-15c")
+                                   (tags . " %i %-15c")
+                                   (search . " %i %-15c"))
+        org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
+                                            (todo user-defined-up)
+                                            (tags category-keep priority-down)
+                                            (search category-keep)))
+        org-agenda-start-with-clockreport-mode nil
+        org-agenda-todo-ignore-scheduled 31
+        org-agenda-todo-keyword-format "%-4s"
+        org-capture-templates `(("c" "Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
+                                 "%(org-chef-get-recipe-from-url)"
+                                 :empty-lines 1)
+                                ("m" "Manual Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
+                                 "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
+                                ("o" "Outlook messages to convert to task" entry (file "~/org/misc.org")
+                                 "* TODO %^{task}\n%a\n:  From:    %:sender\n:  Subject: %:title\n\n %?\n  -----------"
+                                 :jump-to-captured t :empty-lines-before 1)
+                                ("t" "Task" entry
+                                 (file+headline "" "Tasks")
+                                 "* TODO %?\n  %u\n  %a"))
         org-checkbox-hierarchical-statistics nil
         org-clock-persist t
         org-clock-in-resume t
@@ -1449,15 +1486,41 @@ directory, otherwise return nil."
                             ([(control shift left)]  . [(meta shift -)]))
         org-drawers '("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")
         org-enforce-todo-checkbox-dependencies t
-        org-export-backends '(ascii html latex)
+        org-enforce-todo-dependencies t
         org-export-allow-bind-keywords t
+        org-export-backends '(ascii html latex)
+        org-export-headline-levels       3
+        org-export-mark-todo-in-toc      t
+        org-export-with-creator          nil
+        org-export-with-email            nil
+        org-export-with-emphasize        t
+        org-export-with-fixed-width      t
+        org-export-with-priority         t
+        org-export-with-section-numbers  nil
+        org-export-with-special-strings  t
+        org-export-with-sub-superscripts t
+        org-export-with-tables           t
+        org-export-with-tags             'not-in-toc
+        org-export-with-timestamp        t
+        org-export-with-toc              t
         ;; workaround - see https://www.reddit.com/r/orgmode/comments/1c9wm8x/weird_issue_sometimes_headline_wont_expand/
+        org-fast-tag-selection-single-key nil
         org-fold-core-style  'overlays
         org-format-latex-options (plist-put org-format-latex-options :scale 2.5)
+        org-hide-leading-stars t
         org-hierarchical-todo-statistics nil
         org-html-htmlize-output-type 'css
+        org-html-inline-images           t
+        org-html-link-org-files-as-html  t
+        org-html-preamble                t
+        org-html-postamble               'auto
+        org-html-validation-link         nil
         org-list-allow-alphabetical t
+        org-log-done t
         org-log-into-drawer t
+        org-log-reschedule 'time
+        org-log-redeadline 'time
+        org-odd-levels-only t
         org-priority-default 68
         org-replace-disputed-keys t
         org-refile-allow-creating-parent-nodes 'confirm
@@ -1476,7 +1539,10 @@ directory, otherwise return nil."
                              ("shell" . sh)
                              ("bash" . sh))
         org-src-window-setup 'current-window
-        org-use-fast-tag-selection t)
+        org-tags-column -80
+        org-use-fast-tag-selection t
+        org-use-speed-commands t
+        )
 
   ;; org-tempo supports the expansion of <s to src blocks etc.
   (require 'org-tempo)
@@ -1490,95 +1556,7 @@ directory, otherwise return nil."
                                                            (restclient . t)))
 
   (set-face-foreground 'org-hide (face-background 'default))
-  (setq org-enforce-todo-dependencies t
-        org-fast-tag-selection-single-key nil
-        org-hide-leading-stars t
-        org-log-done t
-        org-log-reschedule 'time
-        org-log-redeadline 'time
-        org-odd-levels-only t
-        org-tags-column -80
-        org-use-speed-commands t)
-
-  (require 'org-agenda)
-  (setq org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
-
-
-        org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
-        org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html"))
-                                     ("L" "timeline"
-                                      ((todo
-                                        "TODO"
-                                        ((org-agenda-overriding-header "=== TODO tasks without scheduled date ===")
-                                         (org-agenda-skip-function '(org-agenda-skip-entry-if 'scheduled))
-                                         (org-agenda-prefix-format '((todo . " %1c ")))))
-                                       (agenda
-                                        ""
-                                        ((org-agenda-overriding-header "=== Scheduled tasks ===")
-                                         (org-agenda-span 22)
-                                         (org-agenda-prefix-format '((agenda . " %1c %?-12t %s"))))))))
-
-        org-agenda-files (list org-directory)
-        org-agenda-prefix-format '((agenda . " %i %-18:c%-12,t%-13s")
-                                   (todo . " %i %-15c")
-                                   (tags . " %i %-15c")
-                                   (search . " %i %-15c"))
-        org-agenda-sorting-strategy (quote ((agenda time-up category-keep priority-down)
-                                            (todo user-defined-up)
-                                            (tags category-keep priority-down)
-                                            (search category-keep)))
-        org-agenda-start-with-clockreport-mode nil
-        org-agenda-todo-ignore-scheduled 31
-        org-agenda-todo-keyword-format "%-4s")
-
-  (require 'org-capture)
-  (setq org-capture-templates
-        `(("c" "Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
-           "%(org-chef-get-recipe-from-url)"
-           :empty-lines 1)
-          ("m" "Manual Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
-           "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
-          ("o" "Outlook messages to convert to task" entry (file "~/org/misc.org")
-           "* TODO %^{task}\n%a\n:  From:    %:sender\n:  Subject: %:title\n\n %?\n  -----------"
-           :jump-to-captured t :empty-lines-before 1)
-          ("t" "Task" entry
-           (file+headline "" "Tasks")
-           "* TODO %?\n  %u\n  %a")))
-
-  (require 'org-id)
-
-  (require 'ox)
-  (setq org-export-headline-levels       3
-        org-export-mark-todo-in-toc      t
-        org-export-with-creator          nil
-        org-export-with-email            nil
-        org-export-with-emphasize        t
-        org-export-with-fixed-width      t
-        org-export-with-priority         t
-        org-export-with-section-numbers  nil
-        org-export-with-special-strings  t
-        org-export-with-sub-superscripts t
-        org-export-with-tables           t
-        org-export-with-tags             'not-in-toc
-        org-export-with-timestamp        t
-        org-export-with-toc              t)
-
-  (require 'ox-html)
-  (setq org-html-inline-images           t
-        org-html-link-org-files-as-html  t
-        org-html-preamble                t
-        org-html-postamble               'auto
-        org-html-validation-link         nil)
-
-  (require 'ox-md)
-
-  (require 'ox-publish)
-  (setq org-publish-use-timestamps-flag t)
-
-  ;; org-ref can be slow to load.  The messages about creating
-  ;; links are from org-ref-link-set-parameters.
-  (setq org-ref-show-broken-links nil) ; reported as a speedup
-  )
+  (require 'ox-md))
 
 (use-package org-chef)
 
@@ -1589,7 +1567,7 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   (save-excursion
     (goto-char (point-min))
     (unless (re-search-forward "^#\\+SEQ_TODO:" nil t)
-      (insert "#+SEQ_TODO: TODO(t) HOLD(h) WIP(w) | Done(d)\n"))
+      (insert "#+SEQ_TODO: TODO(t) HOLD(h) WIP(w) | DONE(d)\n"))
     (goto-char (point-min))
     (org-ctrl-c-ctrl-c)))
 
@@ -1600,10 +1578,13 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
                                                     ("Reopened"    . "TODO")
                                                     ("On hold"     . "HOLD")
                                                     ("In Progress" . "WIP")))
-  :hook
-  (org-jira-mode . jm-insert-org-jira-todo-keywords))
+  :hook (org-jira-mode . jm-insert-org-jira-todo-keywords))
 
 (use-package org-ref
+  :init
+  ;; org-ref can be slow to load.  The messages about creating
+  ;; links are from org-ref-link-set-parameters.
+  (setq org-ref-show-broken-links nil)
   :config
   (setq org-ref-clean-bibtex-entry-hook '(org-ref-bibtex-format-url-if-doi orcb-key-comma org-ref-replace-nonascii orcb-& orcb-% org-ref-title-case-article orcb-clean-year orcb-clean-doi orcb-clean-pages orcb-check-journal org-ref-sort-bibtex-entry orcb-fix-spacing)
         org-ref-insert-cite-key "C-c )"
@@ -1683,6 +1664,14 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
         ps-number-of-columns    1
         ps-print-color-p       t))
 
+(defun jm-inferior-python-mode-hook ()
+  (when in-buffer-completion-company-p
+    (company-mode))
+  (bind-keys :package python
+             :map inferior-python-mode-map
+             ("TAB" . yas-or-complete-or-indent-for-tab)
+             ("M-TAB" . python-shell-completion-complete-or-indent)))
+
 (use-package python
   ;; we don't hook python-mode but use a call to python-helpers-enable-lsp-everywhere
   ;; elsewhere so that conda and lsp get initialized correctly.
@@ -1698,14 +1687,7 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
   ;; using bind-keys here works while using :bind as above didn't, possibly because of a
   ;; call to define-key for TAB in inferior-python-mode
-  :hook
-  (inferior-python-mode . (lambda ()
-                            (when in-buffer-completion-company-p
-                             (company-mode))
-                            (bind-keys :package python
-                                       :map inferior-python-mode-map
-                                       ("TAB" . yas-or-complete-or-indent-for-tab)
-                                       ("M-TAB" . python-shell-completion-complete-or-indent))))
+  :hook (inferior-python-mode . jm-inferior-python-mode-hook)
 
   :config
   ;; TODO: check if the comments / workarounds in the rest of this comment are still
