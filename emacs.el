@@ -1439,6 +1439,13 @@ directory, otherwise return nil."
               ("C-c ?"          . outline-mark-subtree))
 
   :config
+  (require 'jiralib)
+  (org-link-set-parameters
+   "jira"
+   :follow
+   (lambda (key _)
+     "Visit the Jira given by KEY in the default browser"
+     (browse-url (concat jiralib-url "/browse/" key))))
   (defalias 'ob-temp-file 'org-babel-temp-file)
   (setq org-adapt-indentation t
         org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
@@ -1454,8 +1461,14 @@ directory, otherwise return nil."
                                         ""
                                         ((org-agenda-overriding-header "=== Scheduled tasks ===")
                                          (org-agenda-span 22)
+                                         (org-agenda-prefix-format '((agenda . " %1c %?-12t %s")))))))
+                                     ("R" "review"
+                                      ((agenda
+                                        ""
+                                        ((org-agenda-start-day "-14d")
+                                         (org-agenda-span 28)
                                          (org-agenda-prefix-format '((agenda . " %1c %?-12t %s"))))))))
-        org-agenda-files (list org-directory)
+        org-agenda-files (or org-agenda-files (list org-directory))
         org-agenda-prefix-format '((agenda . " %i %-18:c%-12,t%-13s")
                                    (todo . " %i %-15c")
                                    (tags . " %i %-15c")
@@ -1541,8 +1554,7 @@ directory, otherwise return nil."
         org-src-window-setup 'current-window
         org-tags-column -80
         org-use-fast-tag-selection t
-        org-use-speed-commands t
-        )
+        org-use-speed-commands t)
 
   ;; org-tempo supports the expansion of <s to src blocks etc.
   (require 'org-tempo)
@@ -1604,6 +1616,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
                                               (lambda (fpath)
                                                 (start-process "open" "*open*" "open" fpath))
                                             'org-open-file)))))
+
+(use-package org-transclusion)
 
 (use-package outline
   :config
@@ -1971,13 +1985,17 @@ files.  This persists across sessions"
 
 (use-package vc ;; built-in support for version-control systems
   :config
-  ;; From https://emacs.stackexchange.com/a/10957
-  (defadvice vc-mode-line (after strip-backend () activate)
-    (when (stringp vc-mode)
-      (let ((noback (replace-regexp-in-string
-                     (format "^ %s" (vc-backend buffer-file-name))
-                     " " vc-mode)))
-        (setq vc-mode noback)))))
+  ;; Conserve space on the mode line.  This is based on
+  ;; https://emacs.stackexchange.com/a/10957 but optimized to not call vc-backend as that
+  ;; can cause noticeable slowdowns for git on Windows in the presence of anti-virus, etc.
+  (advice-add
+   'vc-mode-line
+   :after
+   (lambda (file &optional backend)
+     (when (eq backend 'Git)
+       (setq vc-mode (replace-regexp-in-string (format "^ %s" backend) "" vc-mode)))))
+  (delete 'Git vc-handled-backends)
+  (remove-hook 'find-file-hook 'vc-refresh-state))
 
 (when minibuffer-completion-mocve-p
   (use-package vertico            ; Provides a vertical completion U.I.
