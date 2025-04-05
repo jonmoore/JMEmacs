@@ -42,6 +42,6 @@ expansion if possible, else call `indent-for-tab-command'"
    ((minibufferp) (minibuffer-complete))
    ((try-yas-expand))
    ((try-company-expansion))
-   ((try-capf-expansion))
+   ;; ((try-capf-expansion)) ;; disabled as lsp may offer completion even without a prefix
    (t (indent-for-tab-command))
    ))
