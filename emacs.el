@@ -221,7 +221,10 @@
   (set-face-attribute 'default nil :family "Inconsolata" :height 200))
  (system-linux-p
   (set-face-attribute 'default nil :family "DejaVu Sans Mono" :height 140)
-  (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono" :height 140))
+  (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono" :height 140)
+  ;; (set-face-attribute 'fill-column-indicator nil :family "DejaVu Sans Mono" :height 140)
+  ;; (set-face-attribute 'fill-column-indicator nil :family "FreeSerif" :height 140)
+  )
  (t
   (warn "default face not set as no setting was found for the current system.")))
 
@@ -345,6 +348,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (completion-ignored-extensions '(".o" "~" ".obj" ".elc" ".pyc"))
   (create-lockfiles nil)
   (directory-abbrev-alist nil)
+  ;; See discussion at visual-fill-column
+  ;; (display-fill-column-indicator-character 124)
   (enable-local-eval t)
   (fill-column 90)
   (find-ls-option '("-exec ls -ld {} ';'" . "-ld") t)
@@ -2002,9 +2007,88 @@ files.  This persists across sessions"
   (use-package vertico            ; Provides a vertical completion U.I.
     ))
 
+(defun jm-show-display-fill-column-indicator-character-candidates ()
+  "Insert some characters and associated info at point showing
+candidates for display-fill-column-indicator-character."
+  (mapcar (lambda (char)
+            (insert (format "%c ;; %x (%d) %s %s\n"
+                            char char char (char-to-name char) (char-displayable-p char))))
+          (append '(#x2502 124 69 73 #x23B8 #x23D0 #x2503 #x25AE #xFF5C )
+                  (number-sequence #x2380 #x23FF)
+                  (number-sequence #x2500 #x257F)
+                  (number-sequence #xFF00 #xFF7F))))
+
 (use-package visual-fill-column         ; Fill column wrapping for Visual Line Mode
-  ;; This makes lines display wrapped at fill-column in visual-line-mode
-  :hook (visual-line-mode . visual-fill-column-mode--enable))
+  ;; This makes lines display wrapped at fill-column.  It is typically used together with
+  ;; visual-line-mode.
+
+  ;; Known issues
+  ;;
+  ;; 1) Fill-indicator-truncation. There is a conflict between
+  ;; display-fill-column-indicator-mode and visual-fill-column-mode, at least on WSL.
+  ;; Turning on visual-fill-column-mode results in truncating the display of the
+  ;; display-fill-column-indicator-character, showing just the left-most part of the
+  ;; character.
+  ;;
+  ;; https://codeberg.org/joostkremers/visual-fill-column/issues/14
+
+  ;;
+  ;; Workaround ideas
+  ;;
+  ;; Change display-fill-column-indicator-character, for which #x2502 and 124 are the
+  ;; defaults, to one that shows a visible glyph with visual-fill-column-mode
+  ;;
+  ;; Change the font family of fill-column-indicator to one that shows a visible glyph
+  ;; with visual-fill-column-mode
+  ;;
+  ;; Set display-fill-column-indicator-column to one less than fill-column (it is
+  ;; typically set to t, which is the same as fill-column).
+  ;;
+  ;; Set visual-fill-column-extra-text-width to '(0 . 1)
+  ;;
+  ;; Set visual-fill-column-width, which is used in a similar way
+  ;;
+  ;; Find a way to use the margin area to display the fill-column-indicators.
+  ;;
+  ;; Check visual-fill-column--use-min-margins
+  ;;
+  ;; Check if visual-fill would work instead of visual-fill-column-mode.  Very few updates
+  ;; although it's by Stefan Monnier, on ELPA and an update was made in 2024.
+  ;; https://elpa.gnu.org/packages/visual-fill.html
+
+  ;; Notes
+  ;;
+  ;; See jm-show-display-fill-column-indicator-character-candidates for a helper to show
+  ;; different candidates.
+  ;;
+  ;; Most non-ascii characters that look promising according to their glyphs are displayed
+  ;; as boxes if you just set display-fill-column-indicator-character but are displayed
+  ;; with proper glyphs if you run a modified version of
+  ;; display-fill-column-indicator-mode (replacing ?\u2502 by a variable).  There is a
+  ;; clue that this is font-related in the call to char-displayable-p.
+  ;;
+  ;; The non-display of glyphs with visual-fill-column-mode is not just a matter of
+  ;; truncation as these characters' glyphs extend further left than those for E and I,
+  ;; while the latter /are/ partially displayed in visual-fill-column-mode.
+  ;;
+  ;; Using visual-fill-column-mode expands the margins and reduces the available space for
+  ;; display which causes truncation on the right of the
+  ;; display-fill-column-indicator-character.
+  ;;
+  ;; The (window-margins) function can be used to check margin widths.
+  ;;
+
+  ;; Best candidates:
+  ;;
+  ;; Set visual-fill-column-extra-text-width to '(0 . 1)
+  ;;
+  ;; Change display-fill-column-indicator-character to 124 (VERTICAL LINE) and use
+  ;; FreeSerif as the font family for fill-indicator-mode face.  Other font families might
+  ;; work too.
+  ;;
+  ;; Change display-fill-column-indicator-character to 73 (I) - This is adequate
+  ;; with/without visual-fill-column-mode although a full "I" is displayed without.
+  )
 
 (use-package warnings
   :custom
