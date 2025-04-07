@@ -2088,6 +2088,8 @@ candidates for display-fill-column-indicator-character."
   ;;
   ;; Change display-fill-column-indicator-character to 73 (I) - This is adequate
   ;; with/without visual-fill-column-mode although a full "I" is displayed without.
+  :custom
+  (visual-fill-column-extra-text-width '(0 . 1))
   )
 
 (use-package warnings
