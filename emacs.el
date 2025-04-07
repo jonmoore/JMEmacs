@@ -400,7 +400,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 ;;;==========
 
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
-  :hook (visual-line-mode . adaptive-wrap-prefix-mode))
+  )
 
 (use-package align                      ; built-in
   :custom
