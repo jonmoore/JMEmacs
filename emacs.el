@@ -356,6 +356,13 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (gc-cons-threshold (* 128 1000 1000))
   (history-delete-duplicates t)
   (history-length 100)
+  (ispell-complete-word-dict
+   (let ((linux-words "/usr/share/dict/words"))
+     (cond ((and system-linux-p
+                 (file-exists-p linux-words)
+                 (file-regular-p linux-words))
+            linux-words)
+           (t nil))))
   (jit-lock-chunk-size 4096)
   (jit-lock-defer-time 0.25)
   (jit-lock-context-time 5)
@@ -464,7 +471,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (browse-kill-ring-highlight-current-entry t)
   (browse-kill-ring-highlight-inserted-item t))
 
-(use-package cdlatex)                   ; Fast input methods for LaTeX
+(use-package cape)
 
 (defun my-c-mode-common-hook-fn ()
 
@@ -495,6 +502,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
                               ("\\.c\\'"     (".h")))
         c-default-style '((other . "stroustrup"))
         c-echo-syntactic-information-p nil))
+
+(use-package cdlatex                    ; Fast input methods for LaTeX
+  )
 
 (use-package color-moccur               ; Multi-buffer occur (grep) mode.
   :bind (("M-s O" . moccur)
@@ -594,7 +604,10 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
            ("u" . consult-focus-lines))))
 
 (when in-buffer-completion-capf-p
-  (use-package corfu))
+  (use-package corfu
+    :bind
+    ;; Configure SPC for separator insertion
+    (:map corfu-map ("SPC" . corfu-insert-separator))))
 
 (use-package cov)                       ; Show coverage stats in the fringe.
 
