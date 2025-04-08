@@ -272,10 +272,11 @@
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
 ;; Note that sequences consisting of C-c and a letter, either upper or lower case, are
 ;; reserved for users, as are the function keys F5-F9.
-(bind-keys ("C-c a"        . org-agenda)
+(bind-keys
+           ("C-c M"        . move-file-and-buffer)
+           ("C-c R"        . rename-file-and-buffer)
+           ("C-c a"        . org-agenda)
            ("C-c b"        . browse-url-at-point)
-           ("C-c m"        . move-file-and-buffer)
-           ("C-c r"        . rename-file-and-buffer)
 
            ("C-h b"        . jm-describe-bindings)
 
@@ -447,7 +448,10 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
        :help "Run latexmk on file")))
    TeX-command-list))
 
-(use-package auto-highlight-symbol)
+(use-package auto-highlight-symbol      ; Automatic highlighting current symbol minor mode
+  :config
+  ;; disable aggressive grab of M-left, M-right, etc
+  (setq auto-highlight-symbol-mode-map (make-sparse-keymap)))
 
 (defun disable-autorevert-for-network-files ()
   (when (and buffer-file-name
@@ -943,10 +947,25 @@ display-buffer correctly."
 (use-package hideshow                   ; built-in
   :diminish hs-minor-mode
   :hook (prog-mode . hs-minor-mode)
-  :bind (:map hs-minor-mode-map
-              ("C-c l" . hs-hide-level)
-              ("C-c <right>" . hs-show-block)
-              ("C-c <left>"  . hs-hide-block)))
+  :init
+  (define-prefix-command 'hs-dispatch-map)
+  :bind (:map
+         hs-dispatch-map
+         ("l"   .  hs-hide-level)
+         ("t"   .  hs-toggle-hiding)
+         ("h"   .  hs-hide-block)
+         ("s"   .  hs-show-block)
+         ("M-h" .  hs-hide-all)
+         ("M-s" .  hs-show-all)
+
+         :map
+         hs-minor-mode-map
+         ("C-c l"       . hs-hide-level)
+         ("C-c <right>" . hs-show-block)
+         ("C-c <left>"  . hs-hide-block))
+  :config
+  (keymap-set hs-minor-mode-map "C-c h" '("hide-show" . hs-dispatch-map))
+  (keymap-unset hs-minor-mode-map "C-c @" 'remove))
 
 (use-package highlight-sexps            ; built-in.  highlight an expanding set of surrounding
   :ensure nil
@@ -1237,9 +1256,9 @@ etc. are set up before starting lsp."
   :after elisp-mode
   :bind (:map
          emacs-lisp-mode-map
-         ("C-c m x" . macrostep-expand)
+         ("C-c m" . macrostep-expand)
          :map lisp-interaction-mode-map
-         ("C-c m x" . macrostep-expand)))
+         ("C-c m" . macrostep-expand)))
 
 (use-package magit
   :bind ("C-x g" . magit-status)
@@ -2153,9 +2172,21 @@ candidates for display-fill-column-indicator-character."
                        (run-hooks 'prog-mode-hook))))
 
 (use-package yasnippet
+  :init
+  (define-prefix-command 'yasnippet-dispatch-map)
+  :bind (:map
+         yasnippet-dispatch-map
+         ("s" . #'yas-insert-snippet)
+         ("n" . #'yas-new-snippet)
+         ("v" . #'yas-visit-snippet-file)
+         ("e" . #'yas-expand)
+         ("d" . #'yas-describe-tables))
   :config
+  (keymap-set yas-minor-mode-map "C-c y" '("yasnippet" . yasnippet-dispatch-map))
+  (keymap-unset yas-minor-mode-map "C-c &" 'remove)
   (setq yas-verbosity 2)
   (yas-reload-all))
+
 
 (use-package yasnippet-snippets)        ; Official snippets
 
