@@ -1319,7 +1319,8 @@ etc. are set up before starting lsp."
 (use-package minimap                    ; Sidebar showing a "mini-map" of a buffer
   :custom
   (minimap-minimum width       20)
-  (minimap-window-location 'right))
+  (minimap-window-location 'right)
+  (minimap-major-modes '(prog-mode org-mode)))
 
 (use-package moccur-edit
   :ensure nil
