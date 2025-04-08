@@ -391,6 +391,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
      ))
   (set-mark-command-repeat-pop t)
   (show-trailing-whitespace nil)
+  (visual-line-fringe-indicators '(left-curly-arrow nil))
   :custom-face
   (cursor ((t (:background "yellow"))))
   (font-lock-builtin-face ((((class color) (background light)) (:foreground "blue"))))
