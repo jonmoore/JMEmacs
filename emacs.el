@@ -1448,6 +1448,22 @@ directory, otherwise return nil."
                (file-directory-p candidate))
       candidate)))
 
+
+(defun org-babel-goto-tangled ()
+  "Goto the tangled file for the current source block."
+  (interactive)
+  (let* ((args (nth 2 (org-babel-get-src-block-info t)))
+	 (tangle (alist-get :tangle args)))
+    (cond
+     ((null tangle)
+      (message "org-babel-get-src-block-info: No :tangle target found"))
+     ((equal "no" tangle)
+      (message "org-babel-goto-tangled-file: Cannot goto tangled file: Source block has :tangle set to no"))
+     ((not (file-exists-p tangle))
+      (message "org-babel-goto-tangled-file: Tangled file %s does not exist" tangle))
+     (t
+      (find-file tangle)))))
+
 (use-package org
   :mode "\\.org'"
   :init
@@ -1465,17 +1481,22 @@ directory, otherwise return nil."
     (add-hook 'after-init-hook 'org-mobile-pull)
     (add-hook 'kill-emacs-hook 'org-mobile-push))
 
-  :bind (:map org-mode-map
-              ;; unset these two, to keep the global-map bindings active'
-              ("<C-S-left>"     . nil)
-              ("<C-S-right>"    . nil)
+  :bind (:map
+         org-mode-map
+         ;; unset these two, to keep the global-map bindings active'
+         ("<C-S-left>"     . nil)
+         ("<C-S-right>"    . nil)
 
-              ("<C-tab>"        . org-cycle-t)
-              ("M-?"            . org-complete)
-              ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
-              ("<C-S-down>"     . outline-next-visible-heading)
-              ("<C-S-up>"       . outline-previous-visible-heading)
-              ("C-c ?"          . outline-mark-subtree))
+         ("<C-tab>"        . org-cycle-t)
+         ("M-?"            . org-complete)
+         ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
+         ("<C-S-down>"     . outline-next-visible-heading)
+         ("<C-S-up>"       . outline-previous-visible-heading)
+         ("C-c ?"          . outline-mark-subtree)
+         :map
+         org-babel-map
+         ("t"              . org-babel-goto-tangled)
+         )
 
   :config
   (require 'jiralib)
