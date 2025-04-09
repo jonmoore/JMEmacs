@@ -1456,11 +1456,11 @@ directory, otherwise return nil."
 	 (tangle (alist-get :tangle args)))
     (cond
      ((null tangle)
-      (message "org-babel-get-src-block-info: No :tangle target found"))
+      (message "org-babel-goto-tangled: No :tangle target found"))
      ((equal "no" tangle)
-      (message "org-babel-goto-tangled-file: Cannot goto tangled file: Source block has :tangle set to no"))
+      (message "org-babel-goto-tangled: Cannot goto tangled file: Source block has :tangle set to no"))
      ((not (file-exists-p tangle))
-      (message "org-babel-goto-tangled-file: Tangled file %s does not exist" tangle))
+      (message "org-babel-goto-tangled: Tangled file %s does not exist" tangle))
      (t
       (find-file tangle)))))
 
