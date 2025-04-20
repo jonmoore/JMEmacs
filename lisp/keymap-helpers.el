@@ -66,3 +66,25 @@ current buffer if none is specified."
     (mode-key-binding-clashes
      (collect-mode-key-bindings 
       active))))
+
+;;;###autoload
+(defun keymap-set-prefix-map-with-description (keymap key prefix-map description)
+  "Set KEY to PREFIX-MAP in KEYMAP and add a description for which-key.
+KEYMAP is the keymap to modify.
+KEY is the keybinding to set.
+PREFIX-MAP is the keymap to bind to KEY.
+DESCRIPTION is the description for which-key."
+  ;; This is defined since using which-key-add-keymap-based-replacements is the only way I
+  ;; have found a way to provide descriptions for prefix keymaps that fully work with
+  ;; which-key (specifically providing a cons of string and symbol to keymap-set does not
+  ;; work)
+  ;;
+  ;; Based on https://protesilaos.com/codelog/2024-01-29-emacs-prefix-map/
+  (cl-check-type keymap keymap)
+  (cl-check-type "C-c g" key-valid)
+  (cl-check-type prefix-map keymap)
+  (cl-check-type description string)
+
+  (keymap-set keymap key prefix-map)
+  (which-key-add-keymap-based-replacements keymap
+    key (cons description prefix-map)))
