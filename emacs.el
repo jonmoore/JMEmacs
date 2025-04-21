@@ -238,7 +238,6 @@
 (put 'downcase-region 'disabled nil)
 (put 'narrow-to-page  'disabled nil)
 (fset 'yes-or-no-p 'y-or-n-p)
-(bind-key [remap just-one-space] #'cycle-spacing)
 
 (when system-osx-p
   (setq mac-option-modifier   nil
@@ -270,48 +269,6 @@
 
 (when (and in-buffer-completion-company-p in-buffer-completion-capf-p)
   (error "Cannot use both the Company and capf in-buffer completion stacks"))
-
-;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
-;; Note that sequences consisting of C-c and a letter, either upper or lower case, are
-;; reserved for users, as are the function keys F5-F9.
-(bind-keys
-           ("C-c M"        . move-file-and-buffer)
-           ("C-c R"        . rename-file-and-buffer)
-           ("C-c a"        . org-agenda)
-           ("C-c b"        . browse-url-at-point)
-
-           ("C-h b"        . jm-describe-bindings)
-
-           ("C-x C-o"      . delete-blank-lines-around-point-or-in-region)
-           ("C-x LFD"      . dired-jump)
-
-           ("C-n"          . (lambda () (interactive) (scroll-up-in-place 1)))
-           ("C-p"          . (lambda () (interactive) (scroll-down-in-place 1)))
-
-           ("C-r"          . isearch-backward-regexp)
-           ("M-C-r"        . isearch-backward)
-           ("C-s"          . isearch-forward-regexp)
-           ("M-C-s"        . isearch-backward)
-
-           ("M-."          . find-function)
-           ("M-["          . undo-tree-visualize)
-           ("M-]"          . repeat)
-
-           ("M-C-g"        . gptel-send)
-           ("M-C-G"        . gptel)
-
-           ("<C-S-left>"   . select-last-buffer)
-           ("<C-S-right>"  . select-next-buffer)
-
-           ("<home>"       . beginning-of-buffer)
-           ("<end>"        . end-of-buffer)
-           ("<prior>"      . scroll-down-in-place)
-           ("<next>"       . scroll-up-in-place)
-           ("<f5>"         . other-window)
-           ("<S-f5>"       . swap-buffers-previous-window-and-select)
-           ("<f6>"         . rotate-buffer-to-next-window)
-           ("<S-f6>"       . rotate-buffer-to-next-window-and-select)
-           ("<f8>"         . cycle-frame-maximized))
 
 (defun jm-custom-toggle-all-more-hide ()
   "Toggle all \"More/Hide\" widgets in current buffer.  From alphapapa's
@@ -473,7 +430,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (bibtex-maintain-sorted-entries 'entry-class))
 
 (use-package browse-kill-ring           ; Interactively insert items from kill-ring.
-  :bind ("M-y" . browse-kill-ring)
   :custom
   (browse-kill-ring-highlight-current-entry t)
   (browse-kill-ring-highlight-inserted-item t))
@@ -514,8 +470,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   )
 
 (use-package color-moccur               ; Multi-buffer occur (grep) mode.
-  :bind (("M-s O" . moccur)
-         :map isearch-mode-map
+  :bind (:map
+         isearch-mode-map
          ("M-o" . isearch-moccur )
          ("M-O" . isearch-moccur-all))
   :init
@@ -594,12 +550,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (use-package consult                  ; Enhanced completing-read functions
     :init
     (define-prefix-command 'consult-map nil "consult map")
-    (define-key global-map (kbd "M-s") 'consult-map)
-    :bind (("C-x b"   . consult-buffer)
-           ("M-g g"   . consult-goto-line)
-           ("M-g M-g" . consult-goto-line)
-
-           :map consult-map
+    :bind (:map consult-map
            ("g" . consult-grep)
            ("k" . consult-keep-lines)
            ("l" . consult-line)
@@ -705,16 +656,13 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (use-package embark                   ; Provides actions on minibuffer completions.
     :init
     (define-prefix-command 'embark-map nil "embark map")
-    (define-key global-map (kbd "C-c e") 'embark-map)
-    :bind (("C-h B" . embark-bindings)
-           :map embark-map
+    :bind (:map embark-map
            ("." . embark-act)               ;; pick some comfortable key
            (";" . embark-dwim)              ;; good alternative: M-.
            )))
 
 (use-package expand-region              ; Increase selected region by semantic units.
-  :bind
-  (("C-c x" . er/expand-region)))
+)
 
 (use-package esup)                      ; The Emacs StartUp Profiler (ESUP).
 
@@ -739,13 +687,11 @@ clean buffer we delay checking for longer."
   ;; gain from applying defvar and declare-function eveerywhere is not worth the cost.
   :hook  (flycheck-after-syntax-check . adjust-flycheck-automatic-syntax-eagerness)
   :config
-  ;; the key settings below are per the flycheck docs for flycheck-keymap-prefix
-  (define-key flycheck-mode-map flycheck-keymap-prefix nil)
   (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
-        flycheck-keymap-prefix (kbd "C-c f")
         flycheck-pylintrc "pylintrc")
-  (define-key flycheck-mode-map flycheck-keymap-prefix
-              flycheck-command-map))
+  ;; If the below doesn't work then see the docs for flycheck-keymap-prefix and previous
+  ;; code here for a manual approach to replicating the :set action.
+  (customize-set-variable 'flycheck-keymap-prefix (kbd "C-c f")))
 
 (use-package free-keys                  ; Show free keybindings for modkeys or prefixes
   )
@@ -759,6 +705,12 @@ clean buffer we delay checking for longer."
 
 (use-package gptel                      ; Interact with ChatGPT or other LLMs.
   :pin melpa
+  :init
+  (define-prefix-command 'gptel-dispatch-map)
+  :bind (:map gptel-dispatch-map
+              ("c"  . gptel)
+              ("s"  . gptel-send)
+              ("r"  . gptel-rewrite))
   :config
   (setq gptel-expert-commands t
         gptel-use-curl nil
@@ -1058,28 +1010,6 @@ display-buffer correctly."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
-(defun jm-lsp-keybindings ()
-  "Install my lsp-mode key bindings and remove others"
-  (interactive)
-  (define-prefix-command 'lsp-command-map nil "lsp-mode command map")
-  (define-key lsp-mode-map (kbd "C-c d") 'lsp-command-map)
-
-  (define-key lsp-command-map "d" 'lsp-find-definition)
-  (define-key lsp-command-map "r" 'lsp-find-references)
-  (define-key lsp-command-map "t" 'lsp-find-type-definition)
-  (define-key lsp-command-map "h" 'lsp-describe-thing-at-point)
-  (define-key lsp-command-map "l" 'lsp-document-highlight)
-  (define-key lsp-command-map "F" 'lsp-format-buffer)
-  (define-key lsp-command-map "R" 'lsp-rename)
-
-  (define-key lsp-command-map "wD" 'lsp-disconnect)
-  (define-key lsp-command-map "wd" 'lsp-describe-session)
-  (define-key lsp-command-map "wb" 'lsp-workspace-blocklist-remove)
-  (define-key lsp-command-map "wa" 'lsp-workspace-folders-add)
-  (define-key lsp-command-map "wr" 'lsp-workspace-folders-remove)
-  (define-key lsp-command-map "wS" 'lsp-workspace-restart)
-  (define-key lsp-command-map "wQ" 'lsp-workspace-shutdown))
-
 (defun lsp-mode-handler (&rest args)
   "Helper for correct loading of `python-mode' buffers with
 `lsp-mode' as a minor mode.  Needed because we manage lsp-mode
@@ -1098,15 +1028,29 @@ etc. are set up before starting lsp."
   :init
   ;; must set this before loading lsp
   (setq lsp-keymap-prefix "C-c d")
-  :hook
-  (lsp-mode . jm-lsp-keybindings)
+  (define-prefix-command 'lsp-command-map nil "lsp-mode command map")
+  :bind (:map
+         lsp-command-map
+         ("d" . lsp-find-definition)
+         ("r" . lsp-find-references)
+         ("t" . lsp-find-type-definition)
+         ("h" . lsp-describe-thing-at-point)
+         ("l" . lsp-document-highlight)
+         ("F" . lsp-format-buffer)
+         ("R" . lsp-rename)
 
+         ("wD" . lsp-disconnect)
+         ("wd" . lsp-describe-session)
+         ("wb" . lsp-workspace-blocklist-remove)
+         ("wa" . lsp-workspace-folders-add)
+         ("wr" . lsp-workspace-folders-remove)
+         ("wS" . lsp-workspace-restart)
+         ("wQ" . lsp-workspace-shutdown))
   :commands lsp
   :config
   ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
   (require 'dap-mode)
-  (jm-lsp-keybindings)
-
+  (keymap-set lsp-mode-map lsp-keymap-prefix 'lsp-command-map)
   (setq lsp-before-save-edits                          nil
         lsp-enable-dap-auto-configure                    t
         lsp-enable-indentation                         nil
@@ -1259,11 +1203,11 @@ etc. are set up before starting lsp."
   :bind (:map
          emacs-lisp-mode-map
          ("C-c m" . macrostep-expand)
-         :map lisp-interaction-mode-map
+         :map
+         lisp-interaction-mode-map
          ("C-c m" . macrostep-expand)))
 
 (use-package magit
-  :bind ("C-x g" . magit-status)
   :config
   (setq magit-auto-revert-mode nil
         magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
@@ -1708,7 +1652,6 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   :init
   (when in-buffer-completion-company-p
     (bind-keys :map prog-mode-map
-               :filter
                ("C-c c" . company-complete-common))))
 
 (use-package projectile
@@ -1751,11 +1694,9 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
   :bind (:map python-mode-map
               ;; Check if applicable with LSP
-              ("TAB"     . yas-or-complete-or-indent-for-tab)
-              ("C-c y n" . yas-new-snippet)
-              ("C-c y s" . yas-insert-snippet)
-              ("<M-S-left>" . python-indent-shift-left)
-              ("<M-S-right>" . python-indent-shift-right))
+              ("TAB"         . yas-or-complete-or-indent-for-tab)
+              ("M-S-<left>"  . python-indent-shift-left)
+              ("M-S-<right>" . python-indent-shift-right))
 
   ;; using bind-keys here works while using :bind as above didn't, possibly because of a
   ;; call to define-key for TAB in inferior-python-mode
@@ -1837,7 +1778,17 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
          ("M-RET" . rst-insert-list)))
 
 (use-package scroll-in-place
-  :ensure nil)
+  :ensure nil
+  :init
+  (defun scroll-up-in-place-one-line ()
+    "Do `scroll-up-in-place' for a single  line"
+    (interactive)
+    (scroll-up-in-place 1))
+
+  (defun scroll-down-in-place-one-line ()
+    "Do `scroll-down-in-place' for a single  line"
+    (interactive)
+    (scroll-down-in-place 1)))
 
 (defun shell-cycle-backward-through-command-history ()
   (interactive)
@@ -1886,14 +1837,14 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
          ("C-M-b"         . sp-backward-sexp)
          ("C-M-f"         . sp-forward-sexp)
 
-         ("<C-M-left>"    . sp-backward-sexp)
-         ("<C-M-right>"   . sp-forward-sexp)
+         ("C-M-<left>"    . sp-backward-sexp)
+         ("C-M-<right>"   . sp-forward-sexp)
          ;; The key bindings below are so that the up/down pairs correspond to actions and
          ;; their inverses, at least roughly.
-         ("<C-up>"        . sp-backward-up-sexp)
-         ("<C-down>"      . sp-down-sexp)
-         ("<C-S-up>"      . sp-up-sexp)
-         ("<C-S-down>"    . sp-backward-down-sexp)
+         ("C-<up>"        . sp-backward-up-sexp)
+         ("C-<down>"      . sp-down-sexp)
+         ("C-S-<up>"      . sp-up-sexp)
+         ("C-S-<down>"    . sp-backward-down-sexp)
 
          ("C-M-p"         . sp-previous-sexp)
          ("C-M-n"         . sp-next-sexp)
@@ -1935,8 +1886,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
          ("C-M-k"   . sp-kill-sexp)
          ("C-M-S-k" . sp-backward-kill-sexp)
 
-         ("<C-M-backspace>" . sp-splice-sexp-killing-backward)
-         ("<C-M-delete>"    . sp-splice-sexp-killing-forward))
+         ("C-M-<backspace>" . sp-splice-sexp-killing-backward)
+         ("C-M-<delete>"    . sp-splice-sexp-killing-forward))
   :config
   ;; smartparens-config provides sensible defaults for smartparens in different
   ;; languages.  It's especially important for lisp as otherwise smartparens
@@ -1987,7 +1938,7 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 (use-package text-mode
   :ensure nil
   :bind (:map text-mode-map
-              ([(shift return)] . newline-and-indent)))
+              ("S-<return>" . newline-and-indent)))
 
 (use-package toc-org
   :hook (org-mode . toc-org-mode))
@@ -2171,7 +2122,6 @@ candidates for display-fill-column-indicator-character."
 (use-package windmove                   ; Select windows with arrows
   :init
   (define-prefix-command 'windmove-map nil "windmove map")
-  (define-key global-map (kbd "C-c w") 'windmove-map)
   :bind (:map windmove-map
          ("<left>"  . windmove-left)
          ("<right>" . windmove-right)
@@ -2210,10 +2160,90 @@ candidates for display-fill-column-indicator-character."
 (use-package yasnippet-snippets)        ; Official snippets
 
 (use-package zop-to-char                ; Better zapping
-  :bind (("M-Z" . zop-to-char)
-         ("M-z" . zop-up-to-char)))
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; KEY BINDINGS
+
+;; Do this after the main use-package configuration so that we can refer to keymap variables
+;; created in that.
+
+;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
+;; Note that sequences consisting of C-c and a letter, either upper or lower case, are
+;; reserved for users, as are the function keys F5-F9.
+
+;; Preferred approaches
+;;
+;; Use native commands rather than bind-keys for ease of understanding
+;; Use newer commands e.g. keymap-set rather than define-key
+;; Use bulk commands when setting many keys, e.g. define-keymap
+;; Exception: use :bind inside use-package rather than define-keymap reflecting past use
+;; Use define-prefix-command and :bind in use-package config to define keymaps for packages
+;; To set prefixes in global-map, use keymap-set below with a (string . defn) cons to
+;;   add better string descriptions for which-key
+;; To set prefixes in package modes, use keymap-set in :config with a (string . defn) to
+;;   add better string descriptions for which-key
+;;
+
+(define-keymap
+  :keymap global-map
+
+  "<remap> <just-one-space>"  'cycle-spacing
+  "C-c M"        'move-file-and-buffer
+  "C-c R"        'rename-file-and-buffer
+  "C-c a"        'org-agenda
+  "C-c b"        'browse-url-at-point
+  "C-c e"        'embark-map
+  "C-c g"        '("gptel" . gptel-dispatch-map)
+  "C-c w"        'windmove-map
+  "C-c x"        'er/expand-region
+
+  "C-h b"        'jm-describe-bindings
+  "C-h B"        'embark-bindings
+
+  "C-x b"        'consult-buffer
+  "C-x g"        'magit-status
+
+  "C-x C-o"      'delete-blank-lines-around-point-or-in-region
+  "C-x LFD"      'dired-jump
+
+  "C-n"          'scroll-up-in-place-one-line
+  "C-p"          'scroll-down-in-place-one-line
+
+  "C-r"          'isearch-backward-regexp
+  "C-s"          'isearch-forward-regexp
+  "C-M-r"        'isearch-backward
+  "C-M-s"        'isearch-backward
+
+  "C-M-g"        'gptel-send
+
+  "M-."          'find-function
+  "M-["          'undo-tree-visualize
+  "M-]"          'repeat
+  "M-g g"        'consult-goto-line
+  "M-g M-g"      'consult-goto-line
+
+  "M-s"          'consult-map
+  "M-y"          'browse-kill-ring
+
+  "M-Z"          'zop-to-char
+  "M-z"          'zop-up-to-char
+
+  "C-S-<left>"   'select-last-buffer
+  "C-S-<right>"  'select-next-buffer
+
+  "<home>"       'beginning-of-buffer
+  "<end>"        'end-of-buffer
+  "<prior>"      'scroll-down-in-place
+  "<next>"       'scroll-up-in-place
+
+  "<f5>"         'other-window
+  "S-<f5>"       'swap-buffers-previous-window-and-select
+  "<f6>"         'rotate-buffer-to-next-window
+  "S-<f6>"       'rotate-buffer-to-next-window-and-select
+  "<f8>"         'cycle-frame-maximized
+  )
 
 (use-package emacs
   :custom
