@@ -1478,11 +1478,6 @@ directory, otherwise return nil."
   (setq org-mobile-directory
         (jm-sub-directory-if-present (jm-dropbox-directory) "/Apps/MobileOrg"))
 
-  (when org-mobile-directory
-    (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
-    (add-hook 'after-init-hook 'org-mobile-pull)
-    (add-hook 'kill-emacs-hook 'org-mobile-push))
-
   :bind (:map
          org-mode-map
          ;; unset these two, to keep the global-map bindings active'
@@ -2254,6 +2249,12 @@ candidates for display-fill-column-indicator-character."
     (which-key-mode))
   (when in-buffer-completion-capf-p
     (global-corfu-mode))
+
+  (when org-mobile-directory
+    (require 'org-mobile)
+    (setq org-mobile-inbox-for-pull (concat org-directory "/from-mobile.org"))
+    (add-hook 'after-init-hook 'org-mobile-pull)
+    (add-hook 'kill-emacs-hook 'org-mobile-push))
 
   (desktop-save-mode)
 
