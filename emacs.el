@@ -112,6 +112,8 @@
 ;; possible with package/use-package.
 (use-package quelpa-use-package
   :custom
+  ;; Suppresses misleading message "Newer package has been installed. Not upgrading."
+  (quelpa-build-verbose nil)
   (quelpa-update-melpa-p nil)
   :config
   (quelpa-use-package-activate-advice))
