@@ -73,15 +73,19 @@ current buffer if none is specified."
 KEYMAP is the keymap to modify.
 KEY is the keybinding to set.
 PREFIX-MAP is the keymap to bind to KEY.
-DESCRIPTION is the description for which-key."
-  ;; This is defined since using which-key-add-keymap-based-replacements is the only way I
-  ;; have found a way to provide descriptions for prefix keymaps that fully work with
-  ;; which-key (specifically providing a cons of string and symbol to keymap-set does not
-  ;; work)
-  ;;
-  ;; Based on https://protesilaos.com/codelog/2024-01-29-emacs-prefix-map/
+DESCRIPTION is the description for which-key.
+
+This function is deprecated as using `define-prefix-command'
+appears to be a cleaner approach.
+
+This was defined to provide descriptions for prefix keymaps that
+fully work with which-key -- simply defining a prefix keymap and
+adding it as a definition in another keymap with a (string
+. definition) cons does not work.
+  
+Based on https://protesilaos.com/codelog/2024-01-29-emacs-prefix-map/"
   (cl-check-type keymap keymap)
-  (cl-check-type "C-c g" key-valid)
+  (cl-check-type key key-valid)
   (cl-check-type prefix-map keymap)
   (cl-check-type description string)
 
