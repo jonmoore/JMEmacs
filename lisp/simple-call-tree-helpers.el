@@ -14,9 +14,6 @@
 ;; $dot_text
 ;; #+end_src
 
-(when minibuffer-completion-helm-p
-  (require 'helm))
-
 (require 'simple-call-tree)
 
 ;; there is a bug in how simple-call-tree calls next-single-property-change;
@@ -68,16 +65,6 @@ like `simple-call-tree-alist'"
   (jm-graphviz-edge-pairs-to-digraph
    (jm-simple-call-tree--alist-to-call-pairs alist)))
 
-(defun jm-simple-call-tree--select-buffer (prompt)
-  "Prompt the user with PROMPT to select a buffer. 
-Use helm if `minibuffer-completion-helm-p' is true; otherwise,
-use `completing-read'."
-  (if minibuffer-completion-helm-p
-      (helm :sources (helm-build-sync-source "Select Buffer"
-                       :candidates (helm-buffer-list))
-            :prompt prompt)
-    (get-buffer (completing-read prompt (mapcar #'buffer-name (buffer-list))))))
-
 ;;;###autoload
 (defun jm-simple-call-tree-dot ( &optional buffer)
   "Return a dot representation of the call graph of a buffer,
@@ -85,7 +72,7 @@ created by `simple-call-tree-analyze'.  If BUFFER is nil, the
 buffer to analyze is prompted for."
   (let ((buffer-to-analyze
          (or buffer
-	     (jm-simple-call-tree--select-buffer "Create call tree for: ")
+             (get-buffer (completing-read "Create call tree for: " (mapcar #'buffer-name (buffer-list))))
 	     (error "No buffer provided to analyze"))))
     (simple-call-tree-analyze (list buffer-to-analyze))
     (jm-simple-call-tree-alist-to-digraph simple-call-tree-alist)))

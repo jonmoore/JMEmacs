@@ -5,8 +5,7 @@
 (require 'flycheck)
 (require 'ht)                           ; hash table library
 (require 'projectile)
-(when minibuffer-completion-helm-p
-  (require 'helm))
+
 
 ;;; lsp-mode notes
 ;;  ==============
@@ -108,22 +107,10 @@ from a combined list of project-specific and global environments."
 		    (python-helpers--pixi-environments project-root)
 		    (python-helpers--conda-environments))))
 
-(defun python-helpers--select-conda-env-helm (project-root)
-  "Prompt the user to select a conda environment for PROJECT-ROOT,
-from a mix of project-specific and global environments."
-  (helm :sources (list (helm-build-sync-source "Pixi conda environments"
-			 :candidates ;; here candidates is a simple list
-			 (python-helpers--pixi-environments project-root))
-		       (helm-build-in-file-source
-			   "Conda environments from ~/.conda"
-			   python-helpers--conda-environments-file))))
-
 (defun python-helpers--select-conda-env (project-root)
   "Select a conda environment for the given PROJECT-ROOT."
   (let ((use-dialog-box nil))
-    (or (if minibuffer-completion-helm-p
-	    (python-helpers--select-conda-env-helm project-root)
-	  (python-helpers--select-conda-env-completing-read project-root))
+    (or (python-helpers--select-conda-env-completing-read project-root)
         (condition-case nil
             (read-directory-name "Conda environment directory: ")
           (quit nil)))))
