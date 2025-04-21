@@ -128,27 +128,23 @@ from a mix of project-specific and global environments."
             (read-directory-name "Conda environment directory: ")
           (quit nil)))))
 
-;;;###autoload
-(defun python-helpers--init-in-buffer ()
-  "Handle conda and lsp-mode initialisation.  When the current
-buffer is in python-mode, is visible, is in a projectile project,
-and the user has selected a conda env for the project (prompted
-for if needed) then ensure that conda is synced to use that env
-and that lsp is active.  The initialisation order is first
-project (calculated automatically by projectile), then conda env,
-then lsp.
+(defvar python-helpers--init-in-buffer-core-running-p nil
+  "Non-nil if `python-helpers--init-in-buffer-core` is running.
+Used to detect and prevent reentrant calls.")
 
-The visibility-testing part of this is to avoid massive delays when
-starting up with many different Python buffers loaded from the
-desktop. Ideally we would lean on lsp-deferred for this."
-  (interactive)
-  (cond
-   ((and (not (string-prefix-p " *" (buffer-name)))
-         (not (string-prefix-p "*" (buffer-name)))
-         (equal major-mode 'python-mode)
-         (or (get-buffer-window nil t)
-             (buffer-modified-p)))
-    (let* ((project-root (projectile-project-root))
+(defun python-helpers--init-in-buffer-core (args)
+  "Core of `python-helpers--init-in-buffer'.  Handle conda and
+lsp-mode initialisation.  When the current buffer is in a
+projectile project, and the user has selected a conda env for the
+project (prompted for if needed) then ensure that conda is synced
+to use that env and that lsp is active.  The initialisation order
+is first project (calculated automatically by projectile), then
+conda env, then lsp."
+  (if python-helpers--init-in-buffer-core-running-p
+      (progn
+        (error "Function '%s' called reentrantly" 'python-helpers--init-in-buffer-core))
+    (let* ((python-helpers--init-in-buffer-core-running-p t)
+           (project-root (projectile-project-root))
            (saved-project-conda-env (ht-get python-helpers--ht-project-conda-env project-root)))
       (when project-root
         (cond
@@ -172,7 +168,31 @@ desktop. Ideally we would lean on lsp-deferred for this."
             (lsp)))
          ;; TODO - add case for changing buffer into a buffer in the same project but
          ;; where LSP is not active.  Need to define case for 'do-not-use-an-env
-         ))))))
+         )))))
+
+;;;###autoload
+(defun python-helpers--init-in-buffer ()
+  "Handle conda and lsp-mode initialisation.  When the current
+buffer is in python-mode, is visible, is in a projectile project,
+and the user has selected a conda env for the project (prompted
+for if needed) then ensure that conda is synced to use that env
+and that lsp is active.  The initialisation order is first
+project (calculated automatically by projectile), then conda env,
+then lsp.
+
+The visibility-testing part of this is to avoid massive delays when
+starting up with many different Python buffers loaded from the
+desktop. Ideally we would lean on lsp-deferred for this."
+  (interactive)
+  (cond
+   ((and (not (string-prefix-p " *" (buffer-name)))
+         (not (string-prefix-p "*" (buffer-name)))
+         (equal major-mode 'python-mode)
+         (or (get-buffer-window nil t)
+             (buffer-modified-p)))
+    (python-helpers--init-in-buffer-core)
+    )))
+
 
 (defun python-helpers--init-in-frame (frame)
   (mapcar
