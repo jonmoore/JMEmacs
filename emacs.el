@@ -693,6 +693,18 @@ clean buffer we delay checking for longer."
 (use-package git-gutter-fringe          ; Show git diff information in fringe
   :diminish)
 
+(use-package gitlab-lsp
+  :quelpa (gitlab-lsp :fetcher github
+                      :repo "kassick/gitlab-lsp.el"
+                      :branch "main"
+                      :files ("*.el"))
+  :config
+  (setq gitlab-lsp-show-completions-with-other-clients nil)
+  (add-hook 'gitlab-lsp-complete-before-complete-hook
+            (lambda ()
+              (recenter-top-bottom 4)
+              (message "Asking for suggestions ..."))))
+
 (use-package goto-addr                  ; buttonize URLs and e-mail addresses
   :hook ((prog-mode . goto-address-prog-mode)
          (text-mode . goto-address-mode)))
@@ -853,6 +865,20 @@ etc. are set up before starting lsp."
     (python-helpers--init-in-buffer))
    (t
     (lsp-deferred))))
+
+(use-package lsp-inline-completions
+  :quelpa (lsp-inline-completions :fetcher github
+                                  :repo "kassick/lsp-inline-completions"
+                                  :branch "main"
+                                  :files ("*.el"))
+  :config
+  (add-hook 'lsp-before-inline-completion-hook
+            (lambda ()
+              (recenter-top-bottom 4)
+              (require 'spinner)
+              (spinner-start 'triangle 10)
+              (message "Asking for suggestions ...")))
+  (add-hook 'lsp-after-inline-completion-hook #'spinner-stop))
 
 (use-package lsp-mode                   ; Language Server Protocol support
   ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
@@ -1442,6 +1468,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
           org-ref-bibliography-notes (concat bibliography-directory "/notes.org")
           org-ref-default-bibliography reftex-default-bibliography
           org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/"))))
+
+(use-package org-super-agenda)
 
 (use-package org-transclusion)
 
