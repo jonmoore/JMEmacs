@@ -1220,9 +1220,7 @@ inheritance, which I want."
 HEADLINE as a string, e.g. \"A\", calling either
 `priority-from-normal-headline-tags' or `priority-from-jira-headline'
 according to `headline-is-for-jira'."
-  (if (headline-is-for-jira headline)
-      (priority-from-jira-headline headline)
-    (priority-from-normal-headline-tags headline)))
+  (priority-from-normal-headline-tags headline))
 
 (defun jm-org-agenda-cmp-headline-priorities (a b)
   "Compare the priorities in two org headlines using
