@@ -1231,6 +1231,27 @@ according to `headline-is-for-jira'."
      ((< pa pb) -1)
      (t nil))))
 
+(defun jm-org-agenda-open-jira ()
+  "From org-agenda, open the current Jira in a web browser."
+  (interactive)
+  (let* ((tags (org-get-at-bol 'tags))
+         (plain-tags (mapcar #'substring-no-properties tags))
+         (jira-tags (seq-filter (lambda (tag)
+                                  (string-match-p "^[A-Z]+_[0-9]+" tag))
+                                plain-tags)))
+    (cond
+     ((null jira-tags)
+      (message "No Jir ticket found for this item"))
+     ((> (length jira-tags) 1)
+      (error "Multiple Jira tickets found in tags: %s" jira-tags))
+     (t
+      (let ((jira-id
+             (replace-regexp-in-string "_" "-" (car jira-tags))))
+        (message "Opening Jira ticket: %s" jira-id)
+        (browse-url
+         (concat (replace-regexp-in-string "/*$" "" jiralib-url) "/browse/"
+                 jira-id)))))))
+
 (defun org-cycle-t ()
   (interactive)
   (org-cycle '(4)))
@@ -1468,7 +1489,9 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
         org-jira-jira-status-to-org-keyword-alist '(("Open"        . "TODO")
                                                     ("Reopened"    . "TODO")
                                                     ("On hold"     . "HOLD")
-                                                    ("In Progress" . "WIP")))
+                                                    ("In Progress" . "WIP"))
+
+        org-jira-worklog-sync-p nil)
   :hook (org-jira-mode . jm-insert-org-jira-todo-keywords))
 
 (use-package org-ref
