@@ -1067,8 +1067,7 @@ etc. are set up before starting lsp."
 
 (use-package magit
   :config
-  (setq magit-auto-revert-mode nil
-        magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
+  (setq magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
         magit-log-margin '(t "%Y-%m-%d %H:%M" magit-log-margin-width t 18)
         magit-log-show-refname-after-summary t
         magit-popup-use-prefix-argument 'default
@@ -2132,6 +2131,11 @@ candidates for display-fill-column-indicator-character."
   (global-display-fill-column-indicator-mode)
   (global-font-lock-mode)
   (global-undo-tree-mode)
+  (progn
+    ;; requiring magit-process because consult previews break without it
+    (require 'magit-process)
+    (magit-auto-revert-mode)
+    )
   (recentf-mode)
   (save-place-mode)
   (savehist-mode)
