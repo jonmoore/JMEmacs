@@ -1099,6 +1099,28 @@ etc. are set up before starting lsp."
                 (lambda (&rest _args) nil)
                 '((name . "always-nil")))))
 
+;; This is a hack for a marginalia/vertico/magit issue
+;;
+;; It addresses slowdowns that arise because
+;; 1. Marginalia decorates variable names based on marginalia--symbol-class
+;; 2. This checks if custom variables have been set to non-standard values
+;; 3. defcustom stores standard values un-eval'd so marginalia--symbol-class evals
+;;    the definitions of standard values
+;; 4. The standard value of magit-git-executable invokes git twice using process-lines
+;; 5. magit uses some caching but the caching only applies to the second call
+;; 6. marginalia's cache is cleared by vetico advice each time a completing read
+;;    function sets up the minibuffer
+(progn
+  (require 'magit)
+  (setq my-mge magit-git-executable)
+  (defcustom magit-git-executable
+    my-mge
+    "A hacked version of magit-git-executable from magit-git.el.
+On remote machines `magit-remote-git-executable' is used instead."
+    :package-version '(magit . "3.2.0")
+    :group 'magit-process
+    :type 'string))
+
 (when minibuffer-completion-mocve-p
   (use-package marginalia         ; Provides annotations for completion candidates.
     ))
