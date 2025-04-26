@@ -224,10 +224,7 @@
   (set-face-attribute 'default nil :family "Inconsolata" :height 200))
  (system-linux-p
   (set-face-attribute 'default nil :family "DejaVu Sans Mono" :height 140)
-  (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono" :height 140)
-  ;; (set-face-attribute 'fill-column-indicator nil :family "DejaVu Sans Mono" :height 140)
-  ;; (set-face-attribute 'fill-column-indicator nil :family "FreeSerif" :height 140)
-  )
+  (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono" :height 140))
  (t
   (warn "default face not set as no setting was found for the current system.")))
 
@@ -465,10 +462,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   )
 
 (use-package color-moccur               ; Multi-buffer occur (grep) mode.
-  :bind (:map
-         isearch-mode-map
-         ("M-o" . isearch-moccur )
-         ("M-O" . isearch-moccur-all))
+  :bind (:map isearch-mode-map
+              ("M-o" . isearch-moccur )
+              ("M-O" . isearch-moccur-all))
   :init
   (setq moccur-split-word t
         dmoccur-use-list t
@@ -752,20 +748,18 @@ clean buffer we delay checking for longer."
   :hook (prog-mode . hs-minor-mode)
   :init
   (define-prefix-command 'hs-dispatch-map)
-  :bind (:map
-         hs-dispatch-map
-         ("l"   .  hs-hide-level)
-         ("t"   .  hs-toggle-hiding)
-         ("h"   .  hs-hide-block)
-         ("s"   .  hs-show-block)
-         ("M-h" .  hs-hide-all)
-         ("M-s" .  hs-show-all)
+  :bind (:map hs-dispatch-map
+              ("l"   .  hs-hide-level)
+              ("t"   .  hs-toggle-hiding)
+              ("h"   .  hs-hide-block)
+              ("s"   .  hs-show-block)
+              ("M-h" .  hs-hide-all)
+              ("M-s" .  hs-show-all)
 
-         :map
-         hs-minor-mode-map
-         ("C-c l"       . hs-hide-level)
-         ("C-c <right>" . hs-show-block)
-         ("C-c <left>"  . hs-hide-block))
+              :map hs-minor-mode-map
+              ("C-c l"       . hs-hide-level)
+              ("C-c <right>" . hs-show-block)
+              ("C-c <left>"  . hs-hide-block))
   :config
   (keymap-set hs-minor-mode-map "C-c h" '("hide-show" . hs-dispatch-map))
   (keymap-unset hs-minor-mode-map "C-c @" 'remove))
@@ -812,11 +806,10 @@ clean buffer we delay checking for longer."
            "~")))))
 
 (use-package info                       ; built-in.
-  :bind (:map
-         Info-mode-map
-         (";"           . Info-search-next)
-         (":"           . Info-search-backward)
-         ([(shift tab)] . Info-prev-reference)))
+  :bind (:map Info-mode-map
+              (";"           . Info-search-next)
+              (":"           . Info-search-backward)
+              ([(shift tab)] . Info-prev-reference)))
 
 (use-package jq-mode)                   ; edit jq scripts
 
@@ -892,23 +885,22 @@ etc. are set up before starting lsp."
   ;; must set this before loading lsp
   (setq lsp-keymap-prefix "C-c d")
   (define-prefix-command 'lsp-command-map nil "lsp-mode command map")
-  :bind (:map
-         lsp-command-map
-         ("d" . lsp-find-definition)
-         ("r" . lsp-find-references)
-         ("t" . lsp-find-type-definition)
-         ("h" . lsp-describe-thing-at-point)
-         ("l" . lsp-document-highlight)
-         ("F" . lsp-format-buffer)
-         ("R" . lsp-rename)
+  :bind (:map lsp-command-map
+              ("d" . lsp-find-definition)
+              ("r" . lsp-find-references)
+              ("t" . lsp-find-type-definition)
+              ("h" . lsp-describe-thing-at-point)
+              ("l" . lsp-document-highlight)
+              ("F" . lsp-format-buffer)
+              ("R" . lsp-rename)
 
-         ("wD" . lsp-disconnect)
-         ("wd" . lsp-describe-session)
-         ("wb" . lsp-workspace-blocklist-remove)
-         ("wa" . lsp-workspace-folders-add)
-         ("wr" . lsp-workspace-folders-remove)
-         ("wS" . lsp-workspace-restart)
-         ("wQ" . lsp-workspace-shutdown))
+              ("wD" . lsp-disconnect)
+              ("wd" . lsp-describe-session)
+              ("wb" . lsp-workspace-blocklist-remove)
+              ("wa" . lsp-workspace-folders-add)
+              ("wr" . lsp-workspace-folders-remove)
+              ("wS" . lsp-workspace-restart)
+              ("wQ" . lsp-workspace-shutdown))
   :commands lsp
   :config
   ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
@@ -1063,12 +1055,10 @@ etc. are set up before starting lsp."
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
-  :bind (:map
-         emacs-lisp-mode-map
-         ("C-c m" . macrostep-expand)
-         :map
-         lisp-interaction-mode-map
-         ("C-c m" . macrostep-expand)))
+  :bind (:map emacs-lisp-mode-map
+              ("C-c C-m" . macrostep-expand)
+              :map lisp-interaction-mode-map
+              ("C-c C-m" . macrostep-expand)))
 
 (use-package magit
   :config
@@ -1164,13 +1154,10 @@ On remote machines `magit-remote-git-executable' is used instead."
 
 (use-package nxml-mode
   :ensure nil
-  :bind (:map
-         nxml-mode-map
-         ("<f9>" . nexus-insert-gav-for-keyword))
+  :bind (:map nxml-mode-map
+              ("<f9>" . nexus-insert-gav-for-keyword))
   :config
   (setq nxml-child-indent 4))
-
-;;; ORG MODE
 
 (defun in-a-jira-buffer ()
   "Return if the current buffer is a Jira one, created with
@@ -1325,22 +1312,20 @@ directory, otherwise return nil."
   (setq org-mobile-directory
         (jm-sub-directory-if-present (jm-dropbox-directory) "/Apps/MobileOrg"))
 
-  :bind (:map
-         org-mode-map
-         ;; unset these two, to keep the global-map bindings active'
-         ("<C-S-left>"     . nil)
-         ("<C-S-right>"    . nil)
+  :bind (:map org-mode-map
+              ;; unset these two, to keep the global-map bindings active'
+              ("<C-S-left>"     . nil)
+              ("<C-S-right>"    . nil)
 
-         ("<C-tab>"        . org-cycle-t)
-         ("M-?"            . org-complete)
-         ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
-         ("<C-S-down>"     . outline-next-visible-heading)
-         ("<C-S-up>"       . outline-previous-visible-heading)
-         ("C-c ?"          . outline-mark-subtree)
-         :map
-         org-babel-map
-         ("t"              . org-babel-goto-tangled)
-         )
+              ("<C-tab>"        . org-cycle-t)
+              ("M-?"            . org-complete)
+              ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
+              ("<C-S-down>"     . outline-next-visible-heading)
+              ("<C-S-up>"       . outline-previous-visible-heading)
+              ("C-c ?"          . outline-mark-subtree)
+              :map org-babel-map
+              ("t"              . org-babel-goto-tangled)
+              )
 
   :config
   (require 'jiralib)
@@ -1669,10 +1654,9 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   :mode ("\\.rcl\\'" . restclient-mode))
 
 (use-package rst                        ; ReStructuredText
-  :bind (:map
-         rst-mode-map
-         ("C-=" . nil)
-         ("M-RET" . rst-insert-list)))
+  :bind (:map rst-mode-map
+              ("C-=" . nil)
+              ("M-RET" . rst-insert-list)))
 
 (use-package scroll-in-place
   :ensure nil
@@ -1710,11 +1694,10 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   (sgml-basic-offset 8))
 
 (use-package shell
-  :bind (:map
-         shell-mode-map
-         ("<home>" . comint-bol)
-         ("<up>"   . shell-cycle-backward-through-command-history)
-         ("<down>" . shell-cycle-forward-through-command-history)))
+  :bind (:map shell-mode-map
+              ("<home>" . comint-bol)
+              ("<up>"   . shell-cycle-backward-through-command-history)
+              ("<down>" . shell-cycle-forward-through-command-history)))
 
 (use-package shut-up)                   ; redirects `message' and stdout
 
@@ -1725,66 +1708,65 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 (use-package smartparens
   :diminish smartparens-mode
   :hook (emacs-lisp-mode . smartparens-mode)
-  :bind (:map
-         smartparens-strict-mode-map
-         ("M-q"           . sp-indent-defun)
+  :bind (:map smartparens-strict-mode-map
+              ("M-q"           . sp-indent-defun)
 
-         :map smartparens-mode-map
-         ;; Navigating
-         ("C-M-b"         . sp-backward-sexp)
-         ("C-M-f"         . sp-forward-sexp)
+              :map smartparens-mode-map
+              ;; Navigating
+              ("C-M-b"         . sp-backward-sexp)
+              ("C-M-f"         . sp-forward-sexp)
 
-         ("C-M-<left>"    . sp-backward-sexp)
-         ("C-M-<right>"   . sp-forward-sexp)
-         ;; The key bindings below are so that the up/down pairs correspond to actions and
-         ;; their inverses, at least roughly.
-         ("C-<up>"        . sp-backward-up-sexp)
-         ("C-<down>"      . sp-down-sexp)
-         ("C-S-<up>"      . sp-up-sexp)
-         ("C-S-<down>"    . sp-backward-down-sexp)
+              ("C-M-<left>"    . sp-backward-sexp)
+              ("C-M-<right>"   . sp-forward-sexp)
+              ;; The key bindings below are so that the up/down pairs correspond to actions and
+              ;; their inverses, at least roughly.
+              ("C-<up>"        . sp-backward-up-sexp)
+              ("C-<down>"      . sp-down-sexp)
+              ("C-S-<up>"      . sp-up-sexp)
+              ("C-S-<down>"    . sp-backward-down-sexp)
 
-         ("C-M-p"         . sp-previous-sexp)
-         ("C-M-n"         . sp-next-sexp)
-         ("M-a"           . sp-beginning-of-sexp)
-         ("M-e"           . sp-end-of-sexp)
+              ("C-M-p"         . sp-previous-sexp)
+              ("C-M-n"         . sp-next-sexp)
+              ("M-a"           . sp-beginning-of-sexp)
+              ("M-e"           . sp-end-of-sexp)
 
-         ("M-B"           . sp-backward-symbol)
-         ("M-F"           . sp-forward-symbol)
+              ("M-B"           . sp-backward-symbol)
+              ("M-F"           . sp-forward-symbol)
 
-         ;; Selecting and copying
-         ("C-M-]"         . sp-select-next-thing-exchange)
-         ("C-M-w"         . sp-copy-sexp)
+              ;; Selecting and copying
+              ("C-M-]"         . sp-select-next-thing-exchange)
+              ("C-M-w"         . sp-copy-sexp)
 
-         ;; Editing, but not deleting sexp contents
-         ("C-M-s"         . sp-splice-sexp)
-         ("C-M-?"         . sp-convolute-sexp)
-         ("C-M-S"         . sp-split-sexp)
-         ("C-M-J"         . sp-join-sexp)
-         ("C-M-t"         . sp-transpose-sexp)
-         ("<M-delete>"    . sp-unwrap-sexp)
-         ("<M-backspace>" . sp-backward-unwrap-sexp)
+              ;; Editing, but not deleting sexp contents
+              ("C-M-s"         . sp-splice-sexp)
+              ("C-M-?"         . sp-convolute-sexp)
+              ("C-M-S"         . sp-split-sexp)
+              ("C-M-J"         . sp-join-sexp)
+              ("C-M-t"         . sp-transpose-sexp)
+              ("<M-delete>"    . sp-unwrap-sexp)
+              ("<M-backspace>" . sp-backward-unwrap-sexp)
 
-         ;; Slurp and barf, respectively, push and pop sexps onto and off the current
-         ;; list.  See http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking for
-         ;; the first setting; not using "C-)" because Microsoft have broken this.  Search
-         ;; for "WTF" in this file.
-         ("C-M-0"         . sp-forward-slurp-sexp)
-         ("C-}"           . sp-forward-barf-sexp)
-         ("C-M-9"         . sp-backward-slurp-sexp)
-         ("C-{"           . sp-backward-barf-sexp)
+              ;; Slurp and barf, respectively, push and pop sexps onto and off the current
+              ;; list.  See http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking for
+              ;; the first setting; not using "C-)" because Microsoft have broken this.  Search
+              ;; for "WTF" in this file.
+              ("C-M-0"         . sp-forward-slurp-sexp)
+              ("C-}"           . sp-forward-barf-sexp)
+              ("C-M-9"         . sp-backward-slurp-sexp)
+              ("C-{"           . sp-backward-barf-sexp)
 
-         ;; Deleting and killing
-         ([remap backward-delete-char] . sp-backward-delete-char)
-         ([remap backward-kill-word]   . sp-backward-kill-word)
-         ([remap delete-forward-char]  . sp-delete-char)
-         ([remap kill-line]            . sp-kill-hybrid-sexp)
-         ([remap kill-word]            . sp-kill-word)
+              ;; Deleting and killing
+              ([remap backward-delete-char] . sp-backward-delete-char)
+              ([remap backward-kill-word]   . sp-backward-kill-word)
+              ([remap delete-forward-char]  . sp-delete-char)
+              ([remap kill-line]            . sp-kill-hybrid-sexp)
+              ([remap kill-word]            . sp-kill-word)
 
-         ("C-M-k"   . sp-kill-sexp)
-         ("C-M-S-k" . sp-backward-kill-sexp)
+              ("C-M-k"   . sp-kill-sexp)
+              ("C-M-S-k" . sp-backward-kill-sexp)
 
-         ("C-M-<backspace>" . sp-splice-sexp-killing-backward)
-         ("C-M-<delete>"    . sp-splice-sexp-killing-forward))
+              ("C-M-<backspace>" . sp-splice-sexp-killing-backward)
+              ("C-M-<delete>"    . sp-splice-sexp-killing-forward))
   :config
   ;; smartparens-config provides sensible defaults for smartparens in different
   ;; languages.  It's especially important for lisp as otherwise smartparens
@@ -2040,13 +2022,12 @@ candidates for display-fill-column-indicator-character."
 (use-package yasnippet
   :init
   (define-prefix-command 'yasnippet-dispatch-map)
-  :bind (:map
-         yasnippet-dispatch-map
-         ("s" . #'yas-insert-snippet)
-         ("n" . #'yas-new-snippet)
-         ("v" . #'yas-visit-snippet-file)
-         ("e" . #'yas-expand)
-         ("d" . #'yas-describe-tables))
+  :bind (:map yasnippet-dispatch-map
+              ("s" . #'yas-insert-snippet)
+              ("n" . #'yas-new-snippet)
+              ("v" . #'yas-visit-snippet-file)
+              ("e" . #'yas-expand)
+              ("d" . #'yas-describe-tables))
   :config
   (keymap-set yas-minor-mode-map "C-c y" '("yasnippet" . yasnippet-dispatch-map))
   (keymap-unset yas-minor-mode-map "C-c &" 'remove)
