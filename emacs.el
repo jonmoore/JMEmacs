@@ -539,17 +539,17 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         (consult-line))))
 
   (use-package consult                  ; Enhanced completing-read functions
-    :init
-    (define-prefix-command 'consult-map nil "consult map")
-    :bind (:map consult-map
-           ("g" . consult-grep)
-           ("k" . consult-keep-lines)
-           ("l" . consult-line)
-           ("L" . consult-line-multi)
-           ("o" . consult-outline)
-           ("r" . consult-ripgrep)
-           ("s" . consult-line-symbol)
-           ("u" . consult-focus-lines))))
+    :bind (:map search-map
+           ("g"   . consult-ripgrep)
+           ("i"   . consult-imenu)
+           ("M-i" . consult-imenu-multi)
+           ("l"   . consult-line)
+           ("M-l" . consult-line-multi)
+           ("o"   . consult-outline)    ; overrides occur
+           ("s"   . consult-line-symbol)
+
+           ("k"   . consult-keep-lines)
+           ("f"   . consult-focus-lines))))
 
 (when in-buffer-completion-capf-p
   (use-package corfu
@@ -1062,7 +1062,8 @@ etc. are set up before starting lsp."
 
 (use-package magit
   :config
-  (setq magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
+  (setq magit-define-global-key-bindings nil
+        magit-git-environment (cons (format "HOME=%s" (getenv "HOME")) magit-git-environment)
         magit-log-margin '(t "%Y-%m-%d %H:%M" magit-log-margin-width t 18)
         magit-log-show-refname-after-summary t
         magit-popup-use-prefix-argument 'default
@@ -1887,7 +1888,11 @@ files.  This persists across sessions"
 
 (when minibuffer-completion-mocve-p
   (use-package vertico            ; Provides a vertical completion U.I.
-    ))
+    :init
+    (setopt vertico-cycle t)
+    :bind (:map vertico-map
+                ("C-M-n"  . vertico-next-group)
+                ("C-M-p"  . vertico-previous-group))))
 
 (defun jm-show-display-fill-column-indicator-character-candidates ()
   "Insert some characters and associated info at point showing
@@ -2064,18 +2069,30 @@ candidates for display-fill-column-indicator-character."
 ;;   add better string descriptions for which-key
 ;;
 
+(define-prefix-command 'file-dispatch-map)
+
+(define-keymap
+  :keymap file-dispatch-map
+  "m"        'move-file-and-buffer
+  "r"        'rename-file-and-buffer
+  )
+
 (define-keymap
   :keymap global-map
 
   "<remap> <just-one-space>"  'cycle-spacing
-  "C-c M"        'move-file-and-buffer
-  "C-c R"        'rename-file-and-buffer
+  ;; single commands
   "C-c a"        'org-agenda
   "C-c b"        'browse-url-at-point
-  "C-c e"        'embark-map
-  "C-c g"        '("gptel" . gptel-dispatch-map)
-  "C-c w"        'windmove-map
   "C-c x"        'er/expand-region
+
+  ;; prefix maps
+  "C-c e"        '("embark"     . embark-map)
+  "C-c f"        '("file"       . file-dispatch-map)
+  "C-c g"        '("gptel"      . gptel-dispatch-map)
+  "C-c m"        '("magit-file" . magit-file-dispatch)
+  "C-c M"        '("magit-repo" . magit-dispatch)
+  "C-c w"        '("window"     . windmove-map)
 
   "C-h b"        'describe-bindings
   "C-h B"        'embark-bindings
@@ -2096,13 +2113,17 @@ candidates for display-fill-column-indicator-character."
 
   "C-M-g"        'gptel-send
 
+  "C-,"          'embark-dwim
+  "C-."          'embark-act
+  "C-;"          'embark-collect
+  "C-'"          'embark-export
+
   "M-."          'find-function
   "M-["          'undo-tree-visualize
   "M-]"          'repeat
   "M-g g"        'consult-goto-line
   "M-g M-g"      'consult-goto-line
 
-  "M-s"          'consult-map
   "M-y"          'browse-kill-ring
 
   "M-Z"          'zop-to-char
