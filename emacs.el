@@ -651,9 +651,14 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     :init
     (define-prefix-command 'embark-map nil "embark map")
     :bind (:map embark-map
-           ("." . embark-act)               ;; pick some comfortable key
-           (";" . embark-dwim)              ;; good alternative: M-.
-           )))
+                ("," . embark-dwim)
+                ("." . embark-act)
+                (";" . embark-collect)
+                ("'" . embark-export)
+                ("/" . embark-live)))
+
+  (use-package embark-consult           ; Consult integration for embark
+    ))
 
 (use-package expand-region              ; Increase selected region by semantic units.
 )
