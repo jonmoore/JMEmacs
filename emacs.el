@@ -106,8 +106,6 @@
            (package-install pkg)))
        pkgs))))
 
-(require 'use-package)
-
 ;; I only use quelpa to load packages from github.  From Emacs 30 onwards this should be
 ;; possible with package/use-package.
 (use-package quelpa-use-package
@@ -118,10 +116,13 @@
   :config
   (quelpa-use-package-activate-advice))
 
-(setq use-package-always-ensure t
-      use-package-always-defer t
-      use-package-compute-statistics t
-      use-package-verbose t)
+(setopt use-package-always-ensure t
+        use-package-always-defer t
+        use-package-enable-imenu-support t
+        use-package-compute-statistics t
+        use-package-verbose t)
+
+(require 'use-package)
 
 (use-package async                      ; async execution
   ;; We place this early to avoid errors related to have too many procesess running when
