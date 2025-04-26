@@ -228,7 +228,7 @@
  (t
   (warn "default face not set as no setting was found for the current system.")))
 
-;;; EDITING AND GLOBAL KEY SETTINGS
+;;; EDITING
 (prefer-coding-system 'utf-8)
 (setq require-final-newline t)
 
@@ -2123,6 +2123,7 @@ candidates for display-fill-column-indicator-character."
   "<f8>"         'cycle-frame-maximized
   )
 
+;;; START GLOBAL MODES AND LOAD DESKTOP
 (use-package emacs
   :custom
   (indent-tabs-mode nil)
@@ -2152,7 +2153,7 @@ candidates for display-fill-column-indicator-character."
   (transient-mark-mode)
   (winner-mode)
   (yas-global-mode)
-  
+
   (when minibuffer-completion-mocve-p
     (marginalia-mode)
     (vertico-mode)
@@ -2171,3 +2172,7 @@ candidates for display-fill-column-indicator-character."
   (server-start))
 
 (message "Finished emacs.el")
+
+;; Local Variables:
+;; outline-regexp: ";;;;* "
+;; End:
