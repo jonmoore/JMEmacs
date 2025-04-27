@@ -1273,7 +1273,6 @@ directory, otherwise return nil."
 
 (when minibuffer-completion-mocve-p
   (use-package orderless          ; Provides flexible completion style.
-    :demand t
     :custom
     (completion-styles '(orderless))
     (completion-category-overrides '((file (styles basic partial-completion))))))
@@ -2180,6 +2179,7 @@ candidates for display-fill-column-indicator-character."
   (yas-global-mode)
 
   (when minibuffer-completion-mocve-p
+    (require 'orderless)
     (marginalia-mode)
     (vertico-mode)
     (which-key-mode))
