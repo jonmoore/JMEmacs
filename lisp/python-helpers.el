@@ -119,53 +119,51 @@ from a combined list of project-specific and global environments."
   "Non-nil if `python-helpers--init-in-buffer-core` is running.
 Used to detect and prevent reentrant calls.")
 
-(defun python-helpers--init-in-buffer-core (args)
+(defun python-helpers--init-in-buffer-core (project-root)
   "Core of `python-helpers--init-in-buffer'.  Handle conda and
-lsp-mode initialisation.  When the current buffer is in a
-projectile project, and the user has selected a conda env for the
+lsp-mode initialisation.  PROJECT-ROOT is a projectile project
+root.  When the user has selected a conda env for the
 project (prompted for if needed) then ensure that conda is synced
 to use that env and that lsp is active.  The initialisation order
-is first project (calculated automatically by projectile), then
-conda env, then lsp."
+is first conda env, then lsp."
+  (cl-check-type project-root projectile-project)
   (if python-helpers--init-in-buffer-core-running-p
       (progn
         (error "Function '%s' called reentrantly" 'python-helpers--init-in-buffer-core))
     (let* ((python-helpers--init-in-buffer-core-running-p t)
-           (project-root (projectile-project-root))
            (saved-project-conda-env (ht-get python-helpers--ht-project-conda-env project-root)))
-      (when project-root
-        (cond
-         ((not saved-project-conda-env)
-          (let ((conda-env-path (python-helpers--select-conda-env project-root)))
-            ;; Save the conda env information for project-root
-            (ht-set! python-helpers--ht-project-conda-env
-                     project-root
-                     ;; Either select and activate an env, saving the result,
-                     ;; or else decline to select and save that result as 'do-not-use-an-env
-                     (or conda-env-path 'do-not-use-an-env))
-            (when conda-env-path
-              (conda-env-activate-path conda-env-path)
-              (lsp))))
-         ;; skip if the saved env is already active or no env is required
-         ((memq saved-project-conda-env
-                (list conda-env-current-path 'do-not-use-an-env)))
-         (t
-          (progn
-            (conda-env-activate-path saved-project-conda-env)
-            (lsp)))
-         ;; TODO - add case for changing buffer into a buffer in the same project but
-         ;; where LSP is not active.  Need to define case for 'do-not-use-an-env
-         )))))
+      (cond
+       ((not saved-project-conda-env)
+        (let ((conda-env-path (python-helpers--select-conda-env project-root)))
+          ;; Save the conda env information for project-root
+          (ht-set! python-helpers--ht-project-conda-env
+                   project-root
+                   ;; Either select and activate an env, saving the result,
+                   ;; or else decline to select and save that result as 'do-not-use-an-env
+                   (or conda-env-path 'do-not-use-an-env))
+          (when conda-env-path
+            (conda-env-activate-path conda-env-path)
+            (lsp))))
+       ;; skip if the saved env is already active or no env is required
+       ((memq saved-project-conda-env
+              (list conda-env-current-path 'do-not-use-an-env)))
+       (t
+        (progn
+          (conda-env-activate-path saved-project-conda-env)
+          (lsp)))
+       ;; TODO - add case for changing buffer into a buffer in the same project but
+       ;; where LSP is not active.  Need to define case for 'do-not-use-an-env
+       ))))
 
 ;;;###autoload
 (defun python-helpers--init-in-buffer ()
   "Handle conda and lsp-mode initialisation.  When the current
-buffer is in python-mode, is visible, is in a projectile project,
-and the user has selected a conda env for the project (prompted
-for if needed) then ensure that conda is synced to use that env
-and that lsp is active.  The initialisation order is first
-project (calculated automatically by projectile), then conda env,
-then lsp.
+buffer is in python-mode, is visible or modified, is in a
+projectile project, and the user has selected a conda env for the
+project (prompted for if needed) then ensure that conda is synced
+to use that env and that lsp is active.  The initialisation order
+is first project (calculated automatically by projectile), then
+conda env, then lsp.
 
 The visibility-testing part of this is to avoid massive delays when
 starting up with many different Python buffers loaded from the
@@ -177,16 +175,31 @@ desktop. Ideally we would lean on lsp-deferred for this."
          (equal major-mode 'python-mode)
          (or (get-buffer-window nil t)
              (buffer-modified-p)))
-    (python-helpers--init-in-buffer-core)
-    )))
+    (when-let (project-root (projectile-project-root))
+      (python-helpers--init-in-buffer-core project-root)))))
 
+(defun python-helpers--init-in-window (window)
+  (cl-check-type window window)
+  (with-current-buffer (window-buffer window)
+    (python-helpers--init-in-buffer)))
 
 (defun python-helpers--init-in-frame (frame)
+  (cl-check-type frame frame)
   (mapcar
-   (lambda (window)
-     (with-current-buffer (window-buffer window)
-       (python-helpers--init-in-buffer)))
+   'python-helpers--init-in-window
    (window-list frame)))
+
+(defun python-helpers--window-buffer-change-function (frame-or-window)
+  "Perform Python-related updates when window buffers
+change.  This is normally called due to a global setting, in
+which case FRAME-OR-WINDOW is a frame; see
+`window-buffer-change-functions' for details."
+  (cl-check-type frame-or-window (or frame window))
+  (cond
+   ((framep frame-or-window)
+    (python-helpers--init-in-frame frame-or-window))
+   ((windowp frame-or-window)
+    (python-helpers--init-in-window frame-or-window))))
 
 ;;;###autoload
 (defun python-helpers-enable-lsp-everywhere ()
@@ -198,7 +211,7 @@ to be enabled when needed"
    (frame-list))
 
   ;; configure for future buffers
-  (add-hook 'window-buffer-change-functions #'python-helpers--init-in-frame))
+  (add-hook 'window-buffer-change-functions #'python-helpers--window-buffer-change-function))
 
 ;;;###autoload
 (defun python-helpers-reset ()

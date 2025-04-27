@@ -308,6 +308,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (gc-cons-threshold (* 128 1000 1000))
   (history-delete-duplicates t)
   (history-length 100)
+  (indent-tabs-mode nil)
   (ispell-complete-word-dict
    (let ((linux-words "/usr/share/dict/words"))
      (cond ((and system-linux-p
@@ -1631,7 +1632,10 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
                         "--InteractiveShell.display_page=True")
                       " ")))
     ("python"
-     (setq python-shell-interpreter-args "-i"))))
+     (setq python-shell-interpreter-args "-i")))
+
+  ;; this is quite heavy, as it requires loading python and conda
+  (python-helpers-enable-lsp-everywhere))
 
 (when system-linux-p                      ; vterm is not supported on Windows
   (use-package py-vterm-interaction       ; vterm-based mode for ipython and Python repls
@@ -2146,12 +2150,6 @@ candidates for display-fill-column-indicator-character."
 
 ;;; START GLOBAL MODES AND LOAD DESKTOP
 (use-package emacs
-  :custom
-  (indent-tabs-mode nil)
-
-  ;; this is quite heavy, as it requires loading python and conda
-  :hook (desktop-after-read . python-helpers-enable-lsp-everywhere)
-
   :config
   (tool-bar-mode -1)
 
