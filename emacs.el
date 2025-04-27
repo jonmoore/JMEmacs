@@ -685,9 +685,15 @@ clean buffer we delay checking for longer."
   :config
   (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
         flycheck-pylintrc "pylintrc")
-  ;; If the below doesn't work then see the docs for flycheck-keymap-prefix and previous
-  ;; code here for a manual approach to replicating the :set action.
-  (customize-set-variable 'flycheck-keymap-prefix (kbd "C-c f")))
+
+  ;; This futzing is to get a well-displayed prefix with which-key using the existing
+  ;; flycheck-command-map, which was not created with define-prefix-command.  Also the
+  ;; existing prefixes use kbd, so we use the legacy functions like define-key that allow
+  ;; these.
+  (define-key flycheck-mode-map flycheck-keymap-prefix nil) ; remove existing mapping
+  (setq flycheck-keymap-prefix (kbd "C-c F"))
+  (fset 'flycheck-command-map flycheck-command-map) ; make this work as a prefix command
+  (define-key flycheck-mode-map flycheck-keymap-prefix '("flycheck" . flycheck-command-map)))
 
 (use-package free-keys                  ; Show free keybindings for modkeys or prefixes
   )
