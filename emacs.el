@@ -1573,8 +1573,9 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
     (company-mode))
   (bind-keys :package python
              :map inferior-python-mode-map
-             ("TAB" . yas-or-complete-or-indent-for-tab)
-             ("M-TAB" . python-shell-completion-complete-or-indent)))
+             ("TAB"   . indent-for-tab-command)
+             ;; This uses the inferior process, not lsp, for completion.
+             ("C-M-i" . python-shell-completion-complete-or-indent)))
 
 (use-package python
   ;; we don't hook python-mode but use a call to python-helpers-enable-lsp-everywhere
@@ -1582,8 +1583,12 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   :ensure nil
 
   :bind (:map python-mode-map
-              ;; Check if applicable with LSP
-              ("TAB"         . yas-or-complete-or-indent-for-tab)
+              ;; maybe apply this more widely? Emacs binds both TAB and C-M-i, to
+              ;; `completion-at-point' by default in simple.el See also karthink's
+              ;; comments on a setup using `tab-always-indent' and `tab-first-completion'
+              ;; at https://www.reddit.com/r/emacs/comments/t4u2a8/comment/hz0rrwi/
+              ("TAB"         . indent-for-tab-command)
+              ("C-M-i"       . yas-or-complete-or-indent-for-tab)
               ("M-S-<left>"  . python-indent-shift-left)
               ("M-S-<right>" . python-indent-shift-right))
 
