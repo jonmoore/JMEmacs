@@ -913,8 +913,11 @@ etc. are set up before starting lsp."
   ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
   (require 'dap-mode)
   (keymap-set lsp-mode-map lsp-keymap-prefix 'lsp-command-map)
-  (setq lsp-before-save-edits                          nil
+  (setq lsp-enable-suggest-server-download             nil ; insanely, this is t by default
+
+        lsp-before-save-edits                          nil
         lsp-enable-dap-auto-configure                    t
+
         lsp-enable-indentation                         nil
         lsp-imenu-sort-methods            '(kind position)
 
