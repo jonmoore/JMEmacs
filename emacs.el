@@ -2048,8 +2048,9 @@ candidates for display-fill-column-indicator-character."
               ("e" . #'yas-expand)
               ("d" . #'yas-describe-tables))
   :config
-  (keymap-set yas-minor-mode-map "C-c y" '("yasnippet" . yasnippet-dispatch-map))
   (keymap-unset yas-minor-mode-map "C-c &" 'remove)
+  (keymap-set yas-minor-mode-map "C-c y" #'yas-expand)
+  (keymap-set yas-minor-mode-map "C-c M-y" '("yasnippet" . yasnippet-dispatch-map))
   (setq yas-verbosity 2)
   (yas-reload-all))
 
