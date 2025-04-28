@@ -1,7 +1,7 @@
-;; http://www.emacswiki.org/emacs/CompanyMode
-
 (require 'yasnippet)
-(require 'company)
+(when in-buffer-completion-company-p
+  ;; http://www.emacswiki.org/emacs/CompanyMode
+  (require 'company))
 
 ;;;###autoload
 (defun try-yas-expand ()
@@ -19,7 +19,8 @@
 
 ;;;###autoload
 (defun try-company-expansion ()
-  "Try to expand with company completion if possible."
+  "Try to expand with company completion. Return t if
+this succeeds, otherwise nil."
   (when in-buffer-completion-company-p
     (when (save-excursion (company-expansion-looks-possible))
       (company-expansion-looks-possible) ; for side-effect
@@ -27,8 +28,9 @@
       t)))
 
 ;;;###autoload
-(defun try-capf-expansion ()
-  "Try to expand with capf completion if possible."
+(defun try-completion-at-point ()
+  "Try to expand with capf completion. Return t if
+this succeeds, otherwise nil."
   (when (and in-buffer-completion-capf-p
              (completion-at-point))
     t))
@@ -42,6 +44,6 @@ expansion if possible, else call `indent-for-tab-command'"
    ((minibufferp) (minibuffer-complete))
    ((try-yas-expand))
    ((try-company-expansion))
-   ;; ((try-capf-expansion)) ;; disabled as lsp may offer completion even without a prefix
+   ((try-completion-at-point))
    (t (indent-for-tab-command))
    ))
