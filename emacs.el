@@ -885,6 +885,13 @@ etc. are set up before starting lsp."
               (message "Asking for suggestions ...")))
   (add-hook 'lsp-after-inline-completion-hook #'spinner-stop))
 
+(defun my-lsp--warn-around (orig-fun &rest args)
+  "Stop lsp warning about things it shouldn't"
+  (let ((message (car args))
+        (skip-substring "but automatic download"))
+    (unless (string-match-p (regexp-quote skip-substring) message)
+      (apply orig-fun args))))
+
 (use-package lsp-mode                   ; Language Server Protocol support
   ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
 
@@ -962,7 +969,10 @@ etc. are set up before starting lsp."
         (append
          '("[/\\\\]\\.hypothesis\\'" "[/\\\\]\\.pixi\\'" "[/\\\\]\\.ruff_cache\\'")
          lsp-file-watch-ignored-directories
-         )))
+         ))
+
+  ;; suppress excessive warning-level messages from lsp
+  (advice-add 'lsp--warn :around #'my-lsp--warn-around))
 
 (defun jm-pyright-sync-venv-from-conda-env ()
   "Sync the pyright venv to the current conda-env"
