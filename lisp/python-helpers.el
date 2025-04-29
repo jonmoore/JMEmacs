@@ -156,7 +156,7 @@ is first conda env, then lsp."
        ))))
 
 ;;;###autoload
-(defun python-helpers--init-in-buffer ()
+(defun python-helpers--init-in-buffer (buffer)
   "Handle conda and lsp-mode initialisation.  When the current
 buffer is in python-mode, is visible or modified, is in a
 projectile project, and the user has selected a conda env for the
@@ -168,21 +168,30 @@ conda env, then lsp.
 The visibility-testing part of this is to avoid massive delays when
 starting up with many different Python buffers loaded from the
 desktop. Ideally we would lean on lsp-deferred for this."
-  (interactive)
+  (let ((cb (current-buffer)))
+    (when (not (eq buffer cb))
+      (message "jm - python-helpers--init-in-buffer buffer %s current-buffer %s " buffer cb)))
   (cond
-   ((and (not (string-prefix-p " *" (buffer-name)))
-         (not (string-prefix-p "*" (buffer-name)))
+   ((and (not (string-prefix-p " *" (buffer-name buffer)))
+         (not (string-prefix-p "*" (buffer-name buffer)))
          (equal major-mode 'python-mode)
-         (not (minibufferp))
-         (or (get-buffer-window nil t)
-             (buffer-modified-p)))
+         (eq (minibuffer-depth) 0)      ; prevent activation by consult-preview
+         (not (minibufferp buffer))
+         (or (get-buffer-window buffer t)
+             (buffer-modified-p buffer)))
     (when-let (project-root (projectile-project-root))
       (python-helpers--init-in-buffer-core project-root)))))
+
+;;;###autoload
+(defun python-helpers--init-in-current-buffer ()
+   "Run `python-helpers--init-in-buffer' with the current buffer"
+   (interactive)
+   (python-helpers--init-in-buffer (current-buffer)))
 
 (defun python-helpers--init-in-window (window)
   (cl-check-type window window)
   (when (eq window (selected-window))
-    (python-helpers--init-in-buffer)))
+    (python-helpers--init-in-buffer (window-buffer window))))
 
 (defun python-helpers--init-in-frame (frame)
   (cl-check-type frame frame)
@@ -197,6 +206,7 @@ desktop. Ideally we would lean on lsp-deferred for this."
    (list 'python-helpers--select-conda-env
          'conda-env-activate-path
          'lsp
+         'switch-to-buffer
          'python-helpers--init-in-buffer-core
          'python-helpers--init-in-buffer
          'python-helpers--init-in-window
@@ -222,6 +232,10 @@ which case FRAME-OR-WINDOW is a frame; see
    ((windowp frame-or-window)
     (python-helpers--init-in-window frame-or-window))))
 
+(defun python-helpers--after-switch-to-buffer (buffer)
+  "Advice function to run `python-helpers--init-in-buffer` after `switch-to-buffer`."
+  (python-helpers--init-in-buffer buffer))
+
 ;;;###autoload
 (defun python-helpers-enable-lsp-everywhere ()
   "Initialise LSP in currently visible buffers and configure it
@@ -231,8 +245,11 @@ to be enabled when needed"
    'python-helpers--init-in-frame
    (frame-list))
 
-  ;; configure for future buffers
-  (add-hook 'window-buffer-change-functions #'python-helpers--window-buffer-change-function))
+  ;; disable auto-configuration until this works smoothly with more than one env
+  ;;  (add-hook 'window-buffer-change-functions #'python-helpers--window-buffer-change-function)
+  ;;  (remove-hook 'window-buffer-change-functions #'python-helpers--window-buffer-change-function)
+  (advice-add 'switch-to-buffer :filter-return #'python-helpers--after-switch-to-buffer)
+  )
 
 ;;;###autoload
 (defun python-helpers-reset ()

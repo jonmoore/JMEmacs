@@ -867,7 +867,7 @@ etc. are set up before starting lsp."
   (message "jm- lsp-mode-handler args:%s" args)
   (cond
    ((eq desktop-buffer-major-mode 'python-mode)
-    (python-helpers--init-in-buffer))
+    (python-helpers--init-in-buffer (current-buffer)))
    (t
     (lsp-deferred))))
 
