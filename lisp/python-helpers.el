@@ -126,7 +126,7 @@ root.  When the user has selected a conda env for the
 project (prompted for if needed) then ensure that conda is synced
 to use that env and that lsp is active.  The initialisation order
 is first conda env, then lsp."
-  (cl-check-type project-root projectile-project)
+  (cl-assert (projectile-project-p project-root))
   (if python-helpers--init-in-buffer-core-running-p
       (progn
         (error "Function '%s' called reentrantly" 'python-helpers--init-in-buffer-core))
@@ -173,6 +173,7 @@ desktop. Ideally we would lean on lsp-deferred for this."
    ((and (not (string-prefix-p " *" (buffer-name)))
          (not (string-prefix-p "*" (buffer-name)))
          (equal major-mode 'python-mode)
+         (not (minibufferp))
          (or (get-buffer-window nil t)
              (buffer-modified-p)))
     (when-let (project-root (projectile-project-root))
@@ -180,14 +181,34 @@ desktop. Ideally we would lean on lsp-deferred for this."
 
 (defun python-helpers--init-in-window (window)
   (cl-check-type window window)
-  (with-current-buffer (window-buffer window)
+  (when (eq window (selected-window))
     (python-helpers--init-in-buffer)))
 
 (defun python-helpers--init-in-frame (frame)
   (cl-check-type frame frame)
+  (when (eq frame (selected-frame))
+    (mapcar
+     'python-helpers--init-in-window
+     (window-list frame))))
+
+(progn
   (mapcar
-   'python-helpers--init-in-window
-   (window-list frame)))
+   'trace-function-background
+   (list 'python-helpers--select-conda-env
+         'conda-env-activate-path
+         'lsp
+         'python-helpers--init-in-buffer-core
+         'python-helpers--init-in-buffer
+         'python-helpers--init-in-window
+         'python-helpers--init-in-frame)))
+
+;; various options to hook
+;;
+;; window-buffer-change-functions
+;; windows-selection-change-functions
+;; windows-configuration-change-hook
+;;
+;; switch-to-buffer, can be advised
 
 (defun python-helpers--window-buffer-change-function (frame-or-window)
   "Perform Python-related updates when window buffers

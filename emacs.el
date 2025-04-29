@@ -1012,7 +1012,7 @@ etc. are set up before starting lsp."
   ;;   major modes.
   :custom
   (lsp-pyright-langserver-command
-   (cond ((not (boundp 'jm-pyright-langserver-path))
+   (cond ((not (bound-and-true-p jm-pyright-langserver-path))
           "basedpyright")
          ((not (file-exists-p jm-pyright-langserver-path))
           (error "jm-pyright-langserver-path set but no file exists at %s" jm-pyright-langserver-path))
