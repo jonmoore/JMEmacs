@@ -102,10 +102,12 @@ get_user_environments_txt_file()")
 (defun python-helpers--select-conda-env-completing-read (project-root)
   "Prompt the user to select a conda environment for PROJECT-ROOT,
 from a combined list of project-specific and global environments."
-  (completing-read "Select a conda environment: "
-		   (append
-		    (python-helpers--pixi-environments project-root)
-		    (python-helpers--conda-environments))))
+  (completing-read
+   "Select a conda environment: "
+   (mapcar (lambda (s) (string-replace "\r" "" s))
+    (append
+     (python-helpers--pixi-environments project-root)
+     (python-helpers--conda-environments)))))
 
 (defun python-helpers--select-conda-env (project-root)
   "Select a conda environment for the given PROJECT-ROOT."

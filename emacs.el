@@ -550,7 +550,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
            ("s"   . consult-line-symbol)
 
            ("k"   . consult-keep-lines)
-           ("f"   . consult-focus-lines))))
+           ("f"   . consult-focus-lines)))
+
+  (use-package consult-lsp))
 
 (when in-buffer-completion-capf-p
   (use-package corfu
