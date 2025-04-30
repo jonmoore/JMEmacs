@@ -1389,6 +1389,8 @@ directory, otherwise return nil."
                                             (tags category-keep priority-down)
                                             (search category-keep)))
         org-agenda-start-with-clockreport-mode nil
+        org-agenda-tags-column -120
+        org-tags-column org-agenda-tags-column
         org-agenda-todo-ignore-scheduled 31
         org-agenda-todo-keyword-format "%-4s"
         org-capture-templates `(("c" "Cookbook" entry (file ,(concat org-directory "/cookbook.org"))
