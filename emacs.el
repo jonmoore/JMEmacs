@@ -384,7 +384,23 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
          ([remap isearch-query-replace]        . anzu-isearch-query-replace)
          ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
   :config
-  (setq anzu-search-threshold 100))
+  (setq anzu-search-threshold 100)
+
+  ;; Provide a search and replace that works on the whole buffer.  If GNU hasn't provided
+  ;; one in 40 years, for whatever bizarre reason, this is unlikely to change.
+  (setq jm-anzu-search-replace-whole-buffer t)
+
+  (defun my-anzu--region-begin-advice (use-region thing backward)
+    ;; this is the same as `anzu--region-begin' except for the tests.
+    (cond (use-region (region-beginning))
+          (backward (if jm-anzu-search-replace-whole-buffer (point-max) (point)))
+          (thing (anzu--thing-begin thing))
+          (current-prefix-arg (line-beginning-position))
+          (t (if jm-anzu-search-replace-whole-buffer (point-min) (point)))))
+
+  (advice-add 'anzu--region-begin :override #'my-anzu--region-begin-advice)
+
+  )
 
 (use-package arc-mode                   ; built-in
   :custom
@@ -729,6 +745,11 @@ clean buffer we delay checking for longer."
   :hook ((prog-mode . goto-address-prog-mode)
          (text-mode . goto-address-mode)))
 
+(defun gptel-send-t ()
+  "Call `gptel-send' with a prefix so the configuration menu is shown."
+  (interactive)
+  (gptel-send t))
+
 (use-package gptel                      ; Interact with ChatGPT or other LLMs.
   :pin melpa
   :init
@@ -736,6 +757,7 @@ clean buffer we delay checking for longer."
   :bind (:map gptel-dispatch-map
               ("c"  . gptel)
               ("s"  . gptel-send)
+              ("g"  . gptel-send-t)
               ("r"  . gptel-rewrite))
   :config
   (setq gptel-expert-commands t
@@ -776,7 +798,6 @@ clean buffer we delay checking for longer."
               ("M-s" .  hs-show-all)
 
               :map hs-minor-mode-map
-              ("C-c l"       . hs-hide-level)
               ("C-c <right>" . hs-show-block)
               ("C-c <left>"  . hs-hide-block))
   :config
