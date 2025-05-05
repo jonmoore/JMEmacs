@@ -632,6 +632,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package ebib)                      ; A BibTeX database manager.
 
+(use-package el-patch                   ; override functions in a future-proof way
+  )
+
 (use-package eldoc                      ; built-in
   ;; note: using :diminish effectively creates a :config block, and eldoc is
   ;; already loaded when this block is processed, thus the config is executed,
