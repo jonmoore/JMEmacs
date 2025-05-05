@@ -11,8 +11,8 @@
 ;;   * sh.exe.  For speed, don't use the wrappers in the cmd directory
 ;;   * of the official git Windows client.
 
-;; Beware: In a complete WTF, Windows intercepts both Ctrl-shift-0 and
-;; Ctrl-space.  Ctrl-shift-0 is the default binding for
+;; Beware: In a complete WTF, various versions of Windows intercept
+;; Ctrl-shift-0 and/or Ctrl-space.  Ctrl-shift-0 is the default binding for
 ;; sp-forward-slurp-sexp - think "Ctrl-)".
 ;;
 ;; For Windows 11
@@ -25,12 +25,6 @@
 ;; Verification: After this Ctrl-) should be detected as a key in Emacs,
 ;; e.g. with C-h k C-)
 ;;
-;; TBC: does the problem reoccur between logins?  can we apply this through a registry
-;; file as for Windows 7?
-
-;; In Windows 10 Microsoft appear to have broken Ctrl-shift-0
-;; irreparably.  Ctrl-space can still be bound.
-;;
 ;; References:
 ;;
 ;; https://support.microsoft.com/en-us/kb/967893
@@ -39,6 +33,12 @@
 ;; https://stackoverflow.com/questions/179119/how-to-prevent-windows-xp-from-stealing-my-input-ctrl-space-which-is-meant-for-e
 ;; https://www.emacswiki.org/emacs/DisableImeForEmacs
 ;; https://superuser.com/a/706636
+;;
+;; TODO:
+;;
+;; - replace use of use-package's :bind, bind-keys, etc. by standard Emacs key-management
+;;   commands.  Whatever pluses these once had are outweighed by the conflicting API
+;;   and their own quirks.
 
 ;;; Code:
 
