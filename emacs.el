@@ -1311,10 +1311,6 @@ according to `headline-is-for-jira'."
          (concat (replace-regexp-in-string "/*$" "" jiralib-url) "/browse/"
                  jira-id)))))))
 
-(defun org-cycle-t ()
-  (interactive)
-  (org-cycle '(4)))
-
 (use-package ob-mermaid
   :config
   (message "jm: configuring ob-mermaid. Note that svg display is broken in emacs 29.x: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=64908")
@@ -1350,22 +1346,6 @@ directory, otherwise return nil."
                (file-directory-p candidate))
       candidate)))
 
-
-(defun org-babel-goto-tangled ()
-  "Goto the tangled file for the current source block."
-  (interactive)
-  (let* ((args (nth 2 (org-babel-get-src-block-info t)))
-	 (tangle (alist-get :tangle args)))
-    (cond
-     ((null tangle)
-      (message "org-babel-goto-tangled: No :tangle target found"))
-     ((equal "no" tangle)
-      (message "org-babel-goto-tangled: Cannot goto tangled file: Source block has :tangle set to no"))
-     ((not (file-exists-p tangle))
-      (message "org-babel-goto-tangled: Tangled file %s does not exist" tangle))
-     (t
-      (find-file tangle)))))
-
 (use-package org
   :mode "\\.org'"
   :init
@@ -1378,20 +1358,25 @@ directory, otherwise return nil."
   (setq org-mobile-directory
         (jm-sub-directory-if-present (jm-dropbox-directory) "/Apps/MobileOrg"))
 
+  ;; prefix map for use in tangled files
+  (define-prefix-command 'org-babel-tangled-map)
+
   :bind (:map org-mode-map
               ;; unset these two, to keep the global-map bindings active'
               ("<C-S-left>"     . nil)
               ("<C-S-right>"    . nil)
 
-              ("<C-tab>"        . org-cycle-t)
-              ("M-?"            . org-complete)
-              ("<backtab>"      . org-show-contents-or-move-to-previous-table-field)
+              ("<C-tab>"        . org-cycle-global)
+              ("<backtab>"      . org-shifttab)
               ("<C-S-down>"     . outline-next-visible-heading)
               ("<C-S-up>"       . outline-previous-visible-heading)
               ("C-c ?"          . outline-mark-subtree)
               :map org-babel-map
               ("t"              . org-babel-goto-tangled)
-              )
+              :map org-babel-tangled-map
+              ("j" . org-babel-tangle-jump-to-org)
+              ("d" . org-babel-detangle)
+              ("y" . org-babel-detangle-directory))
 
   :config
   (require 'jiralib)
@@ -1658,6 +1643,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   :hook (inferior-python-mode . jm-inferior-python-mode-hook)
 
   :config
+  (keymap-set python-mode-map "C-c d" '("detangle" . org-babel-tangled-map))
+
   ;; TODO: check if the comments / workarounds in the rest of this comment are still
   ;; recent Windows / Python versions.
   ;;
