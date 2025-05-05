@@ -302,6 +302,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (backup-by-copying t)
   (case-fold-search t)
   (comment-column 50)
+  (confirm-kill-emacs 'yes-or-no-p)
   (completion-ignored-extensions '(".o" "~" ".obj" ".elc" ".pyc"))
   (create-lockfiles nil)
   (directory-abbrev-alist nil)
