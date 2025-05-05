@@ -289,6 +289,11 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (load custom-file))
 
 (use-package emacs
+  :init
+  (setq completion-at-point-functions
+        (append
+         '(cape-file cape-abbrev cape-dabbrev cape-dict)
+         completion-at-point-functions))
   :custom
   (Buffer-menu-buffer+size-width 36)
   (Buffer-menu-mode-width 10)
@@ -427,7 +432,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (browse-kill-ring-highlight-current-entry t)
   (browse-kill-ring-highlight-inserted-item t))
 
-(use-package cape)
+(use-package cape
+  )
 
 (defun my-c-mode-common-hook-fn ()
 
@@ -782,6 +788,19 @@ clean buffer we delay checking for longer."
   (setq hl-sexp-background-colors (create-hl-sexp-background-colors)))
 
 (use-package htmlize)                   ; convert buffer and text decorations to HTML
+
+(use-package hippie-expand              ; built-in
+  :ensure nil
+  :config
+  (require 'yasnippet)
+  (setq hippie-expand-try-functions-list
+        '(try-expand-dabbrev-visible
+          try-expand-dabbrev
+          try-expand-dabbrev-all-buffers
+          try-complete-file-name-partially
+          try-complete-file-name
+          yas-hippie-try-expand
+          )))
 
 (use-package hydra)                     ; Make bindings that stick around.
 
@@ -2156,6 +2175,7 @@ candidates for display-fill-column-indicator-character."
   "M-."          'find-function
   "M-["          'undo-tree-visualize
   "M-]"          'repeat
+  "M-/"          'hippie-expand
   "M-g g"        'consult-goto-line
   "M-g M-g"      'consult-goto-line
 
