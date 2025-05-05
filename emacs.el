@@ -943,7 +943,7 @@ etc. are set up before starting lsp."
 
   :init
   ;; must set this before loading lsp
-  (setq lsp-keymap-prefix "C-c d")
+  (setq lsp-keymap-prefix "C-c l")
   (define-prefix-command 'lsp-command-map nil "lsp-mode command map")
   :bind (:map lsp-command-map
               ("d" . lsp-find-definition)
@@ -974,26 +974,32 @@ etc. are set up before starting lsp."
         lsp-enable-indentation                         nil
         lsp-imenu-sort-methods            '(kind position)
 
-        ;; the order of the settings below is taken from
+        ;; for more information see
         ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
-        lsp-enable-symbol-highlighting                   t
-        lsp-ui-doc-enable                                t
-        lsp-ui-doc-show-with-cursor                      t
-        lsp-ui-doc-show-with-mouse                     nil
-        lsp-lens-enable                                  t
-        lsp-headerline-breadcrumb-enable                 t
-        lsp-ui-sideline-enable                           t
-        lsp-ui-sideline-show-code-actions                t
-        lsp-ui-sideline-show-hover                     nil
-        lsp-modeline-code-actions-enable               nil
-        lsp-diagnostics-provider                     :auto
-        lsp-ui-sideline-show-diagnostics                 t
-        lsp-eldoc-enable-hover                           t
-        lsp-modeline-diagnostics-enable                nil
-        lsp-signature-auto-activate                      t
-        lsp-signature-render-documentation               t
         lsp-completion-show-detail                       t
         lsp-completion-show-kind                         t
+        lsp-diagnostics-provider                     :auto
+        lsp-eldoc-enable-hover                         nil
+        lsp-enable-symbol-highlighting                   t
+        lsp-lens-enable                                  t
+        lsp-headerline-breadcrumb-enable                 t
+        lsp-modeline-code-actions-enable               nil
+        lsp-modeline-code-action-icons-enable          nil
+        lsp-modeline-diagnostics-enable                nil
+        lsp-modeline-workspace-status-enable             t
+
+        lsp-ui-doc-enable                              nil
+        lsp-ui-doc-show-with-cursor                      t
+        lsp-ui-doc-show-with-mouse                     nil
+
+        lsp-ui-sideline-enable                           t
+        lsp-ui-sideline-show-code-actions                t
+        lsp-ui-sideline-show-diagnostics               nil
+        lsp-ui-sideline-show-hover                     nil
+        lsp-ui-sideline-show-symbol                    nil
+
+        lsp-signature-auto-activate                      t
+        lsp-signature-render-documentation               t
         )
   (when in-buffer-completion-company-p
     (setq lsp-completion-provider                    :capf))
