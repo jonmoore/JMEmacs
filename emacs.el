@@ -1386,12 +1386,13 @@ directory, otherwise return nil."
 
   :config
   (require 'jiralib)
-  (org-link-set-parameters
-   "jira"
-   :follow
-   (lambda (key _)
-     "Visit the Jira given by KEY in the default browser"
-     (browse-url (concat jiralib-url "/browse/" key))))
+  (org-link-set-parameters "jira" :follow
+                           (lambda (key _)
+                             "Visit the Jira given by KEY in the default browser"
+                             (browse-url (concat jiralib-url "/browse/" key))))
+  ;; not sure if this one is helpful -- maybe better to hook into org-store-link
+  (org-link-set-parameters "id" :complete
+                           'org-id-complete-link)
   (defalias 'ob-temp-file 'org-babel-temp-file)
   (setq org-adapt-indentation t
         org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
@@ -1482,6 +1483,7 @@ directory, otherwise return nil."
         org-log-reschedule 'time
         org-log-redeadline 'time
         org-odd-levels-only t
+        org-outline-path-complete-in-steps nil ; https://github.com/minad/vertico?tab=readme-ov-file#org-refile
         org-priority-default 68
         org-replace-disputed-keys t
         org-refile-allow-creating-parent-nodes 'confirm
