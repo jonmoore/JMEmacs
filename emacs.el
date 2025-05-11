@@ -988,16 +988,6 @@ etc. are set up before starting lsp."
         lsp-modeline-diagnostics-enable                nil
         lsp-modeline-workspace-status-enable             t
 
-        lsp-ui-doc-enable                              nil
-        lsp-ui-doc-show-with-cursor                      t
-        lsp-ui-doc-show-with-mouse                     nil
-
-        lsp-ui-sideline-enable                           t
-        lsp-ui-sideline-show-code-actions                t
-        lsp-ui-sideline-show-diagnostics               nil
-        lsp-ui-sideline-show-hover                     nil
-        lsp-ui-sideline-show-symbol                    nil
-
         lsp-signature-auto-activate                      t
         lsp-signature-render-documentation               t
         )
@@ -1080,9 +1070,19 @@ etc. are set up before starting lsp."
 (use-package lsp-ui
   :hook  ((lsp-mode . lsp-ui-mode))
   :config
-  (setq lsp-ui-doc-show-with-cursor nil
-        lsp-ui-sideline-show-code-actions t
-        lsp-ui-sideline-show-hover t)
+  (setopt lsp-ui-doc-delay                               1.0
+          lsp-ui-doc-enable                              nil
+          lsp-ui-doc-include-signature                     t
+          lsp-ui-doc-show-with-cursor                      t
+          lsp-ui-doc-show-with-mouse                     nil
+
+          lsp-ui-sideline-delay                          1.0
+          lsp-ui-sideline-enable                           t
+          lsp-ui-sideline-show-code-actions                t
+          lsp-ui-sideline-show-diagnostics               nil
+          lsp-ui-sideline-show-hover                     nil
+          lsp-ui-sideline-show-symbol                    nil
+          )
   ;; A bug with lsp-ui
   ;;
   ;; Reported at https://github.com/emacs-lsp/lsp-ui/issues/761
