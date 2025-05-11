@@ -987,8 +987,9 @@ etc. are set up before starting lsp."
         lsp-diagnostics-provider                     :auto
         lsp-eldoc-enable-hover                         nil
         lsp-enable-symbol-highlighting                   t
-        lsp-lens-enable                                  t
         lsp-headerline-breadcrumb-enable                 t
+        lsp-lens-enable                                  t
+
         lsp-modeline-code-actions-enable               nil
         lsp-modeline-code-action-icons-enable          nil
         lsp-modeline-diagnostics-enable                nil
@@ -1472,8 +1473,8 @@ directory, otherwise return nil."
         org-disputed-keys '(([(control shift right)] . [(meta shift +)])
                             ([(control shift left)]  . [(meta shift -)]))
         org-drawers '("PROPERTIES" "CLOCK" "LOGBOOK" "RESULTS" "EMAIL")
-        org-enforce-todo-checkbox-dependencies t
-        org-enforce-todo-dependencies t
+        org-enforce-todo-checkbox-dependencies  t
+        org-enforce-todo-dependencies           t
         org-export-allow-bind-keywords t
         org-export-backends '(ascii html latex)
         org-export-headline-levels       3
@@ -1491,30 +1492,30 @@ directory, otherwise return nil."
         org-export-with-timestamp        t
         org-export-with-toc              t
         ;; workaround - see https://www.reddit.com/r/orgmode/comments/1c9wm8x/weird_issue_sometimes_headline_wont_expand/
-        org-fast-tag-selection-single-key nil
-        org-fold-core-style  'overlays
-        org-format-latex-options (plist-put org-format-latex-options :scale 2.5)
-        org-hide-leading-stars t
-        org-hierarchical-todo-statistics nil
-        org-html-htmlize-output-type 'css
-        org-html-inline-images           t
-        org-html-link-org-files-as-html  t
-        org-html-preamble                t
-        org-html-postamble               'auto
-        org-html-validation-link         nil
-        org-list-allow-alphabetical t
-        org-log-done t
-        org-log-into-drawer t
-        org-log-reschedule 'time
-        org-log-redeadline 'time
-        org-odd-levels-only t
-        org-outline-path-complete-in-steps nil ; https://github.com/minad/vertico?tab=readme-ov-file#org-refile
-        org-priority-default 68
-        org-replace-disputed-keys t
-        org-refile-allow-creating-parent-nodes 'confirm
-        org-refile-targets '((org-agenda-files :maxlevel . 5))
-        org-refile-use-outline-path 'file
+        org-fast-tag-selection-single-key       nil
+        org-fold-core-style                     'overlays
+        org-format-latex-options                (plist-put org-format-latex-options :scale 2.5)
+        org-hide-leading-stars                  t
+        org-hierarchical-todo-statistics        nil
+        org-html-htmlize-output-type            'css
+        org-html-inline-images                  t
+        org-html-link-org-files-as-html         t
+        org-html-preamble                       t
+        org-html-postamble                      'auto
+        org-html-validation-link                nil
         org-id-link-to-org-use-id               'create-if-interactive-and-no-custom-id
+        org-list-allow-alphabetical             t
+        org-log-done                            t
+        org-log-into-drawer                     t
+        org-log-reschedule                      'time
+        org-log-redeadline                      'time
+        org-odd-levels-only                     t
+        org-outline-path-complete-in-steps      nil ; https://github.com/minad/vertico?tab=readme-ov-file#org-refile
+        org-priority-default                    68
+        org-replace-disputed-keys               t
+        org-refile-allow-creating-parent-nodes  'confirm
+        org-refile-targets                      '((org-agenda-files :maxlevel . 5))
+        org-refile-use-outline-path             'file
         org-safe-remote-resources '("\\`https://fniessen\\.github\\.io\\(?:/\\|\\'\\)")
         org-src-lang-modes '(("ipython" . python)
                              ("elisp" . emacs-lisp)
@@ -1531,7 +1532,7 @@ directory, otherwise return nil."
         org-src-window-setup 'current-window
         org-tags-column -80
         org-use-fast-tag-selection t
-        org-use-speed-commands t)
+        org-use-speed-commands     t)
 
   ;; org-tempo supports the expansion of <s to src blocks etc.
   (require 'org-tempo)
