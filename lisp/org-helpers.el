@@ -63,4 +63,13 @@ Requires tangled files to have been created with `:comments link`."
            (message "Error detangling %s: %s" file err)))))
     (message "Detangling process finished.")))
 
+;;;###autoload
+(defun org-back-to-heading-or-backward-heading (arg)
+  "Navigate to Org headings. If not at an org mode heading, go back
+to beginning of heading, otherwise call `org-backward-heading-same-level`"
+  (interactive "p")
+  (if (org-at-heading-p)
+      (org-backward-heading-same-level arg)
+    (org-back-to-heading)))
+
 (provide 'org-helpers)

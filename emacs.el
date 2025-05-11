@@ -1377,6 +1377,8 @@ directory, otherwise return nil."
               ("<C-S-down>"     . outline-next-visible-heading)
               ("<C-S-up>"       . outline-previous-visible-heading)
               ("C-c ?"          . outline-mark-subtree)
+              ("C-c C-b"        . org-back-to-heading-or-backward-heading)
+
               :map org-babel-map
               ("t"              . org-babel-goto-tangled)
               :map org-babel-tangled-map
