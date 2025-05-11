@@ -202,18 +202,6 @@ desktop. Ideally we would lean on lsp-deferred for this."
      'python-helpers--init-in-window
      (window-list frame))))
 
-(progn
-  (mapcar
-   'trace-function-background
-   (list 'python-helpers--select-conda-env
-         'conda-env-activate-path
-         'lsp
-         'switch-to-buffer
-         'python-helpers--init-in-buffer-core
-         'python-helpers--init-in-buffer
-         'python-helpers--init-in-window
-         'python-helpers--init-in-frame)))
-
 ;; various options to hook
 ;;
 ;; window-buffer-change-functions
