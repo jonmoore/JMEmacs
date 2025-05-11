@@ -951,6 +951,7 @@ etc. are set up before starting lsp."
               ("t" . lsp-find-type-definition)
               ("h" . lsp-describe-thing-at-point)
               ("l" . lsp-document-highlight)
+              ("s" . lsp-signature-activate)
               ("F" . lsp-format-buffer)
               ("R" . lsp-rename)
 
@@ -988,8 +989,12 @@ etc. are set up before starting lsp."
         lsp-modeline-diagnostics-enable                nil
         lsp-modeline-workspace-status-enable             t
 
-        lsp-signature-auto-activate                      t
-        lsp-signature-render-documentation               t
+        ;; This variable is a custom but doesn't have a setter to ensure
+        ;; lsp--update-signature-help-hook gets called.
+        lsp-signature-auto-activate                              nil
+        lsp-signature-doc-lines                                   10
+        lsp-signature-function               'lsp-signature-posframe
+        lsp-signature-render-documentation                       nil
         )
   (when in-buffer-completion-company-p
     (setq lsp-completion-provider                    :capf))
