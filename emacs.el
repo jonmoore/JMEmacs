@@ -712,6 +712,8 @@ clean buffer we delay checking for longer."
   :hook  (flycheck-after-syntax-check . adjust-flycheck-automatic-syntax-eagerness)
   :config
   (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
+        flycheck-display-errors-function nil
+        flycheck-idle-change-delay 1.0
         flycheck-pylintrc "pylintrc")
 
   ;; This futzing is to get a well-displayed prefix with which-key using the existing
