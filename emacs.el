@@ -2207,7 +2207,7 @@ candidates for display-fill-column-indicator-character."
   "C-M-r"        'isearch-backward
   "C-M-s"        'isearch-backward
 
-  "C-M-g"        'gptel-send
+  "C-M-g"        'gptel-send-t
 
   "C-,"          'embark-dwim
   "C-."          'embark-act
