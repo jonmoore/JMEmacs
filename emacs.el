@@ -1589,6 +1589,10 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
 (use-package org-super-agenda)
 
+(use-package org-tidy
+  ; A minor mode to tidy org-mode buffers.
+  )
+
 (use-package org-transclusion)
 
 (use-package outline
