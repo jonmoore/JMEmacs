@@ -1014,7 +1014,20 @@ etc. are set up before starting lsp."
          ))
 
   ;; suppress excessive warning-level messages from lsp
-  (advice-add 'lsp--warn :around #'my-lsp--warn-around))
+  (advice-add 'lsp--warn :around #'my-lsp--warn-around)
+
+  ;; The advice below is a workaround for a problem when using lsp-signature-posframe for
+  ;; lsp-signature-function, i.e. the first part of the signature may not be readable.
+  ;; This happens because the string passed to lsp-signature-function may have a face
+  ;; property lsp-signature-highlight-function-argument.  To avoid that we pass through
+  ;; the string without properties.
+  (defun my-lsp-signature-posframe--no-properties (args)
+    ;; When calling to show the signature, args is a list of one string and we want to
+    ;; remove properties.  When calling to hide the signature posframe, args is a list
+    ;; containing nil.
+    (mapcar (lambda (s) (when s (substring-no-properties s))) args))
+  (advice-add 'lsp-signature-posframe :filter-args #'my-lsp-signature-posframe--no-properties)
+  )
 
 (defun jm-pyright-sync-venv-from-conda-env ()
   "Sync the pyright venv to the current conda-env"
