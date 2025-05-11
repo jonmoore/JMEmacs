@@ -945,13 +945,18 @@ etc. are set up before starting lsp."
   ;; must set this before loading lsp
   (setq lsp-keymap-prefix "C-c l")
   (define-prefix-command 'lsp-command-map nil "lsp-mode command map")
+  ;; might be able to only show available commands by calling
+  ;; lsp-define-conditional-key in config
   :bind (:map lsp-command-map
               ("d" . lsp-find-definition)
               ("r" . lsp-find-references)
               ("t" . lsp-find-type-definition)
-              ("h" . lsp-describe-thing-at-point)
               ("l" . lsp-document-highlight)
+
+              ("g" . lsp-ui-doc-glance)
+              ("h" . lsp-describe-thing-at-point)
               ("s" . lsp-signature-activate)
+
               ("F" . lsp-format-buffer)
               ("R" . lsp-rename)
 
