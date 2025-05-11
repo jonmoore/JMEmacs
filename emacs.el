@@ -1514,6 +1514,7 @@ directory, otherwise return nil."
         org-refile-allow-creating-parent-nodes 'confirm
         org-refile-targets '((org-agenda-files :maxlevel . 5))
         org-refile-use-outline-path 'file
+        org-id-link-to-org-use-id               'create-if-interactive-and-no-custom-id
         org-safe-remote-resources '("\\`https://fniessen\\.github\\.io\\(?:/\\|\\'\\)")
         org-src-lang-modes '(("ipython" . python)
                              ("elisp" . emacs-lisp)
