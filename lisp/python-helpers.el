@@ -132,30 +132,18 @@ is first conda env, then lsp."
   (if python-helpers--init-in-buffer-core-running-p
       (progn
         (error "Function '%s' called reentrantly" 'python-helpers--init-in-buffer-core))
-    (let* ((python-helpers--init-in-buffer-core-running-p t)
-           (saved-project-conda-env (ht-get python-helpers--ht-project-conda-env project-root)))
-      (cond
-       ((not saved-project-conda-env)
-        (let ((conda-env-path (python-helpers--select-conda-env project-root)))
-          ;; Save the conda env information for project-root
-          (ht-set! python-helpers--ht-project-conda-env
-                   project-root
-                   ;; Either select and activate an env, saving the result,
-                   ;; or else decline to select and save that result as 'do-not-use-an-env
-                   (or conda-env-path 'do-not-use-an-env))
-          (when conda-env-path
-            (conda-env-activate-path conda-env-path)
-            (lsp))))
-       ;; skip if the saved env is already active or no env is required
-       ((memq saved-project-conda-env
-              (list conda-env-current-path 'do-not-use-an-env)))
-       (t
-        (progn
-          (conda-env-activate-path saved-project-conda-env)
-          (lsp)))
-       ;; TODO - add case for changing buffer into a buffer in the same project but
-       ;; where LSP is not active.  Need to define case for 'do-not-use-an-env
-       ))))
+    (let ((python-helpers--init-in-buffer-core-running-p t))
+      (setq conda-env-path (or (ht-get python-helpers--ht-project-conda-env project-root)
+                               (python-helpers--select-conda-env project-root)
+                               'do-not-use-an-env))
+      (ht-set! python-helpers--ht-project-conda-env
+               project-root
+               conda-env-path)
+      (unless (eq conda-env-path 'do-not-use-an-env)
+        (unless (eq conda-env-path conda-env-current-path)
+          (conda-env-activate-path conda-env-path))
+        (unless (bound-and-true-p lsp-mode)
+          (lsp))))))
 
 ;;;###autoload
 (defun python-helpers--init-in-buffer (buffer)
