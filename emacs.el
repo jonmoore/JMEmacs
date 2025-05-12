@@ -575,6 +575,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
            ("k"   . consult-keep-lines)
            ("f"   . consult-focus-lines)))
 
+  (use-package consult-flycheck)
+
   (use-package consult-lsp))
 
 (when in-buffer-completion-capf-p
