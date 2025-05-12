@@ -976,35 +976,64 @@ etc. are set up before starting lsp."
   ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
   (require 'dap-mode)
   (keymap-set lsp-mode-map lsp-keymap-prefix 'lsp-command-map)
-  (setq lsp-enable-suggest-server-download             nil ; insanely, this is t by default
 
-        lsp-before-save-edits                          nil
-        lsp-enable-dap-auto-configure                    t
+  ;; we enable and disable features explicitly as the lsp-mode devs have no taste.
+  ;; Naturally, lsp-mode uses a mix of lsp-enable-*, lsp-*-enable-* and lsp-*-enable
+  ;; variables.
+  ;;
+  ;; Most (all?) configuration happens through lsp-managed-mode, which is called for all
+  ;; buffers with lsp enabled.  We set lsp-auto-configure to t as without that the
+  ;; variables to enable and disable features do not get used and activating them manually
+  ;; would require duplicating code to test e.g. if the lsp server supports the features
+  ;; and to decide where to place hooks.
+  (setq lsp-auto-configure t
 
-        lsp-enable-indentation                         nil
-        lsp-imenu-sort-methods            '(kind position)
+        lsp-enable-dap-auto-configure                       nil ; todo: explicit configuration
+        lsp-enable-file-watchers                            t   ;
+        lsp-enable-folding                                  t   ;
+        lsp-enable-imenu                                    t   ;
+        lsp-enable-indentation                              nil ; leave to programming modes
+        lsp-enable-links                                    t   ;
+        lsp-enable-on-type-formatting                       nil ;
+        lsp-enable-relative-indentation                     nil ; leave to programming modes
+        lsp-enable-snippet                                  nil ; leave to yasnippet
+        lsp-enable-suggest-server-download                  nil ; insanely, this is t by default
+        lsp-enable-symbol-highlighting                      t   ;
+        lsp-enable-text-document-color                      t   ;
+        lsp-enable-xref                                     t   ;
 
-        ;; for more information see
-        ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
-        lsp-completion-show-detail                       t
-        lsp-completion-show-kind                         t
-        lsp-diagnostics-provider                     :auto
-        lsp-eldoc-enable-hover                         nil
-        lsp-enable-symbol-highlighting                   t
-        lsp-headerline-breadcrumb-enable                 t
-        lsp-lens-enable                                  t
-
-        lsp-modeline-code-actions-enable               nil
-        lsp-modeline-code-action-icons-enable          nil
-        lsp-modeline-diagnostics-enable                nil
-        lsp-modeline-workspace-status-enable             t
+        lsp-completion-enable                               t   ;
+        lsp-completion-enable-additional-text-edit          t   ;
+        lsp-eldoc-enable-hover                              nil ;
+        lsp-headerline-breadcrumb-enable                    t   ;
+        lsp-headerline-breadcrumb-enable-diagnostics        nil ;
+        lsp-headerline-breadcrumb-enable-symbol-numbers     nil ;
+        lsp-headerline-breadcrumb-icons-enable              t   ;
+        ;; lsp-inlay-hint-enable                               nil ; nil by default but why not?
+        lsp-inline-completion-enable                        t   ;
+        lsp-lens-enable                                     t   ;
+        lsp-modeline-code-action-icons-enable               nil ;
+        lsp-modeline-code-actions-enable                    nil ;
+        lsp-modeline-diagnostics-enable                     nil ;
+        lsp-modeline-workspace-status-enable                t   ;
+        lsp-semantic-tokens-enable                          t   ;
+        lsp-semantic-tokens-enable-multiline-token-support  t   ;
 
         ;; This variable is a custom but doesn't have a setter to ensure
         ;; lsp--update-signature-help-hook gets called.
-        lsp-signature-auto-activate                              nil
-        lsp-signature-doc-lines                                   10
-        lsp-signature-function               'lsp-signature-posframe
-        lsp-signature-render-documentation                       nil
+        lsp-signature-auto-activate                         nil ;
+        lsp-before-save-edits                               nil ; insanely, this is t by default
+
+        lsp-imenu-sort-methods                 '(kind position)
+
+        ;; for more information see
+        ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+        lsp-completion-show-detail                            t ;
+        lsp-completion-show-kind                              t ;
+        lsp-diagnostics-provider                          :auto ;
+        lsp-signature-doc-lines                              10
+        lsp-signature-function          'lsp-signature-posframe
+        lsp-signature-render-documentation                  nil
         )
   (when in-buffer-completion-company-p
     (setq lsp-completion-provider                    :capf))
@@ -1042,6 +1071,17 @@ etc. are set up before starting lsp."
     ;; containing nil.
     (mapcar (lambda (s) (when s (substring-no-properties s))) args))
   (advice-add 'lsp-signature-posframe :filter-args #'my-lsp-signature-posframe--no-properties)
+
+  ;; Set and try requiring the lsp server packages we are likely to use.  When
+  ;; `lsp-auto-configure' is set, this is done from `lsp'.
+  (setopt lsp-client-packages
+          '(lsp-haskell lsp-idris lsp-javascript lsp-jq lsp-json
+                        lsp-latex lsp-lisp lsp-ltex lsp-ltex-plus
+                        lsp-markdown
+                        lsp-pyright
+                        lsp-r lsp-racket lsp-ruff lsp-rust
+                        lsp-sql lsp-sqls
+                        lsp-tex lsp-toml lsp-xml lsp-yaml))
   )
 
 (defun jm-pyright-sync-venv-from-conda-env ()
@@ -1098,15 +1138,19 @@ etc. are set up before starting lsp."
 (use-package lsp-ui
   :hook  ((lsp-mode . lsp-ui-mode))
   :config
-  (setopt lsp-ui-doc-delay                               1.0
-          lsp-ui-doc-enable                              nil
+  (setopt lsp-ui-doc-enable                              nil
+          lsp-ui-doc-delay                               1.0
           lsp-ui-doc-include-signature                     t
           lsp-ui-doc-show-with-cursor                      t
           lsp-ui-doc-show-with-mouse                     nil
 
-          lsp-ui-sideline-delay                          1.0
+          lsp-ui-imenu-enable                              t
+
+          lsp-ui-peek-enable                               t
+
           lsp-ui-sideline-enable                           t
-          lsp-ui-sideline-show-code-actions                t
+          lsp-ui-sideline-delay                          1.0
+          lsp-ui-sideline-show-code-actions              nil
           lsp-ui-sideline-show-diagnostics               nil
           lsp-ui-sideline-show-hover                     nil
           lsp-ui-sideline-show-symbol                    nil
