@@ -1543,6 +1543,7 @@ directory, otherwise return nil."
         org-fast-tag-selection-single-key       nil
         org-fold-core-style                     'overlays
         org-format-latex-options                (plist-put org-format-latex-options :scale 2.5)
+        org-hide-emphasis-markers               t
         org-hide-leading-stars                  t
         org-hierarchical-todo-statistics        nil
         org-html-htmlize-output-type            'css
