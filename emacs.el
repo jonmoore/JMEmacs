@@ -738,12 +738,20 @@ clean buffer we delay checking for longer."
                       :repo "kassick/gitlab-lsp.el"
                       :branch "main"
                       :files ("*.el"))
+  :init
+  (setopt gitlab-lsp-enabled nil)
   :config
   (setq gitlab-lsp-show-completions-with-other-clients nil)
   (add-hook 'gitlab-lsp-complete-before-complete-hook
             (lambda ()
               (recenter-top-bottom 4)
-              (message "Asking for suggestions ..."))))
+              (message "Asking for suggestions ...")))
+  (lsp-register-custom-settings
+   '(("gitlab-lsp.ignoreCertificateErrors" t)))
+  ;; Used this when first getting gitlab-lsp running; the default value is t.  not sure if
+  ;; it's actually useful though.
+  (let* ((server (gethash 'gitlab-lsp-remote lsp-clients)))
+    (setf (lsp--client-remote? server) nil)))
 
 (use-package goto-addr                  ; buttonize URLs and e-mail addresses
   :hook ((prog-mode . goto-address-prog-mode)
