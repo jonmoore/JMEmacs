@@ -1618,6 +1618,11 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
     (goto-char (point-min))
     (org-ctrl-c-ctrl-c)))
 
+(use-package org-hide-drawers           ; Hide drawers in org-mode buffers using overlays
+  ;; Using this instead of org-tidy, which had significant bugs related to keymaps.
+  ;; https://github.com/jxq0/org-tidy/issues/30
+  )
+
 (use-package org-jira
   :config
   (setq org-jira-download-comments nil
@@ -1647,10 +1652,6 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
           org-ref-pdf-directory (concat bibliography-directory "/bibtex-pdfs/"))))
 
 (use-package org-super-agenda)
-
-(use-package org-tidy
-  ; A minor mode to tidy org-mode buffers.
-  )
 
 (use-package org-transclusion)
 
