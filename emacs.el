@@ -1467,6 +1467,48 @@ directory, otherwise return nil."
               ("y" . org-babel-detangle-directory))
 
   :config
+  (progn
+    ;; move various org commands to their own prefix to declutter "C-c C-x", and remove
+    ;; them and some others from org-mode map.
+    (setq org-mode-timer-clock-prefix "C-c C-x C-t")
+    (define-prefix-command 'org-mode-timer-clock-map nil "org-mode timer map")
+    (define-keymap
+      :keymap org-mode-timer-clock-map
+      "," 'org-timer-pause-or-continue
+      "-" 'org-timer-item
+      "." 'org-timer
+      "0" 'org-timer-start
+      ";" 'org-timer-set-timer
+      "_" 'org-timer-stop
+      "C-q" 'org-clock-cancel
+      "C-d" 'org-clock-display
+      "C-j" 'org-clock-goto
+      "TAB" 'org-clock-in
+      "C-x" 'org-clock-in-last
+      "C-e" 'org-clock-modify-effort-estimate
+      "C-o" 'org-clock-out
+      "C-z" 'org-resolve-clocks
+      )
+    (keymap-set org-mode-map org-mode-timer-clock-prefix 'org-mode-timer-clock-map)
+    (define-keymap
+      :keymap org-mode-map
+      "C-c C-x ,"   nil ; org-timer-pause-or-continue
+      "C-c C-x -"   nil ; org-timer-item
+      "C-c C-x ."   nil ; org-timer
+      "C-c C-x 0"   nil ; org-timer-start
+      "C-c C-x ;"   nil ; org-timer-set-timer
+      "C-c C-x _"   nil ; org-timer-stop
+      "C-c C-x C-q" nil ; org-clock-cancel
+      "C-c C-x C-d" nil ; org-clock-display
+      "C-c C-x C-j" nil ; org-clock-goto
+      "C-c C-x TAB" nil ; org-clock-in
+      "C-c C-x C-x" nil ; org-clock-in-last
+      "C-c C-x C-e" nil ; org-clock-modify-effort-estimate
+      "C-c C-x C-o" nil ; org-clock-out
+      "C-c C-x G"   nil ; org-feed-goto-inbox
+      "C-c C-x g"   nil ; org-feed-update-all
+      "C-c C-x C-z" nil ; org-resolve-clocks
+      ))
   (require 'jiralib)
   (org-link-set-parameters "jira" :follow
                            (lambda (key _)
