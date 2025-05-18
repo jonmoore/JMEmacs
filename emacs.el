@@ -1148,6 +1148,8 @@ etc. are set up before starting lsp."
   :config
   (setopt lsp-ui-doc-enable                              nil
           lsp-ui-doc-delay                               1.0
+          lsp-ui-doc-max-height                           40
+          lsp-ui-doc-max-width                            90
           lsp-ui-doc-include-signature                     t
           lsp-ui-doc-show-with-cursor                      t
           lsp-ui-doc-show-with-mouse                     nil
