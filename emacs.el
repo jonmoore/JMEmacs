@@ -1466,6 +1466,7 @@ directory, otherwise return nil."
               :map org-babel-tangled-map
               ("j" . org-babel-tangle-jump-to-org)
               ("d" . org-babel-detangle)
+              ("s" . org-babel-detangle-stay-in-tangled-buffer)
               ("y" . org-babel-detangle-directory))
 
   :config

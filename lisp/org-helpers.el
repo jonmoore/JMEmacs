@@ -72,4 +72,18 @@ to beginning of heading, otherwise call `org-backward-heading-same-level`"
       (org-backward-heading-same-level arg)
     (org-back-to-heading)))
 
+;;;###autoload
+(defun org-babel-detangle-stay-in-tangled-buffer (&optional source-code-file)
+  "Wrap `org-babel-detangle` so that we stay in the tangled buffer,
+from which this should be run.  This is a workaround for some odd behavior
+by `org-babel-detangle', which ends up with a current buffer not equal to the buffer of the
+selected window."
+  (interactive)
+  (let ((cb (current-buffer)))
+    (cl-assert cb)
+    (let ((res (save-selected-window
+                 (org-babel-detangle source-code-file))))
+      (switch-to-buffer cb)
+      res)))
+
 (provide 'org-helpers)
