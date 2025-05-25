@@ -79,11 +79,12 @@ from which this should be run.  This is a workaround for some odd behavior
 by `org-babel-detangle', which ends up with a current buffer not equal to the buffer of the
 selected window."
   (interactive)
-  (let ((cb (current-buffer)))
-    (cl-assert cb)
-    (let ((res (save-selected-window
-                 (org-babel-detangle source-code-file))))
-      (switch-to-buffer cb)
-      res)))
+  (save-mark-and-excursion
+    (let ((cb (current-buffer)))
+      (cl-assert cb)
+      (let ((count-detangled (save-selected-window
+                               (org-babel-detangle source-code-file))))
+        (switch-to-buffer cb)
+        count-detangled))))
 
 (provide 'org-helpers)
