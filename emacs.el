@@ -294,6 +294,13 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         (append
          '(cape-file cape-abbrev cape-dabbrev cape-dict)
          completion-at-point-functions))
+  (setopt hippie-expand-try-functions-list
+          '(try-expand-dabbrev-visible
+            try-expand-dabbrev
+            try-expand-dabbrev-all-buffers
+            try-complete-file-name-partially
+            try-complete-file-name
+            yas-hippie-try-expand))
   :custom
   (Buffer-menu-buffer+size-width 36)
   (Buffer-menu-mode-width 10)
@@ -822,19 +829,6 @@ clean buffer we delay checking for longer."
   (setq hl-sexp-background-colors (create-hl-sexp-background-colors)))
 
 (use-package htmlize)                   ; convert buffer and text decorations to HTML
-
-(use-package hippie-expand              ; built-in
-  :ensure nil
-  :config
-  (require 'yasnippet)
-  (setq hippie-expand-try-functions-list
-        '(try-expand-dabbrev-visible
-          try-expand-dabbrev
-          try-expand-dabbrev-all-buffers
-          try-complete-file-name-partially
-          try-complete-file-name
-          yas-hippie-try-expand
-          )))
 
 (use-package hydra)                     ; Make bindings that stick around.
 
