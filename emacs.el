@@ -1918,6 +1918,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
               ("<up>"   . shell-cycle-backward-through-command-history)
               ("<down>" . shell-cycle-forward-through-command-history)))
 
+(use-package show-font)                 ; preview fonts
+
 (use-package shut-up)                   ; redirects `message' and stdout
 
 (use-package sicp)
