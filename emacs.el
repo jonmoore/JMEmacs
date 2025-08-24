@@ -297,17 +297,20 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package emacs
   :init
+  ;; should think if it's worth separating what we do with completion-at-point and
+  ;; hippie-expand an dabbrev-completion
   (setq completion-at-point-functions
         (append
          '(cape-file cape-abbrev cape-dabbrev cape-dict)
          completion-at-point-functions))
   (setopt hippie-expand-try-functions-list
-          '(try-expand-dabbrev-visible
+          '(try-complete-file-name-partially
+            try-complete-file-name
+            yas-hippie-try-expand
+            try-expand-dabbrev-visible
             try-expand-dabbrev
             try-expand-dabbrev-all-buffers
-            try-complete-file-name-partially
-            try-complete-file-name
-            yas-hippie-try-expand))
+            try-expand-dabbrev-from-kill))
   :custom
   (Buffer-menu-buffer+size-width 36)
   (Buffer-menu-mode-width 10)
