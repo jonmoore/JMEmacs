@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# build_emacs_wsl.sh: Script to build Emacs from source in WSL with GUI and native compilation support.
+# Build Emacs from source in WSL with GUI and native compilation support.
 
 # --- Configuration Variables (can be overridden by arguments) ---
-EMACS_VERSION_TAG="emacs-30.1" # Or a specific tag like "emacs-29.3"
+EMACS_VERSION_TAG="emacs-30.1" # Or a branch e.g. "master"
 BUILD_DIR="$HOME/emacs_build_source"
-INSTALL_PREFIX="$HOME/bin/emacs" # Default installation directory
+INSTALL_PREFIX="$HOME/bin/emacs-new" # Default installation directory
 NUM_CORES=$(nproc) # Number of CPU cores for compilation
 
-# --- Features (default to enabled) ---
-ENABLE_PGTK=true
+# --- Features ---
+ENABLE_GUI=true
 ENABLE_NATIVE_COMPILATION=true
 ENABLE_TREE_SITTER=true
 ENABLE_JSON=true
@@ -21,16 +21,16 @@ ENABLE_MAILUTILS=true
 ENABLE_WIDE_INT=true
 ENABLE_SOUND=true # libasound2-dev
 ENABLE_DBUS=true  # libdbus-1-dev
-ENABLE_GPM=false   # libgpm-dev (console mouse support)
 ENABLE_RSVG=true  # librsvg2-dev
 ENABLE_LCMS2=true # liblcms2-dev
 ENABLE_LOCKFILE=true # liblockfile-dev
 
-# --- Help Function ---
+ENABLE_GPM=false   # libgpm-dev (console mouse support)
+
 print_help() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
-    echo "Builds Emacs from source in WSL with GUI (pgtk) and native compilation."
+    echo "Builds Emacs from source in WSL with GUI and native compilation."
     echo ""
     echo "Options:"
     echo "  -h, --help                        Show this help message and exit."
@@ -38,7 +38,7 @@ print_help() {
     echo "  --build-dir <path>                Set the build directory (default: $BUILD_DIR)."
     echo "  --prefix <path>                   Set the installation prefix (default: $INSTALL_PREFIX)."
     echo "  --jobs <num_cores>                Number of parallel compilation jobs (default: $NUM_CORES)."
-    echo "  --disable-pgtk                    Disable Pure GTK+ (GUI) support."
+    echo "  --disable-gui                     Disable GUI support (build terminal-only)."
     echo "  --disable-native-compilation      Disable native compilation."
     echo "  --disable-tree-sitter             Disable Tree-sitter support."
     echo "  --disable-json                    Disable JSON support."
@@ -59,12 +59,12 @@ print_help() {
     echo "  --no-install                      Perform build but skip 'make install'."
     echo ""
     echo "Example: $0 --version emacs-29.3 --prefix /opt/emacs --jobs 8"
-    echo "Example: $0 --disable-pgtk --disable-native-compilation # Build terminal-only Emacs"
+    echo "Example: $0 --disable-gui --disable-native-compilation # Build terminal-only Emacs"
     exit 0
 }
 
 # --- Argument Parsing ---
-ARGS=$(getopt -o h --long version:,build-dir:,prefix:,jobs:,disable-pgtk,disable-native-compilation,disable-tree-sitter,disable-json,disable-modules,disable-gnutls,disable-imagemagick,disable-cairo,disable-mailutils,disable-wide-int,disable-sound,disable-dbus,disable-gpm,disable-rsvg,disable-lcms2,disable-lockfile,skip-deps,clean,no-install,help -- "$@")
+ARGS=$(getopt -o h --long version:,build-dir:,prefix:,jobs:,disable-gui,disable-native-compilation,disable-tree-sitter,disable-json,disable-modules,disable-gnutls,disable-imagemagick,disable-cairo,disable-mailutils,disable-wide-int,disable-sound,disable-dbus,disable-gpm,disable-rsvg,disable-lcms2,disable-lockfile,skip-deps,clean,no-install,help -- "$@")
 if [ $? -ne 0 ]; then
     print_help
 fi
@@ -95,8 +95,8 @@ while true; do
             NUM_CORES="$2"
             shift 2
             ;;
-        --disable-pgtk)
-            ENABLE_PGTK=false
+        --disable-gui)
+            ENABLE_GUI=false
             shift
             ;;
         --disable-native-compilation)
@@ -204,9 +204,8 @@ install_dependencies() {
     sudo apt install -y build-essential git autoconf texinfo || { log "Error: Failed to install essential dependencies."; exit 1; }
 
     DEPENDENCIES=""
-    $ENABLE_PGTK && DEPENDENCIES+=" libgtk-3-dev"
+    $ENABLE_GUI && DEPENDENCIES+=" libgtk-3-dev"
     $ENABLE_NATIVE_COMPILATION && {
-        # Check GCC version for libgccjit
         GCC_VERSION=$(gcc -dumpversion | cut -d'.' -f1)
         if [[ -z "$GCC_VERSION" ]]; then
             log "Warning: Could not detect GCC version. Native compilation might fail without 'libgccjit-X-dev'."
@@ -221,7 +220,7 @@ install_dependencies() {
     $ENABLE_JSON && DEPENDENCIES+=" libjansson-dev"
     $ENABLE_GNUTLS && DEPENDENCIES+=" libgnutls28-dev"
     $ENABLE_IMAGEMAGICK && DEPENDENCIES+=" libmagick++-dev"
-    $ENABLE_CAIRO && DEPENDENCIES+=" libcairo2-dev" # Cairo is often pulled by GTK but good to list
+    $ENABLE_CAIRO && DEPENDENCIES+=" libcairo2-dev"
     $ENABLE_MAILUTILS && DEPENDENCIES+=" mailutils"
     $ENABLE_SOUND && DEPENDENCIES+=" libasound2-dev"
     $ENABLE_DBUS && DEPENDENCIES+=" libdbus-1-dev"
@@ -230,14 +229,11 @@ install_dependencies() {
     $ENABLE_LCMS2 && DEPENDENCIES+=" liblcms2-dev"
     $ENABLE_LOCKFILE && DEPENDENCIES+=" liblockfile-dev"
 
-    # Common image format libraries
     DEPENDENCIES+=" libtiff5-dev libgif-dev libjpeg-dev libpng-dev libxpm-dev"
-    # Ncurses for terminal UI
     DEPENDENCIES+=" libncurses-dev"
 
     if [ -n "$DEPENDENCIES" ]; then
         log "Installing feature-specific dependencies: $DEPENDENCIES"
-        # Using a loop for individual installs to better pinpoint failures
         for dep in $DEPENDENCIES; do
             sudo apt install -y "$dep" || log "Warning: Failed to install dependency: $dep. Continuing, but build might fail."
         done
@@ -250,20 +246,17 @@ install_dependencies() {
 
 log "Starting Emacs build script in WSL..."
 
-# 1. Check for necessary commands
 check_command "git"
 check_command "make"
 check_command "gcc"
 check_command "apt"
 
-# 2. Install Dependencies
 if ! $SKIP_DEPS; then
     install_dependencies
 else
     log "Skipping dependency installation as requested."
 fi
 
-# 3. Prepare Build Directory
 if $CLEAN_BUILD && [ -d "$BUILD_DIR" ]; then
     log "Cleaning existing build directory: $BUILD_DIR"
     rm -rf "$BUILD_DIR" || { log "Error: Failed to clean build directory."; exit 1; }
@@ -276,21 +269,18 @@ fi
 
 cd "$BUILD_DIR" || { log "Error: Could not change to build directory."; exit 1; }
 
-# 4. Clone or Update Emacs Source
 if [ ! -d "emacs" ]; then
     log "Cloning Emacs source code from Savannah Git repository..."
     git clone https://git.savannah.gnu.org/git/emacs.git || { log "Error: Failed to clone Emacs repository."; exit 1; }
 else
     log "Emacs source directory already exists. Pulling latest changes..."
-    cd emacs || { log "Error: Could not change to emacs source directory."; exit 1; }
-    git pull || { log "Error: Failed to pull latest Emacs source."; exit 1; }
-    cd .. # Go back to build_dir
+    cd emacs                        || { log "Error: Could not change to emacs source directory."  ; exit 1; }
+    git fetch --all                 || { log "Error: Could not run git fetch."                     ; exit 1; }
+    cd ..
 fi
 
-# Ensure we are in the emacs source directory for operations
 cd emacs || { log "Error: Could not change to emacs source directory after clone/pull."; exit 1; }
 
-# Checkout specified version/tag
 if [ "$EMACS_VERSION_TAG" != "master" ]; then
     log "Checking out Emacs version: $EMACS_VERSION_TAG"
     git checkout "$EMACS_VERSION_TAG" || { log "Error: Failed to checkout specified Emacs version/tag."; exit 1; }
@@ -298,34 +288,32 @@ else
     log "Building from latest 'master' branch."
 fi
 
-# 5. Generate configure script
 log "Running autogen.sh to generate configure script..."
 ./autogen.sh || { log "Error: autogen.sh failed."; exit 1; }
 
-# 6. Configure Emacs
 log "Configuring Emacs with selected features..."
 CONFIGURE_FLAGS=""
-$ENABLE_PGTK && CONFIGURE_FLAGS+=" --with-pgtk --with-x-toolkit=gtk3"
+if $ENABLE_GUI; then
+    CONFIGURE_FLAGS+=" --with-x --with-gtk3 --without-pgtk"
+fi
 $ENABLE_NATIVE_COMPILATION && CONFIGURE_FLAGS+=" --with-native-compilation"
-$ENABLE_TREE_SITTER && CONFIGURE_FLAGS+=" --with-tree-sitter"
-$ENABLE_JSON && CONFIGURE_FLAGS+=" --with-json"
-$ENABLE_MODULES && CONFIGURE_FLAGS+=" --with-modules"
-$ENABLE_GNUTLS && CONFIGURE_FLAGS+=" --with-gnutls"
-$ENABLE_IMAGEMAGICK && CONFIGURE_FLAGS+=" --with-imagemagick"
-$ENABLE_CAIRO && CONFIGURE_FLAGS+=" --with-cairo"
-$ENABLE_MAILUTILS && CONFIGURE_FLAGS+=" --with-mailutils"
-$ENABLE_WIDE_INT && CONFIGURE_FLAGS+=" --with-wide-int"
-$ENABLE_SOUND && CONFIGURE_FLAGS+=" --with-sound=alsa"
-$ENABLE_DBUS && CONFIGURE_FLAGS+=" --with-dbus"
-$ENABLE_GPM && CONFIGURE_FLAGS+=" --with-gpm"
-$ENABLE_RSVG && CONFIGURE_FLAGS+=" --with-rsvg"
-$ENABLE_LCMS2 && CONFIGURE_FLAGS+=" --with-lcms2"
-$ENABLE_LOCKFILE && CONFIGURE_FLAGS+=" --with-lockfile"
+$ENABLE_TREE_SITTER        && CONFIGURE_FLAGS+=" --with-tree-sitter"
+$ENABLE_JSON               && CONFIGURE_FLAGS+=" --with-json"
+$ENABLE_MODULES            && CONFIGURE_FLAGS+=" --with-modules"
+$ENABLE_GNUTLS             && CONFIGURE_FLAGS+=" --with-gnutls"
+$ENABLE_IMAGEMAGICK        && CONFIGURE_FLAGS+=" --with-imagemagick"
+$ENABLE_CAIRO              && CONFIGURE_FLAGS+=" --with-cairo"
+$ENABLE_MAILUTILS          && CONFIGURE_FLAGS+=" --with-mailutils"
+$ENABLE_WIDE_INT           && CONFIGURE_FLAGS+=" --with-wide-int"
+$ENABLE_SOUND              && CONFIGURE_FLAGS+=" --with-sound=alsa"
+$ENABLE_DBUS               && CONFIGURE_FLAGS+=" --with-dbus"
+$ENABLE_GPM                && CONFIGURE_FLAGS+=" --with-gpm"
+$ENABLE_RSVG               && CONFIGURE_FLAGS+=" --with-rsvg"
+$ENABLE_LCMS2              && CONFIGURE_FLAGS+=" --with-lcms2"
+$ENABLE_LOCKFILE           && CONFIGURE_FLAGS+=" --with-lockfile"
 
-# Always add common libs
 CONFIGURE_FLAGS+=" --with-tiff --with-gif --with-jpeg --with-png --with-xpm --with-ncurses"
 
-# For native compilation, ensure correct GCC/G++ is used if specific versions were installed
 if $ENABLE_NATIVE_COMPILATION; then
     GCC_BIN=$(which gcc-${GCC_VERSION} || which gcc)
     GXX_BIN=$(which g++-${GCC_VERSION} || which g++)
@@ -341,14 +329,11 @@ fi
 log "Running ./configure $CONFIGURE_FLAGS --prefix=$INSTALL_PREFIX"
 ./configure $CONFIGURE_FLAGS --prefix="$INSTALL_PREFIX" || { log "Error: configure failed."; exit 1; }
 
-# Unset CC/CXX after configure if they were set, to avoid interfering with make
 unset CC CXX
 
-# 7. Compile Emacs
 log "Compiling Emacs with $NUM_CORES parallel jobs..."
 make -j"$NUM_CORES" || { log "Error: make failed."; exit 1; }
 
-# 8. Install Emacs
 if ! $NO_INSTALL; then
     log "Installing Emacs to $INSTALL_PREFIX/bin..."
     sudo make install || { log "Error: make install failed."; exit 1; }
@@ -362,3 +347,4 @@ fi
 log "Emacs build process completed."
 log "To run: $INSTALL_PREFIX/bin/emacs"
 log "To run in terminal: $INSTALL_PREFIX/bin/emacs -nw"
+
