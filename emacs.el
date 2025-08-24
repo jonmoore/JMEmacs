@@ -1059,7 +1059,7 @@ etc. are set up before starting lsp."
         lsp-headerline-breadcrumb-enable-diagnostics        nil ;
         lsp-headerline-breadcrumb-enable-symbol-numbers     nil ;
         lsp-headerline-breadcrumb-icons-enable              t   ;
-        lsp-inlay-hint-enable                               t   ; nil by default but why not?
+        lsp-inlay-hint-enable                               nil ; can we 1) insert the hints 2) toggle?
         lsp-inline-completion-enable                        t   ;
         lsp-lens-enable                                     t   ;
         lsp-modeline-code-action-icons-enable               nil ;
