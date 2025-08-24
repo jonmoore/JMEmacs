@@ -1428,6 +1428,15 @@ directory, otherwise return nil."
                (file-directory-p candidate))
       candidate)))
 
+;; in case of issues with C-c C-e h o, there is this mess in ox-html.el.gz
+;; (?o "As HTML file and open"
+;;     (lambda (a s v b)
+;;       (if a (org-html-export-to-html t s v b)
+;; 	(org-open-file (org-html-export-to-html nil s v b)))))))
+;; checking docs for org-html-export-to-html we infer
+;; a - async, s - subtreep, v - visible-only, b - body-only
+
+
 (use-package org
   :mode "\\.org'"
   :init
@@ -1511,9 +1520,20 @@ directory, otherwise return nil."
                            (lambda (key _)
                              "Visit the Jira given by KEY in the default browser"
                              (browse-url (concat jiralib-url "/browse/" key))))
-  ;; not sure if this one is helpful -- maybe better to hook into org-store-link
+  ;; provides completion for links referenced using "id".
   (org-link-set-parameters "id" :complete
                            'org-id-complete-link)
+  ;; Set org-link-make-description-function, to target internal links using #. This is a
+  ;; workaround -- we'd prefer using org-link-set-parameters with :insert-description but
+  ;; that has no effect because when a link is prefixed only by # without a : its type is
+  ;; not recognized.
+  (setopt org-link-make-description-function #'jm-org-link-custom-id-insert-description)
+  (org-link-set-parameters
+   "#"
+   :complete #'jm-org-link-custom-id-complete
+   ;; :insert-description #'jm-org-link-custom-id-insert-description
+   )
+
   (defalias 'ob-temp-file 'org-babel-temp-file)
   (setq org-adapt-indentation t
         org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities

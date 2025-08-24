@@ -87,4 +87,50 @@ selected window."
         (switch-to-buffer cb)
         count-detangled))))
 
+;;;###autoload
+(defun org-id-complete-link (&optional interactive)
+  "Create an id: link using completion"
+  ;; See https://emacs.stackexchange.com/questions/12391/insert-org-id-link-at-point-via-outline-path-completion
+  (concat "id:"
+          (org-id-get-with-outline-path-completion)))
+
+;;;###autoload
+(defun jm-org-insert-link-with-consult-org-heading ()
+    "Insert a link to a heading based on the CUSTOM_ID property, selecting
+heading using `consult-org-heading`. Replaced for now by the
+configuration further below."
+    (interactive)
+    (seq-let (heading-marker description)
+        (save-excursion
+          (list (consult-org-heading) (org-get-heading)))
+      (when heading-marker
+        (let ((custom-id (org-entry-get heading-marker "CUSTOM_ID")))
+          (when custom-id
+            (org-insert-link nil (concat "#" custom-id) description))))))
+
+;; Configure org-insert-link to allow inserting a link to a heading referencing CUSTOM_ID
+;; properties, selecting the target heading using `consult-org-heading`."
+;;;###autoload
+(defun jm-org-link-custom-id-complete (&optional interactive?)
+  "Provide interactive completion of an internal target (i.e. using #)
+based on org headings with CUSTOM_ID properties set."
+  (let (heading-marker
+        custom-id
+        (org-trust-scanner-tags t)
+        (consult-after-jump-hook nil)) ; avoids error from calling recenter
+    (when (and
+           (setq heading-marker (save-excursion (consult-org-heading "CUSTOM_ID<>\"\"")))
+           (setq custom-id (org-entry-get heading-marker "CUSTOM_ID")))
+      (concat "#" custom-id))))
+
+;;;###autoload
+(defun jm-org-link-custom-id-insert-description (link description)
+  "Return a description for links identified with internal targets.  The
+ heading of the associated entry is used."
+  (when (string-prefix-p "#" link)
+    (save-excursion
+      (message (substring link 1))
+      (goto-char (org-find-property "CUSTOM_ID" (substring link 1)))
+      (org-get-heading t))))
+
 (provide 'org-helpers)
