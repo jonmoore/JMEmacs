@@ -205,6 +205,13 @@
   (setq exec-path (append (bound-and-true-p local-exec-paths)
                           exec-path)))
 
+(when system-linux-p
+  ;; may come back to these - good to be aware of.  WSL is likely to have issues.
+  (setq select-enable-clipboard t)
+  (setq select-active-regions nil)
+  (setq select-enable-primary nil)
+  (setq interprogram-cut-function 'gui-select-text))
+
 (setq backup-directory-alist
       (list
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
