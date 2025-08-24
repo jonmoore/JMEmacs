@@ -732,7 +732,24 @@ clean buffer we delay checking for longer."
   (define-key flycheck-mode-map flycheck-keymap-prefix nil) ; remove existing mapping
   (setq flycheck-keymap-prefix (kbd "C-c F"))
   (fset 'flycheck-command-map flycheck-command-map) ; make this work as a prefix command
-  (define-key flycheck-mode-map flycheck-keymap-prefix '("flycheck" . flycheck-command-map)))
+  (define-key flycheck-mode-map flycheck-keymap-prefix '("flycheck" . flycheck-command-map))
+
+
+  ;; Fix the completely mad (too narrow) defaults
+  (setq flycheck-error-list-format
+  `[("File" 30)
+    ("Line" 5 flycheck-error-list-entry-< :right-align t)
+    ("Col" 3 nil :right-align t)
+    ("Level" 20 flycheck-error-list-entry-level-<)
+    ("ID" 20 t)
+    (,(flycheck-error-list-make-last-column "Message" 'Checker) 0 t)])
+
+  ;; Stop spamming "mouse-1, RET: goto error" when navigating
+  (define-button-type 'flycheck-error-list
+  'action #'flycheck-error-list-goto-error
+  'help-echo nil ; disable the spam messages
+  'face nil)
+  )
 
 (use-package free-keys                  ; Show free keybindings for modkeys or prefixes
   )
@@ -944,6 +961,36 @@ etc. are set up before starting lsp."
     (unless (string-match-p (regexp-quote skip-substring) message)
       (apply orig-fun args))))
 
+;; lsp-mode over-enthusiastically displays the hints returned from the lsp server
+;; (e.g. basedpyright) as issues.  See discussion at
+;; https://github.com/emacs-lsp/lsp-mode/issues/3104. Here are some relevant variables and
+;; functions (fwiw Gemini reported garbage when asked about this.
+;;
+;; Variables: flycheck-error-list-minimum-level, flycheck-navigation-minimum-level,
+;; lsp-diagnostic-filter
+
+;; Functions: flycheck-error-list-set-filter, flycheck-error-list-reset-filter,
+;; flycheck-error-level-p
+(defun my-lsp-diagnostic-filter (params workspace)
+  "Filters diagnostics within an LSP payload, returning a new payload.
+
+  PARAMS is an alist representing the LSP diagnostic payload,
+  e.g., (:uri ... :version ... :diagnostics (...)).
+
+  It copies all key-value pairs as-is, except for the :diagnostics
+  list, which is filtered to exclude diagnostics where :code is
+  \"reportUnusedFunction\" and :source is \"basedpyright\"."
+  (cl-check-type params list)
+  (let* ((new-params (cl-copy-list params))
+         (diagnostics (plist-get params :diagnostics)))
+    (cl-check-type diagnostics vector)
+    (plist-put new-params :diagnostics
+               (cl-remove-if (lambda (diagnostic)
+                               (cl-check-type diagnostic list)
+                               (and (string= (plist-get diagnostic :code) "reportUnusedFunction")
+                                    (string= (plist-get diagnostic :source) "basedpyright")))
+                             diagnostics))))
+
 (use-package lsp-mode                   ; Language Server Protocol support
   ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
 
@@ -1084,6 +1131,7 @@ etc. are set up before starting lsp."
                         lsp-r lsp-racket lsp-ruff lsp-rust
                         lsp-sql lsp-sqls
                         lsp-tex lsp-toml lsp-xml lsp-yaml))
+  (setq lsp-diagnostic-filter #'my-lsp-diagnostic-filter)
   )
 
 (defun jm-pyright-sync-venv-from-conda-env ()
