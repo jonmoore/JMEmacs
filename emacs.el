@@ -1084,6 +1084,7 @@ etc. are set up before starting lsp."
         lsp-signature-auto-activate                         nil ;
         lsp-before-save-edits                               nil ; insanely, this is t by default
 
+        lsp-imenu-index-symbol-kinds '(File Module Namespace Package Class Method Property Field Constructor Enum Interface Function Constant TypeParameter)
         lsp-imenu-sort-methods                 '(kind position)
 
         ;; for more information see
