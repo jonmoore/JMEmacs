@@ -484,24 +484,30 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (set (make-local-variable 'fill-nobreak-predicate)
        (lambda ()
          (not (eq (get-text-property (point) 'face)
-                  'font-lock-comment-face)))))
+                  'font-lock-comment-face))))
+  (lsp)
+  )
 
 (use-package cc-mode
   :mode
-  ("\\.[ch]\\(pp\\|xx\\)?\\'" . c++-mode)
+  ("\\.[ch]\\(pp\\|xx\\|c\\)?\\'" . c++-mode)
   :bind (:map c-mode-base-map
               ("RET"            . c-context-line-break))
   :hook (c-mode-common . my-c-mode-common-hook-fn)
   :config
-  (setq cc-other-file-alist '(("\\.cpp\\'"   (".hpp" ".h"))
-                              ("\\.h\\'"     (".cpp" ".c"))
-                              ("\\.hpp\\'"   (".cpp"))
-                              ("\\.c\\'"     (".h")))
+  (setq cc-other-file-alist '(("\\.h\\'"     (".c" ".cc" ".cpp"))
+                              ("\\.hpp\\'"   (".cc" ".cpp"))
+                              ("\\.c\\'"     (".h"))
+                              ("\\.cc\\'"    (".h" ".hpp"))
+                              ("\\.cpp\\'"   (".h" ".hpp"))
+                              )
         c-default-style '((other . "stroustrup"))
         c-echo-syntactic-information-p nil))
 
 (use-package cdlatex                    ; Fast input methods for LaTeX
   )
+
+(use-package cmake-mode)                ; Major mode for editing CMake source
 
 (use-package color-moccur               ; Multi-buffer occur (grep) mode.
   :bind (:map isearch-mode-map
