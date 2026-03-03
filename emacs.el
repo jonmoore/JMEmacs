@@ -226,9 +226,8 @@
  (system-win32-p
   (set-face-attribute 'default nil :family "Consolas"    :height 120)
   (set-face-attribute 'fixed-pitch nil :family "Consolas"    :height 120))
- ;; Inconsolata needs to be installed otherwise you can end up with Times New Roman
  (system-osx-p
-  (set-face-attribute 'default nil :family "Inconsolata" :height 200))
+  (set-face-attribute 'default nil :family "Menlo" :height 180))
  (system-linux-p
   (set-face-attribute 'default nil :family "DejaVu Sans Mono" :height 140)
   (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono" :height 140))
@@ -507,6 +506,16 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (use-package cdlatex                    ; Fast input methods for LaTeX
   )
 
+(when (version<= "30.0" emacs-version)
+  (use-package claude-code-ide
+    :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
+    :bind ("C-c C-'" . claude-code-ide-menu)
+    :config
+    (setopt claude-code-ide-window-width 72)
+    (claude-code-ide-emacs-tools-setup)))
+
+(use-package citeproc)
+
 (use-package cmake-mode)                ; Major mode for editing CMake source
 
 (use-package color-moccur               ; Multi-buffer occur (grep) mode.
@@ -674,6 +683,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package disable-mouse)             ; suppress mouse events
 
+(use-package docker                     ; Docker support
+  )
+
 (use-package ediff                      ; built-in
   :config
   (setq ediff-custom-diff-options "-c -w"
@@ -693,7 +705,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   ;; eldoc's early loading is unusual, before the `user-init-file', perhaps
   ;; related to the eldoc.eln file under the native-lisp directory.  This
   ;; loading seems unaffected by the contents of eldoc.el.
-  :diminish eldoc-mode)
+  :diminish eldoc-mode
+  :config
+  (setq eldoc-echo-area-prefer-doc-buffer t))
 
 (use-package elmacro)                   ; Convert keyboard macros to emacs lisp.
 
@@ -768,31 +782,14 @@ clean buffer we delay checking for longer."
   'face nil)
   )
 
+(use-package forge                      ; Work with Git forges from Magit
+  )
+
 (use-package free-keys                  ; Show free keybindings for modkeys or prefixes
   )
 
 (use-package git-gutter-fringe          ; Show git diff information in fringe
   :diminish)
-
-(use-package gitlab-lsp
-  :quelpa (gitlab-lsp :fetcher github
-                      :repo "kassick/gitlab-lsp.el"
-                      :branch "main"
-                      :files ("*.el"))
-  :init
-  (setopt gitlab-lsp-enabled nil)
-  :config
-  (setq gitlab-lsp-show-completions-with-other-clients nil)
-  (add-hook 'gitlab-lsp-complete-before-complete-hook
-            (lambda ()
-              (recenter-top-bottom 4)
-              (message "Asking for suggestions ...")))
-  (lsp-register-custom-settings
-   '(("gitlab-lsp.ignoreCertificateErrors" t)))
-  ;; Used this when first getting gitlab-lsp running; the default value is t.  not sure if
-  ;; it's actually useful though.
-  (let* ((server (gethash 'gitlab-lsp-remote lsp-clients)))
-    (setf (lsp--client-remote? server) nil)))
 
 (use-package goto-addr                  ; buttonize URLs and e-mail addresses
   :hook ((prog-mode . goto-address-prog-mode)
@@ -873,6 +870,7 @@ clean buffer we delay checking for longer."
               ("s p" . ibuffer-do-sort-by-filename-or-dired))
   :config
   (setq ibuffer-saved-filter-groups (quote (("my-default-filter-groups"
+                                             ("C++"     (mode . c++-mode))
                                              ("dired"   (mode . dired-mode))
                                              ("org"     (mode . org-mode))
                                              ("script"  (mode . sh-mode))
@@ -931,13 +929,16 @@ clean buffer we delay checking for longer."
   :custom-face
   (font-latex-verbatim-face ((t (:inherit nil :foreground "burlywood")))))
 
-(use-package lean4-mode                 ; Major mode for Lean 4 language
-  :quelpa (lean4-mode :fetcher github
-                      :repo "leanprover-community/lean4-mode"
-                      :files ("*.el" "data")
-                      )
-  :config
-  (require 'unicode-fonts))
+(unless system-osx-p
+  (use-package lean4-mode                 ; Major mode for Lean 4 language
+    :quelpa (lean4-mode :fetcher github
+                        :repo "leanprover-community/lean4-mode"
+                        :files ("*.el" "data")
+                        )
+    :config
+    (setq lean4-info-buffer-debounce-delay-sec       0.5
+          lean4-info-buffer-debounce-upper-bound-sec 1.0)
+    (require 'unicode-fonts)))
 
 (use-package live-py-mode)              ; live coding in Python
 
@@ -1365,6 +1366,10 @@ On remote machines `magit-remote-git-executable' is used instead."
 
 (use-package multiple-cursors)
 
+(use-package nael)
+
+(use-package nael-lsp)
+
 (use-package nexus)
 
 (use-package nxml-mode
@@ -1601,7 +1606,7 @@ directory, otherwise return nil."
    )
 
   (defalias 'ob-temp-file 'org-babel-temp-file)
-  (setq org-adapt-indentation t
+  (setq org-adapt-indentation nil
         org-agenda-cmp-user-defined 'jm-org-agenda-cmp-headline-priorities
         org-agenda-clockreport-parameter-plist (quote (:link t :maxlevel 4))
         org-agenda-custom-commands '(("X" alltodo "" nil ("todo.html"))
@@ -1685,13 +1690,14 @@ directory, otherwise return nil."
         org-html-preamble                       t
         org-html-postamble                      'auto
         org-html-validation-link                nil
+        org-imenu-depth                         4
         org-id-link-to-org-use-id               'create-if-interactive-and-no-custom-id
         org-list-allow-alphabetical             t
         org-log-done                            t
         org-log-into-drawer                     t
         org-log-reschedule                      'time
         org-log-redeadline                      'time
-        org-odd-levels-only                     t
+        org-odd-levels-only                     nil
         org-outline-path-complete-in-steps      nil ; https://github.com/minad/vertico?tab=readme-ov-file#org-refile
         org-priority-default                    68
         org-replace-disputed-keys               t
@@ -1712,6 +1718,7 @@ directory, otherwise return nil."
                              ("shell" . sh)
                              ("bash" . sh))
         org-src-window-setup 'current-window
+        org-startup-indented t
         org-tags-column -80
         org-use-fast-tag-selection t
         org-use-speed-commands     t)
@@ -1760,6 +1767,7 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   :hook (org-jira-mode . jm-insert-org-jira-todo-keywords))
 
 (use-package org-ref
+  :after (citeproc org)                 ; citeproc for dependency issue
   :init
   ;; org-ref can be slow to load.  The messages about creating
   ;; links are from org-ref-link-set-parameters.
@@ -1788,6 +1796,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
 (use-package ox-mediawiki)
 
+(use-package ox-pandoc)
+
 (use-package ox-reveal
   :config
   (setq ox-reveal-root "./reveal.js"
@@ -1799,6 +1809,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 (use-package paren
   :custom
   (show-paren-style 'expression))
+
+(use-package powershell)
 
 (use-package pretty-column
   :ensure nil
@@ -1917,7 +1929,7 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   ;; this is quite heavy, as it requires loading python and conda
   (python-helpers-enable-lsp-everywhere))
 
-(when system-linux-p                      ; vterm is not supported on Windows
+(unless system-win32-p                      ; vterm is not supported on Windows
   (use-package py-vterm-interaction       ; vterm-based mode for ipython and Python repls
     ))
 
@@ -2109,10 +2121,22 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 (use-package toc-org
   :hook (org-mode . toc-org-mode))
 
+(defun my-vterm-tramp-term-setup ()
+  (when (file-remote-p default-directory)
+    (setenv "TERM" "xterm-256color")))
+
 (use-package tramp                      ; built-in
   :config
   (when system-win32-p
-    (setq tramp-default-method "plink")))
+    (setq tramp-default-method "plink"))
+  (push (cons "docker"
+              '((tramp-login-program "docker")
+                (tramp-login-args (("exec" "-it") ("%h") ("/bin/bash"))) ;; Force bash and interactive TTY
+                (tramp-remote-shell "/bin/bash")
+                (tramp-remote-shell-args ("-i") ("-c"))))
+        tramp-methods)
+  (add-hook 'vterm-mode-hook #'my-vterm-tramp-term-setup)
+  )
 
 (use-package transpose-frame)           ; Switch between horizontal and vertically split frames
 
@@ -2169,8 +2193,9 @@ files.  This persists across sessions"
    (lambda (file &optional backend)
      (when (eq backend 'Git)
        (setq vc-mode (replace-regexp-in-string (format "^ %s" backend) "" vc-mode)))))
-  (delete 'Git vc-handled-backends)
-  (remove-hook 'find-file-hook 'vc-refresh-state))
+  (when system-win32-p
+    (delete 'Git vc-handled-backends)
+    (remove-hook 'find-file-hook 'vc-refresh-state)))
 
 (when minibuffer-completion-mocve-p
   (use-package vertico            ; Provides a vertical completion U.I.
@@ -2276,6 +2301,8 @@ candidates for display-fill-column-indicator-character."
    '(c-mode perl-mode cperl-mode python-mode makefile-mode sh-mode diff-mode))
   :custom-face
   (which-func ((t (:foreground "Yellow")))))
+
+(use-package wgrep)
 
 (use-package which-key                  ; Display available keybindings in popup
   :diminish which-key-mode
