@@ -2,7 +2,7 @@
 
 # Compare current folder with latest JMEmacs from GitHub
 
-REPO_URL="https://github/jonmoore/JMEmacs"
+REPO_URL="https://github.com/jonmoore/JMEmacs"
 TEMP_DIR=$(mktemp -d)
 ZIP_FILE="$TEMP_DIR/JMEmacs-latest.zip"
 
@@ -27,9 +27,9 @@ fi
 
 # Compare directories, excluding common files to ignore
 diff -rq --exclude=".git" --exclude="*.elc" --exclude="personal-autoloads.el" \
-     "$EXTRACTED_DIR" . | sed "s|$EXTRACTED_DIR|REPO|g"
+    "$EXTRACTED_DIR" . | sed "s|$EXTRACTED_DIR|REPO|g"
 
 diff -r --exclude=".git" --exclude="*.elc" --exclude="personal-autoloads.el" \
-     "$EXTRACTED_DIR" . | sed "s|$EXTRACTED_DIR|REPO|g"
+    "$EXTRACTED_DIR" . | sed "s|$EXTRACTED_DIR|REPO|g"
 
 rm -rf "$TEMP_DIR"
