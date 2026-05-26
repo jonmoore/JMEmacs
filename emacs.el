@@ -65,6 +65,12 @@
 (defconst system-osx-p (eq system-type 'darwin)
   "Are we running on a Darwin (Mac OS X) system?")
 
+(defconst system-wsl-p (and system-linux-p
+                            (not (null (string-match-p
+                                        "microsoft\\|WSL"
+                                        (shell-command-to-string "uname -r")))))
+  "Are we running on WSL (Windows Subsystem for Linux)?")
+
 ;;; LOADING AND PACKAGE SYSTEM
 (require 'package)
 
@@ -212,6 +218,11 @@
   (setq select-enable-primary nil)
   (setq interprogram-cut-function 'gui-select-text))
 
+(when system-wsl-p
+  ;; xdg-open falls through to mimeopen which opens HTML with Vim via text/plain inheritance
+  (setq browse-url-browser-function 'browse-url-generic
+        browse-url-generic-program "wslview"))
+
 (setq backup-directory-alist
       (list
        (cons "." (cond (system-win32-p (concat (getenv "TEMP") "\\emacs_backup"))
@@ -229,8 +240,9 @@
  (system-osx-p
   (set-face-attribute 'default nil :family "Menlo" :height 180))
  (system-linux-p
-  (set-face-attribute 'default nil :family "DejaVu Sans Mono" :height 140)
-  (set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono" :height 140))
+  ;; using set-frame-font allows fallback to system fonts for emoji and other characters
+  (set-frame-font "DejaVu Sans Mono-14" nil t)
+  )
  (t
   (warn "default face not set as no setting was found for the current system.")))
 
@@ -989,25 +1001,17 @@ etc. are set up before starting lsp."
 
 ;; Functions: flycheck-error-list-set-filter, flycheck-error-list-reset-filter,
 ;; flycheck-error-level-p
-(defun my-lsp-diagnostic-filter (params workspace)
-  "Filters diagnostics within an LSP payload, returning a new payload.
-
-  PARAMS is an alist representing the LSP diagnostic payload,
-  e.g., (:uri ... :version ... :diagnostics (...)).
-
-  It copies all key-value pairs as-is, except for the :diagnostics
-  list, which is filtered to exclude diagnostics where :code is
-  \"reportUnusedFunction\" and :source is \"basedpyright\"."
-  (cl-check-type params list)
-  (let* ((new-params (cl-copy-list params))
-         (diagnostics (plist-get params :diagnostics)))
-    (cl-check-type diagnostics vector)
-    (plist-put new-params :diagnostics
-               (cl-remove-if (lambda (diagnostic)
-                               (cl-check-type diagnostic list)
-                               (and (string= (plist-get diagnostic :code) "reportUnusedFunction")
-                                    (string= (plist-get diagnostic :source) "basedpyright")))
-                             diagnostics))))
+(defun my-lsp-diagnostic-filter (params _workspace)
+  "Filter diagnostics to exclude reportUnusedFunction from basedpyright.
+PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
+  (let ((diagnostics (lsp:publish-diagnostics-params-diagnostics params)))
+    (lsp:set-publish-diagnostics-params-diagnostics
+     params
+     (cl-remove-if (lambda (diagnostic)
+                     (and (equal (lsp:diagnostic-code? diagnostic) "reportUnusedFunction")
+                          (equal (lsp:diagnostic-source? diagnostic) "basedpyright")))
+                   diagnostics))
+    params))
 
 (use-package lsp-mode                   ; Language Server Protocol support
   ;; https://emacs-lsp.github.io/lsp-mode/page/installation/#use-package
@@ -1117,7 +1121,7 @@ etc. are set up before starting lsp."
 
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
-  (advice-add 'lsp--info :around #'jm-advice-to-shut-up)
+  ;; (advice-add 'lsp--info :around #'jm-advice-to-shut-up)
 
   (setq lsp-file-watch-ignored-directories
         (append
@@ -1149,7 +1153,12 @@ etc. are set up before starting lsp."
                         lsp-pyright
                         lsp-r lsp-racket lsp-ruff lsp-rust
                         lsp-sql lsp-sqls
-                        lsp-tex lsp-toml lsp-xml lsp-yaml))
+                        lsp-tex lsp-toml lsp-xml lsp-yaml)
+          lsp-auto-guess-root t
+          lsp-restart 'auto-restart
+          lsp-ruff-multi-root nil
+          lsp-ruff-server-command '("ruff" "server" "--color=never")
+          )
   (setq lsp-diagnostic-filter #'my-lsp-diagnostic-filter)
   )
 
@@ -1174,21 +1183,6 @@ etc. are set up before starting lsp."
   ;; lsp--system-path 2) lsp--try-project-root-workspaces, which indirectly calls
   ;; lsp-before-initialize-hook
 
-  ;; Ideas, in roughly descending order of preference - For all of these, we still need to
-  ;; activate conda envs based on buffer changes:
-  ;;
-  ;; - stick with the current approach of a custom initialization function and a
-  ;;   desktop-restore handler for lsp-mode
-  ;;
-  ;; - create a major mode derived from python-mode.  This might work but direct
-  ;;   references to python-mode could be an issue.  Could check python-ts-mode for comparison
-  ;;
-  ;; - add advice to lsp so that when it is called for Python, we first ensure that conda
-  ;;   is set up.
-  ;;
-  ;; - create a simple minor mode, handling both conda and lsp.  But running lsp calls
-  ;;   lsp-mode, so you'd have to manage both.  And derived modes are only a thing for
-  ;;   major modes.
   :custom
   (lsp-pyright-langserver-command
    (cond ((not (bound-and-true-p jm-pyright-langserver-path))
@@ -1198,6 +1192,7 @@ etc. are set up before starting lsp."
          (t jm-pyright-langserver-path)))
   :config
   (setq jm-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs"))
+  (setopt lsp-pyright-multi-root nil)
   (when (file-directory-p jm-pyright-stub-path)
     (setq lsp-pyright-use-library-code-for-types t ; set to nil if getting too many false positive type errors
           lsp-pyright-stub-path jm-pyright-stub-path)))
@@ -1205,7 +1200,6 @@ etc. are set up before starting lsp."
 (use-package lsp-treemacs) ; lsp-mode/treemacs integration with treeview controls
 
 (use-package lsp-ui
-  :hook  ((lsp-mode . lsp-ui-mode))
   :config
   (setopt lsp-ui-doc-enable                              nil
           lsp-ui-doc-delay                               1.0
@@ -1335,7 +1329,36 @@ On remote machines `magit-remote-git-executable' is used instead."
   (use-package marginalia         ; Provides annotations for completion candidates.
     ))
 
-(use-package markdown-mode)
+(defvar jm-mermaid-html-script
+  "<script src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js'></script>
+<script>
+mermaid.initialize({ startOnLoad: false, theme: 'default' });
+document.querySelectorAll('pre > code.language-mermaid').forEach(el => {
+  const div = document.createElement('div');
+  div.className = 'mermaid';
+  dev.textContent = el.textContent;
+  el.parentElement.replaceWith(div);
+});
+mermaid.run();
+</script>"
+
+  "HTML script block to render Mermaid diagrams in markdown previews.")
+
+(use-package markdown-mode
+  :mode ("\\.md\\'" . gfm=mode)
+  :config
+  (setq markdown-css-paths '("https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown.min.css")
+        markdown-xhtml-body-preamble "<div class =\"markdown-body\">"
+        markdown-xhtml-body-epilogue (concat "</div>" jm-mermaid-html-script))
+  (add-hook 'gfm-mode-hook
+            (lambda ()
+              (setq-local markdown-command
+                          (cond
+                           ((executable-find "cmark-gfm")
+                            "cmark-gfm -e table -e strikethrough -e autolink -e tasklist")
+                           ((executable-find "pandoc") "pandoc")
+                           ((executable-find "markdown") "markdown")
+                           (t "markdown"))))))
 
 (use-package maxframe)
 
@@ -1468,6 +1491,10 @@ according to `headline-is-for-jira'."
   :config
   (message "jm: configuring ob-mermaid. Note that svg display is broken in emacs 29.x: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=64908")
   )
+
+(use-package ob-powershell
+  :config
+  (setq org-babel-powershell-os-command "powershell.exe"))
 
 (use-package ob-restclient)
 
@@ -2080,6 +2107,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   (speedbar-vc-do-check nil))
 
 (use-package sphinx-doc)
+
+(use-package sqlite3)
 
 (use-package svg-lib)
 
