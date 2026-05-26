@@ -1336,7 +1336,7 @@ mermaid.initialize({ startOnLoad: false, theme: 'default' });
 document.querySelectorAll('pre > code.language-mermaid').forEach(el => {
   const div = document.createElement('div');
   div.className = 'mermaid';
-  dev.textContent = el.textContent;
+  div.textContent = el.textContent;
   el.parentElement.replaceWith(div);
 });
 mermaid.run();
@@ -1345,7 +1345,7 @@ mermaid.run();
   "HTML script block to render Mermaid diagrams in markdown previews.")
 
 (use-package markdown-mode
-  :mode ("\\.md\\'" . gfm=mode)
+  :mode ("\\.md\\'" . gfm-mode)
   :config
   (setq markdown-css-paths '("https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown.min.css")
         markdown-xhtml-body-preamble "<div class =\"markdown-body\">"
