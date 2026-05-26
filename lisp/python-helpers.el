@@ -46,8 +46,8 @@
 
 
 (defvar python-helpers-enable-conda t
-  "Non-nil means promtt for and activate conda environments for local Python buffers.
-Set to nil to skip conda entirely (e.g. when conda is not in use on this machine)")
+  "Non-nil means prompt for and activate conda environments for local Python buffers.
+Set to nil to skip conda entirely (e.g. when conda is not in use on this machine).")
 
 (defvar python-helpers--ht-project-conda-env
   (ht-create)

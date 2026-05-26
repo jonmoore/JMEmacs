@@ -1,17 +1,10 @@
 ---
 description: Compare local JMEmacs with upstream and create a detailed report
-args: [format]
 ---
 
 ### Task
 
 Run the compare.sh script to check differences between the local JMEmacs installation and the latest master branch from GitHub, then create a comprehensive report of the findings.
-
-### Input
-
-The user may specify an output format: `org` (default), `markdown`, `pandoc`, or `text`.
-
-If no format is specified, use org mode format.
 
 ### Steps
 
@@ -47,33 +40,12 @@ If no format is specified, use org mode format.
 
 ### Formatting
 
-**Org Mode** (default)
+Use org-mode format throughout
 - Use org-mode heading levels (*, **, ***)
 - Use `#+BEGIN_SRC` blocks for code/diffs
 - Use `- [ ]` for checklists
 - Use `#+BEGIN_EXAMPLE` for command output
 
-**Markdown**
-- Use markdown heading levels (#, ##, ###)
-- Use triple back ticks for code blocks
-- Use `- [ ]` for checklists
-
-**Pandoc**
-- Use markdown with pandoc extensions
-- Include YAML frontmatter with title and date
-- Use fenced code blocks with syntax highlighting
-
-**Plain Text**
-- Use simple formatting with dashes and indentation
-- No special markup
-- Clear section separators
-
 ### Output
 
-Save the report to a file named:
-- `comparison-report.org` (org mode)
-- `comparison-report.md` (markdown)
-- `comparison-report.pandoc.md` (pandoc)
-- `comparison-report.txt` (text)
-
-Return the filename and a brief summary of findings to the user.
+Save the report to `comparison-report.org` and return the filename and a brief summary of findings to the user.
