@@ -45,6 +45,10 @@
 ;; https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143
 
 
+(defvar python-helpers-enable-conda t
+  "Non-nil means promtt for and activate conda environments for local Python buffers.
+Set to nil to skip conda entirely (e.g. when conda is not in use on this machine)")
+
 (defvar python-helpers--ht-project-conda-env
   (ht-create)
   "Hash table used to map projectile projects to conda envs")
@@ -133,9 +137,11 @@ is first conda env, then lsp."
       (progn
         (error "Function '%s' called reentrantly" 'python-helpers--init-in-buffer-core))
     (let ((python-helpers--init-in-buffer-core-running-p t))
-      (setq conda-env-path (or (ht-get python-helpers--ht-project-conda-env project-root)
-                               (python-helpers--select-conda-env project-root)
-                               'do-not-use-an-env))
+      (setq conda-env-path (if python-helpers-enable-conda
+                               (or (ht-get python-helpers--ht-project-conda-env project-root)
+                                   (python-helpers--select-conda-env project-root)
+                                   'do-not-use-an-env)
+                             'do-not-use-an-env))
       (ht-set! python-helpers--ht-project-conda-env
                project-root
                conda-env-path)
@@ -161,16 +167,18 @@ desktop. Ideally we would lean on lsp-deferred for this."
   (let ((cb (current-buffer)))
     (when (not (eq buffer cb))
       (message "jm - python-helpers--init-in-buffer buffer %s current-buffer %s " buffer cb)))
-  (cond
-   ((and (not (string-prefix-p " *" (buffer-name buffer)))
-         (not (string-prefix-p "*" (buffer-name buffer)))
-         (equal major-mode 'python-mode)
-         (eq (minibuffer-depth) 0)      ; prevent activation by consult-preview
-         (not (minibufferp buffer))
-         (or (get-buffer-window buffer t)
-             (buffer-modified-p buffer)))
-    (when-let (project-root (projectile-project-root))
-      (python-helpers--init-in-buffer-core project-root)))))
+  (when (and (not (string-match-p "\\` ?\\*" (buffer-name buffer)))
+             (equal major-mode 'python-mode)
+             (eq (minibuffer-depth) 0)      ; prevent activation by consult-preview
+             (not (minibufferp buffer)))
+    (if (file-remote-p default-directory)
+        (unless (bound-and-true-p lsp-mode)
+          (setq-local lsp-enable-file-watchers nil)
+          (lsp))
+      (when (or (get-buffer-window buffer t)
+                (buffer-modified-p buffer))
+        (when-let ((project-root (projectile-project-root)))
+          (python-helpers--init-in-buffer-core project-root))))))
 
 ;;;###autoload
 (defun python-helpers--init-in-current-buffer ()
@@ -223,10 +231,11 @@ to be enabled when needed"
    'python-helpers--init-in-frame
    (frame-list))
 
+  (add-hook 'python-mode-hook #'python-helpers--init-in-current-buffer)
+  (advice-add 'switch-to-buffer :filter-return #'python-helpers--after-switch-to-buffer)  
   ;; disable auto-configuration until this works smoothly with more than one env
   ;;  (add-hook 'window-buffer-change-functions #'python-helpers--window-buffer-change-function)
   ;;  (remove-hook 'window-buffer-change-functions #'python-helpers--window-buffer-change-function)
-  (advice-add 'switch-to-buffer :filter-return #'python-helpers--after-switch-to-buffer)
   )
 
 ;;;###autoload

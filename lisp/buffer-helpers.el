@@ -194,4 +194,11 @@ with properties."
         (buffer-substring (point-min) (point-max))
       (buffer-substring-no-properties (point-min) (point-max)))))
 
+;;;###autoload
+(defun apply-function-to-region (fn beg end)
+  (interactive "aFunction to apply: \nr")
+  (let ((result (funcall fn (buffer-substring-no-properties beg end))))
+    (delete-region beg end)
+    (insert result)))
+
 (provide 'buffer-helpers)
