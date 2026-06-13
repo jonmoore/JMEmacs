@@ -1352,14 +1352,16 @@ On remote machines `magit-remote-git-executable' is used instead."
 (defvar jm-mermaid-html-script
   "<script src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js'></script>
 <script>
-mermaid.initialize({ startOnLoad: false, theme: 'default' });
+mermaid.initialize({ startOnLoad: false, theme: 'default', suppressErrors: false });
 document.querySelectorAll('pre > code.language-mermaid').forEach(el => {
   const div = document.createElement('div');
   div.className = 'mermaid';
   div.textContent = el.textContent;
   el.parentElement.replaceWith(div);
 });
-mermaid.run();
+mermaid.run().catch(err => {
+  console.error('Mermaid Runtime Error:', err);
+});
 </script>"
 
   "HTML script block to render Mermaid diagrams in markdown previews.")
