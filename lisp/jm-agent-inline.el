@@ -1,33 +1,33 @@
 ;;; jm-agent-inline.el --- Inline agent-shell invocation from any buffer -*- lexical-binding: t; -*-
 
-;; Package-Requires ((agent-shell) (shell-maker))
+;; Package-Requires: ((agent-shell) (shell-maker))
 
-;;; Commentary
+;;; Commentary:
 ;;
 ;; gptel-style inline interaction with Claude via agent-shell.
-;; Lets you stay in your working buffers and summon Claude with a hot key,
+;; Lets you stay in your working buffer and summon Claude with a hot key,
 ;; rather than context-switching to a chat buffer.
 ;;
 ;; Three commands:
 ;;
-;;   `jm-agent-explain'
-;;     Send the selected region (with optional instructions) to the
-;;     agent-shell chat buffer for a full explanation.  Focus moves to
-;;     the chat.
+;;  `jm-agent-explain'
+;;    Send the selected region (with optional instructions) to the
+;;    agent-shell chat buffer for a full explanation.  Focus moves to
+;;    the chat.
 ;;
-;;    `jm-agent-ask'
-;;      Ask a question (optionally with region as context) and have the
-;;      response inserted at a point in your current buffer.  You stay in
-;;      your buffer the whole time.  "Asking Claude..." appears in the
-;;      echo area while waiting; "Response inserted." when done.
+;;  `jm-agent-ask'
+;;    Ask a question (optionally with region as context) and have the
+;;    response inserted at point in your current buffer.  You stay in
+;;    your buffer the whole time.  "Asking Claude..." appears in the
+;;    echo area while waiting; "Response inserted." when done.
 ;;
-;;    `jm-agent-rewrite'
-;;      Select a region and give rewrite instructions.  The original
-;;      region is highlighted and a proposed replacement appears below.
-;;      Then use:
-;;        C-c C-a  accept the rewrite (replaces the region)
-;;        C-c C-l  reject (removes the overlay, original untouched)
-;;        C-c C-d  show a diff between original and proposed
+;;  `jm-agent-rewrite'
+;;    Select a region and give rewrite instructions.  The original
+;;    region is highlighted and a proposed replacement appears below.
+;;    Then use:
+;;      C-c C-a  accept the rewrite (replaces the region)
+;;      C-c C-k  reject (removes the overlay, original untouched)
+;;      C-c C-d  show a diff between original and proposed
 ;;
 ;; All commands reuse the most recent agent-shell session in the project.
 ;; If no session exists, one is started automatically.
@@ -36,7 +36,7 @@
 
 (require 'agent-shell)
 
-;; Utilities
+;;; Utilities
 
 (defun jm-agent-inline--shell-buffer ()
   "Return the current agent-shell buffer, or nil."
@@ -151,7 +151,7 @@ when the response has been placed at point.
 
 (defface jm-agent-rewrite-proposed
   '((t :background "#002a00"))
-  "Face for the proposed repllacement text.")
+  "Face for the proposed replacement text.")
 
 ;;;###autoload
 (defun jm-agent-rewrite (instruction)
@@ -187,13 +187,13 @@ change."
          (subscription nil))
     (deactivate-mark)
     (overlay-put ov 'face 'jm-agent-rewrite-highlight)
-    (overlay-put ov 'keymap 'jm-agent-rewrite-map)
+    (overlay-put ov 'keymap jm-agent-rewrite-map)
     (overlay-put ov 'jm-agent-rewrite-original original)
     (overlay-put ov 'before-string
                  (propertize "REWRITE Waiting...\n"
                              'face 'warning))
     (setq jm-agent-rewrite--overlay ov)
-    (message "Requesting rewrite from Claude")
+    (message "Requesting rewrite from Claude...")
     (setq subscription
           (agent-shell-subscribe-to
            :shell-buffer shell-buf
@@ -227,11 +227,11 @@ change."
   (let* ((ov jm-agent-rewrite--overlay)
          (proposed (overlay-get ov 'jm-agent-rewrite-proposed))
          (beg (overlay-start ov))
-         (end (overlay-end end)))
+         (end (overlay-end ov)))
     (unless proposed
       (user-error "Rewrite not ready yet"))
     (delete-overlay ov)
-    (setq jm-agent-rewrite--overlay  nil)
+    (setq jm-agent-rewrite--overlay nil)
     (goto-char beg)
     (delete-region beg end)
     (insert proposed)
