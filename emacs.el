@@ -384,6 +384,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
      (dired-omit-mode . t)
      (dired-omit-extensions ".html" ".org_archive")
      (electric-indent-mode)
+     (flycheck-disabled-checkers emacs-lisp-checkdoc)
      (gptel-org-branching-context . t)
      (org-odd-levels-only)
      (TeX-command-extra-options . "-shell-escape")
