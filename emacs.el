@@ -411,6 +411,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (use-package adaptive-wrap              ; Choose wrap prefix automatically
   )
 
+(use-package agent-shell                ; Integration of Claude Code etc. using agent context protocol
+  )
+
 (use-package align                      ; built-in
   :custom
   (align-to-tab-stop nil))
