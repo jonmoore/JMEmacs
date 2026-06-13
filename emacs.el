@@ -2560,7 +2560,7 @@ candidates for display-fill-column-indicator-character."
     (add-hook 'kill-emacs-hook 'org-mobile-push))
 
   (add-hook 'prog-mode-hook #'jm-enable-jit-lock-stealth)
-  (add-hook 'prog-mode-hook #'jm-enable-jit-lock-stealth)
+  (add-hook 'text-mode-hook #'jm-enable-jit-lock-stealth)
   (desktop-save-mode)
 
   (server-start))
