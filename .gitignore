@@ -1,9 +1,15 @@
 # compiled emacs files and backups
+*personal-autoloads.el*
 *.elc
 *~
 \#*#
+
 # For OS X
 .DS_Store
-*personal-autoloads.el
+
+# Python
 *.cov2emacs.log
 __pycache__
+
+# agent-shell
+.agent-shell/
