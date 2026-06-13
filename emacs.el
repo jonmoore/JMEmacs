@@ -306,6 +306,18 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
    custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
   (load custom-file))
 
+(defvar jm-inhibit-jit-lock nil)
+
+(defun jm-lsp-inhibit-hooks-advice (orig-fn &rest args)
+  "Prevent `lsp-on-idle-hook' being run re-entrantly.  Also inhibit jit-lock."
+  (let ((lsp-inhibit-lsp-hooks t)
+        (jm-inhibit-jit-lock t))
+    (apply orig-fn args)))
+
+(defun jm-jit-lock-inhibit-advice (orig-fn &rest args)
+  (unless jm-inhibit-jit-lock
+    (apply orig-fn args)))
+
 (use-package emacs
   :init
   ;; should think if it's worth separating what we do with completion-at-point and
@@ -355,7 +367,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (jit-lock-context-time 2.0)
   (jit-lock-stealth-load 50)
   (jit-lock-stealth-nice 1.0)
-  (jit-lock-stealth-time 1.0)
+  (jit-lock-stealth-time nil)           ; disable, re-enable explicitly
   (kill-whole-line t)
   (line-move-visual nil)
   (line-number-display-limit-width 400)
@@ -1160,7 +1172,15 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
           lsp-ruff-server-command '("ruff" "server" "--color=never")
           )
   (setq lsp-diagnostic-filter #'my-lsp-diagnostic-filter)
-  )
+
+  ;; Work around an issue in lsp-headerline, which includes
+  ;; lsp-headerline-check-breadcrumb in lsp-on-idle-hook.  This causes issues with remote
+  ;; buffers as the check uses TRAMP, hence external processes, allowing idle timers to
+  ;; fire reentrantly.
+  (advice-add 'lsp-headerline-check-breadcrumb :around #'jm-lsp-inhibit-hooks-advice)
+  (advice-add 'jit-lock-deferred-fontify :around #'jm-jit-lock-inhibit-advice)
+  (advice-add 'jit-lock-context-fontify :around #'jm-jit-lock-inhibit-advice)
+  (advice-add 'jit-lock--debug-fontify :around #'jm-jit-lock-inhibit-advice))
 
 (defun jm-pyright-sync-venv-from-conda-env ()
   "Sync the pyright venv to the current conda-env"
@@ -2489,6 +2509,12 @@ candidates for display-fill-column-indicator-character."
   )
 
 ;;; START GLOBAL MODES AND LOAD DESKTOP
+(defun jm-enable-jit-lock-stealth ()
+  (interactive)
+  (when (and buffer-file-name
+             font-lock-mode)
+    (setq-local jit-lock-stealth-time 2)))
+
 (use-package emacs
   :config
   (tool-bar-mode -1)
@@ -2527,6 +2553,8 @@ candidates for display-fill-column-indicator-character."
     (add-hook 'after-init-hook 'org-mobile-pull)
     (add-hook 'kill-emacs-hook 'org-mobile-push))
 
+  (add-hook 'prog-mode-hook #'jm-enable-jit-lock-stealth)
+  (add-hook 'prog-mode-hook #'jm-enable-jit-lock-stealth)
   (desktop-save-mode)
 
   (server-start))
