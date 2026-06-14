@@ -39,20 +39,31 @@
 ;;; Utilities
 
 (defun jm-agent-inline--shell-buffer ()
-  "Return the current agent-shell buffer, or nil."
-  (seq-find (lambda (buf)
-              (with-current-buffer buf
-                (derived-mode-p 'agent-shell-mode)))
-            (agent-shell-buffers)))
+  "Return an agent-shell buffer, or nil if none exist.  If exactly one
+exists, return that, otherwise have the user select one."
+  (let ((buffers (agent-shell-buffers)))
+    (when buffers
+      (if (= (length buffers) 1)
+          (car buffers)
+        (get-buffer (completing-read "Select agent-shell buffer: "
+                                     (mapcar #'buffer-name buffers)
+                                     nil t))))))
+
+(defvar-local jm-agent-inline--cached-shell-buffer nil
+  "Buffer-local cache for the associated agent-shell buffer.")
 
 (defun jm-agent-inline--ensure-shell ()
-  "Return an agent-shell buffer, starting one if needed."
-  (or (jm-agent-inline--shell-buffer)
-      (progn
-        (agent-shell-anthropic-start-claude-code)
-        (sit-for 0.5)
-        (jm-agent-inline--shell-buffer))
-      (user-error "No agent-shell buffer available")))
+  "Return an agent-shell buffer, starting one if needed.
+Caches the result buffer-locally to avoid repeated prompts."
+  (if (buffer-live-p jm-agent-inline--cached-shell-buffer)
+      jm-agent-inline--cached-shell-buffer
+    (setq jm-agent-inline--cached-shell-buffer
+          (or (jm-agent-inline--shell-buffer)
+              (progn
+                (agent-shell-anthropic-start-claude-code)
+                (sit-for 1.0)
+                (jm-agent-inline--shell-buffer))
+              (user-error "No agent-shell buffer available")))))
 
 (defun jm-agent-inline--region-context ()
   "Build a context string from the active region, or nil."
@@ -60,9 +71,8 @@
     (let ((text (buffer-substring-no-properties (region-beginning) (region-end)))
           (file (buffer-file-name))
           (start-line (line-number-at-pos (region-beginning))))
-      (concat (if file
-                  (format "From %s (line %d):\n" (file-name-nondirectory file) start-line)
-                "")
+      (concat (when file
+                  (format "From %s (line %d):\n" (file-name-nondirectory file) start-line))
               "```\n" text "\n```"))))
 
 (defun jm-agent-inline--build-prompt (instruction context)
