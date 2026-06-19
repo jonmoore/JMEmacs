@@ -116,43 +116,6 @@
 
 (require 'use-package)
 
-(use-package async                      ; async execution
-  ;; We place this early to avoid errors related to have too many procesess running when
-  ;; compiling other packages that are installed or updated in bulk, e.g. after a new
-  ;; build or package refresh.
-
-  ;; See also
-  ;; https://github.com/jwiegley/emacs-async/issues/96
-  ;; https://gist.github.com/kiennq/cfe57671bab3300d3ed849a7cbf2927c
-
-  :defer 5
-  :init
-  (defvar async-bytecomp-allowed-packages '(all))
-  :config
-  ;; async compiling package
-  (async-bytecomp-package-mode)
-  ;; limit number of async processes
-  (defvar async-maximum-parallel-procs 4)
-  (defvar async--parallel-procs 0)
-  (defvar async--queue nil)
-  (defvar async--cb nil)
-  (advice-add #'async-start :around
-              ;; -async-start is effectively async-start
-              (lambda (-async-start start-func &optional finish-func)
-                (require 'cl-lib)
-                (if (>= async--parallel-procs async-maximum-parallel-procs)
-                    (push `(,start-func ,finish-func) async--queue)
-                  (cl-incf async--parallel-procs)
-                  (let ((future (funcall -async-start start-func
-                                         (lambda (result)
-                                           (cl-decf async--parallel-procs)
-                                           (when async--cb (funcall async--cb result))
-                                           (when-let (args (pop async--queue))
-                                             (apply #'async-start args))))))
-                    (with-current-buffer (process-buffer future)
-                      (setq-local async--cb finish-func)))))
-              '((name . --queue-dispatch))))
-
 ;; Somebody decided that warnings about too-wide docstrings, using package cl, etc. merit
 ;; opening a *Warnings* buffer with big bright red stop-sign icons by default.  People
 ;; have no sense sometimes.
