@@ -66,10 +66,9 @@
   "Are we running on a Darwin (Mac OS X) system?")
 
 (defconst system-wsl-p (and system-linux-p
-                            (not (null (string-match-p
-                                        "microsoft\\|WSL"
-                                        (shell-command-to-string "uname -r")))))
-  "Are we running on WSL (Windows Subsystem for Linux)?")
+                            (string-match-p "microsoft.*WSL2" operating-system-release)
+                            t)
+  "Are we running on WSL2 (Windows Subsystem for Linux 2)?")
 
 ;;; LOADING AND PACKAGE SYSTEM
 (require 'package)
