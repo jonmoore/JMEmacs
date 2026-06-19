@@ -796,9 +796,6 @@ clean buffer we delay checking for longer."
   'face nil)
   )
 
-(use-package forge                      ; Work with Git forges from Magit
-  )
-
 (use-package free-keys                  ; Show free keybindings for modkeys or prefixes
   )
 
