@@ -604,24 +604,6 @@ tried to scroll a window and the number of lines that the window actually
 scrolled.  This difference is the \"debt\" in the window's starting position.
 Subsequent \"in place\" scrolling commands try to make up this debt.")
 
-(defconst scroll-pos-visible-bug-p
-  ;; On September 14, 1993, David Hughes <djh@Harston.CV.COM> told me that
-  ;; Lucid GNU Emacs 19.8 had inherited the bug from Epoch... sigh.
-  (let ((old-match-data (match-data)))
-    (unwind-protect
-	(or (and (boundp 'epoch::version)
-		 (if (string-match "\\`4\\." emacs-version) t nil)
-		 )
-	    (and (string-match "Lucid" emacs-version)
-		 (if (string-match "\\`19\\.8\\." emacs-version) t nil)
-		 )
-	    )
-      (store-match-data old-match-data)))
-  "A flag, set when this version of GNU Emacs has a buggy version of the
-function `pos-visible-in-window-p' that returns `nil' when given `(point-max)'
-and `(point-max)' is on the last line of the window.  Currently, this flag is
-set for all versions of Epoch 4 and for Lucid GNU Emacs 19.8.")
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1263,17 +1245,9 @@ point could otherwise move the full number of lines."
 	  
 	  (setq lines (* direction lines))
 	  
-	  ;; If point is not in the window, center window around point.  We try
-	  ;; to account for a bug in `pos-visible-in-window-p' in some versions
-	  ;; of Emacs (see `scroll-pos-visible-bug-p', above).
+	  ;; If point is not in the window, center window around point.
 	  (save-excursion
-	    (if (pos-visible-in-window-p (let ((point (point)))
-					   (if (and scroll-pos-visible-bug-p
-						    (= point (point-max)))
-					       (max (1- point) (point-min))
-					     point))
-					 window)
-		nil
+	    (when (not (pos-visible-in-window-p (point) window))
 	      (vertical-motion (/ (- window-height) 2))
 	      (set-window-start window (point))))
 	  
