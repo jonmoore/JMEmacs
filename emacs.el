@@ -98,19 +98,6 @@
 (unless (bound-and-true-p package--initialized)
   (package-initialize))
 
-(when (version< emacs-version "29.1")
-  ;; use-package is built into Emacs 29.1 and later
-  ;; Bootstrap `use-package' and `bind-key', which it depends on.
-  (let* ((pkgs  '(bind-key use-package))
-         (all-installed (seq-every-p 'package-installed-p pkgs)))
-    (unless all-installed
-      (package-refresh-contents)
-      (mapc
-       (lambda (pkg)
-         (unless (package-installed-p pkg)
-           (package-install pkg)))
-       pkgs))))
-
 ;; I only use quelpa to load packages from github.  From Emacs 30 onwards this should be
 ;; possible with package/use-package.
 (use-package quelpa-use-package
