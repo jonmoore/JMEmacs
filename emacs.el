@@ -725,7 +725,7 @@ clean buffer we delay checking for longer."
   ;; generate any runtime failures (at the least, it doesn't know about personal autoloads
   ;; and may also have issues with conditionals), and the flycheck wrapping of the byte
   ;; compiler doesn't provide a way to selectively disable classes of warnings. Also, the
-  ;; gain from applying defvar and declare-function eveerywhere is not worth the cost.
+  ;; gain from applying defvar and declare-function everywhere is not worth the cost.
   :hook  (flycheck-after-syntax-check . adjust-flycheck-automatic-syntax-eagerness)
   :config
   (setq flycheck-check-syntax-automatically '(save idle-change mode-enabled)
@@ -733,15 +733,11 @@ clean buffer we delay checking for longer."
         flycheck-idle-change-delay 1.0
         flycheck-pylintrc "pylintrc")
 
-  ;; This futzing is to get a well-displayed prefix with which-key using the existing
-  ;; flycheck-command-map, which was not created with define-prefix-command.  Also the
-  ;; existing prefixes use kbd, so we use the legacy functions like define-key that allow
-  ;; these.
-  (define-key flycheck-mode-map flycheck-keymap-prefix nil) ; remove existing mapping
-  (setq flycheck-keymap-prefix (kbd "C-c F"))
-  (fset 'flycheck-command-map flycheck-command-map) ; make this work as a prefix command
+  (setopt flycheck-keymap-prefix (kbd "C-c F"))
+  ;; Display "flycheck" rather than "prefix" when typing C-c, which occurs after the
+  ;; preceding setopt as the `custom-set' form does not provide a string.  We use the
+  ;; legacy define-key as the existing prefix uses kbd, which keymap-set does not support.
   (define-key flycheck-mode-map flycheck-keymap-prefix '("flycheck" . flycheck-command-map))
-
 
   ;; Fix the completely mad (too narrow) defaults
   (setq flycheck-error-list-format
