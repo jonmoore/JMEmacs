@@ -372,11 +372,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package anzu                       ; Show info on matches in the mode-line in search modes
   :diminish anzu-mode
-  :bind (([remap query-replace]                . anzu-query-replace)
-         ([remap query-replace-regexp]         . anzu-query-replace-regexp)
-         :map isearch-mode-map
-         ([remap isearch-query-replace]        . anzu-isearch-query-replace)
-         ([remap isearch-query-replace-regexp] . anzu-isearch-query-replace-regexp))
   :config
   (setq anzu-search-threshold 100)
 
@@ -2381,11 +2376,16 @@ candidates for display-fill-column-indicator-character."
 ;;
 
 (define-prefix-command 'file-dispatch-map)
-
 (define-keymap
   :keymap file-dispatch-map
   "m"        'move-file-and-buffer
   "r"        'rename-file-and-buffer
+  )
+
+(with-eval-after-load 'isearch
+  (define-keymap :keymap isearch-mode-map
+    "M-%"   'anzu-isearch-query-replace         ;; instead of isearch-query-replace
+    "C-M-%" 'anzu-isearch-query-replace-regexp) ;; instead of isearch-query-replace-regexp
   )
 
 (define-keymap
@@ -2428,6 +2428,9 @@ candidates for display-fill-column-indicator-character."
   "C-."          'embark-act
   "C-;"          'embark-collect
   "C-'"          'embark-export
+
+  "M-%"          'anzu-query-replace         ;; instead of query-replace
+  "C-M-%"        'anzu-query-replace-regexp  ;; instead of query-replace-regexp
 
   "M-."          'find-function
   "M-["          'undo-tree-visualize
