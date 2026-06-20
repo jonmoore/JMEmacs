@@ -482,30 +482,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package cmake-mode)                ; Major mode for editing CMake source
 
-(use-package color-moccur               ; Multi-buffer occur (grep) mode.
-  :bind (:map isearch-mode-map
-              ("M-o" . isearch-moccur )
-              ("M-O" . isearch-moccur-all))
-  :init
-  (setq moccur-split-word t
-        dmoccur-use-list t
-        dmoccur-use-project t
-        dmoccur-list '(("dir" default-directory (".*") dir)))
-  (setq *moccur-buffer-name-exclusion-list*
-        '(".+TAGS.+" "*Completions*" "*Messages*" ".+\\.aps" ".+\\.clw"
-          ".+\\.ncb" ".+\\.opt" ".+\\.plg" ".+\\.rc" ".+\\.scc" "\\.aps$"
-          "\\.clw$" "\\.dsp$" "\\.dsw" "\\.ncb$" "\\.opt$" "\\.plg$"
-          "\\.rc$" "\\.scc$" "\\.obj$" "\\.sbr$" "\\.bak$" "\\.bsc$"
-          "\\.exe$" "\\.ilk$" "\\.map$" "\\.pch$" "\\.pdb$" "\\.res$"))
-  (setq dmoccur-exclusion-mask
-        '("\\.elc$" "\\.exe$" "\\.dll$" "\\.lib$" "\\.lzh$" "\\.zip$"
-          "\\.deb$" "\\.gz$" "\\.pdf$" "\\.doc$" "\\.xls$" "\\.ppt$"
-          "\\.mdb$" "\\.adp$" "\\.jpg$" "\\.gif$" "\\.tiff$" "\\.bmp$"
-          "\\.png$" "\\.pbm$" "\\.aps$" "\\.clw$" "\\.dsp$" "\\.dsw"
-          "\\.ncb$" "\\.opt$" "\\.plg$" "\\.rc$" "\\.scc$" "\\.obj$"
-          "\\.sbr$" "\\.bak$" "\\.bsc$" "\\.exe$" "\\.ilk$" "\\.map$"
-          "\\.pch$" "\\.pdb$" "\\.res$")))
-
 (use-package color-theme-modern)        ; Ports of color-theme themes to deftheme.
 
 (use-package comint                     ; built-in
@@ -621,7 +597,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
               ("I" . dired-maybe-insert-subdir)
               ("j" . dired-execute-file)
               ("P" . dired-do-ps-print)
-              ("O" . dired-do-moccur)
               ("<C-up>" . dired-prev-subdir)
               ("<C-down>" . dired-next-subdir))
   :config
@@ -1335,10 +1310,6 @@ mermaid.run().catch(err => {
   (minimap-minimum width       20)
   (minimap-window-location 'right)
   (minimap-major-modes '(prog-mode org-mode)))
-
-(use-package moccur-edit
-  :ensure nil
-  )
 
 (use-package mermaid-mode)
 
