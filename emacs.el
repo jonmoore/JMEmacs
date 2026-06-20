@@ -462,8 +462,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (use-package cc-mode
   :mode
   ("\\.[ch]\\(pp\\|xx\\|c\\)?\\'" . c++-mode)
-  :bind (:map c-mode-base-map
-              ("RET"            . c-context-line-break))
   :hook (c-mode-common . my-c-mode-common-hook-fn)
   :config
   (setq cc-other-file-alist '(("\\.h\\'"     (".c" ".cc" ".cpp"))
@@ -473,7 +471,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
                               ("\\.cpp\\'"   (".h" ".hpp"))
                               )
         c-default-style '((other . "stroustrup"))
-        c-echo-syntactic-information-p nil))
+        c-echo-syntactic-information-p nil)
+  (define-keymap :keymap c-mode-base-map
+    "RET" 'c-context-line-break))
 
 (use-package cdlatex                    ; Fast input methods for LaTeX
   )
