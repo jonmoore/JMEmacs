@@ -478,14 +478,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (use-package cdlatex                    ; Fast input methods for LaTeX
   )
 
-(when (version<= "30.0" emacs-version)
-  (use-package claude-code-ide
-    :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
-    :bind ("C-c C-'" . claude-code-ide-menu)
-    :config
-    (setopt claude-code-ide-window-width 72)
-    (claude-code-ide-emacs-tools-setup)))
-
 (use-package citeproc)
 
 (use-package cmake-mode)                ; Major mode for editing CMake source
