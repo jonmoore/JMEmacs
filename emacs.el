@@ -205,14 +205,8 @@
 (defconst minibuffer-completion-mocve-p t
   "Whether to use the MOCVE (Marginalia, Orderless, Consult, Vertico, Embark) minibuffer completion stack.")
 
-(defconst in-buffer-completion-company-p nil
-  "Whether to use the Company in-buffer completion stack.")
-
 (defconst in-buffer-completion-capf-p t
   "Whether to use the native capf in-buffer completions.")
-
-(when (and in-buffer-completion-company-p in-buffer-completion-capf-p)
-  (error "Cannot use both the Company and capf in-buffer completion stacks"))
 
 (defun jm-custom-toggle-all-more-hide ()
   "Toggle all \"More/Hide\" widgets in current buffer.  From alphapapa's
@@ -475,25 +469,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   ;; the absence of -hook prevents using :hook here, while the docs for
   ;; comint-output-filter-functions recommends add-hook
   (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
-
-(when in-buffer-completion-company-p
-  ;; possible settings from the company info manual
-  (use-package company ; completion framework
-    :hook (prog-mode . company-mode)
-    :config
-    (company-quickhelp-mode t)
-    :custom
-    (company-show-quick-access t)
-    (company-minimum-prefix-length 5)
-    (company-idle-delay 2.0) ;; default is 0.2, which often severely gets in the way
-    )
-
-  (use-package company-auctex)            ; Company-mode auto-completion for AUCTeX.
-
-  (use-package company-quickhelp)         ; shows popup docs for company completion candidates
-
-  (use-package company-restclient)        ; Company-mode completion back-end for restclient-mode
-  )
 
 (use-package compile                    ; built-in
   :ensure nil
@@ -1014,10 +989,8 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
         lsp-signature-function          'lsp-signature-posframe
         lsp-signature-render-documentation                  nil
         )
-  (when in-buffer-completion-company-p
-    (setq lsp-completion-provider                    :capf))
   (when in-buffer-completion-capf-p
-    (setq lsp-completion-provider                    :none)
+    (setq lsp-completion-provider                    :none) ; TODO: document if this is right and why
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless)))
 
@@ -1781,8 +1754,6 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
         ps-print-color-p       t))
 
 (defun jm-inferior-python-mode-hook ()
-  (when in-buffer-completion-company-p
-    (company-mode))
   (define-keymap :keymap inferior-python-mode-map
     "TAB" 'indent-for-tab-command
     ;; This uses the inferior process, not lsp, for completion.
