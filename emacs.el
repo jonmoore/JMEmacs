@@ -34,11 +34,6 @@
 ;; https://www.emacswiki.org/emacs/DisableImeForEmacs
 ;; https://superuser.com/a/706636
 ;;
-;; TODO:
-;;
-;; - replace use of use-package's :bind, bind-keys, etc. by standard Emacs key-management
-;;   commands.  Whatever pluses these once had are outweighed by the conflicting API
-;;   and their own quirks.
 
 ;;; Code:
 
@@ -536,17 +531,18 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         (consult-line))))
 
   (use-package consult                  ; Enhanced completing-read functions
-    :bind (:map search-map
-           ("g"   . consult-ripgrep)
-           ("i"   . consult-imenu)
-           ("M-i" . consult-imenu-multi)
-           ("l"   . consult-line)
-           ("M-l" . consult-line-multi)
-           ("o"   . consult-outline)    ; overrides occur
-           ("s"   . consult-line-symbol)
+    :init
+    (define-keymap :keymap search-map
+           "g"   'consult-ripgrep
+           "i"   'consult-imenu
+           "M-i" 'consult-imenu-multi
+           "l"   'consult-line
+           "M-l" 'consult-line-multi
+           "o"   'consult-outline    ; overrides occur
+           "s"   'consult-line-symbol
 
-           ("k"   . consult-keep-lines)
-           ("f"   . consult-focus-lines)))
+           "k"   'consult-keep-lines
+           "f"   'consult-focus-lines))
 
   (use-package consult-flycheck)
 
@@ -554,9 +550,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (when in-buffer-completion-capf-p
   (use-package corfu
-    :bind
-    ;; Configure SPC for separator insertion
-    (:map corfu-map ("SPC" . corfu-insert-separator))))
+    :config
+    (define-keymap :keymap corfu-map
+      "SPC" 'corfu-insert-separator)))
 
 (use-package cov)                       ; Show coverage stats in the fringe.
 
@@ -592,18 +588,18 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package dired                      ; built-in
   :ensure nil
-  :bind (:map dired-mode-map
-              ("i" . dired-subtree-toggle)
-              ("I" . dired-maybe-insert-subdir)
-              ("j" . dired-execute-file)
-              ("P" . dired-do-ps-print)
-              ("<C-up>" . dired-prev-subdir)
-              ("<C-down>" . dired-next-subdir))
   :config
   (require 'dired-column-widths)
   (set-face-foreground 'dired-directory "yellow")
   (setq dired-dnd-protocol-alist nil
-        find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld"))))
+        find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
+  (define-keymap :keymap dired-mode-map
+    "i"        'dired-subtree-toggle
+    "I"        'dired-maybe-insert-subdir
+    "j"        'dired-execute-file
+    "P"        'dired-do-ps-print
+    "C-<up>"   'dired-prev-subdir
+    "C-<down>" 'dired-next-subdir))
 
 (use-package dired-preview)             ; Automatically preview file at point in Dired
 
@@ -654,12 +650,12 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (use-package embark                   ; Provides actions on minibuffer completions.
     :init
     (define-prefix-command 'embark-map nil "embark map")
-    :bind (:map embark-map
-                ("," . embark-dwim)
-                ("." . embark-act)
-                (";" . embark-collect)
-                ("'" . embark-export)
-                ("/" . embark-live)))
+    (define-keymap :keymap embark-map
+      "," 'embark-dwim
+      "." 'embark-act
+      ";" 'embark-collect
+      "'" 'embark-export
+      "/" 'embark-live))
 
   (use-package embark-consult           ; Consult integration for embark
     ))
@@ -736,11 +732,11 @@ clean buffer we delay checking for longer."
   :pin melpa
   :init
   (define-prefix-command 'gptel-dispatch-map)
-  :bind (:map gptel-dispatch-map
-              ("c"  . gptel)
-              ("s"  . gptel-send)
-              ("g"  . gptel-send-t)
-              ("r"  . gptel-rewrite))
+  (define-keymap :keymap gptel-dispatch-map
+    "c" 'gptel
+    "s" 'gptel-send
+    "g" 'gptel-send-t
+    "r" 'gptel-rewrite)
   :config
   (setq gptel-expert-commands t
         gptel-use-curl nil
@@ -753,13 +749,13 @@ clean buffer we delay checking for longer."
 
 (use-package haskell-mode               ; A Haskell editing mode
   :hook (haskell-mode . turn-on-haskell-indentation)
-  :bind (:map haskell-mode-map
-              ("C-c C-l"  . haskell-process-load-or-reload)
-              ("C-`"      . haskell-interactive-bring)
-              ("C-c C-i"  . haskell-process-do-info)
-              ("SPC"      . haskell-mode-contextual-space)
-              ("M-."      . haskell-mode-jump-to-def))
   :config
+  (define-keymap :keymap haskell-mode-map
+    "C-c C-l" 'haskell-process-load-or-reload
+    "C-`" 'haskell-interactive-bring
+    "C-c C-i" 'haskell-process-do-info
+    "SPC" 'haskell-mode-contextual-space
+    "M-." 'haskell-mode-jump-to-def)
   (setq haskell-process-auto-import-loaded-modules t
         haskell-process-log t
         haskell-process-suggest-hoogle-imports t
@@ -771,20 +767,20 @@ clean buffer we delay checking for longer."
   :hook (prog-mode . hs-minor-mode)
   :init
   (define-prefix-command 'hs-dispatch-map)
-  :bind (:map hs-dispatch-map
-              ("l"   .  hs-hide-level)
-              ("t"   .  hs-toggle-hiding)
-              ("h"   .  hs-hide-block)
-              ("s"   .  hs-show-block)
-              ("M-h" .  hs-hide-all)
-              ("M-s" .  hs-show-all)
-
-              :map hs-minor-mode-map
-              ("C-c <right>" . hs-show-block)
-              ("C-c <left>"  . hs-hide-block))
+  (define-keymap :keymap hs-dispatch-map
+              "l" 'hs-hide-level
+              "t" 'hs-toggle-hiding
+              "h" 'hs-hide-block
+              "s" 'hs-show-block
+              "M-h" 'hs-hide-all
+              "M-s" 'hs-show-all
+              )
   :config
-  (keymap-set hs-minor-mode-map "C-c h" '("hide-show" . hs-dispatch-map))
-  (keymap-unset hs-minor-mode-map "C-c @" 'remove))
+  (define-keymap :keymap hs-minor-mode-map
+    "C-c <right>" #'hs-show-block
+    "C-c <left>"  #'hs-hide-block
+    "C-c h"       '("hide-show" . hs-dispatch-map)
+    "C-c @"       nil))
 
 (use-package highlight-sexps            ; built-in.  highlight an expanding set of surrounding
   :ensure nil
@@ -798,9 +794,9 @@ clean buffer we delay checking for longer."
 (use-package ibuffer                    ; built-in.
   :hook (ibuffer-mode . (lambda ()
                           (ibuffer-switch-to-saved-filter-groups "my-default-filter-groups")))
-  :bind (:map ibuffer-mode-map
-              ("s p" . ibuffer-do-sort-by-filename-or-dired))
   :config
+  (define-keymap :keymap ibuffer-mode-map
+    "s p" 'ibuffer-do-sort-by-filename-or-dired)
   (setq ibuffer-saved-filter-groups (quote (("my-default-filter-groups"
                                              ("C++"     (mode . c++-mode))
                                              ("dired"   (mode . dired-mode))
@@ -829,10 +825,11 @@ clean buffer we delay checking for longer."
            "~")))))
 
 (use-package info                       ; built-in.
-  :bind (:map Info-mode-map
-              (";"           . Info-search-next)
-              (":"           . Info-search-backward)
-              ([(shift tab)] . Info-prev-reference)))
+  :config
+  (define-keymap :keymap Info-mode-map
+    ";"         'Info-search-next
+    ":"         'Info-search-backward
+    "<backtab>" 'Info-prev-reference))
 
 (use-package jq-mode)                   ; edit jq scripts
 
@@ -854,12 +851,14 @@ clean buffer we delay checking for longer."
 (use-package latex                      ; part of AUCTeX
   :ensure auctex
   :hook (LaTeX-mode . LaTeX-math-mode)
-  :if system-win32-p
-  :bind (:map LaTeX-mode-map
-              ("<prior>" . latex-sumatra-scroll-down)
-              ("<next>"  .  latex-sumatra-scroll-up))
   :custom-face
-  (font-latex-verbatim-face ((t (:inherit nil :foreground "burlywood")))))
+  (font-latex-verbatim-face ((t (:inherit nil :foreground "burlywood"))))
+  :config
+  (when system-win32-p
+    (define-keymap :keymap LaTeX-mode-map
+      "<prior>" 'latex-sumatra-scroll-down
+      "<next>"  'latex-sumatra-scroll-up)
+    ))
 
 (unless system-osx-p
   (use-package lean4-mode                 ; Major mode for Lean 4 language
@@ -942,26 +941,26 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
   (define-prefix-command 'lsp-command-map nil "lsp-mode command map")
   ;; might be able to only show available commands by calling
   ;; lsp-define-conditional-key in config
-  :bind (:map lsp-command-map
-              ("d" . lsp-find-definition)
-              ("r" . lsp-find-references)
-              ("t" . lsp-find-type-definition)
-              ("l" . lsp-document-highlight)
+  (define-keymap :keymap lsp-command-map
+    "d" 'lsp-find-definition
+    "r" 'lsp-find-references
+    "t" 'lsp-find-type-definition
+    "l" 'lsp-document-highlight
 
-              ("g" . lsp-ui-doc-glance)
-              ("h" . lsp-describe-thing-at-point)
-              ("s" . lsp-signature-activate)
+    "g" 'lsp-ui-doc-glance
+    "h" 'lsp-describe-thing-at-point
+    "s" 'lsp-signature-activate
 
-              ("F" . lsp-format-buffer)
-              ("R" . lsp-rename)
+    "F" 'lsp-format-buffer
+    "R" 'lsp-rename
 
-              ("wD" . lsp-disconnect)
-              ("wd" . lsp-describe-session)
-              ("wb" . lsp-workspace-blocklist-remove)
-              ("wa" . lsp-workspace-folders-add)
-              ("wr" . lsp-workspace-folders-remove)
-              ("wS" . lsp-workspace-restart)
-              ("wQ" . lsp-workspace-shutdown))
+    "w D" 'lsp-disconnect
+    "w d" 'lsp-describe-session
+    "w b" 'lsp-workspace-blocklist-remove
+    "w a" 'lsp-workspace-folders-add
+    "w r" 'lsp-workspace-folders-remove
+    "w S" 'lsp-workspace-restart
+    "w Q" 'lsp-workspace-shutdown)
   :commands lsp
   :config
   ;; lsp-enable-dap-auto-configure uses dap iff dap-mode is loaded
@@ -1192,10 +1191,11 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
 
 (use-package macrostep ; Interactively expand macros in code
   :after elisp-mode
-  :bind (:map emacs-lisp-mode-map
-              ("C-c C-m" . macrostep-expand)
-              :map lisp-interaction-mode-map
-              ("C-c C-m" . macrostep-expand)))
+  :init
+  (define-keymap :keymap emacs-lisp-mode-map
+                  "C-c C-m" 'macrostep-expand)
+  (define-keymap :keymap lisp-interaction-mode-map
+                  "C-c C-m" 'macrostep-expand))
 
 (use-package magit
   :config
@@ -1294,13 +1294,13 @@ mermaid.run().catch(err => {
 
 (use-package mediawiki
   :mode ("\\.wiki\\'" . mediawiki-mode)
-  :bind (:map mediawiki-mode-map
-              ("RET"       . newline-and-indent)
-              ("<M-left>"  . mediawiki-simple-outline-promote)
-              ("<M-right>" . mediawiki-simple-outline-demote)
-              ("<M-up>"    . outline-move-subtree-up)
-              ("<M-down>"  . outline-move-subtree-down))
   :config
+  (define-keymap :keymap mediawiki-mode-map
+    "RET" 'newline-and-indent
+    "M-<left>" 'mediawiki-simple-outline-promote
+    "M-<right>" 'mediawiki-simple-outline-demote
+    "M-<up>" 'outline-move-subtree-up
+    "M-<down>" 'outline-move-subtree-down)
   ;; workaround for bug https://github.com/hexmode/mediawiki-el/issues/36
   (remove-hook 'outline-minor-mode-hook 'mediawiki-outline-magic-keys)
   (setq mediawiki-draft-data-file "~/draft.txt"))
@@ -1323,9 +1323,9 @@ mermaid.run().catch(err => {
 
 (use-package nxml-mode
   :ensure nil
-  :bind (:map nxml-mode-map
-              ("<f9>" . nexus-insert-gav-for-keyword))
   :config
+  (define-keymap :keymap nxml-mode-map
+    "<f9>" 'nexus-insert-gav-for-keyword)
   (setq nxml-child-indent 4))
 
 (defun in-a-jira-buffer ()
@@ -1476,69 +1476,67 @@ directory, otherwise return nil."
   ;; prefix map for use in tangled files
   (define-prefix-command 'org-babel-tangled-map)
 
-  :bind (:map org-mode-map
-              ;; unset these two, to keep the global-map bindings active'
-              ("<C-S-left>"     . nil)
-              ("<C-S-right>"    . nil)
-
-              ("<C-tab>"        . org-cycle-global)
-              ("<backtab>"      . org-shifttab)
-              ("<C-S-down>"     . outline-next-visible-heading)
-              ("<C-S-up>"       . outline-previous-visible-heading)
-              ("C-c ?"          . outline-mark-subtree)
-              ("C-c C-b"        . org-back-to-heading-or-backward-heading)
-
-              :map org-babel-map
-              ("t"              . org-babel-goto-tangled)
-              :map org-babel-tangled-map
-              ("j" . org-babel-tangle-jump-to-org)
-              ("d" . org-babel-detangle)
-              ("s" . org-babel-detangle-stay-in-tangled-buffer)
-              ("y" . org-babel-detangle-directory))
-
   :config
-  (progn
-    ;; move various org commands to their own prefix to declutter "C-c C-x", and remove
-    ;; them and some others from org-mode map.
-    (setq org-mode-timer-clock-prefix "C-c C-x C-t")
-    (define-prefix-command 'org-mode-timer-clock-map nil "org-mode timer map")
-    (define-keymap
-      :keymap org-mode-timer-clock-map
-      "," 'org-timer-pause-or-continue
-      "-" 'org-timer-item
-      "." 'org-timer
-      "0" 'org-timer-start
-      ";" 'org-timer-set-timer
-      "_" 'org-timer-stop
-      "C-q" 'org-clock-cancel
-      "C-d" 'org-clock-display
-      "C-j" 'org-clock-goto
-      "TAB" 'org-clock-in
-      "C-x" 'org-clock-in-last
-      "C-e" 'org-clock-modify-effort-estimate
-      "C-o" 'org-clock-out
-      "C-z" 'org-resolve-clocks
-      )
-    (keymap-set org-mode-map org-mode-timer-clock-prefix 'org-mode-timer-clock-map)
-    (define-keymap
-      :keymap org-mode-map
-      "C-c C-x ,"   nil ; org-timer-pause-or-continue
-      "C-c C-x -"   nil ; org-timer-item
-      "C-c C-x ."   nil ; org-timer
-      "C-c C-x 0"   nil ; org-timer-start
-      "C-c C-x ;"   nil ; org-timer-set-timer
-      "C-c C-x _"   nil ; org-timer-stop
-      "C-c C-x C-q" nil ; org-clock-cancel
-      "C-c C-x C-d" nil ; org-clock-display
-      "C-c C-x C-j" nil ; org-clock-goto
-      "C-c C-x TAB" nil ; org-clock-in
-      "C-c C-x C-x" nil ; org-clock-in-last
-      "C-c C-x C-e" nil ; org-clock-modify-effort-estimate
-      "C-c C-x C-o" nil ; org-clock-out
-      "C-c C-x G"   nil ; org-feed-goto-inbox
-      "C-c C-x g"   nil ; org-feed-update-all
-      "C-c C-x C-z" nil ; org-resolve-clocks
-      ))
+  ;; move various org-timer and org-clock commands to their own prefix, and remove them
+  ;; and some others from org-mode map to declutter "C-c C-x".
+  (define-keymap :keymap org-mode-timer-clock-map
+    "," 'org-timer-pause-or-continue
+    "-" 'org-timer-item
+    "." 'org-timer
+    "0" 'org-timer-start
+    ";" 'org-timer-set-timer
+    "_" 'org-timer-stop
+    "C-q" 'org-clock-cancel
+    "C-d" 'org-clock-display
+    "C-j" 'org-clock-goto
+    "TAB" 'org-clock-in
+    "C-x" 'org-clock-in-last
+    "C-e" 'org-clock-modify-effort-estimate
+    "C-o" 'org-clock-out
+    "C-z" 'org-resolve-clocks
+    )
+  (keymap-set org-mode-map org-mode-timer-clock-prefix 'org-mode-timer-clock-map)
+  (define-keymap
+    :keymap org-mode-map
+    ;; unset these two, to keep the global-map bindings active'
+    "C-S-<left>"  nil
+    "C-S-<right>" nil
+    "C-<tab>"     'org-cycle-global
+    "<backtab>"   'org-shifttab
+    "C-S-<down>"  'outline-next-visible-heading
+    "C-S-<up>"    'outline-previous-visible-heading
+    "C-c ?"       'outline-mark-subtree
+    "C-c C-b"     'org-back-to-heading-or-backward-heading
+
+    "C-c C-x ,"   nil ; org-timer-pause-or-continue
+    "C-c C-x -"   nil ; org-timer-item
+    "C-c C-x ."   nil ; org-timer
+    "C-c C-x 0"   nil ; org-timer-start
+    "C-c C-x ;"   nil ; org-timer-set-timer
+    "C-c C-x _"   nil ; org-timer-stop
+    "C-c C-x C-q" nil ; org-clock-cancel
+    "C-c C-x C-d" nil ; org-clock-display
+    "C-c C-x C-j" nil ; org-clock-goto
+    "C-c C-x TAB" nil ; org-clock-in
+    "C-c C-x C-x" nil ; org-clock-in-last
+    "C-c C-x C-e" nil ; org-clock-modify-effort-estimate
+    "C-c C-x C-o" nil ; org-clock-out
+    "C-c C-x G"   nil ; org-feed-goto-inbox
+    "C-c C-x g"   nil ; org-feed-update-all
+    "C-c C-x C-z" nil ; org-resolve-clocks
+    )
+  (define-keymap :keymap org-babel-map
+    "t" 'org-babel-goto-tangled
+    )
+  (define-keymap :keymap org-babel-tangled-map
+    "j" 'org-babel-tangle-jump-to-org
+    "d" 'org-babel-detangle
+    "s" 'org-babel-detangle-stay-in-tangled-buffer
+    "y" 'org-babel-detangle-directory
+    )
+  (setq org-mode-timer-clock-prefix "C-c C-x C-t")
+  (define-prefix-command 'org-mode-timer-clock-map nil "org-mode timer map")
+
   (require 'jiralib)
   (org-link-set-parameters "jira" :follow
                            (lambda (key _)
@@ -1771,13 +1769,6 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   (setq pcol-str-separator " "
         pcol-column-separator "[ \t]+"))
 
-(use-package prog-mode                  ; built-in
-  :ensure nil
-  :init
-  (when in-buffer-completion-company-p
-    (bind-keys :map prog-mode-map
-               ("C-c c" . company-complete-common))))
-
 (use-package projectile
   :config
   (setq projectile-globally-ignored-directories
@@ -1804,33 +1795,28 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 (defun jm-inferior-python-mode-hook ()
   (when in-buffer-completion-company-p
     (company-mode))
-  (bind-keys :package python
-             :map inferior-python-mode-map
-             ("TAB"   . indent-for-tab-command)
-             ;; This uses the inferior process, not lsp, for completion.
-             ("C-M-i" . python-shell-completion-complete-or-indent)))
+  (define-keymap :keymap inferior-python-mode-map
+    "TAB" 'indent-for-tab-command
+    ;; This uses the inferior process, not lsp, for completion.
+    "C-M-i" 'python-shell-completion-complete-or-indent))
 
 (use-package python
   ;; we don't hook python-mode but use a call to python-helpers-enable-lsp-everywhere
   ;; elsewhere so that conda and lsp get initialized correctly.
   :ensure nil
-
-  :bind (:map python-mode-map
-              ;; maybe apply this more widely? Emacs binds both TAB and C-M-i, to
-              ;; `completion-at-point' by default in simple.el See also karthink's
-              ;; comments on a setup using `tab-always-indent' and `tab-first-completion'
-              ;; at https://www.reddit.com/r/emacs/comments/t4u2a8/comment/hz0rrwi/
-              ("TAB"         . indent-for-tab-command)
-              ("C-M-i"       . yas-or-complete-or-indent-for-tab)
-              ("M-S-<left>"  . python-indent-shift-left)
-              ("M-S-<right>" . python-indent-shift-right))
-
-  ;; using bind-keys here works while using :bind as above didn't, possibly because of a
-  ;; call to define-key for TAB in inferior-python-mode
   :hook (inferior-python-mode . jm-inferior-python-mode-hook)
 
   :config
-  (keymap-set python-mode-map "C-c d" '("detangle" . org-babel-tangled-map))
+  (define-keymap :keymap python-mode-map
+    ;; maybe apply this more widely? Emacs binds both TAB and C-M-i, to
+    ;; `completion-at-point' by default in simple.el See also karthink's
+    ;; comments on a setup using `tab-always-indent' and `tab-first-completion'
+    ;; at https://www.reddit.com/r/emacs/comments/t4u2a8/comment/hz0rrwi/
+    "C-c d"       '("detangle" . org-babel-tangled-map)
+    "TAB"         'indent-for-tab-command
+    "C-M-i"       'yas-or-complete-or-indent-for-tab
+    "M-S-<left>"  'python-indent-shift-left
+    "M-S-<right>" 'python-indent-shift-right)
 
   ;; TODO: check if the comments / workarounds in the rest of this comment are still
   ;; recent Windows / Python versions.
@@ -1904,9 +1890,10 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   :mode ("\\.rcl\\'" . restclient-mode))
 
 (use-package rst                        ; ReStructuredText
-  :bind (:map rst-mode-map
-              ("C-=" . nil)
-              ("M-RET" . rst-insert-list)))
+  :config
+  (define-keymap :keymap rst-mode-map
+    "C-="   nil
+    "M-RET" 'rst-insert-list))
 
 (use-package scroll-in-place
   :ensure nil
@@ -1944,10 +1931,11 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   (sgml-basic-offset 8))
 
 (use-package shell
-  :bind (:map shell-mode-map
-              ("<home>" . comint-bol)
-              ("<up>"   . shell-cycle-backward-through-command-history)
-              ("<down>" . shell-cycle-forward-through-command-history)))
+  :config
+  (define-keymap :keymap shell-mode-map
+    "<home>"  'comint-bol
+    "<up>"    'shell-cycle-backward-through-command-history
+    "<down>"  'shell-cycle-forward-through-command-history))
 
 (use-package show-font)                 ; preview fonts
 
@@ -1960,66 +1948,67 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 (use-package smartparens
   :diminish smartparens-mode
   :hook (emacs-lisp-mode . smartparens-mode)
-  :bind (:map smartparens-strict-mode-map
-              ("M-q"           . sp-indent-defun)
-
-              :map smartparens-mode-map
-              ;; Navigating
-              ("C-M-b"         . sp-backward-sexp)
-              ("C-M-f"         . sp-forward-sexp)
-
-              ("C-M-<left>"    . sp-backward-sexp)
-              ("C-M-<right>"   . sp-forward-sexp)
-              ;; The key bindings below are so that the up/down pairs correspond to actions and
-              ;; their inverses, at least roughly.
-              ("C-<up>"        . sp-backward-up-sexp)
-              ("C-<down>"      . sp-down-sexp)
-              ("C-S-<up>"      . sp-up-sexp)
-              ("C-S-<down>"    . sp-backward-down-sexp)
-
-              ("C-M-p"         . sp-previous-sexp)
-              ("C-M-n"         . sp-next-sexp)
-              ("M-a"           . sp-beginning-of-sexp)
-              ("M-e"           . sp-end-of-sexp)
-
-              ("M-B"           . sp-backward-symbol)
-              ("M-F"           . sp-forward-symbol)
-
-              ;; Selecting and copying
-              ("C-M-]"         . sp-select-next-thing-exchange)
-              ("C-M-w"         . sp-copy-sexp)
-
-              ;; Editing, but not deleting sexp contents
-              ("C-M-s"         . sp-splice-sexp)
-              ("C-M-?"         . sp-convolute-sexp)
-              ("C-M-S"         . sp-split-sexp)
-              ("C-M-J"         . sp-join-sexp)
-              ("C-M-t"         . sp-transpose-sexp)
-              ("<M-delete>"    . sp-unwrap-sexp)
-              ("<M-backspace>" . sp-backward-unwrap-sexp)
-
-              ;; Slurp and barf, respectively, push and pop sexps onto and off the current
-              ;; list.  See http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking for
-              ;; the first setting; not using "C-)" because Microsoft have broken this.  Search
-              ;; for "WTF" in this file.
-              ("C-M-0"         . sp-forward-slurp-sexp)
-              ("C-}"           . sp-forward-barf-sexp)
-              ("C-M-9"         . sp-backward-slurp-sexp)
-              ("C-{"           . sp-backward-barf-sexp)
-
-              ;; Deleting and killing
-              ([remap backward-delete-char] . sp-backward-delete-char)
-              ([remap backward-kill-word]   . sp-backward-kill-word)
-              ([remap delete-forward-char]  . sp-delete-char)
-              ([remap kill-line]            . sp-kill-hybrid-sexp)
-              ([remap kill-word]            . sp-kill-word)
-
-              ("C-M-k"   . sp-kill-sexp)
-              ("C-M-S-k" . sp-backward-kill-sexp)
-
-              ("C-M-<backspace>" . sp-splice-sexp-killing-backward)
-              ("C-M-<delete>"    . sp-splice-sexp-killing-forward))
   :config
+  (define-keymap :keymap smartparens-strict-mode-map
+    "M-q" 'sp-indent-defun)
+  (define-keymap :keymap smartparens-mode-map
+    ;; Navigating
+    "C-M-b"          'sp-backward-sexp
+    "C-M-f"          'sp-forward-sexp
+
+    "C-M-<left>"     'sp-backward-sexp
+    "C-M-<right>"    'sp-forward-sexp
+    ;; The key bindings below are so that the up/down pairs correspond to actions and
+    ;; their inverses, at least roughly.
+    "C-<up>"         'sp-backward-up-sexp
+    "C-<down>"       'sp-down-sexp
+    "C-S-<up>"       'sp-up-sexp
+    "C-S-<down>"     'sp-backward-down-sexp
+
+    "C-M-p"          'sp-previous-sexp
+    "C-M-n"          'sp-next-sexp
+    "M-a"            'sp-beginning-of-sexp
+    "M-e"            'sp-end-of-sexp
+
+    "M-B"            'sp-backward-symbol
+    "M-F"            'sp-forward-symbol
+
+    ;; Selecting and copying
+    "C-M-]"          'sp-select-next-thing-exchange
+    "C-M-w"          'sp-copy-sexp
+
+    ;; Editing, but not deleting sexp contents
+    "C-M-s"          'sp-splice-sexp
+    "C-M-?"          'sp-convolute-sexp
+    "C-M-S"          'sp-split-sexp
+    "C-M-J"          'sp-join-sexp
+    "C-M-t"          'sp-transpose-sexp
+    "M-<delete>"     'sp-unwrap-sexp
+    "M-<backspace>"  'sp-backward-unwrap-sexp
+
+    ;; Slurp and barf, respectively, push and pop sexps onto and off the current
+    ;; list.  See http://www.emacswiki.org/emacs/WThirtyTwoCtrlShiftNotWorking for
+    ;; the first setting; not using "C-)" because Microsoft have broken this.  Search
+    ;; for "WTF" in this file.
+    "C-M-0"          'sp-forward-slurp-sexp
+    "C-}"            'sp-forward-barf-sexp
+    "C-M-9"          'sp-backward-slurp-sexp
+    "C-{"            'sp-backward-barf-sexp
+
+    ;; Deleting and killing
+    "<remap> <backward-delete-char>" 'sp-backward-delete-char
+    "<remap> <backward-kill-word>"   'sp-backward-kill-word
+    "<remap> <delete-forward-char>"  'sp-delete-char
+    "<remap> <kill-line>"            'sp-kill-hybrid-sexp
+    "<remap> <kill-word>"            'sp-kill-word
+
+    "C-M-k"    'sp-kill-sexp
+    "C-M-S-k"  'sp-backward-kill-sexp
+
+    "C-M-<backspace>"  'sp-splice-sexp-killing-backward
+    "C-M-<delete>"     'sp-splice-sexp-killing-forward
+    )
+  
   ;; smartparens-config provides sensible defaults for smartparens in different
   ;; languages.  It's especially important for lisp as otherwise smartparens
   ;; will double up insertion of single quotes.
@@ -2070,8 +2059,9 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
 (use-package text-mode
   :ensure nil
-  :bind (:map text-mode-map
-              ("S-<return>" . newline-and-indent)))
+  :config
+  (define-keymap :keymap text-mode-map
+    "S-<return>"  'newline-and-indent))
 
 (use-package toc-org
   :hook (org-mode . toc-org-mode))
@@ -2111,9 +2101,9 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
 (use-package undo-tree
   :diminish undo-tree-mode
-  :bind (:map undo-tree-visualizer-mode-map
-              ("RET" . undo-tree-visualizer-quit))
   :config
+  (define-keymap :keymap undo-tree-visualizer-mode-map
+    "RET"  'undo-tree-visualizer-quit)  
   (setq undo-tree-auto-save-history t
         ;; place history files in one location rather than scattering them everywhere
         undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree")))
@@ -2156,9 +2146,10 @@ files.  This persists across sessions"
   (use-package vertico            ; Provides a vertical completion U.I.
     :init
     (setopt vertico-cycle t)
-    :bind (:map vertico-map
-                ("C-M-n"  . vertico-next-group)
-                ("C-M-p"  . vertico-previous-group))))
+    :config
+    (define-keymap :keymap vertico-map
+      "C-M-n"   'vertico-next-group
+      "C-M-p"   'vertico-previous-group)))
 
 (defun jm-show-display-fill-column-indicator-character-candidates ()
   "Insert some characters and associated info at point showing
@@ -2274,11 +2265,11 @@ candidates for display-fill-column-indicator-character."
 (use-package windmove                   ; Select windows with arrows
   :init
   (define-prefix-command 'windmove-map nil "windmove map")
-  :bind (:map windmove-map
-         ("<left>"  . windmove-left)
-         ("<right>" . windmove-right)
-         ("<up>"    . windmove-up)
-         ("<down>"  . windmove-down)))
+  (define-keymap :keymap windmove-map
+    "<left>"   'windmove-left
+    "<right>"  'windmove-right
+    "<up>"     'windmove-up
+    "<down>"   'windmove-down))
 
 (use-package winner                     ; Undo and redo window configurations
   :init
@@ -2295,16 +2286,17 @@ candidates for display-fill-column-indicator-character."
 (use-package yasnippet
   :init
   (define-prefix-command 'yasnippet-dispatch-map)
-  :bind (:map yasnippet-dispatch-map
-              ("s" . #'yas-insert-snippet)
-              ("n" . #'yas-new-snippet)
-              ("v" . #'yas-visit-snippet-file)
-              ("e" . #'yas-expand)
-              ("d" . #'yas-describe-tables))
+  (define-keymap :keymap yasnippet-dispatch-map
+    "s"  '#'yas-insert-snippet
+    "n"  '#'yas-new-snippet
+    "v"  '#'yas-visit-snippet-file
+    "e"  '#'yas-expand
+    "d"  '#'yas-describe-tables)
   :config
-  (keymap-unset yas-minor-mode-map "C-c &" 'remove)
-  (keymap-set yas-minor-mode-map "C-c y" #'yas-expand)
-  (keymap-set yas-minor-mode-map "C-c M-y" '("yasnippet" . yasnippet-dispatch-map))
+  (define-keymap :keymap yas-minor-mode-map
+    "C-c &"   nil
+    "C-c y"   'yas-expand
+    "C-c M-y" '("yasnippet" . yasnippet-dispatch-map))
   (setq yas-verbosity 2)
   (yas-reload-all))
 
@@ -2328,15 +2320,11 @@ candidates for display-fill-column-indicator-character."
 ;; Preferred approaches
 ;;
 ;; Use native commands rather than bind-keys for ease of understanding
-;; Use newer commands e.g. keymap-set rather than define-key
+;; Use newer commands e.g. define-keymap and keymap-set rather than define-key
 ;; Use bulk commands when setting many keys, e.g. define-keymap
-;; Exception: use :bind inside use-package rather than define-keymap reflecting past use
-;; Use define-prefix-command and :bind in use-package config to define keymaps for packages
-;; To set prefixes in global-map, use keymap-set below with a (string . defn) cons to
+;; Use define-prefix-command and define-keymap in use-package to define keymaps for packages
+;; To set prefixes, use define-kaymap or keymap-set with a (string-description . defn) cons to
 ;;   add better string descriptions for which-key
-;; To set prefixes in package modes, use keymap-set in :config with a (string . defn) to
-;;   add better string descriptions for which-key
-;;
 
 (define-prefix-command 'file-dispatch-map)
 (define-keymap
