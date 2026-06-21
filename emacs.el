@@ -93,16 +93,6 @@
 (unless (bound-and-true-p package--initialized)
   (package-initialize))
 
-;; I only use quelpa to load packages from github.  From Emacs 30 onwards this should be
-;; possible with package/use-package.
-(use-package quelpa-use-package
-  :custom
-  ;; Suppresses misleading message "Newer package has been installed. Not upgrading."
-  (quelpa-build-verbose nil)
-  (quelpa-update-melpa-p nil)
-  :config
-  (quelpa-use-package-activate-advice))
-
 (setopt use-package-always-ensure t
         use-package-always-defer t
         use-package-enable-imenu-support t
@@ -861,11 +851,10 @@ clean buffer we delay checking for longer."
     ))
 
 (unless system-osx-p
-  (use-package lean4-mode                 ; Major mode for Lean 4 language
-    :quelpa (lean4-mode :fetcher github
-                        :repo "leanprover-community/lean4-mode"
-                        :files ("*.el" "data")
-                        )
+  (use-package lean4-mode
+    :vc (:url "https://github.com/leanprover-community/lean4-mode"
+              :lisp-dir "." ; Replaces :files mapping if code is in the root
+              :rev :newest)
     :config
     (setq lean4-info-buffer-debounce-delay-sec       0.5
           lean4-info-buffer-debounce-upper-bound-sec 1.0)
@@ -890,10 +879,9 @@ etc. are set up before starting lsp."
     (lsp-deferred))))
 
 (use-package lsp-inline-completions
-  :quelpa (lsp-inline-completions :fetcher github
-                                  :repo "kassick/lsp-inline-completions"
-                                  :branch "main"
-                                  :files ("*.el"))
+  :vc (:url "https://github.com/kassick/lsp-inline-completions"
+       :lisp-dir "."
+       :rev "main")
   :config
   (add-hook 'lsp-before-inline-completion-hook
             (lambda ()
