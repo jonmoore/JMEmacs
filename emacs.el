@@ -318,8 +318,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
      (TeX-command-extra-options . "-shell-escape")
      ))
   (set-mark-command-repeat-pop t)
-  (suggest-key-bindings nil)
   (show-trailing-whitespace nil)
+  (suggest-key-bindings nil)
   (switch-to-prev-buffer-skip-regexp "\\*.*\\*")
   (visual-line-fringe-indicators '(left-curly-arrow nil))
   :custom-face
