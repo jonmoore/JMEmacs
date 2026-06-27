@@ -49,8 +49,7 @@
 
 (defface e-other-window-overlay-face nil
   "Face used to blink the background")
-(set-face-background 'e-other-window-overlay-face "gray")
-
+(set-face-background 'e-other-window-overlay-face "blue2")
 (defvar e-other-window-interval .25 "Interval to sleep `e-other-window' for.")
 
 ;;;###autoload
