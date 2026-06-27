@@ -37,8 +37,9 @@
 
 ;;;###autoload
 (defun buffer-file-names-in-selected-frame ()
-  "Lists the name of the buffers in the same frame as the current
-buffer, as determined by get-buffer-window, searching all frames."
+  "Return the comma-separated names of the buffers displayed in the same
+frame as the current buffer, as determined by `get-buffer-window',
+searching all frames."
   (mapconcat 'identity
              (delete-dups 
               (mapcar (lambda (w) 
@@ -84,7 +85,7 @@ affect which window is selected."
   (other-window 1))
 
 ;;;###autoload
-(defun rotate-buffer-to-previous-window ()
+(defun rotate-buffers-backwards-in-windows ()
   "Rotate the buffers displayed in the current frame's windows
 maintaining window order so that the current buffer is displayed
 in the previous window."
@@ -93,15 +94,15 @@ in the previous window."
    (lambda (w) (swap-win-contents w (previous-window w)))
    (cdr (window-list))))
 ;;;###autoload
-(defun rotate-buffer-to-previous-window-and-select ()
-  "Call rotate-buffer-to-previous-window, then select the
+(defun rotate-buffers-backwards-in-windows-and-select ()
+  "Call `rotate-buffers-backwards-in-windows' then select the
 previous window."
   (interactive)
-  (rotate-buffer-to-previous-window)
+  (rotate-buffers-backwards-in-windows)
   (other-window -1))
 
 ;;;###autoload
-(defun rotate-buffer-to-next-window ()
+(defun rotate-buffers-forwards-in-windows ()
   "Rotate the buffers displayed in the current frame's windows
 maintaining window order so that the current buffer is displayed
 in the next window."
@@ -111,56 +112,12 @@ in the next window."
    (cdr (reverse (window-list)))))
 
 ;;;###autoload
-(defun rotate-buffer-to-next-window-and-select ()
-  "Call rotate-buffer-to-next-window, then select the next
+(defun rotate-buffers-forwards-in-windows-and-select ()
+  "Call `rotate-buffers-forwards-in-windows' then select the next
 window."
   (interactive)
-  (rotate-buffer-to-next-window)
+  (rotate-buffers-forwards-in-windows)
   (other-window 1))
-
-(defvar cycle-buffer-exclusion-regexp
-  "\\*.*\\*\\|SPEEDBAR"
-  "Buffers to skip over in `select-next-buffer' and `select-last-buffer'")
-
-;;;###autoload
-(defun select-next-buffer () 
-  "Selects the buffer after the current buffer in the buffer
-list, and burys the current buffer. When used with
-`select-last-buffer', allows navigating the buffer list as if it were
-a ring.  Filters out `cycle-buffer-exclusion-regexp'"
-  (interactive)
-  (let* ((list (cdr (buffer-list)))
-	 (buffer (car list)))
-    (while (and (cdr list) (string-match cycle-buffer-exclusion-regexp (buffer-name buffer)))
-      (progn
-	(setq list (cdr list))
-	(setq buffer (car list))))
-    (bury-buffer)
-    (switch-to-buffer buffer)))
-
-;;;###autoload
-(defun select-last-buffer ()
-  "Selects the buffer at the back of the buffer list. When used
-with `select-next-buffer', allows navigating the buffer list as if it
-were a ring.  Filters out `cycle-buffer-exclusion-regexp'"
-  (interactive)
-  (let* ((list (reverse (buffer-list)))
-	 (buffer (car list)))
-    (while (and (cdr list) (string-match cycle-buffer-exclusion-regexp (buffer-name buffer)))
-      (progn
-	(setq list (cdr list))
-	(setq buffer (car list))))
-    (switch-to-buffer buffer)))
-
-;;;###autoload
-(defun kill-buffer-other-window (arg)
-  "Kill the buffer in the other window, and make the current buffer full size. If no other window, kills current buffer."
-  (interactive "p")
-  (let ((buf (save-window-excursion
-	       (other-window arg)
-	       (current-buffer))))
-    (delete-windows-on buf)
-    (kill-buffer buf)))
 
 ;;;###autoload
 (defun delete-unselected-frames ()

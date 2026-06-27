@@ -320,6 +320,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (set-mark-command-repeat-pop t)
   (suggest-key-bindings nil)
   (show-trailing-whitespace nil)
+  (switch-to-prev-buffer-skip-regexp "\\*.*\\*")
   (visual-line-fringe-indicators '(left-curly-arrow nil))
   :custom-face
   (cursor ((t (:background "yellow"))))
@@ -2355,18 +2356,18 @@ candidates for display-fill-column-indicator-character."
   "M-Z"          'zop-to-char
   "M-z"          'zop-up-to-char
 
-  "C-S-<left>"   'select-last-buffer
-  "C-S-<right>"  'select-next-buffer
-
   "<home>"       'beginning-of-buffer
   "<end>"        'end-of-buffer
   "<prior>"      'scroll-down-in-place
   "<next>"       'scroll-up-in-place
 
-  "<f5>"         'other-window
-  "S-<f5>"       'swap-buffers-previous-window-and-select
-  "<f6>"         'rotate-buffer-to-next-window
-  "S-<f6>"       'rotate-buffer-to-next-window-and-select
+  "C-S-<right>"  'previous-buffer
+  "C-S-<left>"   'next-buffer
+
+  "M-o"          'e-other-window
+  "M-O"          'swap-buffers-previous-window-and-select
+  "C-M-o"        'rotate-buffers-backwards-in-windows
+
   "<f8>"         'cycle-frame-maximized
   )
 
