@@ -154,7 +154,7 @@
                        (string-trim (buffer-string)))))
            (go-bin (and gopath (not (string-empty-p gopath))
                         (expand-file-name "bin" gopath))))
-      (when (end go-bin (file-directory-p go-bin))
+      (when (and go-bin (file-directory-p go-bin))
         (add-to-list 'exec-path go-bin)
         (setenv "PATH" (concat go-bin path-separator (getenv "PATH")))))))
 
@@ -248,7 +248,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (load custom-file))
 
 (defun jm-lsp-inhibit-hooks-advice (orig-fn &rest args)
-  "Prevent `lsp-on-idle-hook' being run re-entrantly.  Also inhibit jit-lock."
+  "Prevent `lsp-on-idle-hook' being run re-entrantly."
   (let ((lsp-inhibit-lsp-hooks t))
     (apply orig-fn args)))
 
@@ -586,7 +586,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (diff-hl-delete ((t (:foreground "black" :background "#E06C75"))))
   (diff-hl-change ((t (:foreground "black" :background "#E5C07B"))))
   
-  (diff-hl-reference-insert ((t (:foreground "lime green" :background "lime green#"))))
+  (diff-hl-reference-insert ((t (:foreground "lime green" :background "lime green"))))
   (diff-hl-reference-delete ((t (:foreground "IndianRed"  :background "IndianRed"))))
   (diff-hl-reference-change ((t (:foreground "gold"       :background "gold")))))
 
@@ -857,7 +857,7 @@ clean buffer we delay checking for longer."
   :config
   (define-keymap :keymap isearch-mode-map
     "M-%"   'anzu-isearch-query-replace ;; instead of isearch-query-replace
-    "C-M-"  'anzu-isearch-query-replace-regexp))
+    "C-M-%"  'anzu-isearch-query-replace-regexp))
 
 (use-package jq-mode)                   ; edit jq scripts
 
@@ -1317,7 +1317,7 @@ corresponding to point in the hunk.
             (when (bound-and-true-p diff-hl-amend-mode)
               (diff-hl-amend-mode -1))
             (setq-local diff-hl-reference-revision ref)
-            (setq-local diff-hl-reference-reference-function
+            (setq-local diff-hl-highlight-reference-function
                         #'diff-hl-highlight-on-fringe))
           (diff-hl-update)
           (when line
@@ -1958,7 +1958,7 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
 (use-package rainbow-delimiters)
 
-(use-package rainbow-mode)              ; colorize names
+(use-package rainbow-mode)              ; colorize color names
 
 (use-package realgud)
 
