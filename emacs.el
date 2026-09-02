@@ -145,6 +145,19 @@
   (setq exec-path (append (bound-and-true-p local-exec-paths)
                           exec-path)))
 
+;; Go installs user binaries under $GOPATH/bin.  Ask the Go toolchain itself for GOPATH,
+;; but only when `go' is on the path.
+(when (executable-find "go")
+  (ignore-errors
+    (let* ((gopath (with-temp-buffer
+                     (when (zerop (call-process "go" nil t nil "env" "GOPATH"))
+                       (string-trim (buffer-string)))))
+           (go-bin (and gopath (not (string-empty-p gopath))
+                        (expand-file-name "bin" gopath))))
+      (when (end go-bin (file-directory-p go-bin))
+        (add-to-list 'exec-path go-bin)
+        (setenv "PATH" (concat go-bin path-separator (getenv "PATH")))))))
+
 (when system-linux-p
   ;; may come back to these - good to be aware of.  WSL is likely to have issues.
   (setq select-enable-clipboard t)
@@ -169,7 +182,7 @@
 
 (cond
  (system-win32-p
-  (set-face-attribute 'default nil :family "Consolas"    :height 120)
+  (set-face-attribute 'default nil     :family "Consolas"    :height 120)
   (set-face-attribute 'fixed-pitch nil :family "Consolas"    :height 120))
  (system-osx-p
   (set-face-attribute 'default nil :family "Menlo" :height 180))
@@ -234,16 +247,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
    custom-file (expand-file-name "emacs-custom.el" personal-emacs-root))
   (load custom-file))
 
-(defvar jm-inhibit-jit-lock nil)
-
 (defun jm-lsp-inhibit-hooks-advice (orig-fn &rest args)
   "Prevent `lsp-on-idle-hook' being run re-entrantly.  Also inhibit jit-lock."
-  (let ((lsp-inhibit-lsp-hooks t)
-        (jm-inhibit-jit-lock t))
-    (apply orig-fn args)))
-
-(defun jm-jit-lock-inhibit-advice (orig-fn &rest args)
-  (unless jm-inhibit-jit-lock
+  (let ((lsp-inhibit-lsp-hooks t))
     (apply orig-fn args)))
 
 (use-package emacs
@@ -252,16 +258,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   ;; hippie-expand an dabbrev-completion
   (setq completion-at-point-functions
         (append
-         '(cape-file cape-abbrev cape-dabbrev cape-dict)
+         '(yasnippet-capf cape-file cape-abbrev cape-dabbrev cape-dict)
          completion-at-point-functions))
-  (setopt hippie-expand-try-functions-list
-          '(try-complete-file-name-partially
-            try-complete-file-name
-            yas-hippie-try-expand
-            try-expand-dabbrev-visible
-            try-expand-dabbrev
-            try-expand-dabbrev-all-buffers
-            try-expand-dabbrev-from-kill))
+  
   :custom
   (Buffer-menu-buffer+size-width 36)
   (Buffer-menu-mode-width 10)
@@ -274,8 +273,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (completion-ignored-extensions '(".o" "~" ".obj" ".elc" ".pyc"))
   (create-lockfiles nil)
   (directory-abbrev-alist nil)
-  ;; See discussion at visual-fill-column
-  ;; (display-fill-column-indicator-character 124)
   (enable-local-eval t)
   (fill-column 90)
   (find-ls-option '("-exec ls -ld {} ';'" . "-ld") t)
@@ -290,12 +287,13 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
                  (file-regular-p linux-words))
             linux-words)
            (t nil))))
-  (jit-lock-chunk-size 4096)
-  (jit-lock-defer-time 0.5)
+  ;; jit lock has had various issues with leaking idle timers and causing lags
+  (jit-lock-chunk-size 1024)
+  (jit-lock-defer-time 0)
   (jit-lock-context-time 2.0)
   (jit-lock-stealth-load 50)
   (jit-lock-stealth-nice 1.0)
-  (jit-lock-stealth-time nil)           ; disable, re-enable explicitly
+  (jit-lock-stealth-time 1.0)
   (kill-whole-line t)
   (line-move-visual nil)
   (line-number-display-limit-width 400)
@@ -341,7 +339,22 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   )
 
 (use-package agent-shell                ; Integration of Claude Code etc. using agent context protocol
-  )
+  :config
+  (defun jm-agent-shell-follow-link-at-point ()
+    "Open the rendered agent-shell link at point else fall back to markdown"
+    (interactive)
+    (if-let* ((url (agent-shell-markdown-link-url-at-point)))
+        (agent-shell-markdown--open-link url)
+      (markdown-follow-link-at-point)))
+
+  (setopt agent-shell-prefer-viewport-interaction t
+          agent-shell-preferred-agent-config 'claude-code)
+  (define-keymap :keymap agent-shell-mode-map
+    "C-c C-o" #'jm-agent-shell-follow-link-at-point
+    "C-c o"   #'agent-shell-other-buffer)
+  (define-keymap :keymap agent-shell-viewport-view-mode-map
+    "C-c C-o" #'jm-agent-shell-follow-link-at-point
+    "C-c o"   #'agent-shell-other-buffer))
 
 (use-package align                      ; built-in
   :custom
@@ -480,6 +493,21 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     (read-only-mode))
   :hook (compilation-filter . colorize-compilation-buffer))
 
+(use-package completion-preview         ; built-in
+  :ensure nil
+  :init
+  (define-keymap :keymap completion-preview-active-mode-map
+    "M-i"     'completion-preview-insert-word
+    "M-n"     'completion-preview-next-candidate
+    "M-p"     'completion-preview-prev-candidate
+    "<tab>"   'completion-preview-insert
+    "C-<tab>" 'completion-preview-complete ; show *Completions* buffer
+    )
+  :config
+  (setopt completion-preview-idle-delay 0.5)
+  (with-eval-after-load 'org
+    (add-to-list 'completion-preview-commands #'org-self-insert-command)))
+
 (use-package conda                      ; Work with your conda environments.
   :config
   ;; work around conda--get-executable-path only searching for "conda" and not "conda.exe"
@@ -550,6 +578,18 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
           desktop-load-locked-desktop t
           desktop-path (list local-desktop-dir))))
 
+(use-package diff-hl                    ; highlight uncommitted changes
+  :custom
+  (diff-hl-bmp-max-width 32)
+  :custom-face
+  (diff-hl-insert ((t (:foreground "black" :background "#98C379"))))
+  (diff-hl-delete ((t (:foreground "black" :background "#E06C75"))))
+  (diff-hl-change ((t (:foreground "black" :background "#E5C07B"))))
+  
+  (diff-hl-reference-insert ((t (:foreground "lime green" :background "lime green#"))))
+  (diff-hl-reference-delete ((t (:foreground "IndianRed"  :background "IndianRed"))))
+  (diff-hl-reference-change ((t (:foreground "gold"       :background "gold")))))
+
 (use-package diminish)                  ; Provide suppression of modeline display by minor modes.
 
 (use-package dired                      ; built-in
@@ -590,7 +630,10 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 (use-package ediff                      ; built-in
   :config
   (setq ediff-custom-diff-options "-c -w"
-        ediff-diff-options "-w"))
+        ediff-diff-options "-w"
+        ediff-window-setup-function 'ediff-setup-windows-plain
+        ediff-split-window-function 'split-window-horizontally
+        ))
 
 (use-package ebib)                      ; A BibTeX database manager.
 
@@ -713,6 +756,15 @@ clean buffer we delay checking for longer."
 (use-package graphviz-dot-mode          ; Mode for the dot-language used by graphviz (att).
   :mode "\\.dot\\'")
 
+(use-package grip-mode                  ; live md previews
+  :after markdown-mode
+  :if (executable-find "go-grip")
+  :config
+  (setq grip-command 'go-grip
+        grip-real-time-refresh nil
+        ;; localhost for WSL2
+        grip-preview-host "localhost"))
+
 (use-package haskell-mode               ; A Haskell editing mode
   :hook (haskell-mode . turn-on-haskell-indentation)
   :config
@@ -762,7 +814,10 @@ clean buffer we delay checking for longer."
                           (ibuffer-switch-to-saved-filter-groups "my-default-filter-groups")))
   :config
   (define-keymap :keymap ibuffer-mode-map
-    "s p" 'ibuffer-do-sort-by-filename-or-dired)
+    "s p" #'ibuffer-do-sort-by-filename-or-dired
+    ;; avoid M-o clash
+    "M-o"         nil
+    )
   (setq ibuffer-saved-filter-groups (quote (("my-default-filter-groups"
                                              ("C++"     (mode . c++-mode))
                                              ("dired"   (mode . dired-mode))
@@ -796,6 +851,13 @@ clean buffer we delay checking for longer."
     ";"         'Info-search-next
     ":"         'Info-search-backward
     "<backtab>" 'Info-prev-reference))
+
+(use-package isearch                    ; built-in
+  :ensure nil
+  :config
+  (define-keymap :keymap isearch-mode-map
+    "M-%"   'anzu-isearch-query-replace ;; instead of isearch-query-replace
+    "C-M-"  'anzu-isearch-query-replace-regexp))
 
 (use-package jq-mode)                   ; edit jq scripts
 
@@ -1046,10 +1108,7 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
   ;; lsp-headerline-check-breadcrumb in lsp-on-idle-hook.  This causes issues with remote
   ;; buffers as the check uses TRAMP, hence external processes, allowing idle timers to
   ;; fire reentrantly.
-  (advice-add 'lsp-headerline-check-breadcrumb :around #'jm-lsp-inhibit-hooks-advice)
-  (advice-add 'jit-lock-deferred-fontify :around #'jm-jit-lock-inhibit-advice)
-  (advice-add 'jit-lock-context-fontify :around #'jm-jit-lock-inhibit-advice)
-  (advice-add 'jit-lock--debug-fontify :around #'jm-jit-lock-inhibit-advice))
+  (advice-add 'lsp-headerline-check-breadcrumb :around #'jm-lsp-inhibit-hooks-advice))
 
 (defun jm-pyright-sync-venv-from-conda-env ()
   "Sync the pyright venv to the current conda-env"
@@ -1169,9 +1228,16 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
         magit-wip-after-apply-mode nil
         magit-wip-after-save-mode nil
         magit-wip-before-change-mode nil)
-  ;; reduce the amount of information reported by magit-status, hence the time this
-  ;; requires
-  (progn
+  (setopt
+   magit-diff-refine-hunk 'all
+   magit-diff-fontify-hunk 'all
+   magit-diff-specify-hunk-foreground nil
+   magit-diff-use-indicator-faces t
+   magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
+  
+  (when system-win32-p
+    ;; reduce the amount of information reported by magit-status, hence the time this
+    ;; requires
     (remove-hook 'magit-status-sections-hook 'magit-insert-merge-log)
     (remove-hook 'magit-status-sections-hook 'magit-insert-stashes)
     (remove-hook 'magit-status-sections-hook 'magit-insert-unpulled-from-upstream)
@@ -1187,11 +1253,10 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
   ;; diff's default setting for diff.ignoreSubmodules of "all".  Consistently with this,
   ;; `magit-ignore-submodules-p' returns nil when called for a git repo with no config
   ;; set.
-  (progn
-    (advice-add 'magit-ignore-submodules-p
-                :override
-                (lambda (&rest _args) nil)
-                '((name . "always-nil"))))
+  (advice-add 'magit-ignore-submodules-p
+              :override
+              (lambda (&rest _args) nil)
+              '((name . "always-nil")))
 
   ;; This is a hack for a marginalia/vertico/magit issue
   ;;
@@ -1202,18 +1267,71 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
   ;;    the definitions of standard values
   ;; 4. The standard value of magit-git-executable invokes git twice using process-lines
   ;; 5. magit uses some caching but the caching only applies to the second call
-  ;; 6. marginalia's cache is cleared by vetico advice each time a completing read
+  ;; 6. marginalia's cache is cleared by vertico advice each time a completing read
   ;;    function sets up the minibuffer
-  (progn
-    (require 'magit)
-    (setq my-mge magit-git-executable)
-    (defcustom magit-git-executable
-      my-mge
-      "A hacked version of magit-git-executable from magit-git.el.
+  (require 'magit)
+  (setq my-mge magit-git-executable)
+  (defcustom magit-git-executable
+    my-mge
+    "A hacked version of magit-git-executable from magit-git.el.
 On remote machines `magit-remote-git-executable' is used instead."
-      :package-version '(magit . "3.2.0")
-      :group 'magit-process
-      :type 'string)))
+    :package-version '(magit . "3.2.0")
+    :group 'magit-process
+    :type 'string)
+
+  (require 'magit-repo-sorting)
+  (magit-repo-sorting-enable))
+
+(use-package magit-blame-color-by-age   ; color magit-blame output by commit age
+  :vc (:url "https://github.com/jdtsmith/magit-blame-color-by-age"))
+
+(defun jm-magit-hunk-line-at-point ()
+  "Return the new-file line number corresponding to point in a magit diff hunk."
+  (when (magit-section-match 'hunk)
+    (let ((target (line-beginning-position)))
+      (save-excursion
+        (goto-char (oref (magit-current-section) start))
+        (when (looking-at "@@ -[0-9,]+ \\+\\([0-9]+\\)")
+          (let ((line-num (string-to-number (match-string 1))))
+            (forward-line 1)
+            (while (< (point) target)
+              (unless (eq (char-after) ?-)
+                (cl-incf line-num))
+              (forward-line 1))
+            line-num))))))
+
+(defun jm-magit-auto-preview-file (&rest _)
+  "Visit the worktree version of the file at the current magit section.
+Enable `diff-hl' against the diff's base revision and move to the line
+corresponding to point in the hunk.
+"
+  (when-let ((file (magit-file-at-point)))
+    (let ((line (jm-magit-hunk-line-at-point))
+          (ref (when (bound-and-true-p magit-buffer-range)
+                 (or (car (magit-split-range magit-buffer-range))
+                     magit-buffer-range))))
+      (save-selected-window
+        (with-current-buffer (find-file-other-window file)
+          (diff-hl-mode 1)
+          (when ref
+            (when (bound-and-true-p diff-hl-amend-mode)
+              (diff-hl-amend-mode -1))
+            (setq-local diff-hl-reference-revision ref)
+            (setq-local diff-hl-reference-reference-function
+                        #'diff-hl-highlight-on-fringe))
+          (diff-hl-update)
+          (when line
+            (goto-char (point-min))
+            (forward-line (1- line))
+            (recenter)))))))
+
+(define-minor-mode jm-magit-auto-preview-mode
+  "Preview the file at point as you navigate magit sections."
+  :global t
+  :group 'magit
+  (if jm-magit-auto-preview-mode
+      (add-hook 'magit-section-movement-hook #'jm-magit-auto-preview-file)
+    (remove-hook 'magit-section-movement-hook #'jm-magit-auto-preview-file)))
 
 (when minibuffer-completion-mocve-p
   (use-package marginalia         ; Provides annotations for completion candidates.
@@ -1840,6 +1958,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
 (use-package rainbow-delimiters)
 
+(use-package rainbow-mode)              ; colorize names
+
 (use-package realgud)
 
 (use-package reftex
@@ -2084,6 +2204,8 @@ files.  This persists across sessions"
   (interactive)
   (setq buffer-undo-tree nil))
 
+(use-package unfill)                    ; unfill-paragraph/region
+
 (use-package unicode-fonts
   :config
   (unicode-fonts-setup))
@@ -2261,11 +2383,14 @@ candidates for display-fill-column-indicator-character."
   (setq yas-verbosity 2)
   (yas-reload-all))
 
+(use-package yasnippet-capf)
 
 (use-package yasnippet-snippets)        ; Official snippets
 
 (use-package zop-to-char                ; Better zapping
 )
+
+(use-package ztree)                     ; recursive directory-tree diff
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2294,16 +2419,11 @@ candidates for display-fill-column-indicator-character."
   "r"        'rename-file-and-buffer
   )
 
-(with-eval-after-load 'isearch
-  (define-keymap :keymap isearch-mode-map
-    "M-%"   'anzu-isearch-query-replace         ;; instead of isearch-query-replace
-    "C-M-%" 'anzu-isearch-query-replace-regexp) ;; instead of isearch-query-replace-regexp
-  )
-
 (define-keymap
   :keymap global-map
 
   "<remap> <just-one-space>"  'cycle-spacing
+  "<remap> <fill-paragraph>"  'unfill-toggle
   ;; single commands
   "C-c a"        'org-agenda
   "C-c b"        'browse-url-at-point
@@ -2347,7 +2467,6 @@ candidates for display-fill-column-indicator-character."
   "M-."          'find-function
   "M-["          'undo-tree-visualize
   "M-]"          'repeat
-  "M-/"          'hippie-expand
   "M-g g"        'consult-goto-line
   "M-g M-g"      'consult-goto-line
 
@@ -2364,7 +2483,7 @@ candidates for display-fill-column-indicator-character."
   "C-S-<right>"  'previous-buffer
   "C-S-<left>"   'next-buffer
 
-  "M-o"          'e-other-window
+  "M-o"          'other-window-pulse-one-line
   "M-O"          'swap-buffers-previous-window-and-select
   "C-M-o"        'rotate-buffers-backwards-in-windows
 
@@ -2385,6 +2504,7 @@ candidates for display-fill-column-indicator-character."
   (global-anzu-mode)
   (global-auto-highlight-symbol-mode)
   (global-auto-revert-mode)
+  (global-completion-preview-mode 1)
   (global-disable-mouse-mode)
   (global-display-fill-column-indicator-mode)
   (global-font-lock-mode)
