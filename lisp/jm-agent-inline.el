@@ -85,9 +85,9 @@ Caches the result buffer-locally to avoid repeated prompts."
   "Call `agent-shell-insert' via the shell (non-viewport) path.  These
 commands target a specific shell buffer and scrape its output, and the
 viewport path errors \"Not yet supported\" for :submit/:no-focus, so
-bind `agent-shell-prefer-viewport-interaction' to nil for the cell."
+bind `agent-shell-prefer-viewport-interaction' to nil for the call."
   (let ((agent-shell-prefer-viewport-interaction nil))
-    (apply #`agent-shell-insert args)))
+    (apply #'agent-shell-insert args)))
 
 ;;; jm-agent-explain
 

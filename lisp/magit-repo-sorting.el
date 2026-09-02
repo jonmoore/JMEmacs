@@ -5,14 +5,14 @@
 ;; Changes `magit-read-repository' to display the repositories from
 ;; `magit-repository-directories' in a better-sorted order.  This advises
 ;; `magit-repos-alist' to return its entries most-recently-active first, using the
-;; modification time of each repository's reflog (.git/log/HEAD) as the activity signal,
+;; modification time of each repository's reflog (.git/logs/HEAD) as the activity signal,
 ;; tiebroken by on-disk path.
 
 ;;; Code:
 
 (defun magit-repo-sorting--gitdir (path)
   "Resolve PATH's git directory, following a linked-worktree \".git\" file."
-  (let ((dotgit (expand-file-name ".git" oath)))
+  (let ((dotgit (expand-file-name ".git" path)))
     (cond ((file-directory-p dotgit) dotgit)
           ((file-regular-p dotgit)      ; linked worktree
            (with-temp-buffer
@@ -59,4 +59,3 @@ once, not on every sort comparison."
 (provide 'magit-repo-sorting)
 
 ;;; magit-repo-sorting.el ends here
-
