@@ -48,76 +48,68 @@ searching all frames."
              ", "))
 
 ;;;###autoload
-(defun swap-win-contents (win1 win2)
-  "Swap the buffers displayed in windows WIN1 and WIN2.  Does not
-affect which window is selected."
+(defun swap-buffers-previous-window-and-select ()
+  "Swap the buffers displayed in the selected window and the previous
+window, selecting the previous window."
   (interactive)
-  (let* ((b1 (window-buffer win1))
-         (b2 (window-buffer win2))
-         (s1 (window-start win1))
-         (s2 (window-start win2)))
-    (set-window-buffer win1 b2)
-    (set-window-buffer win2 b1)
-    (set-window-start win1 s2)
-    (set-window-start win2 s1)))
+  (window-swap-states (selected-window) (previous-window)))
 
 ;;;###autoload
 (defun swap-buffers-previous-window ()
-  "Swap the buffers displayed in the selected window and the previous window."
+  "Swap the buffers displayed in the selected window and the previous
+window, maintaining the selected window."
   (interactive)
-  (swap-win-contents (selected-window) (previous-window)))
-;;;###autoload
-(defun swap-buffers-previous-window-and-select ()
-  "Swap the buffers displayed in the selected window and the previous window and select the previous window."
-  (interactive)
-  (swap-buffers-previous-window)
-  (other-window -1))
-;;;###autoload
-(defun swap-buffers-next-window ()
-  "Swap the buffers displayed in the selected window and the next window."
-  (interactive)
-  (swap-win-contents (selected-window) (next-window)))
+  (window-swap-states (selected-window) (previous-window))
+  (other-window 1))
+
 ;;;###autoload
 (defun swap-buffers-next-window-and-select ()
-  "Swap the buffers displayed in the selected window and the next window and select the next window."
+  "Swap the buffers displayed in the selected window and the next window, selecting the next window."
   (interactive)
-  (swap-buffers-next-window)
-  (other-window 1))
+  (window-swap-states (selected-window) (next-window)))
+
+;;;###autoload
+(defun swap-buffers-next-window ()
+  "Swap the buffers displayed in the selected window and the next window, maintaining the selected window."
+  (interactive)
+  (window-swap-states (selected-window) (next-window))
+  (other-window -1))
+
+;;;###autoload
+(defun rotate-buffers-backwards-in-windows-and-select ()
+  "Rotate the buffers displayed in the current frame's windows maintaining
+window order so that the current buffer is displayed in the previous
+window, which is selected."
+  (interactive)
+  (mapcar
+   (lambda (w) (window-swap-states w (previous-window w)))
+   (cdr (window-list))))
 
 ;;;###autoload
 (defun rotate-buffers-backwards-in-windows ()
-  "Rotate the buffers displayed in the current frame's windows
-maintaining window order so that the current buffer is displayed
-in the previous window."
+  "Call `rotate-buffers-backwards-in-windows-and-select' then select
+the (then) next window, maintaining the selected window."
   (interactive)
-  (mapcar 
-   (lambda (w) (swap-win-contents w (previous-window w)))
-   (cdr (window-list))))
-;;;###autoload
-(defun rotate-buffers-backwards-in-windows-and-select ()
-  "Call `rotate-buffers-backwards-in-windows' then select the
-previous window."
-  (interactive)
-  (rotate-buffers-backwards-in-windows)
-  (other-window -1))
-
-;;;###autoload
-(defun rotate-buffers-forwards-in-windows ()
-  "Rotate the buffers displayed in the current frame's windows
-maintaining window order so that the current buffer is displayed
-in the next window."
-  (interactive)
-  (mapcar 
-   (lambda (w) (swap-win-contents w (next-window w)))
-   (cdr (reverse (window-list)))))
+  (rotate-buffers-backwards-in-windows-and-select)
+  (other-window 1))
 
 ;;;###autoload
 (defun rotate-buffers-forwards-in-windows-and-select ()
-  "Call `rotate-buffers-forwards-in-windows' then select the next
-window."
+  "Rotate the buffers displayed in the current frame's windows maintaining
+window order so that the current buffer is displayed in the next window,
+which is selected."
   (interactive)
-  (rotate-buffers-forwards-in-windows)
-  (other-window 1))
+  (mapcar 
+   (lambda (w) (window-swap-states w (next-window w)))
+   (cdr (reverse (window-list)))))
+
+;;;###autoload
+(defun rotate-buffers-forwards-in-windows ()
+  "Call `rotate-buffers-forwards-in-windows-and-select' then select
+the (then) previous window, maintaining the selected window."
+  (interactive)
+  (rotate-buffers-forwards-in-windows-and-select)
+  (other-window -1))
 
 ;;;###autoload
 (defun delete-unselected-frames ()
@@ -157,5 +149,55 @@ with properties."
   (let ((result (funcall fn (buffer-substring-no-properties beg end))))
     (delete-region beg end)
     (insert result)))
+
+;;;###autoload
+(defun other-window-pulse-one-line (count &optional all-frames interactive)
+  "Run `other-window' and pulse the current line afterwards."
+  (interactive "p\ni\np")
+  (other-window count all-frames interactive)
+  (let ((pulse-delay 0.05))
+    (pulse-momentary-highlight-one-line)))
+
+(defun buffer-helpers--rightmost-window ()
+  "Return the sole right-most window of the selected frame.  Signal a
+`user-error' if the right edge is split vertically."
+  (let ((edge (window-at-side-list nil 'right)))
+    (when (cdr edge)
+      (user-error "Right edge is split vertically"))
+    (car edge)))
+
+(defun buffer-windows--preserve-other-widths (window preserve)
+  "Set horizontal preserve-size PRESERVE on every window of WINDOW's frame
+but WINDOW."
+  (dolist (w (window-list (window-frame window) 'exclude-minibuf))
+    (unless (eq w window) (window-preserve-size w t preserve))))
+
+;;;###autoload
+(defun remove-window-on-the-right ()
+  "Delete the window on the right of the selected frame and shrink the
+frame, leaving the other windows at their original sizes."
+  (interactive)
+  (let* ((rightmost (buffer-helpers--rightmost-window))
+         (width     (window-pixel-width rightmost)))
+    (unless (window-parent rightmost)
+      (user-error "Only one window"))
+    (delete-window rightmost)
+    (let ((new-rightmost (car (window-at-side-list nil 'right))))
+      (buffer-windows--preserve-other-widths new-rightmost t)
+      (set-frame-width nil (- (frame-pixel-width) width) nil t)
+      (buffer-windows--preserve-other-widths new-rightmost nil))))
+
+;;;###autoload
+(defun add-window-on-the-right ()
+  "Add a new window on the right of the selected frame, with the same width
+as the current right-most window, widening the frame to make room."
+  (interactive)
+  (let* ((rightmost (buffer-helpers--rightmost-window))
+         (width     (window-pixel-width rightmost)))
+    (buffer-windows--preserve-other-widths rightmost t)
+    (set-frame-width nil (+ (frame-pixel-width) width) nil t)
+    (let ((window-combination-resize nil))
+      (split-window rightmost (- width) 'right t))
+    (buffer-windows--preserve-other-widths rightmost nil)))
 
 (provide 'buffer-helpers)
