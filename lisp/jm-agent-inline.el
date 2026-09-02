@@ -81,6 +81,14 @@ Caches the result buffer-locally to avoid repeated prompts."
       (concat context "\n\n" instruction)
     instruction))
 
+(defun jm-agent-inline--insert (&rest args)
+  "Call `agent-shell-insert' via the shell (non-viewport) path.  These
+commands target a specific shell buffer and scrape its output, and the
+viewport path errors \"Not yet supported\" for :submit/:no-focus, so
+bind `agent-shell-prefer-viewport-interaction' to nil for the cell."
+  (let ((agent-shell-prefer-viewport-interaction nil))
+    (apply #`agent-shell-insert args)))
+
 ;;; jm-agent-explain
 
 ;;;###autoload
@@ -98,7 +106,7 @@ need the response inserted into your working buffer."
          (prompt (jm-agent-inline--build-prompt instruction context))
          (shell-buf (jm-agent-inline--ensure-shell)))
     (when (use-region-p) (deactivate-mark))
-    (agent-shell-insert :text prompt :submit t :shell-buffer shell-buf)))
+    (jm-agent-inline--insert :text prompt :submit t :shell-buffer shell-buf)))
 
 ;;; jm-agent-ask
 
@@ -140,7 +148,7 @@ when the response has been placed at point.
                      (goto-char target-pos)
                      (insert "\n" (string-trim response) "\n")))
                  (message "Response inserted."))))))
-    (agent-shell-insert :text prompt :submit t :no-focus t :shell-buffer shell-buf)))
+    (jm-agent-inline--insert :text prompt :submit t :no-focus t :shell-buffer shell-buf)))
 
 ;;; jm-agent-rewrite
 
@@ -226,7 +234,7 @@ change."
                                                       "\n--- end ---")
                                               'face 'jm-agent-rewrite-proposed))
                      (message "Rewrite ready. (C-c C-a accept, C-c C-k reject, C-c C-d diff)"))))))))
-    (agent-shell-insert :text prompt :submit t :no-focus t :shell-buffer shell-buf)))
+    (jm-agent-inline--insert :text prompt :submit t :no-focus t :shell-buffer shell-buf)))
 
 ;;;###autoload
 (defun jm-agent-rewrite-accept ()
