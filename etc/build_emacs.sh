@@ -3,7 +3,7 @@
 # Build Emacs from source in WSL with GUI and native compilation support.
 
 # --- Configuration Variables (can be overridden by arguments) ---
-EMACS_VERSION_TAG="emacs-30.1" # Or a branch e.g. "master"
+EMACS_VERSION_TAG="emacs-31.1" # Or a branch e.g. "master"
 BUILD_DIR="$HOME/emacs_build_source"
 INSTALL_PREFIX="$HOME/bin/emacs-new" # Default installation directory
 NUM_CORES=$(nproc) # Number of CPU cores for compilation
@@ -12,13 +12,10 @@ NUM_CORES=$(nproc) # Number of CPU cores for compilation
 ENABLE_GUI=true
 ENABLE_NATIVE_COMPILATION=true
 ENABLE_TREE_SITTER=true
-ENABLE_JSON=true
 ENABLE_MODULES=true
 ENABLE_GNUTLS=true
 ENABLE_IMAGEMAGICK=true
 ENABLE_CAIRO=true
-ENABLE_MAILUTILS=true
-ENABLE_WIDE_INT=true
 ENABLE_SOUND=true # libasound2-dev
 ENABLE_DBUS=true  # libdbus-1-dev
 ENABLE_RSVG=true  # librsvg2-dev
@@ -41,13 +38,10 @@ print_help() {
     echo "  --disable-gui                     Disable GUI support (build terminal-only)."
     echo "  --disable-native-compilation      Disable native compilation."
     echo "  --disable-tree-sitter             Disable Tree-sitter support."
-    echo "  --disable-json                    Disable JSON support."
     echo "  --disable-modules                 Disable dynamic modules support."
     echo "  --disable-gnutls                  Disable GnuTLS support."
     echo "  --disable-imagemagick             Disable ImageMagick support."
     echo "  --disable-cairo                   Disable Cairo graphics support."
-    echo "  --disable-mailutils               Disable Mailutils integration."
-    echo "  --disable-wide-int                Disable wide-int support."
     echo "  --disable-sound                   Disable sound support (libasound2-dev)."
     echo "  --disable-dbus                    Disable D-Bus support (libdbus-1-dev)."
     echo "  --disable-gpm                     Disable GPM support (libgpm-dev)."
@@ -64,7 +58,7 @@ print_help() {
 }
 
 # --- Argument Parsing ---
-ARGS=$(getopt -o h --long version:,build-dir:,prefix:,jobs:,disable-gui,disable-native-compilation,disable-tree-sitter,disable-json,disable-modules,disable-gnutls,disable-imagemagick,disable-cairo,disable-mailutils,disable-wide-int,disable-sound,disable-dbus,disable-gpm,disable-rsvg,disable-lcms2,disable-lockfile,skip-deps,clean,no-install,help -- "$@")
+ARGS=$(getopt -o h --long version:,build-dir:,prefix:,jobs:,disable-gui,disable-native-compilation,disable-tree-sitter,disable-modules,disable-gnutls,disable-imagemagick,disable-cairo,disable-sound,disable-dbus,disable-gpm,disable-rsvg,disable-lcms2,disable-lockfile,skip-deps,clean,no-install,help -- "$@")
 if [ $? -ne 0 ]; then
     print_help
 fi
@@ -107,10 +101,6 @@ while true; do
             ENABLE_TREE_SITTER=false
             shift
             ;;
-        --disable-json)
-            ENABLE_JSON=false
-            shift
-            ;;
         --disable-modules)
             ENABLE_MODULES=false
             shift
@@ -125,14 +115,6 @@ while true; do
             ;;
         --disable-cairo)
             ENABLE_CAIRO=false
-            shift
-            ;;
-        --disable-mailutils)
-            ENABLE_MAILUTILS=false
-            shift
-            ;;
-        --disable-wide-int)
-            ENABLE_WIDE_INT=false
             shift
             ;;
         --disable-sound)
@@ -217,11 +199,9 @@ install_dependencies() {
         fi
     }
     $ENABLE_TREE_SITTER && DEPENDENCIES+=" libtree-sitter-dev"
-    $ENABLE_JSON && DEPENDENCIES+=" libjansson-dev"
     $ENABLE_GNUTLS && DEPENDENCIES+=" libgnutls28-dev"
     $ENABLE_IMAGEMAGICK && DEPENDENCIES+=" libmagick++-dev"
     $ENABLE_CAIRO && DEPENDENCIES+=" libcairo2-dev"
-    $ENABLE_MAILUTILS && DEPENDENCIES+=" mailutils"
     $ENABLE_SOUND && DEPENDENCIES+=" libasound2-dev"
     $ENABLE_DBUS && DEPENDENCIES+=" libdbus-1-dev"
     $ENABLE_GPM && DEPENDENCIES+=" libgpm-dev"
@@ -270,8 +250,8 @@ fi
 cd "$BUILD_DIR" || { log "Error: Could not change to build directory."; exit 1; }
 
 if [ ! -d "emacs" ]; then
-    log "Cloning Emacs source code from Savannah Git repository..."
-    git clone https://git.savannah.gnu.org/git/emacs.git || { log "Error: Failed to clone Emacs repository."; exit 1; }
+    log "Cloning Emacs source code from GitHub mirror (shallow, $EMACS_VERSION_TAG)..."
+    git clone --depth 1 --branch "$EMACS_VERSION_TAG" https://github.com/emacs-mirror/emacs.git emacs || { log "Error: Failed to clone Emacs repository."; exit 1; }
 else
     log "Emacs source directory already exists. Pulling latest changes..."
     cd emacs                        || { log "Error: Could not change to emacs source directory."  ; exit 1; }
@@ -294,17 +274,17 @@ log "Running autogen.sh to generate configure script..."
 log "Configuring Emacs with selected features..."
 CONFIGURE_FLAGS=""
 if $ENABLE_GUI; then
-    CONFIGURE_FLAGS+=" --with-x --with-gtk3 --without-pgtk"
+    CONFIGURE_FLAGS+=" --with-pgtk"
 fi
+
+# Do /not/ set this to aot, which massively slows compilation and is a huge waste of time
 $ENABLE_NATIVE_COMPILATION && CONFIGURE_FLAGS+=" --with-native-compilation"
+
 $ENABLE_TREE_SITTER        && CONFIGURE_FLAGS+=" --with-tree-sitter"
-$ENABLE_JSON               && CONFIGURE_FLAGS+=" --with-json"
 $ENABLE_MODULES            && CONFIGURE_FLAGS+=" --with-modules"
 $ENABLE_GNUTLS             && CONFIGURE_FLAGS+=" --with-gnutls"
 $ENABLE_IMAGEMAGICK        && CONFIGURE_FLAGS+=" --with-imagemagick"
 $ENABLE_CAIRO              && CONFIGURE_FLAGS+=" --with-cairo"
-$ENABLE_MAILUTILS          && CONFIGURE_FLAGS+=" --with-mailutils"
-$ENABLE_WIDE_INT           && CONFIGURE_FLAGS+=" --with-wide-int"
 $ENABLE_SOUND              && CONFIGURE_FLAGS+=" --with-sound=alsa"
 $ENABLE_DBUS               && CONFIGURE_FLAGS+=" --with-dbus"
 $ENABLE_GPM                && CONFIGURE_FLAGS+=" --with-gpm"
@@ -326,10 +306,12 @@ if $ENABLE_NATIVE_COMPILATION; then
     fi
 fi
 
+export LDFLAGS="-Wl,-rpath=$HOME/.local/lib:/usr/local/lib"
+
 log "Running ./configure $CONFIGURE_FLAGS --prefix=$INSTALL_PREFIX"
 ./configure $CONFIGURE_FLAGS --prefix="$INSTALL_PREFIX" || { log "Error: configure failed."; exit 1; }
 
-unset CC CXX
+unset CC CXX LDFLAGS
 
 log "Compiling Emacs with $NUM_CORES parallel jobs..."
 make -j"$NUM_CORES" || { log "Error: make failed."; exit 1; }

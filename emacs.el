@@ -47,7 +47,9 @@
 
 (setq inhibit-default-init t
       inhibit-splash-screen t
-      inhibit-startup-screen t)
+      inhibit-startup-screen t
+      warning-minimum-level :error ; don't show a warnings window for trivia
+      warning-minimum-log-level : warning)
 
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
@@ -347,7 +349,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         (agent-shell-markdown--open-link url)
       (markdown-follow-link-at-point)))
 
-  (setopt agent-shell-prefer-viewport-interaction t
+  (setopt agent-shell-inhibit-system-sleep nil ; broken on some WSL2
+          agent-shell-prefer-viewport-interaction t
           agent-shell-preferred-agent-config 'claude-code)
   (define-keymap :keymap agent-shell-mode-map
     "C-c C-o" #'jm-agent-shell-follow-link-at-point
@@ -495,7 +498,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package completion-preview         ; built-in
   :ensure nil
-  :init
+  :config
   (define-keymap :keymap completion-preview-active-mode-map
     "M-i"     'completion-preview-insert-word
     "M-n"     'completion-preview-next-candidate
@@ -503,7 +506,6 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     "<tab>"   'completion-preview-insert
     "C-<tab>" 'completion-preview-complete ; show *Completions* buffer
     )
-  :config
   (setopt completion-preview-idle-delay 0.5)
   (with-eval-after-load 'org
     (add-to-list 'completion-preview-commands #'org-self-insert-command)))
@@ -722,6 +724,8 @@ clean buffer we delay checking for longer."
   'face nil)
   )
 
+;; Do not install forge! Impenetrable code, binary deps, and external serialization
+
 (use-package free-keys                  ; Show free keybindings for modkeys or prefixes
   )
 
@@ -760,6 +764,7 @@ clean buffer we delay checking for longer."
   :after markdown-mode
   :if (executable-find "go-grip")
   :config
+  ;; go-grip renders HTML itself, separately from markdown-export
   (setq grip-command 'go-grip
         grip-real-time-refresh nil
         ;; localhost for WSL2
@@ -1354,7 +1359,21 @@ mermaid.run().catch(err => {
 
   "HTML script block to render Mermaid diagrams in markdown previews.")
 
+(defun jm-set-markdown-command ()
+  "Set `markdown-command' for HTML export, preferring cmark=gfm.  Shared by
+`gfm-mode' and `markdown-ts-mode'"
+  (setq-local markdown-command
+              (cond
+               ((executable-find "cmark-gfm")
+                "cmark-gfm -e table -e strikethrough -e autolink -e tasklist")
+               ((executable-find "pandoc")
+                "pandoc")
+               ((executable-find "markdown")
+                "markdown")
+               (t "markdown"))))
+
 (use-package markdown-mode
+  ;; supplies HTML export for both this and markdown-ts-mode
   :mode ("\\.md\\'" . gfm-mode)
   :config
   (setq markdown-css-paths '("https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown.min.css")
@@ -1369,6 +1388,19 @@ mermaid.run().catch(err => {
                            ((executable-find "pandoc") "pandoc")
                            ((executable-find "markdown") "markdown")
                            (t "markdown"))))))
+
+(use-package markdown-ts-mode           ; built-in
+  :ensure nil
+  :mode ("\\.md\\'" . markdown-ts-mode)
+  :config
+  (require 'markdown-mode)              ; for HTML export
+  (add-hook 'markdown-ts-mode-hook #'jm-set-markdown-command)
+  (define-keymap :keymap markdown-ts-mode-map
+    "C-c C-e" #'markdown-export
+    "C-c C-v" #'markdown-export-and-preview
+    "C-c C-g" #'grip-mode
+    "C-c TAB" #'forward-button
+    "C-c <backtab>" #'backward-button))
 
 (use-package maxframe)
 

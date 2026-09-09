@@ -1,5 +1,5 @@
 ---
-description: Compare local JMEmacs with upstream and create a detailed report
+description: Compare local JMEmacs with upstream and create a detailed report and diff
 ---
 
 ### Task
@@ -15,6 +15,7 @@ Run the compare.sh script to check differences between the local JMEmacs install
    - Files that differ between versions
 3. **Analyze each difference**: For files that differ or are missing, read the relevant files to understand what changed.
 4. **Provide recommendations**: For each difference, suggest an action (update, merge, keep local, ignore, etc.)
+5. **Display diff**: Use the Emacs ztree package
 
 ### Report Sections
 
@@ -36,8 +37,6 @@ Run the compare.sh script to check differences between the local JMEmacs install
   - Files to review manually
   - Conflicts to resolve
 
-- **Appendices**: Full diff output for reference
-
 ### Formatting
 
 Use org-mode format throughout
@@ -49,3 +48,5 @@ Use org-mode format throughout
 ### Output
 
 Save the report to `comparison-report.org` and return the filename and a brief summary of findings to the user.
+
+Open an Emacs ztree session comparing the two directories.
