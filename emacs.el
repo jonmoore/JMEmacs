@@ -1374,20 +1374,11 @@ mermaid.run().catch(err => {
 
 (use-package markdown-mode
   ;; supplies HTML export for both this and markdown-ts-mode
-  :mode ("\\.md\\'" . gfm-mode)
   :config
   (setq markdown-css-paths '("https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown.min.css")
         markdown-xhtml-body-preamble "<div class =\"markdown-body\">"
         markdown-xhtml-body-epilogue (concat "</div>" jm-mermaid-html-script))
-  (add-hook 'gfm-mode-hook
-            (lambda ()
-              (setq-local markdown-command
-                          (cond
-                           ((executable-find "cmark-gfm")
-                            "cmark-gfm -e table -e strikethrough -e autolink -e tasklist")
-                           ((executable-find "pandoc") "pandoc")
-                           ((executable-find "markdown") "markdown")
-                           (t "markdown"))))))
+  (add-hook 'gfm-mode-hook #'jm-set-markdown-command))
 
 (use-package markdown-ts-mode           ; built-in
   :ensure nil
