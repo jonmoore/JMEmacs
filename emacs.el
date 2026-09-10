@@ -49,7 +49,7 @@
       inhibit-splash-screen t
       inhibit-startup-screen t
       warning-minimum-level :error ; don't show a warnings window for trivia
-      warning-minimum-log-level : warning)
+      warning-minimum-log-level :warning)
 
 ;;; SYSTEM
 (defconst system-win32-p (eq system-type 'windows-nt)
