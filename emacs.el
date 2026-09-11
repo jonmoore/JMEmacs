@@ -85,6 +85,9 @@
 ;; tricky-to-diagnose issues
 (setq package-check-signature nil)
 
+(setopt package-autosuggest-mode t
+        package-menu-use-current-if-no-marks nil)
+
 ;; The call to package-initialize is needed to stop Emacs trying to
 ;; install built-in packages from an external repository.  According
 ;; to the documentation of package-initialize, this call should not be
@@ -262,7 +265,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         (append
          '(yasnippet-capf cape-file cape-abbrev cape-dabbrev cape-dict)
          completion-at-point-functions))
-  
+
   :custom
   (Buffer-menu-buffer+size-width 36)
   (Buffer-menu-mode-width 10)
@@ -270,17 +273,28 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (auto-save-timeout 120)
   (backup-by-copying t)
   (case-fold-search t)
+  (column-number-mode t)
   (comment-column 50)
   (confirm-kill-emacs 'yes-or-no-p)
+  (compilation-scroll-output 'first-error)
+  (completion-auto-select 'second-tab)
+  (completion-eager-update t)
   (completion-ignored-extensions '(".o" "~" ".obj" ".elc" ".pyc"))
+  (completion-styles '(basic emacs22 flex))
+  (completions-detailed t)
+  (completions-group t)
+  (context-menu-mode t)
   (create-lockfiles nil)
+  (delete-selection-mode t)
   (directory-abbrev-alist nil)
   (enable-local-eval t)
   (fill-column 90)
   (find-ls-option '("-exec ls -ld {} ';'" . "-ld") t)
+  (frame-resize-pixelwise t)
   (gc-cons-threshold (* 128 1000 1000))
   (history-delete-duplicates t)
   (history-length 100)
+  (imenu-auto-rescan t)
   (indent-tabs-mode nil)
   (ispell-complete-word-dict
    (let ((linux-words "/usr/share/dict/words"))
@@ -296,6 +310,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (jit-lock-stealth-load 50)
   (jit-lock-stealth-nice 1.0)
   (jit-lock-stealth-time 1.0)
+  (kill-do-not-save-duplicates t)
   (kill-whole-line t)
   (line-move-visual nil)
   (line-number-display-limit-width 400)
@@ -305,6 +320,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (ls-lisp-verbosity nil)
   (minibuffer-prompt-properties
    '(read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt))
+  (minibuffer-visible-completions t)
+  (mode-line-compact 'long)
   (next-line-add-newlines nil)
   (read-buffer-completion-ignore-case t)
   (safe-local-variable-values
@@ -318,10 +335,18 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
      (TeX-command-extra-options . "-shell-escape")
      ))
   (set-mark-command-repeat-pop t)
+  (shell-command-prompt-show-cwd t)
   (show-trailing-whitespace nil)
   (suggest-key-bindings nil)
   (switch-to-prev-buffer-skip-regexp "\\*.*\\*")
+  (tab-always-indent 'complete)
+  (tab-bar-history-mode t)
+  (tab-bar-show 0)
+  (view-read-only t)
   (visual-line-fringe-indicators '(left-curly-arrow nil))
+  (window-combination-resize t)
+  (window-resize-pixelwise t)
+
   :custom-face
   (cursor ((t (:background "yellow"))))
   (font-lock-builtin-face ((((class color) (background light)) (:foreground "blue"))))
@@ -587,7 +612,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (diff-hl-insert ((t (:foreground "black" :background "#98C379"))))
   (diff-hl-delete ((t (:foreground "black" :background "#E06C75"))))
   (diff-hl-change ((t (:foreground "black" :background "#E5C07B"))))
-  
+
   (diff-hl-reference-insert ((t (:foreground "lime green" :background "lime green"))))
   (diff-hl-reference-delete ((t (:foreground "IndianRed"  :background "IndianRed"))))
   (diff-hl-reference-change ((t (:foreground "gold"       :background "gold")))))
@@ -599,8 +624,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :config
   (require 'dired-column-widths)
   (set-face-foreground 'dired-directory "yellow")
-  (setq dired-dnd-protocol-alist nil
-        find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
+  (setopt dired-dnd-protocol-alist nil
+          dired-auto-revert-buffer t
+          find-ls-option (quote ("-exec ls -ld {} ';'" . "-ld")))
   (define-keymap :keymap dired-mode-map
     "i"        'dired-subtree-toggle
     "I"        'dired-maybe-insert-subdir
@@ -723,6 +749,10 @@ clean buffer we delay checking for longer."
   'help-echo nil ; disable the spam messages
   'face nil)
   )
+
+(use-package flyspell                   ; built-in
+  :hook ((prog-mode . flyspell-prog-mode)
+         (text-mode . flyspell-mode)))
 
 ;; Do not install forge! Impenetrable code, binary deps, and external serialization
 
@@ -1239,7 +1269,7 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
    magit-diff-specify-hunk-foreground nil
    magit-diff-use-indicator-faces t
    magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
-  
+
   (when system-win32-p
     ;; reduce the amount of information reported by magit-status, hence the time this
     ;; requires
@@ -2112,7 +2142,7 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
     "C-M-<backspace>"  'sp-splice-sexp-killing-backward
     "C-M-<delete>"     'sp-splice-sexp-killing-forward
     )
-  
+
   ;; smartparens-config provides sensible defaults for smartparens in different
   ;; languages.  It's especially important for lisp as otherwise smartparens
   ;; will double up insertion of single quotes.
@@ -2207,7 +2237,7 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   :diminish undo-tree-mode
   :config
   (define-keymap :keymap undo-tree-visualizer-mode-map
-    "RET"  'undo-tree-visualizer-quit)  
+    "RET"  'undo-tree-visualizer-quit)
   (setq undo-tree-auto-save-history t
         ;; place history files in one location rather than scattering them everywhere
         undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree")))
@@ -2235,6 +2265,13 @@ files.  This persists across sessions"
 
 (use-package vc ;; built-in support for version-control systems
   :config
+  (setopt vc-auto-revert-mode t
+          vc-deduce-backend-nonvc-modes t
+          vc-dir-save-some-buffers-on-revert t
+          vc-find-revision-no-save t
+          vc-follow-symlinks t
+          vc-use-incoming-outgoing-prefixes t)
+
   ;; Conserve space on the mode line.  This is based on
   ;; https://emacs.stackexchange.com/a/10957 but optimized to not call vc-backend as that
   ;; can cause noticeable slowdowns for git on Windows in the presence of anti-virus, etc.
@@ -2532,12 +2569,16 @@ candidates for display-fill-column-indicator-character."
   (global-display-fill-column-indicator-mode)
   (global-font-lock-mode)
   (global-undo-tree-mode)
+  (global-xref-mouse-mode t)
   (progn
     ;; requiring magit-process because consult previews break without it
     (require 'magit-process)
-    (magit-auto-revert-mode)
-    )
-  (recentf-mode)
+    (magit-auto-revert-mode))
+
+   (pixel-scroll-mode t)
+   (recentf-mode t)
+   (repeat-mode t)
+
   (save-place-mode)
   (savehist-mode)
   (show-paren-mode)
