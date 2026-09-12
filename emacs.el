@@ -926,6 +926,15 @@ clean buffer we delay checking for longer."
     ))
 
 (unless system-osx-p
+  ;; For Lean, nael-mode seems like the best option.
+  ;;
+  ;; See https://github.com/leanprover-community/lean4-mode/issues/112 for an overview of
+  ;; the relation between lean4-mode and nael.
+  ;;
+  ;; lean4-mode is not on MELPA.  Its main repos are:
+  ;; - https://github.com/leanprover-community/lean4-mode inactive
+  ;;   - https://github.com/bustercopley/lean4-mode forked from the above in Oct 2023
+  ;;     - https://github.com/ultronozm/lean4-mode forked from the above in Fen 2026, a few commits ahead
   (use-package lean4-mode
     :vc (:url "https://github.com/leanprover-community/lean4-mode"
               :lisp-dir "." ; Replaces :files mapping if code is in the root
@@ -1435,6 +1444,11 @@ mermaid.run().catch(err => {
 
 (use-package multiple-cursors)
 
+;; nael is an alternative to lean4-mode created by a former maintainer.
+;; - https://codeberg.org/mekeor/nael , although codeberg often seems to be down
+;; - https://github.com/bustercopley/nael : mirror of the above
+
+;; Its autoload has a dangling reference to `nael-mode-map'; this can be deleted.
 (use-package nael)
 
 (use-package nael-lsp)
