@@ -2560,13 +2560,13 @@ candidates for display-fill-column-indicator-character."
     (require 'magit-process)
     (magit-auto-revert-mode))
 
-   (pixel-scroll-mode t)
-   (recentf-mode t)
-   (repeat-mode t)
-
+  (pixel-scroll-mode t)
+  (recentf-mode t)
+  (repeat-mode t)
   (save-place-mode)
   (savehist-mode)
   (show-paren-mode)
+  (tool-bar-mode -1)
   (transient-mark-mode)
   (winner-mode)
   (yas-global-mode)
@@ -2587,8 +2587,8 @@ candidates for display-fill-column-indicator-character."
 
   (add-hook 'prog-mode-hook #'jm-enable-jit-lock-stealth)
   (add-hook 'text-mode-hook #'jm-enable-jit-lock-stealth)
-  (desktop-save-mode)
 
+  (desktop-save-mode)
   (server-start))
 
 (message "Finished emacs.el")
