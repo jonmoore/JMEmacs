@@ -752,7 +752,9 @@ clean buffer we delay checking for longer."
 
 (use-package flyspell                   ; built-in
   :hook ((prog-mode . flyspell-prog-mode)
-         (text-mode . flyspell-mode)))
+         (text-mode . flyspell-mode))
+  :init
+  (setopt flyspell-use-meta-tab nil))
 
 ;; Do not install forge! Impenetrable code, binary deps, and external serialization
 
