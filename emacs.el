@@ -220,9 +220,6 @@
         ;; for when we don't have a right Windows key
         w32-apps-modifier 'super))
 
-(defconst minibuffer-completion-mocve-p t
-  "Whether to use the MOCVE (Marginalia, Orderless, Consult, Vertico, Embark) minibuffer completion stack.")
-
 (defconst in-buffer-completion-capf-p t
   "Whether to use the native capf in-buffer completions.")
 
@@ -541,33 +538,32 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (when system-win32-p
     (setq conda--executable-path (f-join conda-anaconda-home conda-env-executables-dir "conda.exe"))))
 
-(when minibuffer-completion-mocve-p
-  (defun consult-line-symbol ()
-    "Run `consult-line' in the current buffer, filtering based on
+(defun consult-line-symbol ()
+  "Run `consult-line' in the current buffer, filtering based on
 `symbol-at-point.'"
-    (interactive)
-    (let ((symbol (symbol-at-point)))
-      (if symbol
-          (consult-line (symbol-name symbol))
-        (consult-line))))
+  (interactive)
+  (let ((symbol (symbol-at-point)))
+    (if symbol
+        (consult-line (symbol-name symbol))
+      (consult-line))))
 
-  (use-package consult                  ; Enhanced completing-read functions
-    :init
-    (define-keymap :keymap search-map
-           "g"   'consult-ripgrep
-           "i"   'consult-imenu
-           "M-i" 'consult-imenu-multi
-           "l"   'consult-line
-           "M-l" 'consult-line-multi
-           "o"   'consult-outline    ; overrides occur
-           "s"   'consult-line-symbol
+(use-package consult                  ; Enhanced completing-read functions
+  :init
+  (define-keymap :keymap search-map
+    "g"   'consult-ripgrep
+    "i"   'consult-imenu
+    "M-i" 'consult-imenu-multi
+    "l"   'consult-line
+    "M-l" 'consult-line-multi
+    "o"   'consult-outline    ; overrides occur
+    "s"   'consult-line-symbol
 
-           "k"   'consult-keep-lines
-           "f"   'consult-focus-lines))
+    "k"   'consult-keep-lines
+    "f"   'consult-focus-lines))
 
-  (use-package consult-flycheck)
+(use-package consult-flycheck)
 
-  (use-package consult-lsp))
+(use-package consult-lsp)
 
 (when in-buffer-completion-capf-p
   (use-package corfu
@@ -683,19 +679,18 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package elmacro)                   ; Convert keyboard macros to emacs lisp.
 
-(when minibuffer-completion-mocve-p
-  (use-package embark                   ; Provides actions on minibuffer completions.
-    :init
-    (define-prefix-command 'embark-map nil "embark map")
-    (define-keymap :keymap embark-map
-      "," 'embark-dwim
-      "." 'embark-act
-      ";" 'embark-collect
-      "'" 'embark-export
-      "/" 'embark-live))
+(use-package embark                   ; Provides actions on minibuffer completions.
+  :init
+  (define-prefix-command 'embark-map nil "embark map")
+  (define-keymap :keymap embark-map
+    "," 'embark-dwim
+    "." 'embark-act
+    ";" 'embark-collect
+    "'" 'embark-export
+    "/" 'embark-live))
 
-  (use-package embark-consult           ; Consult integration for embark
-    ))
+(use-package embark-consult           ; Consult integration for embark
+  )
 
 (use-package expand-region              ; Increase selected region by semantic units.
 )
@@ -1379,9 +1374,8 @@ corresponding to point in the hunk.
       (add-hook 'magit-section-movement-hook #'jm-magit-auto-preview-file)
     (remove-hook 'magit-section-movement-hook #'jm-magit-auto-preview-file)))
 
-(when minibuffer-completion-mocve-p
-  (use-package marginalia         ; Provides annotations for completion candidates.
-    ))
+(use-package marginalia         ; Provides annotations for completion candidates.
+  )
 
 (defvar jm-mermaid-html-script
   "<script src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js'></script>
@@ -1566,11 +1560,10 @@ directory, otherwise return nil."
       (when (file-directory-p candidate)
         candidate))))
 
-(when minibuffer-completion-mocve-p
-  (use-package orderless          ; Provides flexible completion style.
-    :custom
-    (completion-styles '(orderless))
-    (completion-category-overrides '((file (styles basic partial-completion))))))
+(use-package orderless          ; Provides flexible completion style.
+  :custom
+  (completion-styles '(orderless))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
 
 (defun jm-dropbox-directory ()
   "Return the path to my Dropbox directory if present"
@@ -2286,14 +2279,13 @@ files.  This persists across sessions"
     (delete 'Git vc-handled-backends)
     (remove-hook 'find-file-hook 'vc-refresh-state)))
 
-(when minibuffer-completion-mocve-p
-  (use-package vertico            ; Provides a vertical completion U.I.
-    :init
-    (setopt vertico-cycle t)
-    :config
-    (define-keymap :keymap vertico-map
-      "C-M-n"   'vertico-next-group
-      "C-M-p"   'vertico-previous-group)))
+(use-package vertico            ; Provides a vertical completion U.I.
+  :init
+  (setopt vertico-cycle t)
+  :config
+  (define-keymap :keymap vertico-map
+    "C-M-n"   'vertico-next-group
+    "C-M-p"   'vertico-previous-group))
 
 (defun jm-show-display-fill-column-indicator-character-candidates ()
   "Insert some characters and associated info at point showing
@@ -2560,20 +2552,23 @@ candidates for display-fill-column-indicator-character."
 
 (use-package emacs
   :config
+  ;; requiring magit-process because consult previews break without it
+  (require 'magit-process)
+  (require 'orderless)
+
   (global-anzu-mode)
   (global-auto-highlight-symbol-mode)
   (global-auto-revert-mode)
   (global-completion-preview-mode 1)
+  (when in-buffer-completion-capf-p
+    (global-corfu-mode))
   (global-disable-mouse-mode)
   (global-display-fill-column-indicator-mode)
   (global-font-lock-mode)
   (global-undo-tree-mode)
   (global-xref-mouse-mode t)
-  (progn
-    ;; requiring magit-process because consult previews break without it
-    (require 'magit-process)
-    (magit-auto-revert-mode))
-
+  (magit-auto-revert-mode)
+  (marginalia-mode)
   (pixel-scroll-mode t)
   (recentf-mode t)
   (repeat-mode t)
@@ -2582,16 +2577,10 @@ candidates for display-fill-column-indicator-character."
   (show-paren-mode)
   (tool-bar-mode -1)
   (transient-mark-mode)
+  (vertico-mode)
+  (which-key-mode)
   (winner-mode)
   (yas-global-mode)
-
-  (when minibuffer-completion-mocve-p
-    (require 'orderless)
-    (marginalia-mode)
-    (vertico-mode)
-    (which-key-mode))
-  (when in-buffer-completion-capf-p
-    (global-corfu-mode))
 
   (when org-mobile-directory
     (require 'org-mobile)
