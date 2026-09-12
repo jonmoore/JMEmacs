@@ -1390,8 +1390,7 @@ mermaid.run().catch(err => {
   "HTML script block to render Mermaid diagrams in markdown previews.")
 
 (defun jm-set-markdown-command ()
-  "Set `markdown-command' for HTML export, preferring cmark=gfm.  Shared by
-`gfm-mode' and `markdown-ts-mode'"
+  "Set `markdown-command' for HTML export, preferring cmark-gfm"
   (setq-local markdown-command
               (cond
                ((executable-find "cmark-gfm")
@@ -1403,25 +1402,11 @@ mermaid.run().catch(err => {
                (t "markdown"))))
 
 (use-package markdown-mode
-  ;; supplies HTML export for both this and markdown-ts-mode
   :config
   (setq markdown-css-paths '("https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown.min.css")
         markdown-xhtml-body-preamble "<div class =\"markdown-body\">"
         markdown-xhtml-body-epilogue (concat "</div>" jm-mermaid-html-script))
   (add-hook 'gfm-mode-hook #'jm-set-markdown-command))
-
-(use-package markdown-ts-mode           ; built-in
-  :ensure nil
-  :mode ("\\.md\\'" . markdown-ts-mode)
-  :config
-  (require 'markdown-mode)              ; for HTML export
-  (add-hook 'markdown-ts-mode-hook #'jm-set-markdown-command)
-  (define-keymap :keymap markdown-ts-mode-map
-    "C-c C-e" #'markdown-export
-    "C-c C-v" #'markdown-export-and-preview
-    "C-c C-g" #'grip-mode
-    "C-c TAB" #'forward-button
-    "C-c <backtab>" #'backward-button))
 
 (use-package maxframe)
 
@@ -2559,8 +2544,6 @@ candidates for display-fill-column-indicator-character."
 
 (use-package emacs
   :config
-  (tool-bar-mode -1)
-
   (global-anzu-mode)
   (global-auto-highlight-symbol-mode)
   (global-auto-revert-mode)
