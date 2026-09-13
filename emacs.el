@@ -448,8 +448,9 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (auto-revert-interval 60))
 
 (use-package bibtex                     ; built-in
-  :custom
-  (bibtex-maintain-sorted-entries 'entry-class))
+  :init
+  (setopt bibtex-maintain-sorted-entries 'entry-class
+          bibtex-dialect 'biblatex))
 
 (use-package browse-kill-ring           ; Interactively insert items from kill-ring.
   :custom
