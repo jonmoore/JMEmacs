@@ -745,24 +745,6 @@ clean buffer we delay checking for longer."
   'face nil)
   )
 
-(use-package flyspell                   ; built-in
-  ;; minad's jinx may be worth a look but requires compiling a C library.
-  :hook ((prog-mode . flyspell-prog-mode)
-         (text-mode . flyspell-mode))
-  :init
-  (setopt flyspell-use-meta-tab nil)
-  (define-prefix-command 'flyspell-dispatch-map)
-  (define-keymap :keymap flyspell-dispatch-map
-    ;; not binding the auto-correct functions as I found bugs as soon as trying to use
-    ;; them.  flyspell-auto-correct-word triggered infinite recursion and
-    ;; flyspell-auto-correct-previous-word did not correct errors.
-    "c" 'flyspell-correct-word-before-point
-    "n" 'flyspell-goto-next-error
-    )
-  :config
-  (setcdr flyspell-mode-map nil)        ; allow global bindings for embark below
-  )
-
 ;; Do not install forge! Impenetrable code, binary deps, and external serialization
 
 (use-package free-keys                  ; Show free keybindings for modkeys or prefixes
@@ -2500,7 +2482,7 @@ candidates for display-fill-column-indicator-character."
   "C-c g"        '("gptel"      . gptel-dispatch-map)
   "C-c m"        '("magit-file" . magit-file-dispatch)
   "C-c M"        '("magit-repo" . magit-dispatch)
-  "C-c s"        '("spell"      . flyspell-dispatch-map)
+  ;; "C-c s"        '("spell"      . flyspell-dispatch-map)
   "C-c w"        '("window"     . windmove-map)
 
   "C-h b"        'describe-bindings
