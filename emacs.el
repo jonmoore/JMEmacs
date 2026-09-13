@@ -887,6 +887,28 @@ clean buffer we delay checking for longer."
 
 (use-package jq-mode)                   ; edit jq scripts
 
+(use-package jinx                       ; spell-checker
+  :init
+  (defun jinx-check-dependencies ()
+    "Check for Jinx build dependencies and warn about missing items."
+    (cond
+     ((not (executable-find "pkg-config"))
+      (display-warning 'jinx
+                       "Jinx dependency missing: `pkg-config` executable was not found in PATH."
+                       :warning)
+      nil)
+     ((not (zerop (process-file "pkg-config" nil nil nil "--exists" "enchant-2")))
+      (display-warning 'jinx
+                       "Jinx dependency missing: `enchant-2` development headers (libenchant-2-dev / enchant2-devel) are not installed."
+                       :warning)
+      nil)
+     (t)))
+  :config
+  ;; suggested settings to show more completions
+  (require 'vertico-multiform)
+  (add-to-list 'vertico-multiform-categories
+               '(jinx grid (vertico-grid-annotate . 10) (vertico-count . 4))))
+
 (use-package json-mode)                 ; Major mode for editing JSON files.
 
 (use-package js2-mode                   ; Improved JavaScript editing mode.
@@ -2279,7 +2301,8 @@ files.  This persists across sessions"
   :config
   (define-keymap :keymap vertico-map
     "C-M-n"   'vertico-next-group
-    "C-M-p"   'vertico-previous-group))
+    "C-M-p"   'vertico-previous-group)
+  (vertico-multiform-mode))
 
 (defun jm-show-display-fill-column-indicator-character-candidates ()
   "Insert some characters and associated info at point showing
@@ -2560,6 +2583,9 @@ candidates for display-fill-column-indicator-character."
   (global-disable-mouse-mode)
   (global-display-fill-column-indicator-mode)
   (global-font-lock-mode)
+  (when (jinx-check-dependencies)
+    (global-jinx-mode 1)
+    (keymap-global-set "M-$" #'jinx-correct))
   (global-undo-tree-mode)
   (global-xref-mouse-mode t)
   (magit-auto-revert-mode)
