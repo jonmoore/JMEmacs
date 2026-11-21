@@ -22,8 +22,10 @@
 (defvar jm-test-suites
   '(("units"       "-Q" "test/test-units.el")
     ("environment" "-Q" "test/test-environment.el")
-    ("lint"        nil  "test/test-lint.el" "--strict")
-    ("startup"     nil  "test/test-startup.el"))
+    ;; startup installs missing packages through use-package, so it must
+    ;; run before lint, which needs them to compile lisp/*.el.
+    ("startup"     nil  "test/test-startup.el")
+    ("lint"        nil  "test/test-lint.el" "--strict"))
   "Test suites: name, optional Emacs flag, file relative to the root, and
 any further arguments for the test file.")
 

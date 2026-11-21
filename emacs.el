@@ -251,6 +251,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package custom
   :ensure nil
+  :after color-theme-modern             ; provides word-perfect
   :init
   (load-theme 'word-perfect t t)
   (enable-theme 'word-perfect)

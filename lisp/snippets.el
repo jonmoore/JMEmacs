@@ -1,6 +1,8 @@
 ;; -*- lexical-binding: nil -*-
 (require 'cl-lib)
 
+(defvar explicit-shell-file-name)       ; shell.el
+
 (declare-function joccur "joccur")
 (declare-function w32-shell-execute "w32fns.c")
 
