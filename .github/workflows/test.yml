@@ -24,19 +24,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Third-party actions are pinned to full commit SHAs, so a later push
-      # to them can't change what runs here.  Dependabot proposes updates.
+      # The third-party action is pinned to a full commit SHA, so a later push
+      # to it can't change what runs here.  Dependabot proposes updates.
       - name: Install Emacs (Linux, macOS)
         if: runner.os != 'Windows'
         uses: purcell/setup-emacs@34c6ded44899fd1bf74d2889558befd1750e61a7  # master, 2026-11-21
         with:
           version: ${{ matrix.emacs }}
 
+      # On Windows, use GNU's official build directly rather than a
+      # third-party action (the one available lags behind new releases).
       - name: Install Emacs (Windows)
         if: runner.os == 'Windows'
-        uses: jcs090218/setup-emacs-windows@3ad415b5f6575fe0bb8218cb35c199a93b1fb833  # master, 2026-11-21
-        with:
-          version: ${{ matrix.emacs }}
+        shell: pwsh
+        run: |
+          $version = "${{ matrix.emacs }}"
+          $major = $version.Split('.')[0]
+          $url = "https://ftpmirror.gnu.org/emacs/windows/emacs-$major/emacs-$version.zip"
+          Invoke-WebRequest -Uri $url -OutFile "$env:RUNNER_TEMP\emacs.zip"
+          7z x "$env:RUNNER_TEMP\emacs.zip" -oC:\emacs -y | Out-Null
+          $bin = (Get-ChildItem C:\emacs -Recurse -Filter emacs.exe | Select-Object -First 1).DirectoryName
+          Add-Content $env:GITHUB_PATH $bin
+          & "$bin\emacs.exe" --version
 
       # Tools the environment test requires, plus cmake/libtool/libvterm,
       # which vterm needs to compile its module.
