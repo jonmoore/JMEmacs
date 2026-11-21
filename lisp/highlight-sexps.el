@@ -133,7 +133,7 @@ over.")
 ;;;###autoload
 (define-minor-mode highlight-sexps-mode
   "Minor mode to highlight an expanding set of surrounding s-expressions."
-  nil " hl-s" nil
+  :lighter " hl-s"
   (if highlight-sexps-mode
       (progn
         (hl-sexp-create-overlays)
