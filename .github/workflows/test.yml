@@ -47,13 +47,16 @@ jobs:
           Add-Content $env:GITHUB_PATH $bin
           & "$bin\emacs.exe" --version
 
-      # Tools the environment test requires, plus cmake/libtool/libvterm,
-      # which vterm needs to compile its module.
+      # Tools the environment test requires, plus cmake/libtool, which vterm
+      # needs to compile its module.  No libvterm-dev: this Emacs is a Nix
+      # build that doesn't search /usr/lib, so a module linked against the
+      # system libvterm can't be opened.  Without it, vterm builds its
+      # vendored libvterm into the module.
       - name: Install tools (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ripgrep pkg-config libenchant-2-dev cmake libtool-bin libvterm-dev
+          sudo apt-get install -y ripgrep pkg-config enchant-2 libenchant-2-dev cmake libtool-bin
 
       - name: Install tools (macOS)
         if: runner.os == 'macOS'
