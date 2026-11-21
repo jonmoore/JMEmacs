@@ -1,4 +1,13 @@
 ;; -*- lexical-binding: nil -*-
+
+;; These helpers need Org.  The file is autoloaded, so this only runs the
+;; first time one of its commands is used.
+(require 'org)
+(require 'org-clock)
+(require 'org-id)
+(require 'ob-core)
+(require 'ob-tangle)
+
 ;;;###autoload
 (defun org-check-running-clock-any-buffer ()
   "Check if any Org buffer contains a running clock.
@@ -75,10 +84,10 @@ to beginning of heading, otherwise call `org-backward-heading-same-level`"
 
 ;;;###autoload
 (defun org-babel-detangle-stay-in-tangled-buffer (&optional source-code-file)
-  "Wrap `org-babel-detangle` so that we stay in the tangled buffer,
-from which this should be run.  This is a workaround for some odd behavior
-by `org-babel-detangle', which ends up with a current buffer not equal to the buffer of the
-selected window."
+  "Wrap `org-babel-detangle' so that we stay in the tangled buffer.
+Run this from the tangled buffer.  This is a workaround for some odd
+behavior by `org-babel-detangle', which ends up with a current buffer
+not equal to the buffer of the selected window."
   (interactive)
   (save-mark-and-excursion
     (let ((cb (current-buffer)))

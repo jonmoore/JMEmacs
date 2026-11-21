@@ -47,8 +47,9 @@
 
 
 (defvar python-helpers-enable-conda t
-  "Non-nil means prompt for and activate conda environments for local Python buffers.
-Set to nil to skip conda entirely (e.g. when conda is not in use on this machine).")
+  "Non-nil means prompt for and activate conda environments.
+This applies to local Python buffers.  Set to nil to skip conda
+entirely, e.g. when conda is not in use on this machine.")
 
 (defvar python-helpers--ht-project-conda-env
   (ht-create)
@@ -137,12 +138,12 @@ is first conda env, then lsp."
   (if python-helpers--init-in-buffer-core-running-p
       (progn
         (error "Function '%s' called reentrantly" 'python-helpers--init-in-buffer-core))
-    (let ((python-helpers--init-in-buffer-core-running-p t))
-      (setq conda-env-path (if python-helpers-enable-conda
+    (let* ((python-helpers--init-in-buffer-core-running-p t)
+           (conda-env-path (if python-helpers-enable-conda
                                (or (ht-get python-helpers--ht-project-conda-env project-root)
                                    (python-helpers--select-conda-env project-root)
                                    'do-not-use-an-env)
-                             'do-not-use-an-env))
+                             'do-not-use-an-env)))
       (ht-set! python-helpers--ht-project-conda-env
                project-root
                conda-env-path)
@@ -178,7 +179,7 @@ desktop. Ideally we would lean on lsp-deferred for this."
           (lsp))
       (when (or (get-buffer-window buffer t)
                 (buffer-modified-p buffer))
-        (when-let ((project-root (projectile-project-root)))
+        (when-let* ((project-root (projectile-project-root)))
           (python-helpers--init-in-buffer-core project-root))))))
 
 ;;;###autoload
@@ -220,7 +221,8 @@ which case FRAME-OR-WINDOW is a frame; see
     (python-helpers--init-in-window frame-or-window))))
 
 (defun python-helpers--after-switch-to-buffer (buffer)
-  "Advice function to run `python-helpers--init-in-buffer` after `switch-to-buffer`."
+  "Run `python-helpers--init-in-buffer' on BUFFER.
+Used as advice after `switch-to-buffer'."
   (python-helpers--init-in-buffer buffer))
 
 ;;;###autoload
@@ -228,7 +230,7 @@ which case FRAME-OR-WINDOW is a frame; see
   "Initialise LSP in currently visible buffers and configure it
 to be enabled when needed"
   ;; take care of buffers that are currently loaded and visible
-  (mapcar
+  (mapc
    'python-helpers--init-in-frame
    (frame-list))
 

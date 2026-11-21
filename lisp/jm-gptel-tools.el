@@ -11,6 +11,9 @@
 
 (require 'gptel)
 
+(declare-function Info-find-node "info")
+(declare-function buffer-contents "buffer-helpers")
+
 ;;;###autoload
 (defun gptel-describe-tools ()
   "Display a buffer containing summary information about the known GPTel tools."
@@ -36,7 +39,7 @@
   "Call FUNCTION with ARGS and return the contents of BUFFER,
 assumed to be created or modified by FUNCTION.  This is wrapped
 with `save-window-excursion'."
-  (cl-check-type function fbound)
+  (cl-check-type function (satisfies fboundp))
   (save-window-excursion
     (apply function args)
     (buffer-contents buffer)))
@@ -45,7 +48,7 @@ with `save-window-excursion'."
   "Return a description of TARGET using DESCRIBE-HELPER with ARGS.
 DESCRIBE-HELPER must be one of the standard Emacs describe
 functions, e.g. describe-function. TARGET must be a string."
-  (cl-check-type describe-helper fbound)
+  (cl-check-type describe-helper (satisfies fboundp))
   (cl-check-type target string)
   (apply 'jm--call-and-return-from-buffer
          describe-helper "*Help*" (intern target) args))
@@ -375,7 +378,7 @@ Example:
 (defun info-elisp-symbol-contents (symbol-name)
   "Return the contents of the info node for SYMBOL-NAME
 as determined by `info-lookup-symbol', specifically for Emacs Lisp symbols."
-  (when-let ((symbol (intern-soft symbol-name)))
+  (when-let* ((symbol (intern-soft symbol-name)))
     (save-window-excursion
       (info-lookup-symbol symbol 'emacs-lisp-mode)
       (buffer-contents "*info*"))))
@@ -393,7 +396,8 @@ as determined by `info-lookup-symbol', specifically for Emacs Lisp symbols."
 (defun info-elisp-nodename-contents (nodename)
   "Return the contents of a specific NODENAME from the Emacs Lisp manual.
 
-NODENAME should be a string, e.g., \"Interactive Evaluation\" or \"Defining Variables\".
+NODENAME should be a string, e.g., \"Interactive Evaluation\" or
+\"Defining Variables\".
 
 This function first looks for a case-sensitive match for NODENAME;
 if none is found it then tries a case-insensitive match."
@@ -445,7 +449,7 @@ declared.
 
 Example call:
 
-(jm-gptel-insert-function-declaration 'number-sequence)"
+(jm-gptel-insert-function-declaration \\='number-sequence)"
   ;; For Lisp functions with source available this could probably be written directly
   ;; based on the function code.  This function was really a quick exercise in creating
   ;; a tool combining LLMs and other tools.

@@ -58,7 +58,7 @@
 ;;
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(require 'cl-lib)
 
 (provide 'highlight-sexps)
 
@@ -144,7 +144,7 @@ over.")
     (remove-hook 'post-command-hook 'hl-sexp-highlight t)))
 
 (defun hl-sexp-create-overlays ()
-  "Create some 'overlays-in-waiting' with the right priorities and attributes."
+  "Create some \"overlays-in-waiting\" with the right priorities and attributes."
   (let* ((fg hl-sexp-colors)
 		 (bg hl-sexp-background-colors)
 		 (count (max (length fg) (length bg)))
@@ -161,7 +161,7 @@ over.")
 	  (push (make-overlay 0 0) hl-sexp-overlays)
 	  (overlay-put (car hl-sexp-overlays) 'face attributes)
 	  (overlay-put (car hl-sexp-overlays) 'priority num)
-	  (decf num))
+	  (cl-decf num))
 	(setq hl-sexp-overlays (nreverse hl-sexp-overlays))))
 
 (defun hl-sexp-color-update ()

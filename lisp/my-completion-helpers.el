@@ -1,13 +1,16 @@
 ;; -*- lexical-binding: nil -*-
 (require 'yasnippet)
 
+(defvar in-buffer-completion-capf-p) ; defined in emacs.el
+
 ;;;###autoload
 (defun try-yas-expand ()
   "Return t iff we successfully expand with `yasnippet'"
-  (let ((yas-fallback-behavior 'return-nil))
-    (and (looking-at "\\>")                ;; at the end of a word
-         (not (nth 4 (syntax-ppss)))       ;; not in a comment
-         (yas-expand-from-trigger-key))))
+  (with-suppressed-warnings ((obsolete yas-fallback-behavior))
+    (let ((yas-fallback-behavior 'return-nil))
+      (and (looking-at "\\>")                ;; at the end of a word
+           (not (nth 4 (syntax-ppss)))       ;; not in a comment
+           (yas-expand-from-trigger-key)))))
 
 ;;;###autoload
 (defun try-completion-at-point ()

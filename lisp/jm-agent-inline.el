@@ -163,13 +163,19 @@ when the response has been placed at point.
     map)
   "Keymap active on rewrite overlays.")
 
+(defgroup jm-agent-inline nil
+  "Inline agent-shell invocation from any buffer."
+  :group 'tools)
+
 (defface jm-agent-rewrite-highlight
   '((t :background "#3a3a00"))
-  "Face for the original region during a pending rewrite.")
+  "Face for the original region during a pending rewrite."
+  :group 'jm-agent-inline)
 
 (defface jm-agent-rewrite-proposed
   '((t :background "#002a00"))
-  "Face for the proposed replacement text.")
+  "Face for the proposed replacement text."
+  :group 'jm-agent-inline)
 
 ;;;###autoload
 (defun jm-agent-rewrite (instruction)

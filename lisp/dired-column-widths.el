@@ -107,7 +107,11 @@
 ;;; Code:
 
 (require 'dired)
-(require 'cl)
+(require 'cl-lib)
+
+(defvar dired-column-widths nil
+  "Column widths captured from the current dired listing.
+Made buffer-local in dired buffers by `dired-before-readin-hook'.")
 
 
 (defun dired-capture-column-widths ()
@@ -122,7 +126,7 @@
 	  (if more-widths
 	      ;; Merge widths from two sections into one using maximum of
 	      ;; each field width.
-	      (setq widths (map 'list
+	      (setq widths (cl-map 'list
 				(lambda (a b) (if (> (cdr a) (cdr b)) a b))
 				widths more-widths)) )))
       (setq dired-column-widths widths) )))
@@ -199,7 +203,7 @@
 
 	    ;; Merge widths and justification list.
 	    ;; Prepend '(skip . 2) for standard 2 character indentation.
-	    (append (list '(skip . 2)) (map 'list 'cons just widths)) )))))
+	    (append (list '(skip . 2)) (cl-map 'list 'cons just widths)) )))))
 
 (defun dired-col-widths-split-string (s)
   ;; Splits string into whitespace and non-whitespace components.
@@ -226,7 +230,7 @@
 	    (setq current-type c-type))) )))
 
     ;; Convert each component list into a string and return the list of strings.
-    (map 'list 'concat components)))
+    (cl-map 'list 'concat components)))
 
 (defun dired-apply-column-widths ()
   ;; Apply column widths in dired-column-widths to current buffer.
@@ -239,7 +243,7 @@
   ;; But: it's possible that an entry has changed enough that a field is
   ;; wider. In that case, too bad, and we'll just try to not make the entry
   ;; illegible.
-  (beginning-of-buffer)
+  (goto-char (point-min))
   (let ((re-entry (dired-col-widths-re-entry-pattern))
 	buffer-read-only) ;; Override buffer local.
     (while (not (eobp))

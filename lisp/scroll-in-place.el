@@ -472,6 +472,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Defined at load time with `fset' below.
+(declare-function original-scroll-up "scroll-in-place")
+(declare-function original-scroll-down "scroll-in-place")
+(declare-function original-scroll-other-window "scroll-in-place")
+
 (defvar scroll-in-place t
   "*When this variable is true (i.e., non-`nil'), the standard GNU Emacs
 vertical scrolling commands `scroll-down', `scroll-up', `scroll-other-window-
@@ -645,7 +650,7 @@ top of the screen if the selected window is at the bottom of the screen."
 		 )
 	    minibuffer-scroll-window
 	  ;; We know that the (selected) minibuffer is active, so `next-window'
-	  ;; will examine all of the frames/screens that share this minibuffer.
+	  ;; will examine all of the frames that share this minibuffer.
 	  ;; Should we consider `other-window-scroll-buffer' here?  I don't
 	  ;; believe so.
 	  (next-window selected-window))
@@ -719,9 +724,7 @@ scrolling' which first appeared in the FSF's GNU Emacs 19.26."
 		     next-window)))
 		
 		(t
-		 ;; In Emacs 19 (FSF, Lucid, and XEmacs), look for a window on
-		 ;; another visible frame or screen.  This could be written for
-		 ;; Epoch, too, I suppose...
+		 ;; Look for a window on another visible frame.
 		 (condition-case nil
 		     (let ((this-window (next-window selected-window nil t)))
 		       (while (not (or (eq this-window selected-window)
@@ -747,14 +750,8 @@ scrolling' which first appeared in the FSF's GNU Emacs 19.26."
 ;;;
 
 (defun scroll-choose-window-frame-visible-p (window)
-  "Return a true value if the frame or screen of the given WINDOW is visible."
-  (cond ((fboundp 'window-frame)
-	 ;; For FSF GNU Emacs 19.
-	 (eq t (frame-visible-p (window-frame window))))
-	((fboundp 'window-screen)
-	 ;; For XEmacs and Lucid GNU Emacs.
-	 (screen-visible-p (window-screen window)))
-	(t t)))
+  "Return a true value if the frame of the given WINDOW is visible."
+  (eq t (frame-visible-p (window-frame window))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1013,15 +1010,12 @@ buffer-local value in the window to be scrolled.  That value is honored."
   (let* ((other-window (scroll-choose-other-window))
 	 (other-window-buffer (window-buffer other-window)))
     (if ;; Allow `scroll-in-place' to be a buffer-local variable.
-	(save-excursion (set-buffer other-window-buffer) scroll-in-place)
+	(with-current-buffer other-window-buffer scroll-in-place)
 	(scroll-window-in-place other-window lines -1)
       
       ;; Paranoid, we forcibly break any running sequence of "in place"
       ;; scrolling commands.
       (setq scroll-previous-window nil)
-      ;; For XEmacs and Lucid GNU Emacs, preserve the region's state.
-      (if (boundp 'zmacs-region-stays)
-	  (setq zmacs-region-stays t))
       (if (fboundp 'original-scroll-other-window-down)
 	  (original-scroll-other-window-down lines)
 	;; `scroll-other-window-down' first appeared as a builtin in FSF GNU
@@ -1066,15 +1060,12 @@ buffer-local value in the window to be scrolled.  That value is honored."
   (let* ((other-window (scroll-choose-other-window))
 	 (other-window-buffer (window-buffer other-window)))
     (if ;; Allow `scroll-in-place' to be a buffer-local variable.
-	(save-excursion (set-buffer other-window-buffer) scroll-in-place)
+	(with-current-buffer other-window-buffer scroll-in-place)
 	(scroll-window-in-place other-window lines 1)
       
       ;; Paranoid, we forcibly break any running sequence of "in place"
       ;; scrolling commands.
       (setq scroll-previous-window nil)
-      ;; For XEmacs and Lucid GNU Emacs, preserve the region's state.
-      (if (boundp 'zmacs-region-stays)
-	  (setq zmacs-region-stays t))
       (original-scroll-other-window lines))
     ))
 
@@ -1172,11 +1163,6 @@ point could otherwise move the full number of lines."
 	 (lines-value (prefix-numeric-value lines))
 	 )
     
-    ;; For XEmacs and Lucid GNU Emacs, preserve the region's state.  Note that
-    ;; these Emacsen will forcibly deactivate the region if we signal an error
-    ;; later on.  Is this bad?
-    (if (boundp 'zmacs-region-stays)
-	(setq zmacs-region-stays t))
     ;; Parse the direction into a unit distance (1 or -1).
     (setq direction (scroll-parse-direction direction))
     
@@ -1361,7 +1347,7 @@ a buffer-local value in the WINDOW's buffer.  That value is honored."
     (if ;; Allow `scroll-in-place' to be a buffer-local variable.
 	(if (eq current-buffer window-buffer)
 	    scroll-in-place
-	  (save-excursion (set-buffer window-buffer) scroll-in-place))
+	  (with-current-buffer window-buffer scroll-in-place))
 	(scroll-window-in-place window lines direction)
       
       (unwind-protect
@@ -1369,9 +1355,6 @@ a buffer-local value in the WINDOW's buffer.  That value is honored."
 	    ;; Paranoid, we forcibly break any running sequence of "in place"
 	    ;; scrolling commands.
 	    (setq scroll-previous-window nil)
-	    ;; For XEmacs and Lucid GNU Emacs, preserve the region's state.
-	    (if (boundp 'zmacs-region-stays)
-		(setq zmacs-region-stays t))
 	    (select-window window)
 	    (if (= (scroll-parse-direction direction) 1)
 		(original-scroll-up lines)

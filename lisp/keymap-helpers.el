@@ -25,7 +25,10 @@ given KEYMAP."
     (let (alist)
       (with-temp-buffer
         ;; Describe the map in temporary buffer
-        (describe-map-tree keymap t nil nil nil t)
+        (if (fboundp 'help--describe-map-tree) ; Emacs 30+
+            (help--describe-map-tree keymap t nil nil nil t)
+          (with-suppressed-warnings ((obsolete describe-map-tree))
+            (describe-map-tree keymap t nil nil nil t)))
         (goto-char (point-min))
         (while (re-search-forward "^\\([^\t\n]+\\)[ \t]+\\([^ \t\n]*\\)$" nil t)
           (let ((key (substring-no-properties (match-string 1)))
@@ -85,9 +88,9 @@ adding it as a definition in another keymap with a (string
 . definition) cons does not work.
   
 Based on https://protesilaos.com/codelog/2024-01-29-emacs-prefix-map/"
-  (cl-check-type keymap keymap)
-  (cl-check-type key key-valid)
-  (cl-check-type prefix-map keymap)
+  (cl-check-type keymap (satisfies keymapp))
+  (cl-check-type key (satisfies key-valid-p))
+  (cl-check-type prefix-map (satisfies keymapp))
   (cl-check-type description string)
 
   (keymap-set keymap key prefix-map)

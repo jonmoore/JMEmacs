@@ -1,8 +1,9 @@
 ;; -*- lexical-binding: nil -*-
+(require 'cl-lib)
 (require 'hexrgb)
 
 (defun weight-lists (froms tos weight)
-  (mapcar* (lambda (from to)
+  (cl-mapcar (lambda (from to)
              (+ from (* (- to from) weight)))
            froms tos))
 

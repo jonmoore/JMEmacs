@@ -1,4 +1,9 @@
 ;; -*- lexical-binding: nil -*-
+(require 'cl-lib)
+
+(declare-function joccur "joccur")
+(declare-function w32-shell-execute "w32fns.c")
+
 ;;; DISPLAY
 ;;;###autoload
 (defun recenter-top    () (interactive) (recenter 0))
@@ -212,7 +217,8 @@ to the implementation body"
 (defun uniquify-buffer ()
   "remove duplicate adjacent lines in the current buffer"
   (interactive)
-  (mark-whole-buffer)
+  (push-mark (point-max) nil t)
+  (goto-char (point-min))
   (uniquify-region))
 
 ;;; ADVICE
@@ -236,7 +242,7 @@ to the implementation body"
 (defun assoc-regexp-exact  (key list)
   "Return non-nil if KEY is `equal' to the car of an element of LIST.
 The value is actually the first element of list whose car equals key."
-  (assoc-if 
+  (cl-assoc-if
    (lambda (x) 
      (string-match x key))
    list))
@@ -288,7 +294,7 @@ BODY. Return this and also print a message."
 ;;;###autoload
 (defun jm-package-status (pkg)
   "Return the status of a package e.g.
-(jm-package-status 'ansi-color) returns \"built-in\""
+(jm-package-status \\='ansi-color) returns \"built-in\""
   (let* ((desc (or
                 (if (package-desc-p pkg) pkg)
                 (cadr (assq pkg package-alist))

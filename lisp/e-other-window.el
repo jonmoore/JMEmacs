@@ -47,8 +47,13 @@
 ;;; Code:
 (defvar e-other-window-overlay (make-overlay 0 0) "Overlay used to blink this window.")
 
+(defgroup e-other-window nil
+  "Blink the window selected by `e-other-window'."
+  :group 'windows)
+
 (defface e-other-window-overlay-face nil
-  "Face used to blink the background")
+  "Face used to blink the background"
+  :group 'e-other-window)
 (set-face-background 'e-other-window-overlay-face "blue2")
 (defvar e-other-window-interval .25 "Interval to sleep `e-other-window' for.")
 

@@ -202,7 +202,12 @@
 ;;
 ;;; Code:
 
-(eval-when-compile (require 'cl)) ;; case
+(require 'cl-lib) ;; cl-case
+
+(declare-function eyedrop-foreground-at-point "eyedropper")
+(declare-function eyedrop-background-at-point "eyedropper")
+(declare-function eyedrop-foreground-at-mouse "eyedropper" (event))
+(declare-function eyedrop-background-at-mouse "eyedropper" (event))
 
 ;; Unless you first load `hexrgb.el', then either `palette.el' or `eyedropper.el', you will get
 ;; warnings about variables and functions with prefix `eyedrop-' when you byte-compile
@@ -249,19 +254,19 @@ Character FROM is affected (possibly deleted).  Character TO is not."
        (buffer-string)))))
 
 ;;;###autoload
-(defconst hexrgb-defined-colors (eval-when-compile (and window-system (x-defined-colors)))
+(defconst hexrgb-defined-colors (eval-when-compile (and window-system (defined-colors)))
   "List of all supported colors.")
 
 ;;;###autoload
 (defconst hexrgb-defined-colors-no-dups
     (eval-when-compile
-     (and window-system (hexrgb-canonicalize-defined-colors (x-defined-colors))))
+     (and window-system (hexrgb-canonicalize-defined-colors (defined-colors))))
   "List of all supported color names, with no duplicates.
 Names are all lowercase, without any spaces.")
 
 ;;;###autoload
 (defconst hexrgb-defined-colors-alist
-    (eval-when-compile (and window-system (mapcar #'list (x-defined-colors))))
+    (eval-when-compile (and window-system (mapcar #'list (defined-colors))))
   "Alist of all supported color names, for use in completion.
 See also `hexrgb-defined-colors-no-dups-alist', which is the same
 thing, but without any duplicates, such as \"light blue\" and
@@ -271,7 +276,7 @@ thing, but without any duplicates, such as \"light blue\" and
 (defconst hexrgb-defined-colors-no-dups-alist
     (eval-when-compile
      (and window-system
-          (mapcar #'list (hexrgb-canonicalize-defined-colors (x-defined-colors)))))
+          (mapcar #'list (hexrgb-canonicalize-defined-colors (defined-colors)))))
   "Alist of all supported color names, with no duplicates, for completion.
 Names are all lowercase, without any spaces.")
 
@@ -583,7 +588,7 @@ Returns a list of RGB components of value 0.0 to 1.0, inclusive."
             pp       (* value (- 1 saturation))
             qq       (* value (- 1 (* saturation fract)))
             ww       (* value (- 1 (* saturation (- 1 (- hue int-hue))))))
-      (case int-hue
+      (cl-case int-hue
         ((0 6) (setq red    value
                      green  ww
                      blue   pp))
@@ -670,7 +675,7 @@ The output string is `#' followed by NB-DIGITS hex digits for each
 color component.  So for the default NB-DIGITS value of 4, the form is
 \"#RRRRGGGGBBBB\"."
   (setq nb-digits  (or nb-digits  4))
-  (let ((components  (or (x-color-values color)  (error "No such color: %S" color))))
+  (let ((components  (or (color-values color)  (error "No such color: %S" color))))
     (unless (hexrgb-rgb-hex-string-p color)
       (setq color  (hexrgb-color-values-to-hex components nb-digits))))
   color)
@@ -722,10 +727,10 @@ The output list is as for `x-color-values'."
   "Increase hue component of COLOR by INCREMENT.
 INCREMENT ranges from -100 to 100."
   (unless (string-match "#" color)      ; Convert color name to #hhh...
-    (setq color  (hexrgb-color-values-to-hex (or (x-color-values color)
+    (setq color  (hexrgb-color-values-to-hex (or (color-values color)
                                                  (error "No such color: %S" color)))))
   ;; Convert RGB to HSV
-  (let* ((rgb         (or (x-color-values color)  (error "No such color: %S" color)))
+  (let* ((rgb         (or (color-values color)  (error "No such color: %S" color)))
          (red         (/ (float (nth 0 rgb)) 65535.0)) ; Convert from 0-65535 to 0.0-1.0
          (green       (/ (float (nth 1 rgb)) 65535.0))
          (blue        (/ (float (nth 2 rgb)) 65535.0))
@@ -743,10 +748,10 @@ INCREMENT ranges from -100 to 100."
 (defun hexrgb-increment-saturation (color increment &optional nb-digits)
   "Increase saturation component of COLOR by INCREMENT."
   (unless (string-match "#" color)      ; Convert color name to #hhh...
-    (setq color  (hexrgb-color-values-to-hex (or (x-color-values color)
+    (setq color  (hexrgb-color-values-to-hex (or (color-values color)
                                                  (error "No such color: %S" color)))))
   ;; Convert RGB to HSV
-  (let* ((rgb         (or (x-color-values color)  (error "No such color: %S" color)))
+  (let* ((rgb         (or (color-values color)  (error "No such color: %S" color)))
          (red         (/ (float (nth 0 rgb)) 65535.0)) ; Convert from 0-65535 to 0.0-1.0
          (green       (/ (float (nth 1 rgb)) 65535.0))
          (blue        (/ (float (nth 2 rgb)) 65535.0))
@@ -764,10 +769,10 @@ INCREMENT ranges from -100 to 100."
 (defun hexrgb-increment-value (color increment &optional nb-digits)
   "Increase value component (brightness) of COLOR by INCREMENT."
   (unless (string-match "#" color)      ; Convert color name to #hhh...
-    (setq color  (hexrgb-color-values-to-hex (or (x-color-values color)
+    (setq color  (hexrgb-color-values-to-hex (or (color-values color)
                                                  (error "No such color: %S" color)))))
   ;; Convert RGB to HSV
-  (let* ((rgb         (or (x-color-values color)  (error "No such color: %S" color)))
+  (let* ((rgb         (or (color-values color)  (error "No such color: %S" color)))
          (red         (/ (float (nth 0 rgb)) 65535.0)) ; Convert from 0-65535 to 0.0-1.0
          (green       (/ (float (nth 1 rgb)) 65535.0))
          (blue        (/ (float (nth 2 rgb)) 65535.0))

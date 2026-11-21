@@ -177,7 +177,7 @@ START and END delimits the corners of text rectangle."
 (defvar pcol-max nil)
 (defvar pcol-limit nil)
 
-(defun pretty-rectangle-max (startpos &optional ignore ignore)
+(defun pretty-rectangle-max (startpos &optional _ignore1 _ignore2)
   (set-marker pcol-limit (point))
   (goto-char startpos)
   (let ((ncol 1)
@@ -210,7 +210,7 @@ START and END delimits the corners of text rectangle."
       (aset pcol-max ncol (max (aref pcol-max ncol) (car values)))
       (setq values (cdr values)))))
 
-(defun pretty-rectangle-line (startpos &optional ignore ignore)
+(defun pretty-rectangle-line (startpos &optional _ignore1 _ignore2)
   (let ((ncol 0)
         (len (length pcol-max))
         origin)
