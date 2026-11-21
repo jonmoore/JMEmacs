@@ -921,6 +921,15 @@ clean buffer we delay checking for longer."
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 10) (vertico-count . 4))))
 
+(use-package jiralib                    ; Jira REST client, part of org-jira
+  :ensure org-jira
+  :after org
+  :config
+  (org-link-set-parameters "jira" :follow
+                           (lambda (key _)
+                             "Visit the Jira given by KEY in the default browser"
+                             (browse-url (concat jiralib-url "/browse/" key)))))
+
 (use-package json-mode)                 ; Major mode for editing JSON files.
 
 (use-package js2-mode                   ; Improved JavaScript editing mode.
@@ -1691,11 +1700,7 @@ directory, otherwise return nil."
     "y" 'org-babel-detangle-directory
     )
 
-  (require 'jiralib)
-  (org-link-set-parameters "jira" :follow
-                           (lambda (key _)
-                             "Visit the Jira given by KEY in the default browser"
-                             (browse-url (concat jiralib-url "/browse/" key))))
+  ;; The "jira" link type is set up in the `jiralib' block.
   ;; provides completion for links referenced using "id".
   (org-link-set-parameters "id" :complete
                            'org-id-complete-link)
@@ -2023,10 +2028,16 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 (unless system-win32-p                  ; vterm is not supported on Windows
   (use-package vterm                    ; terminal emulator using libvterm
     :init
-    (setq vterm-always-compile-module t))
+    (setq vterm-always-compile-module t)
+    ;; On a fresh install, load vterm (building its module) before
+    ;; py-vterm-interaction is installed: if vterm builds the module
+    ;; while that package is being byte-compiled, the compiler writes a
+    ;; truncated .elc.  Once it is installed, vterm stays deferred.
+    (unless (package-installed-p 'py-vterm-interaction)
+      (require 'vterm)))
 
   (use-package py-vterm-interaction     ; vterm-based mode for ipython and Python repls
-    ))
+    :after vterm))
 
 (use-package racket-mode                ; preferred over geiser for racket
   :mode (("\\.rkt\\'" . racket-mode)
