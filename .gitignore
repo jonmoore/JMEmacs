@@ -16,3 +16,6 @@ __pycache__
 
 # test output
 test/*.log
+
+# Claude Code personal notes
+CLAUDE.local.md
