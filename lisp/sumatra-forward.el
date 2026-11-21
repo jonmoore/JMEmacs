@@ -122,5 +122,6 @@ Partly copied from tex.el's TeX-master-file and TeX-add-local-master."
 ;; ddeclient SUMATRA control [ForwardSearch("D:\my documents\latex\Current\thesis\thesis.pdf","thesis.tex",5,0)]
 
 
+
 (provide 'sumatra-forward)
 
