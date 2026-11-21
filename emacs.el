@@ -974,10 +974,9 @@ etc. are set up before starting lsp."
    (t
     (lsp-deferred))))
 
-(use-package lsp-inline-completions
-  :vc (:url "https://github.com/kassick/lsp-inline-completions"
-       :lisp-dir "."
-       :rev "main")
+(use-package lsp-inline-completion      ; part of lsp-mode
+  :ensure nil
+  :after lsp-mode
   :config
   (add-hook 'lsp-before-inline-completion-hook
             (lambda ()
