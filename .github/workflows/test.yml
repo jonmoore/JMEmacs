@@ -22,7 +22,7 @@ jobs:
         emacs: ['31.1']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The third-party action is pinned to a full commit SHA, so a later push
       # to it can't change what runs here.  Dependabot proposes updates.
