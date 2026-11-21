@@ -7,6 +7,10 @@
 ;;    reported, such as a package's autoloads failing to load; or
 ;;  - anything is reported through `display-warning' at level :error
 ;;    (use-package reports failures in :init and :config blocks that way).
+;;
+;; Most packages are deferred, so their :config blocks only run when
+;; the package is first used.  After loading emacs.el, the test loads
+;; every package declared with use-package, so those blocks run too.
 ;; Plain warnings are counted but don't fail the run.
 ;;
 ;; From the repository root, on any platform:
@@ -59,6 +63,20 @@ packages), as well as for unhandled ones, which then end the run."
       debug-on-error t)
 (load (expand-file-name "emacs.el" jm-test-root) nil t)
 (setq debug-on-error nil)
+
+;; Run the deferred :config blocks by loading each use-package'd package.
+;; Names with no library behind them (e.g. `emacs') are skipped.
+(when (boundp 'use-package--statistics)
+  (let ((count 0))
+    (maphash
+     (lambda (pkg _)
+       (when (and (not (featurep pkg)) (locate-library (symbol-name pkg)))
+         (setq count (1+ count))
+         (condition-case err
+             (require pkg)
+           (error (push (format "require %s: %S" pkg err) jm-test-errors)))))
+     use-package--statistics)
+    (message "test-startup: loaded %d deferred package(s)." count)))
 
 (message "\ntest-startup: %d warning(s) while loading, %d error(s)."
          jm-test-warning-count (length jm-test-errors))

@@ -650,10 +650,10 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   :ensure nil
   :hook (dired-mode . dired-omit-mode)
   :config
-  (setq dired-omit-extensions (set-difference
+  (setq dired-omit-extensions (seq-difference
                                dired-omit-extensions
                                '("~" ".pdf" ".lnk" ".dll" ".dvi" ".lib" ".obj")
-                               :test 'string=)
+                               #'string=)
         dired-clean-confirm-killing-deleted-buffers nil
         dired-omit-files "^\\.?#\\|^\\."))
 
@@ -927,12 +927,12 @@ clean buffer we delay checking for longer."
 
 (defun latex-sumatra-scroll-down ()
   (interactive)
-  (scroll-down-in-place)
+  (scroll-down-command)
   (sumatra-jump-to-line))
 
 (defun latex-sumatra-scroll-up ()
   (interactive)
-  (scroll-up-in-place)
+  (scroll-up-command)
   (sumatra-jump-to-line))
 
 (use-package latex                      ; part of AUCTeX
@@ -2048,18 +2048,19 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
     "C-="   nil
     "M-RET" 'rst-insert-list))
 
-(use-package scroll-in-place
-  :ensure nil
-  :init
-  (defun scroll-up-in-place-one-line ()
-    "Do `scroll-up-in-place' for a single  line"
-    (interactive)
-    (scroll-up-in-place 1))
+;;; Scrolling: point keeps its screen position (formerly scroll-in-place.el)
+(setopt scroll-preserve-screen-position 'always ; point keeps its screen row when scrolling
+        scroll-error-top-bottom t)              ; at the ends, move to top/bottom instead of erroring
 
-  (defun scroll-down-in-place-one-line ()
-    "Do `scroll-down-in-place' for a single  line"
-    (interactive)
-    (scroll-down-in-place 1)))
+(defun jm-scroll-up-one-line ()
+  "Scroll the text up one line, keeping point's screen position."
+  (interactive)
+  (scroll-up-command 1))
+
+(defun jm-scroll-down-one-line ()
+  "Scroll the text down one line, keeping point's screen position."
+  (interactive)
+  (scroll-down-command 1))
 
 (defun shell-cycle-backward-through-command-history ()
   (interactive)
@@ -2526,8 +2527,8 @@ candidates for display-fill-column-indicator-character."
   "C-x C-o"      'delete-blank-lines-around-point-or-in-region
   "C-x LFD"      'dired-jump
 
-  "C-n"          'scroll-up-in-place-one-line
-  "C-p"          'scroll-down-in-place-one-line
+  "C-n"          'jm-scroll-up-one-line
+  "C-p"          'jm-scroll-down-one-line
 
   "C-r"          'isearch-backward-regexp
   "C-s"          'isearch-forward-regexp
@@ -2557,8 +2558,6 @@ candidates for display-fill-column-indicator-character."
 
   "<home>"       'beginning-of-buffer
   "<end>"        'end-of-buffer
-  "<prior>"      'scroll-down-in-place
-  "<next>"       'scroll-up-in-place
 
   "C-S-<right>"  'previous-buffer
   "C-S-<left>"   'next-buffer
