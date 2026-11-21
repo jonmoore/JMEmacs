@@ -65,13 +65,15 @@ window, maintaining the selected window."
 
 ;;;###autoload
 (defun swap-buffers-next-window-and-select ()
-  "Swap the buffers displayed in the selected window and the next window, selecting the next window."
+  "Swap the buffers displayed in the selected and next windows.
+The next window is selected afterwards."
   (interactive)
   (window-swap-states (selected-window) (next-window)))
 
 ;;;###autoload
 (defun swap-buffers-next-window ()
-  "Swap the buffers displayed in the selected window and the next window, maintaining the selected window."
+  "Swap the buffers displayed in the selected and next windows.
+The selected window stays selected."
   (interactive)
   (window-swap-states (selected-window) (next-window))
   (other-window -1))
