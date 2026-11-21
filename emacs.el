@@ -1463,13 +1463,9 @@ mermaid.run().catch(err => {
 
 (use-package nael-lsp)
 
-(use-package nexus)
-
 (use-package nxml-mode
   :ensure nil
   :config
-  (define-keymap :keymap nxml-mode-map
-    "<f9>" 'nexus-insert-gav-for-keyword)
   (setq nxml-child-indent 4))
 
 (defun in-a-jira-buffer ()
