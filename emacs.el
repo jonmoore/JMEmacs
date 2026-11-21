@@ -593,7 +593,7 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package desktop                    ; built-in
   :config
-  (let* ((computername (getenv "COMPUTERNAME"))
+  (let* ((computername (or (getenv "COMPUTERNAME") (system-name)))
          (local-desktop-dir
           (string-as-unibyte (concat "~/.emacs.d/" computername ))))
     (unless (file-exists-p local-desktop-dir)
