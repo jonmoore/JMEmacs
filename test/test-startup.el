@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+(require 'warnings)
+
 (defvar jm-test-root
   (file-name-directory
    (directory-file-name (file-name-directory (or load-file-name buffer-file-name))))
@@ -34,12 +36,15 @@
 
 (defvar jm-test-errors nil "Warnings raised at level :error, and errors seen by the debugger.")
 (defvar jm-test-warning-count 0 "Number of warnings raised while loading.")
+(defvar jm-test-skipped nil "Packages skipped because loading them asked a question.")
 
 (defun jm-test--record-warning (type message &optional level &rest _)
-  "Count warnings and remember those of TYPE and MESSAGE at LEVEL :error."
-  (setq jm-test-warning-count (1+ jm-test-warning-count))
-  (when (eq level :error)
-    (push (format "%S: %s" type message) jm-test-errors)))
+  "Count warnings and remember those of TYPE and MESSAGE at LEVEL :error.
+Warnings suppressed through `warning-suppress-log-types' aren't counted."
+  (unless (warning-suppress-p type warning-suppress-log-types)
+    (setq jm-test-warning-count (1+ jm-test-warning-count))
+    (when (eq level :error)
+      (push (format "%S: %s" type message) jm-test-errors))))
 
 (advice-add 'display-warning :before #'jm-test--record-warning)
 
@@ -61,27 +66,42 @@ packages), as well as for unhandled ones, which then end the run."
 
 (setq debugger #'jm-test--debugger
       debug-on-error t)
+;; Load the config the way a normal startup does: early-init.el first.
+(load (expand-file-name "early-init.el" jm-test-root) nil t)
 (load (expand-file-name "emacs.el" jm-test-root) nil t)
 (setq debug-on-error nil)
 
 ;; Run the deferred :config blocks by loading each use-package'd package.
 ;; Names with no library behind them (e.g. `emacs') are skipped.
-(when (boundp 'use-package--statistics)
-  (let ((count 0))
+;; The table is filled because emacs.el sets `use-package-compute-statistics'.
+(let ((stats (seq-some (lambda (var) (and (boundp var) (symbol-value var)))
+                       '(use-package-statistics use-package--statistics)))
+      (count 0))
+  (if (not (hash-table-p stats))
+      (push "could not find use-package's statistics table to load deferred packages"
+            jm-test-errors)
     (maphash
      (lambda (pkg _)
        (when (and (not (featurep pkg)) (locate-library (symbol-name pkg)))
          (setq count (1+ count))
          (condition-case err
              (require pkg)
+           ;; In batch mode a question at load time (e.g. vterm offering
+           ;; to compile its module) reads from stdin and fails.  That's
+           ;; not a config error, so note it and carry on.
+           (end-of-file (push (format "%s (asked a question while loading)" pkg)
+                              jm-test-skipped))
            (error (push (format "require %s: %S" pkg err) jm-test-errors)))))
-     use-package--statistics)
-    (message "test-startup: loaded %d deferred package(s)." count)))
+     stats)
+    (message "test-startup: loaded %d deferred package(s) out of %d declared."
+             count (hash-table-count stats))))
 
 (message "\ntest-startup: %d warning(s) while loading, %d error(s)."
          jm-test-warning-count (length jm-test-errors))
 (dolist (e (reverse jm-test-errors))
   (message "  ERROR %s" e))
+(dolist (s (reverse jm-test-skipped))
+  (message "  SKIPPED %s" s))
 (message "test-startup: %s" (if jm-test-errors "FAILED" "PASSED"))
 (kill-emacs (if jm-test-errors 1 0))
 

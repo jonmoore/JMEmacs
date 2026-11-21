@@ -15,6 +15,14 @@
 
 (require 'ert)
 (require 'seq)
+(require 'subr-x)
+
+;; emacs.el adds Go's bin directory (go-grip lives there) to `exec-path';
+;; do the same here, since this test runs without loading emacs.el.
+(when (executable-find "go")
+  (let ((gopath (string-trim (shell-command-to-string "go env GOPATH"))))
+    (unless (string-empty-p gopath)
+      (add-to-list 'exec-path (expand-file-name "bin" gopath)))))
 
 (defun jm-test--tool-p (&rest names)
   "Non-nil if any of the program NAMES is on `exec-path'."
@@ -36,7 +44,9 @@
 
 (ert-deftest jm-env-optional-tools ()
   "Optional tools: features degrade quietly without them."
-  (dolist (tool '(("go-grip") ("7z" "7zz") ("dot") ("latexmk")))
+  (dolist (tool '(("go-grip") ("7z" "7zz") ("dot") ("latexmk")
+                  ("pandoc")              ; ox-pandoc
+                  ("cmake")))             ; compiling the vterm module
     (unless (apply #'jm-test--tool-p tool)
       (message "  optional tool not found: %s" (car tool)))))
 

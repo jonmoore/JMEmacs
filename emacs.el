@@ -2019,8 +2019,12 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
   ;; this is quite heavy, as it requires loading python and conda
   (python-helpers-enable-lsp-everywhere))
 
-(unless system-win32-p                      ; vterm is not supported on Windows
-  (use-package py-vterm-interaction       ; vterm-based mode for ipython and Python repls
+(unless system-win32-p                  ; vterm is not supported on Windows
+  (use-package vterm                    ; terminal emulator using libvterm
+    :init
+    (setq vterm-always-compile-module t))
+
+  (use-package py-vterm-interaction     ; vterm-based mode for ipython and Python repls
     ))
 
 (use-package racket-mode                ; preferred over geiser for racket

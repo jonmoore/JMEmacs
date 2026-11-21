@@ -25,13 +25,27 @@ fi
 brew install git ripgrep enchant pkg-config graphviz go
 brew install p7zip || brew install sevenzip || echo ">> 7-Zip not installed (only needed for zip extraction)"
 
-# Optional: go-grip for Markdown preview (the config only enables it if found)
-go install github.com/chrishrb/go-grip@latest || echo ">> go-grip not installed (optional)"
+# 4. Tools for optional features (each degrades quietly if missing)
+# pandoc: ox-pandoc export.  cmake, libtool: compiling vterm's module.
+brew install pandoc cmake libtool || echo ">> some optional tools not installed"
 
-# 4. Directories the config uses
+# go-grip: Markdown preview (installed to ~/go/bin, which emacs.el adds to exec-path)
+go install github.com/chrishrb/go-grip@latest || echo ">> go-grip not installed"
+
+# LaTeX for AUCTeX: BasicTeX (~100 MB) rather than the full MacTeX (~5 GB),
+# plus latexmk.  The installer and tlmgr ask for your password.
+if [ ! -x /Library/TeX/texbin/tlmgr ]; then
+  brew install --cask basictex || echo ">> BasicTeX not installed"
+fi
+if [ -x /Library/TeX/texbin/tlmgr ] && [ ! -x /Library/TeX/texbin/latexmk ]; then
+  sudo /Library/TeX/texbin/tlmgr update --self
+  sudo /Library/TeX/texbin/tlmgr install latexmk
+fi
+
+# 5. Directories the config uses
 mkdir -p ~/git ~/backup ~/info
 
-# 5. Clone (or update) the config
+# 6. Clone (or update) the config
 if [ -d ~/git/JMEmacs/.git ]; then
   git -C ~/git/JMEmacs pull --ff-only
 else
