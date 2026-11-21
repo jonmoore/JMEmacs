@@ -13,3 +13,6 @@ __pycache__
 
 # agent-shell
 .agent-shell/
+
+# test output
+test/*.log
