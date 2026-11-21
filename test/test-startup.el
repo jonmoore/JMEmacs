@@ -38,15 +38,31 @@
 (defvar jm-test-warning-count 0 "Number of warnings raised while loading.")
 (defvar jm-test-skipped nil "Packages skipped because loading them asked a question.")
 
+(defvar jm-test--installing nil
+  "Non-nil while package.el is installing a package.")
+
 (defun jm-test--record-warning (type message &optional level &rest _)
   "Count warnings and remember those of TYPE and MESSAGE at LEVEL :error.
-Warnings suppressed through `warning-suppress-log-types' aren't counted."
+Warnings suppressed through `warning-suppress-log-types' aren't counted.
+Byte-compiler errors raised while a package is being installed are
+counted as plain warnings: they come from files inside third-party
+packages (often their own tests) that don't compile on their own, not
+from this config."
   (unless (warning-suppress-p type warning-suppress-log-types)
     (setq jm-test-warning-count (1+ jm-test-warning-count))
-    (when (eq level :error)
+    (when (and (eq level :error)
+               (not (and jm-test--installing (eq type 'bytecomp))))
       (push (format "%S: %s" type message) jm-test-errors))))
 
 (advice-add 'display-warning :before #'jm-test--record-warning)
+
+(defun jm-test--note-installing (orig &rest args)
+  "Call ORIG with ARGS with `jm-test--installing' set."
+  (let ((jm-test--installing t))
+    (apply orig args)))
+
+(with-eval-after-load 'package
+  (advice-add 'package-install :around #'jm-test--note-installing))
 
 ;; Keep the run from affecting anything outside it.
 (advice-add 'server-start :override #'ignore)
