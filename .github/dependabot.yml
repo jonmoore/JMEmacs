@@ -1,0 +1,8 @@
+# Weekly pull requests to update the actions used in .github/workflows,
+# including the SHA-pinned third-party ones.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

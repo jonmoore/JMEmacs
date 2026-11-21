@@ -1,0 +1,71 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# Read-only token: a compromised third-party action can't push or change the repo.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Emacs ${{ matrix.emacs }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false            # let every platform finish, so all failures show
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        emacs: ['31.1']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Third-party actions are pinned to full commit SHAs, so a later push
+      # to them can't change what runs here.  Dependabot proposes updates.
+      - name: Install Emacs (Linux, macOS)
+        if: runner.os != 'Windows'
+        uses: purcell/setup-emacs@34c6ded44899fd1bf74d2889558befd1750e61a7  # master, 2026-11-21
+        with:
+          version: ${{ matrix.emacs }}
+
+      - name: Install Emacs (Windows)
+        if: runner.os == 'Windows'
+        uses: jcs090218/setup-emacs-windows@3ad415b5f6575fe0bb8218cb35c199a93b1fb833  # master, 2026-11-21
+        with:
+          version: ${{ matrix.emacs }}
+
+      # Tools the environment test requires, plus cmake/libtool/libvterm,
+      # which vterm needs to compile its module.
+      - name: Install tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ripgrep pkg-config libenchant-2-dev cmake libtool-bin libvterm-dev
+
+      - name: Install tools (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ripgrep pkg-config enchant cmake libtool libvterm
+
+      - name: Install tools (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ripgrep -y
+
+      # On Windows, Emacs uses HOME for ~ when it is set.  Point it at the
+      # user profile so ~/.emacs.d matches the cache path below.
+      - name: Set HOME (Windows)
+        if: runner.os == 'Windows'
+        run: echo "HOME=$env:USERPROFILE" >> $env:GITHUB_ENV
+
+      - name: Cache packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.emacs.d/elpa
+          key: elpa-${{ runner.os }}-${{ matrix.emacs }}-${{ hashFiles('emacs.el') }}
+          restore-keys: elpa-${{ runner.os }}-${{ matrix.emacs }}-
+
+      - name: Run tests
+        run: emacs --batch -l test/run-all.el
