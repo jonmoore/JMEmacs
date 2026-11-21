@@ -1,4 +1,4 @@
-;;; pretty-column.el --- Prettify all columns in a region or rectangle.
+;;; pretty-column.el --- Prettify all columns in a region or rectangle.  -*- lexical-binding: nil -*-
 
 ;; Copyright (C) 1999 Vinicius Jose Latorre <vinic...@cpqd.com.br>
 

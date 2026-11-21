@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;;; (X)Emacs frontend to forward search with SumatraPDF. This script
 ;;; is a modified version of the script "kdvi-script.el" by Stefan Kebekus
 ;;; <kebekus@kde.org>. The modifications were performed by William Blum (http://william.famille-blum.org) 

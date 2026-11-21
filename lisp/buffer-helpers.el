@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;;; Helpers for working with buffers, files and windows
 
 ;;;###autoload

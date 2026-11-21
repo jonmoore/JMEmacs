@@ -1,4 +1,4 @@
-;;; hexrgb.el --- Functions to manipulate colors, including RGB hex strings.
+;;; hexrgb.el --- Functions to manipulate colors, including RGB hex strings.  -*- lexical-binding: nil -*-
 ;;
 ;; Filename: hexrgb.el
 ;; Description: Functions to manipulate colors, including RGB hex strings.

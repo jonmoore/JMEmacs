@@ -1,4 +1,4 @@
-;; Prefer to move settings into emacs.el use-package
+;; Prefer to move settings into emacs.el use-package  -*- lexical-binding: nil -*-
 
 ;; use-package will add packages to package-selected-packages below when
 ;; triggering package installation by running a use-package block, either

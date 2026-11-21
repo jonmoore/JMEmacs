@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;;; DISPLAY
 ;;;###autoload
 (defun recenter-top    () (interactive) (recenter 0))

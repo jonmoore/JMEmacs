@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 (require 'hexrgb)
 
 (defun weight-lists (froms tos weight)

@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;;; Helper functions for Python programming, based on conda, lsp-mode and
 ;;; dap-mode.
 (require 'cl-seq)

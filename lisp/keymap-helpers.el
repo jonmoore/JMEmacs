@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;;;###autoload
 (defun collect-mode-key-bindings (mode-list)
   "Collect key bindings for modes in MODE-LIST and return them as an

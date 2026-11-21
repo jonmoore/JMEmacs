@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;; Support Nexus GAV insertion with helm
 
 (require 'nexus)

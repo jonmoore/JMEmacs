@@ -1,4 +1,4 @@
-;;; e-other-window.el --- flash while switching to other windows.
+;;; e-other-window.el --- flash while switching to other windows.  -*- lexical-binding: nil -*-
 
 ;; $Id: e-other-window.el,v 1.7 2001/11/11 00:55:29 burton Exp $
 

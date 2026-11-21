@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;; A collection of tools for gptel, based on the examples at
 ;; https://github.com/karthink/gptel/issues/514
 ;;

@@ -1,4 +1,4 @@
-;; autoloads advice - http://stackoverflow.com/questions/4189159/emacs23-elisp-how-to-properly-autoload-this-library
+;; autoloads advice - http://stackoverflow.com/questions/4189159/emacs23-elisp-how-to-properly-autoload-this-library  -*- lexical-binding: nil -*-
 
 ;; What you really want is to get the autoloads generated for you
 ;; automatically, so that your .emacs file remains pristine. Most
@@ -25,7 +25,7 @@
     (when autoloads-was-empty
       ;; create the file with non-zero size to appease autoload
       (with-current-buffer (find-file-noselect generated-autoload-file)
-        (insert ";;") 
+        (insert ";;; personal-autoloads.el --- generated autoloads  -*- lexical-binding: t -*-\n") 
         (save-buffer)))
     (when (or autoloads-was-empty
               (has-files-newer-than-autoload base generated-autoload-file))

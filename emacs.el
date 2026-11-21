@@ -1,4 +1,4 @@
-;;; emacs.el --- my customizations
+;;; emacs.el --- my customizations  -*- lexical-binding: nil -*-
 ;;; Commentary:
 ;; * Install Emacs.  For Windows, use the standard zip recommended at
 ;;   https://www.gnu.org/software/emacs/download.html

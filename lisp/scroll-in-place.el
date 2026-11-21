@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 
 ;;;; -*-Emacs-Lisp-*- Improved Vertical Scrolling Commands
 ;;;; Written by Eric Eide, last modified on 1994/11/18 21:23:01.

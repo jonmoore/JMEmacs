@@ -1,4 +1,4 @@
-;;; highlight-sexps.el --- highlight surrounding parentheses
+;;; highlight-sexps.el --- highlight surrounding parentheses  -*- lexical-binding: nil -*-
 ;;
 ;; Copyright (C) 2011 David Rysdam
 ;;

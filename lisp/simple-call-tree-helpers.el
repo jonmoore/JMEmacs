@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;;; simple-call-tree-helpers.el - extensions to simple-call-tree
 
 ;; The entry points are

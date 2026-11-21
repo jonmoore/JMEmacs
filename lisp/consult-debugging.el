@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 (defun consult-minimal-vertico ()
   "Minimal consult setup with Vertico for emacs -Q from https://github.com/minad/consult"
   (interactive)

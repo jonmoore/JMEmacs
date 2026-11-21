@@ -1,4 +1,4 @@
-;;; dired-column-widths.el --- Corrects column widths after entry modification.
+;;; dired-column-widths.el --- Corrects column widths after entry modification.  -*- lexical-binding: nil -*-
 ;;
 ;; Author:        Craig Lawson <craig.lawson@alum.mit.edu>
 ;; Maintainer:    Craig Lawson <craig.lawson@alum.mit.edu>

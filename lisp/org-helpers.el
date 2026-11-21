@@ -1,3 +1,4 @@
+;; -*- lexical-binding: nil -*-
 ;;;###autoload
 (defun org-check-running-clock-any-buffer ()
   "Check if any Org buffer contains a running clock.

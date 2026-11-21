@@ -1,4 +1,4 @@
-;;; org-wp-link.el --- Support for links to WikiPedia articles from
+;;; org-wp-link.el --- Support for links to WikiPedia articles from  -*- lexical-binding: nil -*-
 ;;; within Org-mode
 
 ;; Copyright (C) 2008-2009 Rudolf Olah, Jonathan Moore
