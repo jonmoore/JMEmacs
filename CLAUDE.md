@@ -8,9 +8,9 @@ A personal Emacs configuration, used on macOS, Linux and Windows.
   is a small bootstrap that loads it.
 - `early-init.el`: settings that must run before packages are activated.
   Each machine's `~/.emacs.d/early-init.el` loads it.
-- `emacs-custom.el`: the `custom-file`.  Emacs rewrites
-  `package-selected-packages` here whenever it installs packages; don't
-  commit that churn.
+- `emacs-custom.el`: the `custom-file`.  `package-selected-packages` is
+  not saved here: `emacs.el` builds it from the use-package declarations
+  each session, so `package-autoremove` removes undeclared packages.
 - `lisp/`: personal and vendored helper libraries.  `personal-autoloads.el`
   is generated from `;;;###autoload` cookies and is git-ignored; delete it to
   force regeneration after removing or renaming files.

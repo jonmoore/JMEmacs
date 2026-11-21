@@ -116,6 +116,47 @@
 
 (require 'use-package)
 
+;; `package-selected-packages' records which packages were installed on
+;; purpose rather than as dependencies; `package-autoremove' and the
+;; package menu rely on it.  The use-package declarations in this file
+;; are that record, so build the list from them each session instead of
+;; letting package.el save it to `custom-file' after every install.
+;; Removing a declaration then lets `package-autoremove' offer to delete
+;; the package and any dependencies only it needed.
+;;
+;; package.el has no option to stop saving the list; see Emacs bug#57503,
+;; https://debbugs.gnu.org/57503, and the 2016 thread suggesting this
+;; use-package advice:
+;; https://lists.gnu.org/archive/html/help-gnu-emacs/2016-07/msg00331.html
+(defun jm-package-select-ensured (name args &rest _)
+  "Add the packages use-package ensures for NAME to `package-selected-packages'.
+ARGS are the block's :ensure values, as passed to `use-package-ensure-elpa'."
+  (dolist (ensure args)
+    (let ((pkg (if (eq ensure t) (use-package-as-symbol name) ensure)))
+      (when (consp pkg)                 ; (PACKAGE . ARCHIVE) from :pin
+        (setq pkg (car pkg)))
+      (when pkg
+        (add-to-list 'package-selected-packages pkg)))))
+
+(advice-add 'use-package-ensure-elpa :before #'jm-package-select-ensured)
+
+(defun jm-package-select-vc (arg &rest _)
+  "Add the package a use-package :vc block installs to `package-selected-packages'.
+ARG is (PACKAGE SPEC REV), as passed to `use-package-vc-install'."
+  (add-to-list 'package-selected-packages (car arg)))
+
+(advice-add 'use-package-vc-install :before #'jm-package-select-vc)
+
+(defun jm-package-set-selected-without-saving (&optional value)
+  "Set `package-selected-packages' to VALUE, but don't save it.
+Replaces `package--save-selected-packages', which also writes the list
+to `custom-file'."
+  (when (or value after-init-time)
+    (setq package-selected-packages value)))
+
+(advice-add 'package--save-selected-packages
+            :override #'jm-package-set-selected-without-saving)
+
 ;; Somebody decided that warnings about too-wide docstrings, using package cl, etc. merit
 ;; opening a *Warnings* buffer with big bright red stop-sign icons by default.  People
 ;; have no sense sometimes.

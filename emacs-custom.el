@@ -1,8 +1,7 @@
 ;; Prefer to move settings into emacs.el use-package  -*- lexical-binding: nil -*-
 
-;; use-package will add packages to package-selected-packages below when
-;; triggering package installation by running a use-package block, either
-;; manually or during Emacs initialisation.
+;; package-selected-packages doesn't belong here: emacs.el builds it from
+;; the use-package declarations each session.  Delete it if it appears.
 
 ;;;
 ;;;; CUSTOMIZE VARIABLES
