@@ -88,6 +88,14 @@
 (setopt package-autosuggest-mode t
         package-menu-use-current-if-no-marks nil)
 
+;; nael-lsp's autoloads run (keymap-set nael-mode-map "C-c C-l" #'lsp)
+;; before nael is loaded, which signals void-variable while packages are
+;; activated.  Give them a throwaway keymap to bind into (early-init.el
+;; does the same for activation at startup), then remove it so nael's
+;; own `defvar-keymap' still defines the real map.  C-c C-l is bound
+;; there in the nael use-package block below.
+(defvar nael-mode-map (make-sparse-keymap))
+
 ;; The call to package-initialize is needed to stop Emacs trying to
 ;; install built-in packages from an external repository.  According
 ;; to the documentation of package-initialize, this call should not be
@@ -97,6 +105,8 @@
 ;; getting set before this point.
 (unless (bound-and-true-p package--initialized)
   (package-initialize))
+(unless (featurep 'nael)
+  (makunbound 'nael-mode-map))
 
 (setopt use-package-always-ensure t
         use-package-always-defer t
@@ -1458,8 +1468,11 @@ mermaid.run().catch(err => {
 ;; - https://codeberg.org/mekeor/nael , although codeberg often seems to be down
 ;; - https://github.com/bustercopley/nael : mirror of the above
 
-;; Its autoload has a dangling reference to `nael-mode-map'; this can be deleted.
-(use-package nael)
+;; nael-lsp's autoloads bind C-c C-l before nael is loaded; see the
+;; workaround near `package-initialize'.  Bind it here instead.
+(use-package nael
+  :config
+  (keymap-set nael-mode-map "C-c C-l" #'lsp))
 
 (use-package nael-lsp)
 
