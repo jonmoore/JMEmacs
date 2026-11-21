@@ -43,6 +43,23 @@
   (should (equal (weight-lists '(0 10) '(10 20) 0.5) '(5.0 15.0)))
   (should (equal (weight-lists '(0 10) '(10 20) 1.0) '(10.0 20.0))))
 
+;;;; org-wp-link
+
+(require 'org-wp-link)
+
+(ert-deftest jm-org-wp-path-to-url ()
+  (let ((org-wp-language "en"))
+    (should (equal (org-wp-path-to-url "Emacs Lisp")
+                   "https://en.wikipedia.org/wiki/Emacs_Lisp"))
+    (should (equal (org-wp-path-to-url "  Pi (mathematics) ")
+                   "https://en.wikipedia.org/wiki/Pi_%28mathematics%29")))
+  (let ((org-wp-language "de"))
+    (should (equal (org-wp-path-to-url "Emacs")
+                   "https://de.wikipedia.org/wiki/Emacs"))))
+
+(ert-deftest jm-org-wp-link-registered ()
+  (should (eq (org-link-get-parameter "wp" :follow) #'org-wp-follow)))
+
 (when noninteractive
   (ert-run-tests-batch-and-exit))
 

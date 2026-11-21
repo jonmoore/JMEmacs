@@ -1,62 +1,72 @@
-;;; org-wp-link.el --- Support for links to WikiPedia articles from  -*- lexical-binding: nil -*-
-;;; within Org-mode
+;;; org-wp-link.el --- Org links to Wikipedia articles  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2008-2009 Rudolf Olah, Jonathan Moore
 
 ;; Author: Rudolf Olah <omouse@gmail.com>
-;; Keywords: outlines, hypermedia, calendar, wp
+;; Keywords: outlines, hypermedia, wp
 
 ;; Licensed under the GNU General Public License version 3 or later.
 ;; The terms of the license are included with Emacs.
 
-(require 'org)
-(eval-when-compile
-  (require 'cl))
+;;; Commentary:
 
-(defvar *org-wp-language* "en"
-  "Which language version of WikiPedia to use")
+;; Adds a "wp:" link type to Org, e.g.
+;;
+;;   [[wp:Emacs Lisp]]  or  [[wp:Emacs Lisp][Elisp]]
+;;
+;; Following the link opens the article in a browser.  On export to
+;; HTML, LaTeX or Markdown it becomes an ordinary link to the article.
+;; The link type is registered when Org loads (see the autoload below).
 
-(org-add-link-type "wp" 'org-wp-follow 'org-wp-export)
+;;; Code:
+
+(require 'ol)
+(require 'url-util)
+
+(declare-function org-html-encode-plain-text "ox-html" (text))
+(declare-function org-latex--protect-text "ox-latex" (text))
+
+;; Register the link type whenever Org loads.  On the cookie line, this
+;; form goes into the autoloads file only.
+;;;###autoload (with-eval-after-load 'org (require 'org-wp-link))
+
+(defgroup org-wp-link nil
+  "Org links to Wikipedia articles."
+  :group 'org-link)
+
+(defcustom org-wp-language "en"
+  "Language code of the Wikipedia to link to, e.g. \"en\" or \"de\"."
+  :type 'string)
 
 (defun org-wp-path-to-url (path)
-  "Returns the WikiPedia url for PATH."
-  (message path)
+  "Return the Wikipedia URL for the article named PATH.
+Whitespace becomes underscores, as in Wikipedia's own URLs."
+  (concat "https://" org-wp-language ".wikipedia.org/wiki/"
+          (url-hexify-string
+           (replace-regexp-in-string "[ \t\n]+" "_" (string-trim path)))))
 
-  (let ((old-buffer (current-buffer)))
-    (save-current-buffer
-      (set-buffer (get-buffer-create "*ORG-WP-PATH*"))
-      (insert path)
-      (goto-char (point-min))
-      ;; (capitalized-words-mode 1)  ;; emacs 23 function
-      (while (forward-word)
-        (if (and (< (point) (point-max))
-                 (not (char-equal (char-after) ?_))
-                 (not (char-equal (char-after) ?))))
-            (insert "_")))
-      
-      (setq url (concat "http://" *org-wp-language*
-                        ".wikipedia.org/wiki/" (buffer-string)))
-      (kill-buffer nil)
-      url)))
-
-(defun org-wp-follow (path)
-  "Follow a WikiPedia link to the article's PATH per
-`org-add-link-type'."
+(defun org-wp-follow (path _arg)
+  "Open the Wikipedia article PATH in a browser."
   (browse-url (org-wp-path-to-url path)))
 
-(defun org-wp-export (path desc format)
-  "Export function for wikipedia links starting with \"wp:\", 
-   per `org-add-link-type'.  Works for html only."
-  (cond 
-   ((eq format 'html)
-    (let* ((link (org-wp-path-to-url (substring-no-properties path)))
-	   (rpl (concat "<a href=\""
-			(org-export-html-format-href link)
-			"\"" ">"
-			(org-export-html-format-desc 
-			 (replace-regexp-in-string "\\(wp:\\)" "" desc nil nil 1))
-			"</a>")))
-      rpl))
-   ((warn "Cannot export wikipedia links to this format"))))
+(defun org-wp-export (path desc backend &optional _info)
+  "Export a wp: link to PATH with description DESC for BACKEND.
+Handles HTML, LaTeX and Markdown; returns nil for other back-ends,
+which then use their default handling."
+  (let ((url (org-wp-path-to-url path))
+        (desc (or desc path)))
+    (pcase backend
+      ('html  (format "<a href=\"%s\">%s</a>" url (org-html-encode-plain-text desc)))
+      ('latex (format "\\href{%s}{%s}" url
+                      (if (fboundp 'org-latex--protect-text)
+                          (org-latex--protect-text desc)
+                        desc)))
+      ('md    (format "[%s](%s)" desc url)))))
+
+(org-link-set-parameters "wp"
+                         :follow #'org-wp-follow
+                         :export #'org-wp-export)
 
 (provide 'org-wp-link)
+
+;;; org-wp-link.el ends here
