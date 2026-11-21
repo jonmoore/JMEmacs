@@ -22,19 +22,20 @@
 (defvar jm-test-suites
   '(("units"       "-Q" "test/test-units.el")
     ("environment" "-Q" "test/test-environment.el")
-    ("lint"        nil  "test/test-lint.el")
+    ("lint"        nil  "test/test-lint.el" "--strict")
     ("startup"     nil  "test/test-startup.el"))
-  "Test suites: name, optional extra Emacs flag, file relative to the root.")
+  "Test suites: name, optional Emacs flag, file relative to the root, and
+any further arguments for the test file.")
 
 (let ((emacs (expand-file-name invocation-name invocation-directory))
       (default-directory jm-test-root)
       (results nil))
   (dolist (suite jm-test-suites)
-    (pcase-let ((`(,name ,flag ,file) suite))
+    (pcase-let ((`(,name ,flag ,file . ,extra) suite))
       (message "\n==================== %s ====================" name)
       (with-temp-buffer
         (let ((status (apply #'call-process emacs nil t nil
-                             (delq nil (list flag "--batch" "-l" file)))))
+                             (append (delq nil (list flag "--batch" "-l" file)) extra))))
           (message "%s" (buffer-string))
           (push (cons name status) results)))))
   (message "\n==================== summary ====================")
