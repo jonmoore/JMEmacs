@@ -2193,8 +2193,6 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
 
 (use-package sphinx-doc)
 
-(use-package sqlite3)
-
 (use-package svg-lib)
 
 (use-package tex-site
