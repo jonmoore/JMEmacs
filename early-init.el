@@ -5,7 +5,7 @@
 ;; Runs before package.el activates installed packages at startup.
 ;; Bootstrap it from ~/.emacs.d/early-init.el with:
 ;;
-;;   (load (expand-file-name "~/git/JMEmacs/early-init.el") t t)
+;;   (load (expand-file-name "~/git/jonmoore/JMEmacs/early-init.el") t t)
 
 ;;; Code:
 

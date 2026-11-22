@@ -4,7 +4,7 @@
 ;;   https://www.gnu.org/software/emacs/download.html
 ;; * Clone the repo containing this file
 ;; * Place the real .emacs.el in the standard location and from there
-;;   * load this, e.g. (load "/Users/jon/src/git/JMEmacs/emacs.el")
+;;   * load this, e.g. (load "~/git/jonmoore/JMEmacs/emacs.el")
 ;;
 ;;   * For git/magit, as I have a note that exec-path should be set
 ;;   * early, set local-exec-paths to include paths to git.exe and

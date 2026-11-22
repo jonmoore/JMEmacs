@@ -6,7 +6,7 @@ My emacs stuff. Should be portable across platforms.
 Setup
 -----
 
-These steps assume the checkout is at `~/git/JMEmacs`.  If it is
+These steps assume the checkout is at `~/git/jonmoore/JMEmacs`.  If it is
 somewhere else, change the paths in the two files below to match.
 
 ### 1. Install the external tools
@@ -28,7 +28,7 @@ lists the required and optional tools.
 
 ```elisp
 ;;; early-init.el --- bootstrap for JMEmacs  -*- lexical-binding: t; -*-
-(load (expand-file-name "~/git/JMEmacs/early-init.el") t t)
+(load (expand-file-name "~/git/jonmoore/JMEmacs/early-init.el") t t)
 ```
 
 `~/.emacs.d/init.el`:
@@ -59,7 +59,7 @@ lists the required and optional tools.
                   (with-temp-file log
                     (insert (format "%S\n\n" err))
                     (insert (with-output-to-string (backtrace))))))))
-    (load (expand-file-name "~/git/JMEmacs/emacs.el"))))
+    (load (expand-file-name "~/git/jonmoore/JMEmacs/emacs.el"))))
 
 ;;; init.el ends here
 ```
