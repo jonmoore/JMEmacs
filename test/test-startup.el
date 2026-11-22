@@ -83,9 +83,21 @@ packages), as well as for unhandled ones, which then end the run."
 (setq debugger #'jm-test--debugger
       debug-on-error t)
 ;; Load the config the way a normal startup does: early-init.el first.
-(load (expand-file-name "early-init.el" jm-test-root) nil t)
-(load (expand-file-name "emacs.el" jm-test-root) nil t)
+(defvar jm-test-load-time
+  (let ((start (float-time)))
+    (load (expand-file-name "early-init.el" jm-test-root) nil t)
+    (load (expand-file-name "emacs.el" jm-test-root) nil t)
+    (- (float-time) start))
+  "Seconds taken to load early-init.el and emacs.el.")
 (setq debug-on-error nil)
+
+;; Packages should load when first used, not at startup.  org has been
+;; pulled in at launch before, by another package's autoloads.
+(dolist (pkg '(org lsp-mode magit))
+  (when (featurep pkg)
+    (push (format "startup: %s loaded while loading emacs.el (should be deferred)" pkg)
+          jm-test-errors)))
+(message "test-startup: loaded emacs.el in %.1fs" jm-test-load-time)
 
 ;; Check what a normal startup must have set up, before the loop below
 ;; loads every package (which would also run blocks that wait on deferred

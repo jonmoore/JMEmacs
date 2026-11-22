@@ -25,6 +25,7 @@
     ;; startup installs missing packages through use-package, so it must
     ;; run before lint, which needs them to compile lisp/*.el.
     ("startup"     nil  "test/test-startup.el")
+    ("integration" nil  "test/test-integration.el")
     ("lint"        nil  "test/test-lint.el" "--strict"))
   "Test suites: name, optional Emacs flag, file relative to the root, and
 any further arguments for the test file.")

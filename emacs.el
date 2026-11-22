@@ -1057,8 +1057,8 @@ clean buffer we delay checking for longer."
   "Helper for correct loading of `python-mode' buffers with
 `lsp-mode' as a minor mode.  Needed because we manage lsp-mode
 through `python-helpers--init-in-buffer', which also ensures that conda
-etc. are set up before starting lsp."
-  (message "jm- lsp-mode-handler args:%s" args)
+etc. are set up before starting lsp.  ARGS are ignored."
+  (ignore args)
   (cond
    ((eq desktop-buffer-major-mode 'python-mode)
     (python-helpers--init-in-buffer (current-buffer)))

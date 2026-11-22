@@ -10,6 +10,12 @@ on:
 permissions:
   contents: read
 
+# Compile and run lsp-mode with plists, as ~/.emacs.d/early-init.el from
+# the dotfiles does on every machine.  lsp-mode bakes this in when it is
+# byte-compiled, so it is part of the package cache key below.
+env:
+  LSP_USE_PLISTS: "true"
+
 jobs:
   test:
     name: ${{ matrix.os }} / Emacs ${{ matrix.emacs }}
@@ -75,6 +81,15 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install ripgrep -y
 
+      # Python language servers for the integration test, which starts
+      # them on a Python file.  pipx is preinstalled on all runners.
+      - name: Install Python language servers
+        shell: bash
+        run: |
+          pipx install ruff
+          pipx install basedpyright
+          echo "$(pipx environment --value PIPX_BIN_DIR)" >> "$GITHUB_PATH"
+
       # On Windows, Emacs uses HOME for ~ when it is set.  Point it at the
       # user profile so ~/.emacs.d matches the cache path below.
       - name: Set HOME (Windows)
@@ -95,8 +110,8 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.emacs.d/elpa
-          key: elpa-${{ runner.os }}-${{ matrix.emacs }}-${{ steps.month.outputs.month }}-${{ hashFiles('emacs.el') }}
-          restore-keys: elpa-${{ runner.os }}-${{ matrix.emacs }}-${{ steps.month.outputs.month }}-
+          key: elpa-plists-${{ runner.os }}-${{ matrix.emacs }}-${{ steps.month.outputs.month }}-${{ hashFiles('emacs.el') }}
+          restore-keys: elpa-plists-${{ runner.os }}-${{ matrix.emacs }}-${{ steps.month.outputs.month }}-
 
       - name: Run tests
         run: emacs --batch -l test/run-all.el

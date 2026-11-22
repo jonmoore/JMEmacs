@@ -9,9 +9,11 @@ Run from the repository root:
 
     emacs --batch -l test/run-all.el
 
-The suite runs unit tests, checks for external tools, lints `lisp/`, and
-loads the full configuration. Any error or compiler warning fails it. CI
-runs the same command on all three platforms.
+The suite runs unit tests, checks for external tools, loads the full
+configuration, runs integration tests against it (key bindings, prompts,
+desktop restore, the Python language servers), and lints `lisp/`. Any
+error or compiler warning fails it. CI runs the same command on all
+three platforms.
 
 ## Conventions
 
