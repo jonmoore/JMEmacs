@@ -87,6 +87,18 @@ packages), as well as for unhandled ones, which then end the run."
 (load (expand-file-name "emacs.el" jm-test-root) nil t)
 (setq debug-on-error nil)
 
+;; Check what a normal startup must have set up, before the loop below
+;; loads every package (which would also run blocks that wait on deferred
+;; packages, hiding a startup that never runs them).
+(unless (memq 'word-perfect custom-enabled-themes)
+  (push (format "startup: theme word-perfect not enabled (enabled: %S)"
+                custom-enabled-themes)
+        jm-test-errors))
+(unless (and custom-file
+             (file-equal-p custom-file (expand-file-name "emacs-custom.el" jm-test-root)))
+  (push (format "startup: custom-file is %S, not emacs-custom.el" custom-file)
+        jm-test-errors))
+
 ;; Run the deferred :config blocks by loading each use-package'd package.
 ;; Names with no library behind them (e.g. `emacs') are skipped.
 ;; The table is filled because emacs.el sets `use-package-compute-statistics'.

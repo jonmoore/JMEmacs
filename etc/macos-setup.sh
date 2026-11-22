@@ -48,8 +48,11 @@ brew install pandoc cmake libtool libvterm || echo ">> some optional tools not i
 # agent-shell with Claude: Node.js, the ACP adapter agent-shell starts
 # (claude-agent-acp), and the Claude Code CLI, used once to sign in.  Both
 # npm packages land in /opt/homebrew/bin, which init.el puts on exec-path.
+# Claude Code finishes installing in its postinstall script, which npm only
+# runs when allowed; --allow-scripts allows it for that package alone.
 brew install node || echo ">> Node.js not installed (needed for agent-shell)"
-npm install -g @agentclientprotocol/claude-agent-acp @anthropic-ai/claude-code \
+npm install -g --allow-scripts=@anthropic-ai/claude-code \
+    @agentclientprotocol/claude-agent-acp @anthropic-ai/claude-code \
   || echo ">> claude-agent-acp / Claude Code not installed (needed for agent-shell)"
 
 # go-grip: Markdown preview (installed to ~/go/bin, which emacs.el adds to exec-path)

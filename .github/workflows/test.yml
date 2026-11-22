@@ -59,12 +59,15 @@ jobs:
           sudo apt-get install -y ripgrep pkg-config enchant-2 libenchant-2-dev cmake libtool-bin
 
       # Run the setup script, so CI tests it and has the same tools as
-      # a Mac set up with it.  Then put the directories that the README's
-      # ~/.emacs.d/init.el adds to exec-path (TeX, Go) on PATH as well.
+      # a Mac set up with it.  Check that the Claude Code CLI it installs
+      # actually runs, since the environment test only checks it's on PATH.
+      # Then put the directories that the README's ~/.emacs.d/init.el adds
+      # to exec-path (TeX, Go) on PATH as well.
       - name: Install tools (macOS)
         if: runner.os == 'macOS'
         run: |
           bash etc/macos-setup.sh
+          claude --version
           echo "/Library/TeX/texbin" >> "$GITHUB_PATH"
           echo "$HOME/go/bin" >> "$GITHUB_PATH"
 

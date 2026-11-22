@@ -558,7 +558,8 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
 
 (use-package cmake-mode)                ; Major mode for editing CMake source
 
-(use-package color-theme-modern)        ; Ports of color-theme themes to deftheme.
+(use-package color-theme-modern         ; Ports of color-theme themes to deftheme.
+  :demand t)
 
 (use-package comint                     ; built-in
   :ensure nil
@@ -648,16 +649,33 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
   (add-hook 'dap-stopped-hook
             (lambda (arg) (call-interactively #'dap-hydra))))
 
+(defun jm-computer-name ()
+  "Return a name for this computer that doesn't change with the network.
+On macOS, `system-name' can come from the network, so use the computer's
+Bonjour name, LocalHostName plus \".local\", which is what `system-name'
+returns when no network name overrides it.  On Windows use COMPUTERNAME;
+elsewhere, `system-name'."
+  (or (getenv "COMPUTERNAME")
+      (and system-osx-p
+           (let ((name (ignore-errors
+                         (car (process-lines "scutil" "--get" "LocalHostName")))))
+             (and name (not (string-empty-p name)) (concat name ".local"))))
+      (system-name)))
+
 (use-package desktop                    ; built-in
   :config
-  (let* ((computername (or (getenv "COMPUTERNAME") (system-name)))
+  ;; One desktop per computer
+  (let* ((computername (jm-computer-name))
          (local-desktop-dir
           (string-as-unibyte (concat "~/.emacs.d/" computername ))))
     (unless (file-exists-p local-desktop-dir)
       (mkdir local-desktop-dir))
     (setq desktop-lazy-verbose nil
           desktop-load-locked-desktop t
-          desktop-path (list local-desktop-dir))))
+          desktop-path (list local-desktop-dir)))
+  ;; Don't save or restore frame colours: the theme sets them.
+  (dolist (param '(background-color foreground-color background-mode))
+    (push (cons param :never) frameset-filter-alist)))
 
 (use-package diff-hl                    ; highlight uncommitted changes
   :custom
