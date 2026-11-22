@@ -1245,6 +1245,17 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
           )
   (setq lsp-diagnostic-filter #'my-lsp-diagnostic-filter)
 
+  ;; `lsp-method-requirements' keys semantic tokens as
+  ;; "textDocument/semanticTokensFull" etc., not the method names actually
+  ;; sent, so these requests skip the capability check and go to every
+  ;; workspace, including one still starting.  ruff >= 0.17 exits when it
+  ;; gets a request before `initialized', and `auto-restart' then loops.
+  (dolist (method '("textDocument/semanticTokens/full"
+                    "textDocument/semanticTokens/full/delta"
+                    "textDocument/semanticTokens/range"))
+    (setf (alist-get method lsp-method-requirements nil nil #'equal)
+          '(:capability :semanticTokensProvider)))
+
   ;; Work around an issue in lsp-headerline, which includes
   ;; lsp-headerline-check-breadcrumb in lsp-on-idle-hook.  This causes issues with remote
   ;; buffers as the check uses TRAMP, hence external processes, allowing idle timers to
