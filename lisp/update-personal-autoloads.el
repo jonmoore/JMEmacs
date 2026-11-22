@@ -1,46 +1,45 @@
-;; autoloads advice - http://stackoverflow.com/questions/4189159/emacs23-elisp-how-to-properly-autoload-this-library  -*- lexical-binding: nil -*-
+;;; update-personal-autoloads.el --- generate autoloads for lisp/  -*- lexical-binding: t -*-
 
-;; What you really want is to get the autoloads generated for you
-;; automatically, so that your .emacs file remains pristine. Most
-;; packages have the ;;;###autoload lines in them already, and if not,
-;; you can easily add them.
+;;; Commentary:
 
-;; To manage this, you can put all the packages in a directory, say
-;; ~/emacs/lisp, and in there have a file named update-auto-loads.el
-;; which contains:
+;; Scans the files in this directory for ;;;###autoload cookies and
+;; writes the autoloads to personal-autoloads.el, also in this
+;; directory.  emacs.el calls `update-personal-autoloads' at startup,
+;; then loads the result.
+;;
+;; The file is regenerated in full, but only when a file in the
+;; directory is newer than it, or when files were added, removed or
+;; renamed (which updates the directory's modification time).
 
-(require 'autoload)
-(require 'cl-lib)
+;;; Code:
 
-(defun has-files-newer-than-autoload (dir autoload-file)
-  (cl-find-if (lambda (file)
-             (file-newer-than-file-p file autoload-file))
-           (directory-files dir t directory-files-no-dot-files-regexp)))
+(require 'loaddefs-gen)
+(require 'seq)
 
-(defun update-personal-autoloads-ex (base generated-autoload-file)
-  "Update autoloads for all files in directory BASE, saving the
-  autoloads to GENERATED-AUTOLOAD-FILE"
-  (let ((autoloads-was-empty (not (file-exists-p generated-autoload-file))))
-    (cd base)
-    (when autoloads-was-empty
-      ;; create the file with non-zero size to appease autoload
-      (with-current-buffer (find-file-noselect generated-autoload-file)
-        (insert ";;; personal-autoloads.el --- generated autoloads  -*- lexical-binding: t -*-\n") 
-        (save-buffer)))
-    (when (or autoloads-was-empty
-              (has-files-newer-than-autoload base generated-autoload-file))
-      (update-directory-autoloads base))))
+(defun update-personal-autoloads--stale-p (dir autoload-file)
+  "Non-nil if AUTOLOAD-FILE needs regenerating from the files in DIR."
+  (or (not (file-exists-p autoload-file))
+      (file-newer-than-file-p dir autoload-file)
+      (seq-some (lambda (file) (file-newer-than-file-p file autoload-file))
+                (directory-files dir t "\\.el\\'"))))
+
+(defun update-personal-autoloads-ex (dir autoload-file)
+  "Write autoloads for the Lisp files in DIR to AUTOLOAD-FILE if it is stale."
+  (when (update-personal-autoloads--stale-p dir autoload-file)
+    (loaddefs-generate dir autoload-file (list autoload-file) nil nil t)
+    ;; Writing the file updates DIR's modification time, possibly after
+    ;; the file's own; make the file the newer so it isn't stale already.
+    (when (file-exists-p autoload-file)
+      (set-file-times autoload-file))))
 
 ;;;###autoload
 (defun update-personal-autoloads ()
-  "Update personal autoloads for all files in the directory in
-which this function is defined.  The autoloads are saved to this
-directory."
-  (let ((base (file-truename
-               (file-name-directory
-                (symbol-file 'update-personal-autoloads 'defun)))))
-    (update-personal-autoloads-ex
-     base
-     (concat base "personal-autoloads.el"))))
+  "Update the autoloads for the files in the directory defining this function.
+They are written to personal-autoloads.el in that directory."
+  (let ((dir (file-name-directory
+              (file-truename (symbol-file 'update-personal-autoloads 'defun)))))
+    (update-personal-autoloads-ex dir (expand-file-name "personal-autoloads.el" dir))))
 
 (provide 'update-personal-autoloads)
+
+;;; update-personal-autoloads.el ends here

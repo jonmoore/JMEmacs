@@ -60,6 +60,65 @@
 (ert-deftest jm-org-wp-link-registered ()
   (should (eq (org-link-get-parameter "wp" :follow) #'org-wp-follow)))
 
+;;;; update-personal-autoloads
+
+(require 'update-personal-autoloads)
+
+(defun jm-test--file-mtime (file seconds-ago)
+  "Set FILE's modification time to SECONDS-AGO seconds before now."
+  (set-file-times file (time-subtract nil seconds-ago)))
+
+(ert-deftest jm-update-personal-autoloads ()
+  "Autoloads are generated, regenerated when stale, and dropped for removed files."
+  (let* ((dir (file-name-as-directory (make-temp-file "jm-autoloads-" t)))
+         (out (expand-file-name "personal-autoloads.el" dir))
+         (foo (expand-file-name "foo.el" dir))
+         (bar (expand-file-name "bar.el" dir))
+         (default-directory default-directory))
+    (unwind-protect
+        (progn
+          (with-temp-file foo
+            (insert ";;; foo.el  -*- lexical-binding: t -*-\n"
+                    ";;;###autoload\n(defun foo-cmd () (interactive))\n"))
+          (with-temp-file bar
+            (insert ";;; bar.el  -*- lexical-binding: t -*-\n"
+                    ";;;###autoload\n(defun bar-cmd () (interactive))\n"))
+          (update-personal-autoloads-ex dir out)
+          (should (file-exists-p out))
+          (should-not (update-personal-autoloads--stale-p dir out))
+          (with-temp-buffer
+            (insert-file-contents out)
+            (should (string-match-p "lexical-binding: t" (buffer-string)))
+            (should (string-match-p "(autoload 'foo-cmd \"foo\"" (buffer-string)))
+            (should (string-match-p "(autoload 'bar-cmd \"bar\"" (buffer-string))))
+          ;; Up to date: no change.
+          (jm-test--file-mtime foo 100)
+          (jm-test--file-mtime bar 100)
+          (set-file-times dir (time-subtract nil 100))
+          (should-not (update-personal-autoloads--stale-p dir out))
+          ;; Removing a file makes it stale, and its autoloads go.
+          (delete-file bar)
+          (jm-test--file-mtime foo 100)
+          (set-file-times dir nil)
+          (jm-test--file-mtime out 50)
+          (should (update-personal-autoloads--stale-p dir out))
+          (update-personal-autoloads-ex dir out)
+          (with-temp-buffer
+            (insert-file-contents out)
+            (should (string-match-p "(autoload 'foo-cmd" (buffer-string)))
+            (should-not (string-match-p "bar-cmd" (buffer-string)))))
+      (delete-directory dir t))))
+
+(ert-deftest jm-update-personal-autoloads-keeps-default-directory ()
+  "Generating autoloads doesn't change `default-directory'."
+  (let* ((dir (file-name-as-directory (make-temp-file "jm-autoloads-" t)))
+         (before default-directory))
+    (unwind-protect
+        (progn
+          (update-personal-autoloads-ex dir (expand-file-name "personal-autoloads.el" dir))
+          (should (equal default-directory before)))
+      (delete-directory dir t))))
+
 (when noninteractive
   (ert-run-tests-batch-and-exit))
 

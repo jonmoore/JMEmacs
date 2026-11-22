@@ -12,8 +12,9 @@ A personal Emacs configuration, used on macOS, Linux and Windows.
   not saved here: `emacs.el` builds it from the use-package declarations
   each session, so `package-autoremove` removes undeclared packages.
 - `lisp/`: personal and vendored helper libraries.  `personal-autoloads.el`
-  is generated from `;;;###autoload` cookies and is git-ignored; delete it to
-  force regeneration after removing or renaming files.
+  is generated from `;;;###autoload` cookies by `update-personal-autoloads.el`
+  (using `loaddefs-generate`) and is git-ignored.  It is regenerated when a
+  file in `lisp/` changes or is added, removed or renamed.
 - `etc/macos-setup.sh`: installs the external tools the config uses and
   clones the repo on a new Mac.
 - `test/`: the test suite (below).
