@@ -9,7 +9,8 @@
 ;;
 ;; Loading the config this way doesn't start a server, save the desktop,
 ;; write package-selected-packages to emacs-custom.el, or touch the real
-;; lsp session file.
+;; lsp session file, and nothing on `kill-emacs-hook' (recentf, savehist,
+;; ...) runs at exit.
 
 ;;; Code:
 
@@ -32,8 +33,11 @@ Return the number of seconds loading took."
     (advice-add 'package--save-selected-packages :override #'ignore))
   (with-eval-after-load 'lsp-mode
     (setq lsp-session-file (expand-file-name "lsp-session" jm-test-state-dir)))
-  (add-hook 'kill-emacs-hook
-            (lambda () (ignore-errors (delete-directory jm-test-state-dir t))))
+  ;; Packages loaded later add savers too, so empty the hook at exit.
+  (advice-add 'kill-emacs :before
+              (lambda (&rest _)
+                (setq kill-emacs-hook nil)
+                (ignore-errors (delete-directory jm-test-state-dir t))))
   (let ((start (float-time)))
     (load (expand-file-name "early-init.el" jm-test-root) nil t)
     (load (expand-file-name "emacs.el" jm-test-root) nil t)
