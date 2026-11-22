@@ -433,6 +433,11 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
     "C-c C-o" #'jm-agent-shell-follow-link-at-point
     "C-c o"   #'agent-shell-other-buffer))
 
+(use-package agent-shell-hq             ; dashboard and peek for agent-shell sessions
+  ;; Not on MELPA.  The repo has no release tags, so track its default
+  ;; branch rather than the :vc default of the latest release.
+  :vc (:url "https://github.com/SreenivasVRao/agent-shell-hq" :rev :newest))
+
 (use-package align                      ; built-in
   :custom
   (align-to-tab-stop nil))
