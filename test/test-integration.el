@@ -15,11 +15,21 @@
 ;;; Code:
 
 (require 'ert)
+(require 'seq)
 
 (load (expand-file-name "jm-test-config.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil t)
-(jm-test-load-config)
+(defconst jm-test-load-time (jm-test-load-config)
+  "Seconds taken to load early-init.el and emacs.el.")
+
+(defconst jm-test-loaded-at-startup
+  (seq-filter #'featurep '(org lsp-mode magit))
+  "Packages from a watch list that loading emacs.el loaded.
+Recorded here rather than in test-startup.el, which may install packages
+while loading, and compiling them loads these.")
+
+(message "test-integration: loaded emacs.el in %.1fs" jm-test-load-time)
 
 ;; Bound with `let' below, before their packages load: declare them
 ;; special so the bindings are dynamic.
@@ -53,6 +63,13 @@ servers, then delete DIR."
         (kill-buffer buf))))
   (delete-directory dir t))
 
+(defun jm-test--print-server-stderr ()
+  "Print the stderr buffers of language servers, to show why one failed."
+  (dolist (buf (buffer-list))
+    (when (string-match-p "::stderr\\*" (buffer-name buf))
+      (message "---- %s\n%s" (buffer-name buf)
+               (with-current-buffer buf (buffer-string))))))
+
 (defun jm-test--wait (seconds &optional pred)
   "Process events for SECONDS, or until PRED returns non-nil.
 Return PRED's last value."
@@ -62,6 +79,13 @@ Return PRED's last value."
                 (< (float-time) deadline))
       (accept-process-output nil 0.2))
     result))
+
+;;;; Startup
+
+(ert-deftest jm-int-packages-deferred ()
+  "Packages load when first used, not at startup.
+org has been pulled in at launch before, by another package's autoloads."
+  (should-not jm-test-loaded-at-startup))
 
 ;;;; Key bindings
 
@@ -171,15 +195,19 @@ starting; ruff exits when that happens, and auto-restart looped."
                          (lambda (a b) (string< (car a) (car b))))))
          (expected '((pyright . initialized) (ruff . initialized))))
     (unwind-protect
-        (progn
-          (find-file (expand-file-name "t.py" dir))
-          (lsp-workspace-folders-add (directory-file-name dir))
-          (python-helpers--init-in-buffer (current-buffer))
-          (should (jm-test--wait 60 (lambda () (equal (funcall status) expected))))
-          (goto-char (point-max))
-          (insert "y = x + 1\n")
-          (jm-test--wait 15)
-          (should (equal (funcall status) expected)))
+        (condition-case err
+            (progn
+              (find-file (expand-file-name "t.py" dir))
+              (lsp-workspace-folders-add (directory-file-name dir))
+              (python-helpers--init-in-buffer (current-buffer))
+              (should (jm-test--wait 60 (lambda () (equal (funcall status) expected))))
+              (goto-char (point-max))
+              (insert "y = x + 1\n")
+              (jm-test--wait 15)
+              (should (equal (funcall status) expected)))
+          (ert-test-failed
+           (jm-test--print-server-stderr)
+           (signal (car err) (cdr err))))
       (jm-test--kill-project dir))))
 
 (when noninteractive
