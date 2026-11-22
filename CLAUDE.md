@@ -15,6 +15,11 @@ A personal Emacs configuration, used on macOS, Linux and Windows.
   is generated from `;;;###autoload` cookies by `update-personal-autoloads.el`
   (using `loaddefs-generate`) and is git-ignored.  It is regenerated when a
   file in `lisp/` changes or is added, removed or renamed.
+- `etc/package-manifest.el`: lists the installed version and source commit
+  of every package, since package.el can't pin versions.  CI runs it after
+  the tests: the list goes in each job's summary and is uploaded unzipped
+  as the `package-manifest-<OS>.txt` artifact, which opens in the browser.
+  GitHub keeps both for 90 days.
 - `etc/macos-setup.sh`: installs the external tools the config uses and
   clones the repo on a new Mac.
 - `test/`: the test suite (below).

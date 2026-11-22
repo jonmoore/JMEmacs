@@ -91,3 +91,23 @@ jobs:
 
       - name: Run tests
         run: emacs --batch -l test/run-all.el
+
+      # Record which package versions this run installed and tested: listed
+      # in the job summary and uploaded as a text-file artifact.  With
+      # archive: false the file isn't zipped, so it opens in the browser,
+      # and the artifact takes the file's name.  GitHub keeps both for 90
+      # days.  Uploading needs no extra token permissions.
+      - name: Write package manifest
+        if: always()
+        shell: bash
+        run: >-
+          emacs --batch -l etc/package-manifest.el -f package-manifest-write
+          "package-manifest-${{ runner.os }}.txt" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload package manifest
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          path: package-manifest-${{ runner.os }}.txt
+          archive: false
+          if-no-files-found: warn
