@@ -1,6 +1,6 @@
 #!/bin/bash
-# macOS setup for JMEmacs: installs the tools the config expects (via Homebrew)
-# and clones the repo to ~/git/JMEmacs.  Run with: bash etc/macos-setup.sh
+# macOS setup for JMEmacs: installs the tools the config expects (via Homebrew).
+# Run from the checkout with: bash etc/macos-setup.sh
 # Safe to re-run.
 set -e
 
@@ -21,13 +21,36 @@ if ! command -v brew >/dev/null 2>&1; then
   fi
 fi
 
-# 3. Tools referenced by the config
+# 3. An `emacs` command for /Applications/Emacs.app: a wrapper script in
+#    Homebrew's bin directory, which is on PATH.  (A symlink to the app's
+#    binary can stop it finding its own files.)  Only created when there is
+#    no `emacs` on PATH yet, so an existing one (or CI's) is left alone.
+emacs_app="${JM_EMACS_APP:-/Applications/Emacs.app}"
+if ! command -v emacs >/dev/null 2>&1; then
+  if [ -x "$emacs_app/Contents/MacOS/Emacs" ]; then
+    wrapper="$(brew --prefix)/bin/emacs"
+    printf '#!/bin/sh\nexec "%s/Contents/MacOS/Emacs" "$@"\n' "$emacs_app" > "$wrapper"
+    chmod +x "$wrapper"
+    echo ">> Created $wrapper to run $emacs_app"
+  else
+    echo ">> No emacs command and no $emacs_app: install Emacs.app, then run this again."
+  fi
+fi
+
+# 4. Tools referenced by the config
 brew install git ripgrep enchant pkg-config graphviz go
 brew install p7zip || brew install sevenzip || echo ">> 7-Zip not installed (only needed for zip extraction)"
 
-# 4. Tools for optional features (each degrades quietly if missing)
-# pandoc: ox-pandoc export.  cmake, libtool: compiling vterm's module.
-brew install pandoc cmake libtool || echo ">> some optional tools not installed"
+# 5. Tools for optional features (each degrades quietly if missing)
+# pandoc: ox-pandoc export.  cmake, libtool, libvterm: compiling vterm's module.
+brew install pandoc cmake libtool libvterm || echo ">> some optional tools not installed"
+
+# agent-shell with Claude: Node.js, the ACP adapter agent-shell starts
+# (claude-agent-acp), and the Claude Code CLI, used once to sign in.  Both
+# npm packages land in /opt/homebrew/bin, which init.el puts on exec-path.
+brew install node || echo ">> Node.js not installed (needed for agent-shell)"
+npm install -g @agentclientprotocol/claude-agent-acp @anthropic-ai/claude-code \
+  || echo ">> claude-agent-acp / Claude Code not installed (needed for agent-shell)"
 
 # go-grip: Markdown preview (installed to ~/go/bin, which emacs.el adds to exec-path)
 go install github.com/chrishrb/go-grip@latest || echo ">> go-grip not installed"
@@ -42,14 +65,8 @@ if [ -x /Library/TeX/texbin/tlmgr ] && [ ! -x /Library/TeX/texbin/latexmk ]; the
   sudo /Library/TeX/texbin/tlmgr install latexmk
 fi
 
-# 5. Directories the config uses
+# 6. Directories the config uses
 mkdir -p ~/git ~/backup ~/info
 
-# 6. Clone (or update) the config
-if [ -d ~/git/JMEmacs/.git ]; then
-  git -C ~/git/JMEmacs pull --ff-only
-else
-  git clone https://github.com/jonmoore/JMEmacs.git ~/git/JMEmacs
-fi
-
-echo ">> Done. Start Emacs; the first launch downloads packages from ELPA/MELPA and takes a few minutes."
+echo ">> Done.  Next, create ~/.emacs.d/init.el and ~/.emacs.d/early-init.el as"
+echo ">> described in README.md (this script doesn't), then start Emacs."
