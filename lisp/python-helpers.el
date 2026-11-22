@@ -46,9 +46,10 @@
 ;; https://github.com/emacs-lsp/dap-mode/issues/184#issuecomment-584575143
 
 
-(defvar python-helpers-enable-conda t
+(defvar python-helpers-enable-conda (and (executable-find "conda") t)
   "Non-nil means prompt for and activate conda environments.
-This applies to local Python buffers.  Set to nil to skip conda
+This applies to local Python buffers.  Defaults to non-nil when a
+`conda' executable is on `exec-path'.  Set to nil to skip conda
 entirely, e.g. when conda is not in use on this machine.")
 
 (defvar python-helpers--ht-project-conda-env
@@ -130,10 +131,10 @@ Used to detect and prevent reentrant calls.")
 (defun python-helpers--init-in-buffer-core (project-root)
   "Core of `python-helpers--init-in-buffer'.  Handle conda and
 lsp-mode initialisation.  PROJECT-ROOT is a projectile project
-root.  When the user has selected a conda env for the
-project (prompted for if needed) then ensure that conda is synced
-to use that env and that lsp is active.  The initialisation order
-is first conda env, then lsp."
+root.  When `python-helpers-enable-conda' is non-nil, ensure conda
+is synced to the env selected for the project (prompted for if
+needed).  Then ensure lsp is active.  The initialisation order is
+first conda env, then lsp."
   (cl-assert (projectile-project-p project-root))
   (if python-helpers--init-in-buffer-core-running-p
       (progn
@@ -147,11 +148,11 @@ is first conda env, then lsp."
       (ht-set! python-helpers--ht-project-conda-env
                project-root
                conda-env-path)
-      (unless (eq conda-env-path 'do-not-use-an-env)
-        (unless (eq conda-env-path conda-env-current-path)
-          (conda-env-activate-path conda-env-path))
-        (unless (bound-and-true-p lsp-mode)
-          (lsp))))))
+      (unless (or (eq conda-env-path 'do-not-use-an-env)
+                  (eq conda-env-path conda-env-current-path))
+        (conda-env-activate-path conda-env-path))
+      (unless (bound-and-true-p lsp-mode)
+        (lsp)))))
 
 ;;;###autoload
 (defun python-helpers--init-in-buffer (buffer)
