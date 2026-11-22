@@ -74,7 +74,9 @@ To test a fresh install without touching `~/.emacs.d`:
   downloads GNU's official zip from `ftpmirror.gnu.org`.
 - Third-party actions are pinned to full commit SHAs, and the workflow token
   is read-only (`permissions: contents: read`).  Keep it that way.
-- `~/.emacs.d/elpa` is cached per OS and Emacs version, keyed on `emacs.el`.
+- `~/.emacs.d/elpa` is cached per OS, Emacs version and month, keyed on
+  `emacs.el`.  The first run each month installs every package afresh, so
+  CI picks up new package versions.
 - Dependabot opens weekly PRs for action updates.
 - Useful commands: `gh run list`, `gh run view <id> --log-failed`,
   `gh run watch`.

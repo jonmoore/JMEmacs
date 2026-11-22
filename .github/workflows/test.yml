@@ -72,12 +72,22 @@ jobs:
         if: runner.os == 'Windows'
         run: echo "HOME=$env:USERPROFILE" >> $env:GITHUB_ENV
 
+      # The month in the cache key makes CI install current package versions
+      # at least once a month; otherwise it would keep testing the versions
+      # from whenever emacs.el last changed.  restore-keys stays within the
+      # month: use-package only installs missing packages and never upgrades
+      # them, so restoring an older month's cache would keep its versions.
+      - name: Get month
+        id: month
+        shell: bash
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+
       - name: Cache packages
         uses: actions/cache@v6
         with:
           path: ~/.emacs.d/elpa
-          key: elpa-${{ runner.os }}-${{ matrix.emacs }}-${{ hashFiles('emacs.el') }}
-          restore-keys: elpa-${{ runner.os }}-${{ matrix.emacs }}-
+          key: elpa-${{ runner.os }}-${{ matrix.emacs }}-${{ steps.month.outputs.month }}-${{ hashFiles('emacs.el') }}
+          restore-keys: elpa-${{ runner.os }}-${{ matrix.emacs }}-${{ steps.month.outputs.month }}-
 
       - name: Run tests
         run: emacs --batch -l test/run-all.el
