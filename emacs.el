@@ -423,7 +423,14 @@ https://github.com/alphapapa/unpackaged.el#expand-all-options-documentation"
         (agent-shell-markdown--open-link url)
       (markdown-follow-link-at-point)))
 
+  (defun jm-agent-shell-notice-filter (notice)
+    "Drop claude-agent-acp's idle-compaction log lines from NOTICE."
+    (let ((text (map-elt notice :text)))
+      (unless (string-prefix-p "[idle-compaction]" text)
+        text)))
+
   (setopt agent-shell-inhibit-system-sleep nil ; broken on some WSL2
+          agent-shell-notice-filter-function #'jm-agent-shell-notice-filter
           agent-shell-prefer-viewport-interaction t
           agent-shell-preferred-agent-config 'claude-code)
   (define-keymap :keymap agent-shell-mode-map
