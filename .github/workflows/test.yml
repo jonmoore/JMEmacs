@@ -81,14 +81,16 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install ripgrep -y
 
-      # Python language servers for the integration test, which starts
-      # them on a Python file.  pipx is preinstalled on all runners.
+      # Python language servers for the integration test, from pixi
+      # (conda-forge) as on the real machines.  Pinned to a commit SHA,
+      # like the other third-party action above.
       - name: Install Python language servers
-        shell: bash
-        run: |
-          pipx install ruff
-          pipx install basedpyright
-          echo "$(pipx environment --value PIPX_BIN_DIR)" >> "$GITHUB_PATH"
+        uses: prefix-dev/setup-pixi@9936258fee697aff89b3fed6ca1f80a382ef694e  # v0.11.3
+        with:
+          run-install: false
+          global-environments: |
+            ruff
+            basedpyright
 
       # On Windows, Emacs uses HOME for ~ when it is set.  Point it at the
       # user profile so ~/.emacs.d matches the cache path below.

@@ -1053,18 +1053,6 @@ clean buffer we delay checking for longer."
   :config
   (setq-default lorem-ipsum-list-bullet "- "))
 
-(defun lsp-mode-handler (&rest args)
-  "Helper for correct loading of `python-mode' buffers with
-`lsp-mode' as a minor mode.  Needed because we manage lsp-mode
-through `python-helpers--init-in-buffer', which also ensures that conda
-etc. are set up before starting lsp.  ARGS are ignored."
-  (ignore args)
-  (cond
-   ((eq desktop-buffer-major-mode 'python-mode)
-    (python-helpers--init-in-buffer (current-buffer)))
-   (t
-    (lsp-deferred))))
-
 (use-package lsp-inline-completion      ; part of lsp-mode
   :ensure nil
   :after lsp-mode
@@ -1205,10 +1193,11 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless)))
 
-  ;; Try to make python-mode/lsp-mode buffers reload correctly
-  (push
-   (cons 'lsp-mode #'lsp-mode-handler)
-   desktop-minor-mode-handlers)
+  ;; Don't let desktop turn lsp-mode back on: that calls `lsp' directly.
+  ;; Python buffers start lsp through python-helpers (after conda) when
+  ;; desktop shows them with `switch-to-buffer'; other modes need M-x lsp.
+  (with-eval-after-load 'desktop
+    (add-to-list 'desktop-minor-mode-table '(lsp-mode nil)))
 
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884

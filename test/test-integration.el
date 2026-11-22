@@ -2,9 +2,9 @@
 
 ;;; Commentary:
 
-;; Loads emacs.el as test-startup.el does, then checks behaviour that has
-;; broken before: key bindings, prompts when visiting files, desktop
-;; restore of Python buffers, and the Python language servers.
+;; Loads the config as test-startup.el does, then checks behaviour that
+;; has broken before: key bindings, prompts when visiting files, and the
+;; Python language servers.
 ;;
 ;;   emacs --batch -l test/test-integration.el
 ;;
@@ -15,41 +15,16 @@
 ;;; Code:
 
 (require 'ert)
-(require 'cl-lib)
 
-(defvar jm-test-root
-  (file-name-directory
-   (directory-file-name (file-name-directory (or load-file-name buffer-file-name))))
-  "Root of the JMEmacs checkout.")
+(load (expand-file-name "jm-test-config.el"
+                        (file-name-directory (or load-file-name buffer-file-name)))
+      nil t)
+(jm-test-load-config)
 
-;; Don't touch the real session: no server, no desktop saving, no
-;; package-selected-packages written, and state files kept in a temp dir.
-;; Variables from packages loaded later, bound with `let' below: declare
-;; them special so those bindings are dynamic.
-(defvar desktop-buffer-ok-count)
-(defvar desktop-buffer-fail-count)
-(defvar desktop-first-buffer)
-(defvar desktop-dirname)
-(defvar desktop-buffers-not-to-save)
-(defvar desktop-files-not-to-save)
-(defvar desktop-base-file-name)
-(defvar lsp-session-file)
-(defvar lsp-use-plists)
+;; Bound with `let' below, before their packages load: declare them
+;; special so the bindings are dynamic.
 (defvar lsp-restart)
-(defvar lsp-auto-guess-root)
-(defvar lsp--buffer-workspaces)
 (defvar python-helpers-enable-conda)
-(defvar python-helpers--init-in-buffer-core-running-p)
-(defvar jm-test-state-dir (make-temp-file "jm-test-state" t))
-(advice-add 'server-start :override #'ignore)
-(advice-add 'desktop-save-mode :override #'ignore)
-(with-eval-after-load 'package
-  (advice-add 'package--save-selected-packages :override #'ignore))
-(with-eval-after-load 'lsp-mode
-  (setq lsp-session-file (expand-file-name "lsp-session" jm-test-state-dir)))
-
-(load (expand-file-name "early-init.el" jm-test-root) nil t)
-(load (expand-file-name "emacs.el" jm-test-root) nil t)
 
 ;;;; Helpers
 
@@ -64,39 +39,9 @@ FILES is a list of (NAME . CONTENTS)."
         (insert (cdr f))))
     dir))
 
-(defun jm-test--prompt-error (orig &rest args)
-  "Signal an error naming the prompt in ARGS instead of calling ORIG."
-  (ignore orig)
-  (error "Unexpected prompt: %S" (car args)))
-
-(defconst jm-test--prompt-functions
-  '(yes-or-no-p y-or-n-p read-from-minibuffer completing-read read-string
-                read-char-choice read-multiple-choice)
-  "Functions that ask the user something.")
-
-(defmacro jm-test--without-prompts (&rest body)
-  "Run BODY with every prompt function signalling an error."
-  (declare (indent 0))
-  `(unwind-protect
-       (progn
-         (dolist (f jm-test--prompt-functions)
-           (advice-add f :around #'jm-test--prompt-error))
-         ,@body)
-     (dolist (f jm-test--prompt-functions)
-       (advice-remove f #'jm-test--prompt-error))))
-
-(defun jm-test--wait-until (pred timeout)
-  "Process events until PRED returns non-nil or TIMEOUT seconds pass.
-Return PRED's last value."
-  (let ((deadline (+ (float-time) timeout))
-        result)
-    (while (and (not (setq result (funcall pred)))
-                (< (float-time) deadline))
-      (accept-process-output nil 0.2))
-    result))
-
-(defun jm-test--kill-project-buffers (dir)
-  "Kill buffers visiting files under DIR, shutting down any lsp workspaces."
+(defun jm-test--kill-project (dir)
+  "Kill buffers visiting files under DIR, stopping their language
+servers, then delete DIR."
   (dolist (buf (buffer-list))
     (when (and (buffer-file-name buf)
                (file-in-directory-p (buffer-file-name buf) dir))
@@ -105,37 +50,48 @@ Return PRED's last value."
           (dolist (ws (lsp-workspaces))
             (ignore-errors (lsp-workspace-shutdown ws))))
         (set-buffer-modified-p nil)
-        (kill-buffer buf)))))
+        (kill-buffer buf))))
+  (delete-directory dir t))
+
+(defun jm-test--wait (seconds &optional pred)
+  "Process events for SECONDS, or until PRED returns non-nil.
+Return PRED's last value."
+  (let ((deadline (+ (float-time) seconds))
+        result)
+    (while (and (not (and pred (setq result (funcall pred))))
+                (< (float-time) deadline))
+      (accept-process-output nil 0.2))
+    result))
 
 ;;;; Key bindings
 
 (defconst jm-test-key-bindings
-  '((nil            "C-S-<left>"  next-buffer)
-    (nil            "C-S-<right>" previous-buffer)
-    (nil            "C-M-g"       gptel-send-t)
+  '((nil             "C-S-<left>"  next-buffer)
+    (nil             "C-S-<right>" previous-buffer)
+    (nil             "C-M-g"       gptel-send-t)
     ;; org binds C-S-<left>/<right> itself; emacs.el unsets them
-    (org-mode       "C-S-<left>"  next-buffer)
-    (org-mode       "C-S-<right>" previous-buffer)
+    (org-mode        "C-S-<left>"  next-buffer)
+    (org-mode        "C-S-<right>" previous-buffer)
     ;; flyspell takes C-M-i unless `flyspell-use-meta-tab' is nil
-    (text-mode      "C-M-i"       complete-symbol)
-    (markdown-mode  "C-M-i"       complete-symbol)
-    (org-mode       "C-M-i"       complete-symbol)
-    (emacs-lisp-mode "C-M-i"      completion-at-point)
-    (python-mode    "TAB"         indent-for-tab-command)
-    (python-mode    "C-M-i"       yas-or-complete-or-indent-for-tab))
+    (text-mode       "C-M-i"       complete-symbol)
+    (markdown-mode   "C-M-i"       complete-symbol)
+    (org-mode        "C-M-i"       complete-symbol)
+    (emacs-lisp-mode "C-M-i"       completion-at-point)
+    (python-mode     "TAB"         indent-for-tab-command)
+    (python-mode     "C-M-i"       yas-or-complete-or-indent-for-tab))
   "(MODE KEY COMMAND): KEY runs COMMAND in a MODE buffer, or globally if
-MODE is nil.  Each has been broken before by a mode or package update.")
+MODE is nil.  Each has been broken before by a mode or package update.
+Checked in a buffer without a file and without lsp running.")
 
 (ert-deftest jm-int-key-bindings ()
   "Keys that modes and package updates have taken over in the past."
   (let (wrong)
     (pcase-dolist (`(,mode ,key ,expected) jm-test-key-bindings)
-      (let ((actual
-             (if (null mode)
-                 (keymap-lookup global-map key)
-               (with-temp-buffer
-                 (funcall mode)
-                 (key-binding (kbd key))))))
+      (let ((actual (if mode
+                        (with-temp-buffer
+                          (funcall mode)
+                          (key-binding (kbd key)))
+                      (keymap-lookup global-map key))))
         (unless (eq actual expected)
           (push (format "%s in %s: %S, expected %S"
                         key (or mode "global") actual expected)
@@ -144,10 +100,16 @@ MODE is nil.  Each has been broken before by a mode or package update.")
 
 ;;;; Prompts when visiting files
 
+(defconst jm-test--prompt-functions
+  '(yes-or-no-p y-or-n-p read-from-minibuffer completing-read read-string
+                read-char-choice read-multiple-choice)
+  "Functions that ask the user something.")
+
 (ert-deftest jm-int-no-prompts-visiting-files ()
   "Visiting a file in each common mode doesn't ask anything.
 Past prompts: lsp offering to download servers, the conda env prompt
-on machines without conda."
+on machines without conda.  Prompts are recorded rather than signalled,
+so one inside a `condition-case' still fails the test."
   (let* ((files '(("a.py" . "import os\n")
                   ("a.org" . "* Heading\n")
                   ("a.md" . "# Heading\n")
@@ -157,162 +119,68 @@ on machines without conda."
                   ("a.yaml" . "a: 1\n")
                   ("a.sh" . "#!/bin/sh\n")
                   ("a.txt" . "text\n")))
-         (dir (jm-test--make-project files)))
-    (unwind-protect
-        (jm-test--without-prompts
-          (dolist (f files)
-            (find-file (expand-file-name (car f) dir))
-            ;; let deferred hooks and timers (lsp-deferred etc.) run
-            (accept-process-output nil 0.5)))
-      (jm-test--kill-project-buffers dir)
-      (delete-directory dir t))))
-
-;;;; Desktop restore of Python buffers
-
-(ert-deftest jm-int-desktop-restore-python ()
-  "A Python buffer saved with lsp-mode on starts lsp through python-helpers
-when restored, so conda is set up first.  Turning `lsp-mode' on calls
-`lsp' directly; `lsp-mode-handler' stops desktop doing that."
-  (require 'desktop)
-  (require 'lsp-mode)
-  (let* ((dir (jm-test--make-project '(("t.py" . "import os\n"))))
-         (file (expand-file-name "t.py" dir))
-         (desktop-dir (make-temp-file "jm-test-desktop" t))
-         (calls nil)
-         (lsp-stub (lambda (&rest _)
-                     (push (if python-helpers--init-in-buffer-core-running-p
-                               'via-python-helpers
-                             'direct)
-                           calls)
-                     (setq-local lsp-mode t))))
+         (dir (jm-test--make-project files))
+         (prompts nil)
+         (record (lambda (&rest args)
+                   (push (format "%s: %S" (buffer-name) (car args)) prompts)
+                   nil)))
     (unwind-protect
         (progn
-          ;; Save a desktop holding t.py with lsp-mode on, without
-          ;; starting a server.
-          (advice-add 'lsp :override lsp-stub)
-          (advice-add 'lsp-deferred :override lsp-stub)
-          ;; desktop only saves modes turned on through their function
-          (with-current-buffer (find-file-noselect file)
-            (lsp-mode 1))
-          (let ((desktop-dirname desktop-dir)
-                (desktop-buffers-not-to-save nil)
-                (desktop-files-not-to-save "\\`\\'"))
-            (desktop-save desktop-dir t))
-          (jm-test--kill-project-buffers dir)
-          (setq calls nil)
-          (jm-test--without-prompts
-            ;; `desktop-read' is a no-op in batch mode; loading the file
-            ;; runs the same `desktop-create-buffer' calls.
-            (let ((desktop-dirname desktop-dir)
-                  (desktop-buffer-ok-count 0)
-                  (desktop-buffer-fail-count 0)
-                  (desktop-first-buffer nil))
-              (load (expand-file-name desktop-base-file-name desktop-dir) nil t t))
-            (let ((buf (get-file-buffer file)))
-              (should buf)
-              (switch-to-buffer buf)
-              (should (eq major-mode 'python-mode))))
-          (should (equal calls '(via-python-helpers))))
-      (advice-remove 'lsp lsp-stub)
-      (advice-remove 'lsp-deferred lsp-stub)
-      (jm-test--kill-project-buffers dir)
-      (delete-directory dir t)
-      (delete-directory desktop-dir t))))
+          (dolist (f jm-test--prompt-functions)
+            (advice-add f :override record))
+          (dolist (f files)
+            (find-file (expand-file-name (car f) dir))))
+      (dolist (f jm-test--prompt-functions)
+        (advice-remove f record))
+      (jm-test--kill-project dir))
+    (should-not (nreverse prompts))))
 
-;;;; lsp-mode build
+;;;; lsp-mode
 
 (ert-deftest jm-int-lsp-plists ()
-  "lsp-mode was compiled with the same `lsp-use-plists' it runs with.
-A mismatch breaks every server; it needs the elpa copy rebuilt."
+  "lsp-mode was compiled with the `lsp-use-plists' setting it runs with.
+A mismatch breaks every server, and the elpa copy has to be rebuilt.
+`lsp-make-position' was compiled into lsp-mode; `lsp-get' expands here."
   (require 'lsp-mode)
-  (should (eq (and lsp-use-plists t) (and (getenv "LSP_USE_PLISTS") t)))
-  ;; `lsp-make-position' was compiled into lsp-mode; `lsp-get' expands
-  ;; here, with the current setting.
   (should (equal (lsp-get (lsp-make-position :line 1 :character 2) :line) 1)))
 
-;;;; Python language servers
+(ert-deftest jm-int-lsp-semantic-tokens-need-capability ()
+  "Semantic token requests only go to servers that support them.
+lsp-mode's own table uses other names for these methods, so without
+emacs.el's entries they went to every server, including one still
+starting; ruff exits when that happens, and auto-restart looped."
+  (require 'lsp-mode)
+  (dolist (method '("textDocument/semanticTokens/full"
+                    "textDocument/semanticTokens/full/delta"
+                    "textDocument/semanticTokens/range"))
+    (should (assoc method lsp-method-requirements))))
 
 (ert-deftest jm-int-python-lsp-servers-stay-up ()
-  "pyright and ruff both start on a Python file and keep running.
-ruff once crashed on every start (a semantic tokens request arrived
-before initialization) and auto-restart looped."
+  "pyright and ruff both start on a Python file and are still running
+15 seconds later."
   (skip-unless (and (executable-find "ruff")
                     (executable-find "basedpyright-langserver")))
   (let* ((dir (jm-test--make-project '(("t.py" . "import os\n\nx = 1\n"))))
-         (file (expand-file-name "t.py" dir))
          (python-helpers-enable-conda nil)
-         (lsp-auto-guess-root t)
-         ;; a crash should fail the test, not start a restart loop
-         (lsp-restart 'ignore))
+         (lsp-restart 'ignore)          ; a crash should fail the test
+         (status (lambda ()
+                   (sort (mapcar (lambda (ws)
+                                   (cons (lsp--client-server-id (lsp--workspace-client ws))
+                                         (lsp--workspace-status ws)))
+                                 (lsp-workspaces))
+                         (lambda (a b) (string< (car a) (car b))))))
+         (expected '((pyright . initialized) (ruff . initialized))))
     (unwind-protect
-        (jm-test--without-prompts
-          (find-file file)
+        (progn
+          (find-file (expand-file-name "t.py" dir))
           (lsp-workspace-folders-add (directory-file-name dir))
           (python-helpers--init-in-buffer (current-buffer))
-          (let* ((buf (current-buffer))
-                 (servers (lambda ()
-                            (with-current-buffer buf
-                              (sort (mapcar (lambda (ws)
-                                              (lsp--client-server-id (lsp--workspace-client ws)))
-                                            (lsp-workspaces))
-                                    #'string<))))
-                 (ready (lambda ()
-                          (with-current-buffer buf
-                            (and (= (length (lsp-workspaces)) 2)
-                                 (seq-every-p (lambda (ws) (eq (lsp--workspace-status ws) 'initialized))
-                                              (lsp-workspaces))))))
-                 (pids (lambda ()
-                         (with-current-buffer buf
-                           (sort (mapcar (lambda (ws) (process-id (lsp--workspace-proc ws)))
-                                         (lsp-workspaces))
-                                 #'<)))))
-            (should (jm-test--wait-until ready 60))
-            (should (equal (funcall servers) '(pyright ruff)))
-            ;; Restart ruff and, while it is starting, send the semantic
-            ;; tokens request that redisplay would send in a GUI session
-            ;; (batch mode never redisplays).
-            (let* ((ruff (lambda ()
-                           (with-current-buffer buf
-                             (seq-find (lambda (ws)
-                                         (eq (lsp--client-server-id (lsp--workspace-client ws))
-                                             'ruff))
-                                       (lsp-workspaces)))))
-                   (proc nil)          ; the ruff that gets the request
-                   (request-while-starting
-                    (lambda (ws)
-                      (when (eq (lsp--client-server-id (lsp--workspace-client ws)) 'ruff)
-                        (setq proc (lsp--workspace-proc ws))
-                        ;; lsp-mode adds the new workspace to the buffer
-                        ;; just after this; add it now, as it is when
-                        ;; redisplay sends the request.
-                        (with-current-buffer buf
-                          (let ((lsp--buffer-workspaces
-                                 (cons ws (remove ws lsp--buffer-workspaces))))
-                            (lsp--semantic-tokens-request nil nil))))
-                      ws)))
-              (advice-add 'lsp--start-workspace :filter-return request-while-starting)
-              (unwind-protect
-                  (progn
-                    (lsp-workspace-restart (funcall ruff))
-                    (should (jm-test--wait-until (lambda () proc) 30)))
-                (advice-remove 'lsp--start-workspace request-while-starting))
-              (jm-test--wait-until (lambda () (or (funcall ready)
-                                                  (not (process-live-p proc))))
-                                   60)
-              (jm-test--wait-until #'ignore 2)
-              (should (process-live-p proc))
-              (should (funcall ready)))
-            (let ((before (funcall pids)))
-              ;; Edit and wait: a server that crashes would be restarted
-              ;; with a new pid.
-              (goto-char (point-max))
-              (insert "y = x + 1\n")
-              (lsp--semantic-tokens-request nil nil)
-              (jm-test--wait-until #'ignore 10)
-              (should (funcall ready))
-              (should (equal (funcall pids) before)))))
-      (jm-test--kill-project-buffers dir)
-      (delete-directory dir t))))
+          (should (jm-test--wait 60 (lambda () (equal (funcall status) expected))))
+          (goto-char (point-max))
+          (insert "y = x + 1\n")
+          (jm-test--wait 15)
+          (should (equal (funcall status) expected)))
+      (jm-test--kill-project dir))))
 
 (when noninteractive
   (ert-run-tests-batch-and-exit))

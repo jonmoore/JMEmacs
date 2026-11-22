@@ -29,10 +29,9 @@
 
 (require 'warnings)
 
-(defvar jm-test-root
-  (file-name-directory
-   (directory-file-name (file-name-directory (or load-file-name buffer-file-name))))
-  "Root of the JMEmacs checkout.")
+(load (expand-file-name "jm-test-config.el"
+                       (file-name-directory (or load-file-name buffer-file-name)))
+      nil t)
 
 (defvar jm-test-errors nil "Warnings raised at level :error, and errors seen by the debugger.")
 (defvar jm-test-warning-count 0 "Number of warnings raised while loading.")
@@ -64,12 +63,6 @@ from this config."
 (with-eval-after-load 'package
   (advice-add 'package-install :around #'jm-test--note-installing))
 
-;; Keep the run from affecting anything outside it.
-(advice-add 'server-start :override #'ignore)
-(advice-add 'desktop-save-mode :override #'ignore)
-(with-eval-after-load 'package
-  (advice-add 'package--save-selected-packages :override #'ignore))
-
 (defun jm-test--debugger (&rest args)
   "Record the error in ARGS and print a backtrace, then let it continue.
 With `debug-on-error' set, this runs for errors that are later caught
@@ -83,11 +76,7 @@ packages), as well as for unhandled ones, which then end the run."
 (setq debugger #'jm-test--debugger
       debug-on-error t)
 ;; Load the config the way a normal startup does: early-init.el first.
-(defvar jm-test-load-time
-  (let ((start (float-time)))
-    (load (expand-file-name "early-init.el" jm-test-root) nil t)
-    (load (expand-file-name "emacs.el" jm-test-root) nil t)
-    (- (float-time) start))
+(defvar jm-test-load-time (jm-test-load-config)
   "Seconds taken to load early-init.el and emacs.el.")
 (setq debug-on-error nil)
 
