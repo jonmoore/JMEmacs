@@ -22,6 +22,11 @@ wrapper in Homebrew's `bin` directory that runs `Emacs.app`.
 On other platforms, install the equivalents by hand: `test/test-environment.el`
 lists the required and optional tools.
 
+If these tools are already installed some other way, skip this step.  To
+check what is present, run:
+
+    emacs -Q --batch -l test/test-environment.el
+
 ### 2. Create the bootstrap files in `~/.emacs.d`
 
 `~/.emacs.d/early-init.el`:
