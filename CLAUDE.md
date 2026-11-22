@@ -20,8 +20,8 @@ A personal Emacs configuration, used on macOS, Linux and Windows.
   the tests: the list goes in each job's summary and is uploaded unzipped
   as the `package-manifest-<OS>.txt` artifact, which opens in the browser.
   GitHub keeps both for 90 days.
-- `etc/macos-setup.sh`: installs the external tools the config uses and
-  clones the repo on a new Mac.
+- `etc/macos-setup.sh`: installs the external tools the config uses on a
+  Mac.  Run it from the checkout.
 - `test/`: the test suite (below).
 - `.github/`: CI workflow and Dependabot configuration.
 
@@ -77,6 +77,9 @@ To test a fresh install without touching `~/.emacs.d`:
 - `.github/workflows/test.yml` runs `test/run-all.el` on Ubuntu, macOS and
   Windows.  Linux and macOS get Emacs from `purcell/setup-emacs`; Windows
   downloads GNU's official zip from `ftpmirror.gnu.org`.
+- The macOS job installs its tools by running `etc/macos-setup.sh`, so a
+  change to that script is tested there.  Linux and Windows install theirs
+  in the workflow.
 - Third-party actions are pinned to full commit SHAs, and the workflow token
   is read-only (`permissions: contents: read`).  Keep it that way.
 - `~/.emacs.d/elpa` is cached per OS, Emacs version and month, keyed on
