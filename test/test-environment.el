@@ -46,7 +46,9 @@
   "Optional tools: features degrade quietly without them."
   (dolist (tool '(("go-grip") ("7z" "7zz") ("dot") ("latexmk")
                   ("pandoc")              ; ox-pandoc
-                  ("cmake")))             ; compiling the vterm module
+                  ("cmake")               ; compiling the vterm module
+                  ("claude-agent-acp")    ; agent-shell's Claude adapter
+                  ("claude")))            ; Claude Code CLI, to sign in
     (unless (apply #'jm-test--tool-p tool)
       (message "  optional tool not found: %s" (car tool)))))
 
