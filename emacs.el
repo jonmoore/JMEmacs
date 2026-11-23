@@ -2617,7 +2617,7 @@ candidates for display-fill-column-indicator-character."
   "C-r"          'isearch-backward-regexp
   "C-s"          'isearch-forward-regexp
   "C-M-r"        'isearch-backward
-  "C-M-s"        'isearch-backward
+  "C-M-s"        'isearch-forward
 
   "C-M-g"        'gptel-send-t
 

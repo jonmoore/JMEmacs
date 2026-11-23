@@ -169,9 +169,14 @@ Checked in a buffer without a file and without lsp running.")
   "Features to load so that every keymap emacs.el binds keys in exists,
 with its use-package :config already run.")
 
-(defun jm-test--other-platform-p (form)
-  "Non-nil if FORM is a `when' or `unless' on the platform constants
-\(`system-win32-p' etc.) whose body doesn't run on this platform."
+(defconst jm-test--binding-condition-functions '(jinx-check-dependencies)
+  "Functions without side effects that emacs.el uses to decide whether
+to bind keys, e.g. only when jinx can be built.")
+
+(defun jm-test--skipped-here-p (form)
+  "Non-nil if FORM is a `when' or `unless' whose body doesn't run here.
+Only conditions built from the platform constants (`system-win32-p'
+etc.) and `jm-test--binding-condition-functions' are evaluated."
   (pcase form
     (`(,(and op (or 'when 'unless)) ,cond . ,_)
      (let ((syms nil))
@@ -179,6 +184,7 @@ with its use-package :config already run.")
                                       ((symbolp x) (push x syms)))))
          (collect cond))
        (and (cl-every (lambda (s) (or (memq s '(not and or))
+                                      (memq s jm-test--binding-condition-functions)
                                       (string-match-p "\\`system-.*-p\\'"
                                                       (symbol-name s))))
                       syms)
@@ -190,14 +196,14 @@ with its use-package :config already run.")
 FN is the binding function, `define-key' or `keymap-set'; `define-keymap'
 and `keymap-global-set' count as `keymap-set'.  MAP, KEY and DEF are the
 unevaluated forms.  Not searched: quoted data, function bodies (they bind
-keys only when called, e.g. from a mode hook) and code for other
-platforms."
+keys only when called, e.g. from a mode hook) and code that doesn't
+run here, see `jm-test--skipped-here-p'."
   (let (bindings)
     (cl-labels
         ((walk (form)
            (when (and (consp form)
                       (not (memq (car form) '(quote defun)))
-                      (not (jm-test--other-platform-p form)))
+                      (not (jm-test--skipped-here-p form)))
              (pcase form
                (`(define-keymap . ,args)
                 (let (map)
