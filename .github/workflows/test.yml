@@ -92,6 +92,18 @@ jobs:
             ruff
             basedpyright
 
+      # conda-forge's basedpyright can't start on Windows: its nodejs_wheel
+      # looks for node.exe in the wrong directory for conda's layout
+      # (lib\python\site-packages) and fails with WinError 2.  Use the npm
+      # package with the runner's Node instead.  Adding npm's prefix to
+      # PATH after the pixi step puts it ahead of ~/.pixi/bin.
+      - name: Install basedpyright from npm (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          npm install -g basedpyright
+          npm prefix -g >> "$GITHUB_PATH"
+
       # On Windows, Emacs uses HOME for ~ when it is set.  Point it at the
       # user profile so ~/.emacs.d matches the cache path below.
       - name: Set HOME (Windows)
@@ -108,8 +120,13 @@ jobs:
         shell: bash
         run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
 
-      - name: Cache packages
-        uses: actions/cache@v6
+      # Restore and save are separate steps so the packages are saved even
+      # when the tests fail; actions/cache saves only after a passing job,
+      # so a failing platform would otherwise reinstall everything on every
+      # run.  Skipped when the exact key was restored, as nothing changed.
+      - name: Restore packages
+        id: elpa-cache
+        uses: actions/cache/restore@v6
         with:
           path: ~/.emacs.d/elpa
           key: elpa-plists-${{ runner.os }}-${{ matrix.emacs }}-${{ steps.month.outputs.month }}-${{ hashFiles('emacs.el') }}
@@ -117,6 +134,13 @@ jobs:
 
       - name: Run tests
         run: emacs --batch -l test/run-all.el
+
+      - name: Save packages
+        if: ${{ !cancelled() && steps.elpa-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.emacs.d/elpa
+          key: ${{ steps.elpa-cache.outputs.cache-primary-key }}
 
       # Record which package versions this run installed and tested: listed
       # in the job summary and uploaded as a text-file artifact.  With
