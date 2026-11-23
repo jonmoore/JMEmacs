@@ -3,8 +3,9 @@
 ;;; Commentary:
 
 ;; Loads the config as test-startup.el does, then checks behaviour that
-;; has broken before: key bindings, prompts when visiting files, desktop
-;; save and restore, and the Python language servers.
+;; has broken before: key bindings, global modes, org, prompts when
+;; visiting files, desktop save and restore, and the Python language
+;; servers.
 ;;
 ;;   emacs --batch -l test/test-integration.el
 ;;
@@ -191,43 +192,55 @@ etc.) and `jm-test--binding-condition-functions' are evaluated."
             (let ((value (eval cond t)))
               (if (eq op 'when) (not value) value)))))))
 
+(defun jm-test--config-forms ()
+  "Return the top-level forms of emacs.el, unevaluated."
+  (let (forms)
+    (with-temp-buffer
+      (insert-file-contents (expand-file-name "emacs.el" jm-test-root))
+      (condition-case nil
+          (while t (push (read (current-buffer)) forms))
+        (end-of-file nil)))
+    (nreverse forms)))
+
+(defun jm-test--walk-forms (form fn)
+  "Call FN on FORM and each of its subforms that runs when emacs.el loads.
+Not walked: quoted data, function bodies (they run only when called,
+e.g. from a mode hook) and code that doesn't run here, see
+`jm-test--skipped-here-p'."
+  (when (and (consp form)
+             (not (memq (car form) '(quote defun)))
+             (not (jm-test--skipped-here-p form)))
+    (funcall fn form)
+    (while (consp form)
+      (jm-test--walk-forms (car form) fn)
+      (setq form (cdr form)))))
+
 (defun jm-test--config-bindings ()
   "Return the key bindings that emacs.el makes, as (FN MAP KEY DEF) forms.
 FN is the binding function, `define-key' or `keymap-set'; `define-keymap'
 and `keymap-global-set' count as `keymap-set'.  MAP, KEY and DEF are the
-unevaluated forms.  Not searched: quoted data, function bodies (they bind
-keys only when called, e.g. from a mode hook) and code that doesn't
-run here, see `jm-test--skipped-here-p'."
+unevaluated forms.  See `jm-test--walk-forms' for what is searched."
   (let (bindings)
-    (cl-labels
-        ((walk (form)
-           (when (and (consp form)
-                      (not (memq (car form) '(quote defun)))
-                      (not (jm-test--skipped-here-p form)))
-             (pcase form
-               (`(define-keymap . ,args)
-                (let (map)
-                  (while (keywordp (car args))
-                    (when (eq (car args) :keymap) (setq map (cadr args)))
-                    (setq args (cddr args)))
-                  (when map
-                    (while args
-                      (push (list 'keymap-set map (car args) (cadr args)) bindings)
-                      (setq args (cddr args))))))
-               (`(keymap-set ,map ,key ,def)
-                (push (list 'keymap-set map key def) bindings))
-               (`(keymap-global-set ,key ,def)
-                (push (list 'keymap-set 'global-map key def) bindings))
-               (`(define-key ,map ,key ,def)
-                (push (list 'define-key map key def) bindings)))
-             (while (consp form)
-               (walk (car form))
-               (setq form (cdr form))))))
-      (with-temp-buffer
-        (insert-file-contents (expand-file-name "emacs.el" jm-test-root))
-        (condition-case nil
-            (while t (walk (read (current-buffer))))
-          (end-of-file nil))))
+    (dolist (top (jm-test--config-forms))
+      (jm-test--walk-forms
+       top
+       (lambda (form)
+         (pcase form
+           (`(define-keymap . ,args)
+            (let (map)
+              (while (keywordp (car args))
+                (when (eq (car args) :keymap) (setq map (cadr args)))
+                (setq args (cddr args)))
+              (when map
+                (while args
+                  (push (list 'keymap-set map (car args) (cadr args)) bindings)
+                  (setq args (cddr args))))))
+           (`(keymap-set ,map ,key ,def)
+            (push (list 'keymap-set map key def) bindings))
+           (`(keymap-global-set ,key ,def)
+            (push (list 'keymap-set 'global-map key def) bindings))
+           (`(define-key ,map ,key ,def)
+            (push (list 'define-key map key def) bindings))))))
     (nreverse bindings)))
 
 (defun jm-test--binding-target (def)
@@ -266,6 +279,94 @@ a misquoted '#'command, or a command a package update renamed."
               (push (format "%s: bound to %S, not %S" where actual def)
                     problems)))))))
     (should-not (nreverse problems))))
+
+;;;; Global modes
+
+(defun jm-test--global-mode (symbol)
+  "The global minor mode SYMBOL names, following function aliases, or nil.
+A global minor mode has a customize setter that turns it on or off."
+  (while (and (symbolp symbol) (fboundp symbol)
+              (symbolp (symbol-function symbol)))
+    (setq symbol (symbol-function symbol)))
+  (and (symbolp symbol)
+       (eq (get symbol 'custom-set) 'custom-set-minor-mode)
+       symbol))
+
+(defun jm-test--config-global-modes ()
+  "Return (MODE . ON) for each global minor mode emacs.el's
+`use-package emacs' blocks turn on or off, in :custom or by calls in
+:init and :config.  ON is non-nil if the mode should end up on."
+  (let (modes)
+    (dolist (top (jm-test--config-forms))
+      (when (eq (car-safe top) 'use-package)
+        (when (eq (cadr top) 'emacs)
+          (let ((section nil))
+            (dolist (item (cddr top))
+              (cond
+               ((keywordp item) (setq section item))
+               ((and (eq section :custom) (consp item)
+                     (jm-test--global-mode (car item)))
+                (push (cons (jm-test--global-mode (car item))
+                            (and (eval (cadr item) t) t))
+                      modes))
+               ((memq section '(:init :config))
+                (jm-test--walk-forms
+                 item
+                 (lambda (form)
+                   (when (and (proper-list-p form)
+                              (<= (length form) 2)
+                              (symbolp (car form))
+                              (jm-test--global-mode (car form)))
+                     (let ((arg (eval (cadr form) t)))
+                       (push (cons (jm-test--global-mode (car form))
+                                   (or (null arg) (eq arg t)
+                                       (and (numberp arg) (> arg 0))))
+                             modes))))))))))))
+    (nreverse modes)))
+
+(ert-deftest jm-int-global-modes ()
+  "The global minor modes emacs.el turns on are on after loading it,
+and the ones it turns off are off.  A mode whose package fails to load
+otherwise goes unnoticed.  `desktop-save-mode' is left out: loading
+the config for a test doesn't turn it on."
+  (let ((modes (cl-remove 'desktop-save-mode (jm-test--config-global-modes)
+                          :key #'car))
+        wrong)
+    (should (> (length modes) 20))      ; the reader found them
+    (pcase-dolist (`(,mode . ,on) modes)
+      (unless (eq (and (default-value mode) t) on)
+        (push (format "%s is %s" mode (if on "off" "on")) wrong)))
+    (should-not (nreverse wrong))))
+
+;;;; Org
+
+(ert-deftest jm-int-org-setup ()
+  "org's babel languages load and run, <s TAB expands to a source
+block, and HTML and Markdown export work, without prompts."
+  (require 'org)
+  (should-not
+   (jm-test--prompts-from
+    (lambda ()
+      ;; Babel: every language emacs.el enables has an executor, and an
+      ;; Emacs Lisp block runs (without asking, as emacs.el sets).
+      (pcase-dolist (`(,lang . ,on) org-babel-load-languages)
+        (when on
+          (should (fboundp (intern (format "org-babel-execute:%s" lang))))))
+      (with-temp-buffer
+        (org-mode)
+        (insert "#+begin_src emacs-lisp\n(+ 1 2)\n#+end_src\n")
+        (goto-char (point-min))
+        (should (equal (org-babel-execute-src-block) 3)))
+      ;; org-tempo: <s then the command on TAB.
+      (with-temp-buffer
+        (org-mode)
+        (insert "<s")
+        (call-interactively (key-binding (kbd "TAB")))
+        (should (string-match-p "\\`#\\+begin_src" (buffer-string))))
+      ;; Export.
+      (let ((text "* Heading\nSome *bold* text.\n"))
+        (should (string-match-p "<b>bold</b>" (org-export-string-as text 'html t)))
+        (should (string-match-p "\\*\\*bold\\*\\*" (org-export-string-as text 'md t))))))))
 
 ;;;; Prompts when visiting files
 
