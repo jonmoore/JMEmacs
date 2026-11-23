@@ -420,8 +420,8 @@ on machines without conda."
 (ert-deftest jm-int-desktop-round-trip ()
   "Buffers saved in the desktop come back without prompts, and lsp
 starts again only when the Python buffer is shown.
-emacs.el keeps desktop from turning lsp-mode back on itself
-\(`desktop-minor-mode-table'), and python-helpers starts it only in
+emacs.el keeps desktop from turning lsp-mode and lsp-ui's modes back
+on itself (`desktop-minor-mode-table'), and python-helpers starts it only in
 buffers left on screen, though `desktop-read' shows each buffer it
 restores on the way.  Advice python-helpers used to put on
 `switch-to-buffer' once made it return nil.  The lsp part is skipped
@@ -475,6 +475,9 @@ unless ruff and basedpyright-langserver are on `exec-path'."
           (jm-test--settle)
           (should (eq (current-buffer) (funcall file-buffer "a.el")))
           (should-not (funcall lsp-buffers))
+          ;; lsp-ui's modes are lsp's to turn on, too.
+          (should-not (with-current-buffer (funcall file-buffer "a.py")
+                        (bound-and-true-p lsp-ui-mode)))
           (let ((py (funcall file-buffer "a.py")))
             (should (eq (switch-to-buffer py) py))
             (jm-test--settle)

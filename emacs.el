@@ -1194,9 +1194,11 @@ PARAMS is a PublishDiagnosticsParams object (plist or hash-table)."
 
   ;; Don't let desktop turn lsp-mode back on: that calls `lsp' directly.
   ;; Python buffers start lsp through python-helpers (after conda) when
-  ;; desktop shows them with `switch-to-buffer'; other modes need M-x lsp.
+  ;; they are first shown; other modes need M-x lsp.  Leave lsp-ui's
+  ;; modes to lsp too, which turns them on when it starts.
   (with-eval-after-load 'desktop
-    (add-to-list 'desktop-minor-mode-table '(lsp-mode nil)))
+    (dolist (mode '(lsp-mode lsp-ui-mode lsp-ui-sideline-mode lsp-ui-doc-mode))
+      (add-to-list 'desktop-minor-mode-table (list mode nil))))
 
   ;; suppress info-level messages from lsp.
   ;; related feature request https://github.com/emacs-lsp/lsp-mode/issues/1884
