@@ -166,7 +166,8 @@ conda env, then lsp.
 
 The visibility-testing part of this is to avoid massive delays when
 starting up with many different Python buffers loaded from the
-desktop. Ideally we would lean on lsp-deferred for this."
+desktop.  `python-helpers--init-deferred' calls this when a buffer
+is shown."
   (let ((cb (current-buffer)))
     (when (not (eq buffer cb))
       (message "jm - python-helpers--init-in-buffer buffer %s current-buffer %s " buffer cb)))
@@ -221,10 +222,41 @@ which case FRAME-OR-WINDOW is a frame; see
    ((windowp frame-or-window)
     (python-helpers--init-in-window frame-or-window))))
 
-(defun python-helpers--after-switch-to-buffer (buffer)
-  "Run `python-helpers--init-in-buffer' on BUFFER.
-Used as advice after `switch-to-buffer'."
-  (python-helpers--init-in-buffer buffer))
+;; Starting lsp when a buffer is shown, as `lsp-deferred' does, rather
+;; than when its file is visited: restoring a desktop visits every file,
+;; and each Python project started its servers at once.
+;;
+;; Like `lsp-deferred', the first check waits for an idle timer, so that
+;; buffers a command shows only on the way (`desktop-read' shows each one
+;; it restores with `switch-to-buffer') don't count as visible.  A buffer
+;; not shown then gets a buffer-local `window-configuration-change-hook'
+;; that checks again, from another idle timer, each time its windows
+;; change, until lsp is running.  Unlike `lsp-deferred', the check
+;; ignores buffers shown while the minibuffer is active, so a
+;; `consult-buffer' preview doesn't start lsp, and it activates the
+;; project's conda env first.  Doing the work from a timer rather than
+;; the hook keeps a conda prompt out of redisplay.
+
+(defun python-helpers--init-when-idle (buffer)
+  "Initialise BUFFER if it is shown, else check when its windows change.
+Run from an idle timer; see `python-helpers--init-deferred'."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (python-helpers--init-in-buffer buffer)
+      (if (bound-and-true-p lsp-mode)
+          (remove-hook 'window-configuration-change-hook
+                       #'python-helpers--init-on-window-change t)
+        (add-hook 'window-configuration-change-hook
+                  #'python-helpers--init-on-window-change nil t)))))
+
+(defun python-helpers--init-on-window-change ()
+  "Check the current buffer again once the command that changed its
+windows has finished.  Buffer-local on `window-configuration-change-hook'."
+  (run-with-idle-timer 0 nil #'python-helpers--init-when-idle (current-buffer)))
+
+(defun python-helpers--init-deferred ()
+  "Initialise the current buffer when it is shown.  For `python-mode-hook'."
+  (run-with-idle-timer 0 nil #'python-helpers--init-when-idle (current-buffer)))
 
 ;;;###autoload
 (defun python-helpers-enable-lsp-everywhere ()
@@ -235,8 +267,8 @@ to be enabled when needed"
    'python-helpers--init-in-frame
    (frame-list))
 
-  (add-hook 'python-mode-hook #'python-helpers--init-in-current-buffer)
-  (advice-add 'switch-to-buffer :filter-return #'python-helpers--after-switch-to-buffer)  
+  (remove-hook 'python-mode-hook #'python-helpers--init-in-current-buffer)
+  (add-hook 'python-mode-hook #'python-helpers--init-deferred)
   ;; disable auto-configuration until this works smoothly with more than one env
   ;;  (add-hook 'window-buffer-change-functions #'python-helpers--window-buffer-change-function)
   ;;  (remove-hook 'window-buffer-change-functions #'python-helpers--window-buffer-change-function)

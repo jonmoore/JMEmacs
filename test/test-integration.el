@@ -3,8 +3,8 @@
 ;;; Commentary:
 
 ;; Loads the config as test-startup.el does, then checks behaviour that
-;; has broken before: key bindings, prompts when visiting files, and the
-;; Python language servers.
+;; has broken before: key bindings, prompts when visiting files, desktop
+;; save and restore, and the Python language servers.
 ;;
 ;;   emacs --batch -l test/test-integration.el
 ;;
@@ -14,6 +14,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'seq)
 
@@ -51,17 +52,31 @@ FILES is a list of (NAME . CONTENTS)."
 
 (defun jm-test--kill-project (dir)
   "Kill buffers visiting files under DIR, stopping their language
-servers, then delete DIR."
-  (dolist (buf (buffer-list))
-    (when (and (buffer-file-name buf)
-               (file-in-directory-p (buffer-file-name buf) dir))
-      (with-current-buffer buf
-        (when (bound-and-true-p lsp-mode)
-          (dolist (ws (lsp-workspaces))
-            (ignore-errors (lsp-workspace-shutdown ws))))
-        (set-buffer-modified-p nil)
-        (kill-buffer buf))))
+servers, remove DIR from the lsp session, then delete DIR."
+  (jm-test--kill-project-buffers dir)
+  (when (and (featurep 'lsp-mode)
+             (member (directory-file-name dir) (lsp-session-folders (lsp-session))))
+    (lsp-workspace-folders-remove (directory-file-name dir)))
   (delete-directory dir t))
+
+(defun jm-test--kill-project-buffers (dir)
+  "Kill buffers visiting files under DIR, stopping their language servers.
+Wait for the servers to exit, so a later test can't reuse one that is
+shutting down."
+  (let (workspaces)
+    (dolist (buf (buffer-list))
+      (when (and (buffer-file-name buf)
+                 (file-in-directory-p (buffer-file-name buf) dir))
+        (with-current-buffer buf
+          (when (bound-and-true-p lsp-mode)
+            (dolist (ws (lsp-workspaces))
+              (cl-pushnew ws workspaces)
+              (ignore-errors (lsp-workspace-shutdown ws))))
+          (set-buffer-modified-p nil)
+          (kill-buffer buf))))
+    (jm-test--wait 10 (lambda ()
+                        (cl-notany (lambda (ws) (process-live-p (lsp--workspace-proc ws)))
+                                   workspaces)))))
 
 (defun jm-test--print-server-stderr ()
   "Print the stderr buffers of language servers, to show why one failed."
@@ -79,6 +94,30 @@ Return PRED's last value."
                 (< (float-time) deadline))
       (accept-process-output nil 0.2))
     result))
+
+(defun jm-test--settle ()
+  "Do what redisplay and idle time would do for python-helpers.
+Batch Emacs has neither, so run `window-configuration-change-hook' and
+then python-helpers' pending idle timers."
+  (run-window-configuration-change-hook)
+  (dolist (timer (copy-sequence timer-idle-list))
+    (when (eq (timer--function timer) #'python-helpers--init-when-idle)
+      (cancel-timer timer)
+      (apply (timer--function timer) (timer--args timer)))))
+
+(defun jm-test--stub-lsp ()
+  "Replace `lsp' with a stub that turns on `lsp-mode' without a server.
+Return a function that returns the names of the files it was called
+in, most recent first, and removes the stub when called with `remove'."
+  (require 'lsp-mode)
+  (let* ((started nil)
+         (stub (lambda (&rest _)
+                 (push (file-name-nondirectory buffer-file-name) started)
+                 (setq-local lsp-mode t))))
+    (advice-add 'lsp :override stub)
+    (lambda (&optional op)
+      (when (eq op 'remove) (advice-remove 'lsp stub))
+      started)))
 
 ;;;; Startup
 
@@ -122,6 +161,106 @@ Checked in a buffer without a file and without lsp running.")
                 wrong))))
     (should-not (nreverse wrong))))
 
+(defconst jm-test--binding-features
+  '(agent-shell cc-mode completion-preview corfu dired elisp-mode embark
+    flycheck gptel haskell-mode hideshow ibuffer info isearch latex lsp-mode
+    lsp-ui mediawiki nael org python rst shell smartparens text-mode
+    undo-tree vertico windmove yasnippet)
+  "Features to load so that every keymap emacs.el binds keys in exists,
+with its use-package :config already run.")
+
+(defun jm-test--other-platform-p (form)
+  "Non-nil if FORM is a `when' or `unless' on the platform constants
+\(`system-win32-p' etc.) whose body doesn't run on this platform."
+  (pcase form
+    (`(,(and op (or 'when 'unless)) ,cond . ,_)
+     (let ((syms nil))
+       (cl-labels ((collect (x) (cond ((consp x) (mapc #'collect x))
+                                      ((symbolp x) (push x syms)))))
+         (collect cond))
+       (and (cl-every (lambda (s) (or (memq s '(not and or))
+                                      (string-match-p "\\`system-.*-p\\'"
+                                                      (symbol-name s))))
+                      syms)
+            (let ((value (eval cond t)))
+              (if (eq op 'when) (not value) value)))))))
+
+(defun jm-test--config-bindings ()
+  "Return the key bindings that emacs.el makes, as (FN MAP KEY DEF) forms.
+FN is the binding function, `define-key' or `keymap-set'; `define-keymap'
+and `keymap-global-set' count as `keymap-set'.  MAP, KEY and DEF are the
+unevaluated forms.  Not searched: quoted data, function bodies (they bind
+keys only when called, e.g. from a mode hook) and code for other
+platforms."
+  (let (bindings)
+    (cl-labels
+        ((walk (form)
+           (when (and (consp form)
+                      (not (memq (car form) '(quote defun)))
+                      (not (jm-test--other-platform-p form)))
+             (pcase form
+               (`(define-keymap . ,args)
+                (let (map)
+                  (while (keywordp (car args))
+                    (when (eq (car args) :keymap) (setq map (cadr args)))
+                    (setq args (cddr args)))
+                  (when map
+                    (while args
+                      (push (list 'keymap-set map (car args) (cadr args)) bindings)
+                      (setq args (cddr args))))))
+               (`(keymap-set ,map ,key ,def)
+                (push (list 'keymap-set map key def) bindings))
+               (`(keymap-global-set ,key ,def)
+                (push (list 'keymap-set 'global-map key def) bindings))
+               (`(define-key ,map ,key ,def)
+                (push (list 'define-key map key def) bindings)))
+             (while (consp form)
+               (walk (car form))
+               (setq form (cdr form))))))
+      (with-temp-buffer
+        (insert-file-contents (expand-file-name "emacs.el" jm-test-root))
+        (condition-case nil
+            (while t (walk (read (current-buffer))))
+          (end-of-file nil))))
+    (nreverse bindings)))
+
+(defun jm-test--binding-target (def)
+  "DEF without a (DESCRIPTION . DEF) which-key label."
+  (if (and (consp def) (stringp (car def))) (cdr def) def))
+
+(ert-deftest jm-int-config-bindings-are-commands ()
+  "Every key emacs.el binds runs a command or opens a prefix keymap, and
+still has that binding after the packages are loaded.
+A binding to something else fails only when the key is pressed, e.g.
+a misquoted '#'command, or a command a package update renamed."
+  (dolist (f jm-test--binding-features)
+    (require f))
+  (let ((bindings (jm-test--config-bindings))
+        problems)
+    (should (> (length bindings) 100))  ; the reader found them
+    (pcase-dolist (`(,fn ,map-form ,key-form ,def-form) bindings)
+      (let* ((where (format "%S %S" map-form key-form))
+             (map (ignore-errors (eval map-form t)))
+             (key (ignore-errors (eval key-form t)))
+             (def (jm-test--binding-target (ignore-errors (eval def-form t)))))
+        (cond
+         ((not (keymapp map))
+          (push (format "%s: no keymap (add its feature to `jm-test--binding-features')"
+                        where)
+                problems))
+         ((null def))                   ; unbinding a key
+         ((not (or (commandp def) (keymapp def)))
+          (push (format "%s: %S is not a command or keymap" where def) problems))
+         (t
+          (let ((actual (jm-test--binding-target
+                         (if (eq fn 'define-key)
+                             (lookup-key map key)
+                           (lookup-key map (key-parse key))))))
+            (unless (equal actual def)
+              (push (format "%s: bound to %S, not %S" where actual def)
+                    problems)))))))
+    (should-not (nreverse problems))))
+
 ;;;; Prompts when visiting files
 
 (defconst jm-test--prompt-functions
@@ -129,11 +268,27 @@ Checked in a buffer without a file and without lsp running.")
                 read-char-choice read-multiple-choice)
   "Functions that ask the user something.")
 
+(defun jm-test--prompts-from (thunk)
+  "Call THUNK and return the prompts it asked, as strings.
+Prompts are recorded and answered with nil rather than signalled, so
+one inside a `condition-case' is still recorded."
+  (let* ((prompts nil)
+         (record (lambda (&rest args)
+                   (push (format "%s: %S" (buffer-name) (car args)) prompts)
+                   nil)))
+    (unwind-protect
+        (progn
+          (dolist (f jm-test--prompt-functions)
+            (advice-add f :override record))
+          (funcall thunk))
+      (dolist (f jm-test--prompt-functions)
+        (advice-remove f record)))
+    (nreverse prompts)))
+
 (ert-deftest jm-int-no-prompts-visiting-files ()
   "Visiting a file in each common mode doesn't ask anything.
 Past prompts: lsp offering to download servers, the conda env prompt
-on machines without conda.  Prompts are recorded rather than signalled,
-so one inside a `condition-case' still fails the test."
+on machines without conda."
   (let* ((files '(("a.py" . "import os\n")
                   ("a.org" . "* Heading\n")
                   ("a.md" . "# Heading\n")
@@ -143,21 +298,146 @@ so one inside a `condition-case' still fails the test."
                   ("a.yaml" . "a: 1\n")
                   ("a.sh" . "#!/bin/sh\n")
                   ("a.txt" . "text\n")))
+         (dir (jm-test--make-project files)))
+    (unwind-protect
+        (should-not
+         (jm-test--prompts-from
+          (lambda ()
+            (dolist (f files)
+              (find-file (expand-file-name (car f) dir))
+              (jm-test--settle)))))
+      (jm-test--kill-project dir))))
+
+;;;; Desktop
+
+(ert-deftest jm-int-desktop-round-trip ()
+  "Buffers saved in the desktop come back without prompts, and lsp
+starts again only when the Python buffer is shown.
+emacs.el keeps desktop from turning lsp-mode back on itself
+\(`desktop-minor-mode-table'), and python-helpers starts it only in
+buffers left on screen, though `desktop-read' shows each buffer it
+restores on the way.  Advice python-helpers used to put on
+`switch-to-buffer' once made it return nil.  The lsp part is skipped
+unless ruff and basedpyright-langserver are on `exec-path'."
+  (require 'desktop)
+  (require 'lsp-mode)
+  (let* ((files '(("a.py" . "import os\n") ("a.org" . "* Heading\n")
+                  ("a.el" . ";;; a.el  -*- lexical-binding: t -*-\n")))
+         (modes '(("a.py" . python-mode) ("a.org" . org-mode)
+                  ("a.el" . emacs-lisp-mode)))
          (dir (jm-test--make-project files))
-         (prompts nil)
-         (record (lambda (&rest args)
-                   (push (format "%s: %S" (buffer-name) (car args)) prompts)
-                   nil)))
+         (desktop-dir (file-name-as-directory (make-temp-file "jm-test-desktop" t)))
+         (servers (and (executable-find "ruff")
+                       (executable-find "basedpyright-langserver")))
+         (python-helpers-enable-conda nil)
+         (lsp-restart 'ignore)
+         (desktop-restore-frames nil)   ; only buffers; batch has no real frames
+         (desktop-restore-eager t)
+         (file-buffer (lambda (name)
+                        (find-buffer-visiting (expand-file-name name dir))))
+         (lsp-buffers (lambda ()
+                        (seq-filter (lambda (f)
+                                      (buffer-local-value
+                                       'lsp-mode (funcall file-buffer (car f))))
+                                    files))))
     (unwind-protect
         (progn
-          (dolist (f jm-test--prompt-functions)
-            (advice-add f :override record))
+          (when servers
+            (lsp-workspace-folders-add (directory-file-name dir)))
           (dolist (f files)
-            (find-file (expand-file-name (car f) dir))))
-      (dolist (f jm-test--prompt-functions)
-        (advice-remove f record))
-      (jm-test--kill-project dir))
-    (should-not (nreverse prompts))))
+            (find-file (expand-file-name (car f) dir)))
+          (switch-to-buffer (funcall file-buffer "a.py"))
+          (jm-test--settle)
+          (when servers
+            (should (jm-test--wait 30 (lambda () (equal (mapcar #'car (funcall lsp-buffers))
+                                                        '("a.py"))))))
+          ;; Without frames, `desktop-read' leaves the most recent buffer
+          ;; shown.  Make that a.el, so a.py is restored but not shown.
+          (switch-to-buffer (funcall file-buffer "a.el"))
+          (desktop-save desktop-dir t)
+          (jm-test--kill-project-buffers dir)
+          (switch-to-buffer "*scratch*")
+          ;; `desktop-read' does nothing in batch mode.
+          (should-not (jm-test--prompts-from
+                       (lambda () (let ((noninteractive nil))
+                                    (should (desktop-read desktop-dir))))))
+          (pcase-dolist (`(,name . ,mode) modes)
+            (let ((buf (funcall file-buffer name)))
+              (should buf)
+              (should (eq (buffer-local-value 'major-mode buf) mode))))
+          (jm-test--settle)
+          (should (eq (current-buffer) (funcall file-buffer "a.el")))
+          (should-not (funcall lsp-buffers))
+          (let ((py (funcall file-buffer "a.py")))
+            (should (eq (switch-to-buffer py) py))
+            (jm-test--settle)
+            (when servers
+              (should (jm-test--wait 30 (lambda () (buffer-local-value 'lsp-mode py))))))
+          (should (member (mapcar #'car (funcall lsp-buffers))
+                          (if servers '(("a.py")) '(nil)))))
+      (ignore-errors (desktop-release-lock desktop-dir))
+      (setq desktop-dirname nil)
+      (jm-test--kill-project dir)
+      (delete-directory desktop-dir t))))
+
+;;;; When lsp starts in Python buffers
+
+(ert-deftest jm-int-python-lsp-starts-when-shown ()
+  "With several Python buffers open, lsp starts in each one when it is
+first shown, once, and not in buffers that are only visited.
+Uses a stub for `lsp', so no language servers are needed."
+  (let* ((dir (jm-test--make-project '(("a.py" . "a = 1\n") ("b.py" . "b = 1\n")
+                                       ("c.py" . "c = 1\n") ("d.py" . "d = 1\n"))))
+         (python-helpers-enable-conda nil)
+         (started (jm-test--stub-lsp))
+         (visit (lambda (name) (find-file-noselect (expand-file-name name dir)))))
+    (unwind-protect
+        (let ((a (funcall visit "a.py"))
+              (b (funcall visit "b.py"))
+              (c (funcall visit "c.py")))
+          (switch-to-buffer "*scratch*")
+          (jm-test--settle)
+          (should-not (funcall started))
+          (switch-to-buffer b)
+          (jm-test--settle)
+          (should (equal (funcall started) '("b.py")))
+          (switch-to-buffer a)
+          (jm-test--settle)
+          (switch-to-buffer b)
+          (jm-test--settle)
+          (should (equal (funcall started) '("a.py" "b.py")))
+          (should-not (buffer-local-value 'lsp-mode c))
+          ;; A file shown as it is visited starts without a later window change.
+          (find-file (expand-file-name "d.py" dir))
+          (jm-test--settle)
+          (should (equal (funcall started) '("d.py" "a.py" "b.py"))))
+      (funcall started 'remove)
+      (jm-test--kill-project dir))))
+
+(ert-deftest jm-int-python-lsp-not-started-by-preview ()
+  "Showing a Python buffer while the minibuffer is active, as a
+`consult-buffer' preview does, doesn't start lsp; choosing it does.
+Uses a stub for `lsp', so no language servers are needed."
+  (let* ((dir (jm-test--make-project '(("a.py" . "a = 1\n"))))
+         (python-helpers-enable-conda nil)
+         (started (jm-test--stub-lsp)))
+    (unwind-protect
+        (let ((a (find-file-noselect (expand-file-name "a.py" dir))))
+          (switch-to-buffer "*scratch*")
+          (jm-test--settle)
+          ;; The preview: shown with `switch-to-buffer', then the original
+          ;; buffer put back, all inside the minibuffer.
+          (cl-letf (((symbol-function 'minibuffer-depth) (lambda () 1)))
+            (switch-to-buffer a 'norecord)
+            (jm-test--settle)
+            (switch-to-buffer "*scratch*" 'norecord)
+            (jm-test--settle))
+          (should-not (funcall started))
+          (switch-to-buffer a)
+          (jm-test--settle)
+          (should (equal (funcall started) '("a.py"))))
+      (funcall started 'remove)
+      (jm-test--kill-project dir))))
 
 ;;;; lsp-mode
 

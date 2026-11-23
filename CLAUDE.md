@@ -11,8 +11,9 @@ Run from the repository root:
 
 The suite runs unit tests, checks for external tools, loads the full
 configuration, runs integration tests against it (key bindings, prompts,
-the Python language servers), and lints `lisp/`. Any error or compiler
-warning fails it. CI runs the same command on all three platforms.
+desktop save and restore, the Python language servers), and lints
+`lisp/`. Any error or compiler warning fails it. CI runs the same command
+on all three platforms.
 
 ## Conventions
 

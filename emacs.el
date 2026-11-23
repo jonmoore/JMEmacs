@@ -881,7 +881,6 @@ clean buffer we delay checking for longer."
     "C-c C-l" 'haskell-process-load-or-reload
     "C-`" 'haskell-interactive-bring
     "C-c C-i" 'haskell-process-do-info
-    "SPC" 'haskell-mode-contextual-space
     "M-." 'haskell-mode-jump-to-def)
   (setq haskell-process-auto-import-loaded-modules t
         haskell-process-log t
@@ -2221,8 +2220,8 @@ one doesn't already exist.  Then restart org-mode to ensure this gets picked up.
     ;; Editing, but not deleting sexp contents
     "C-M-s"          'sp-splice-sexp
     "C-M-?"          'sp-convolute-sexp
-    "C-M-S"          'sp-split-sexp
-    "C-M-J"          'sp-join-sexp
+    "C-M-S-s"        'sp-split-sexp
+    "C-M-S-j"        'sp-join-sexp
     "C-M-t"          'sp-transpose-sexp
     "M-<delete>"     'sp-unwrap-sexp
     "M-<backspace>"  'sp-backward-unwrap-sexp
@@ -2535,11 +2534,11 @@ candidates for display-fill-column-indicator-character."
   :init
   (define-prefix-command 'yasnippet-dispatch-map)
   (define-keymap :keymap yasnippet-dispatch-map
-    "s"  '#'yas-insert-snippet
-    "n"  '#'yas-new-snippet
-    "v"  '#'yas-visit-snippet-file
-    "e"  '#'yas-expand
-    "d"  '#'yas-describe-tables)
+    "s"  #'yas-insert-snippet
+    "n"  #'yas-new-snippet
+    "v"  #'yas-visit-snippet-file
+    "e"  #'yas-expand
+    "d"  #'yas-describe-tables)
   :config
   (define-keymap :keymap yas-minor-mode-map
     "C-c &"   nil
